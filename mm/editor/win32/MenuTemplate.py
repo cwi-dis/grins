@@ -312,10 +312,12 @@ POPUP_HVIEW_LEAF = (
 #		(FLAG_PRO, ENTRY, 'New object &before...', None, NEW_BEFORE),
 		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
 		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
+		(FLAG_ALL, ENTRY, 'Copy Properties...', None, COPYPROPERTIES),
 		(FLAG_ALL, ENTRY, '&Paste within', None, PASTE_UNDER),
 		(FLAG_ALL, ENTRY, 'Paste bef&ore', None, PASTE_BEFORE),
 		(FLAG_ALL, ENTRY, 'Paste a&fter', None, PASTE_AFTER),
 		(FLAG_ALL, ENTRY, 'Pa&ste file', None, PASTE_FILE),
+		(FLAG_ALL, ENTRY, 'Paste Properties', None, PASTEPROPERTIES),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, CASCADE, '&Insert', (
 			(FLAG_ALL, CASCADE, '&Media', (
@@ -403,9 +405,11 @@ POPUP_HVIEW_SLIDE = (
 		# light version
 		((features.EDIT_REALPIX,), ENTRY, 'Cu&t', None, CUT),
 		((features.EDIT_REALPIX,), ENTRY, '&Copy', None, COPY),
+		(FLAG_ALL, ENTRY, 'Copy Properties...', None, COPYPROPERTIES),
 		((features.EDIT_REALPIX,), ENTRY, '&Paste', None, PASTE_AFTER),
 		((features.EDIT_REALPIX,), ENTRY, 'Paste bef&ore', None, PASTE_BEFORE),
 		((features.EDIT_REALPIX,), ENTRY, 'Pa&ste file', None, PASTE_FILE),
+		(FLAG_ALL, ENTRY, 'Paste Properties', None, PASTEPROPERTIES),
 		((features.EDIT_REALPIX,), SEP,),
 		((features.EDIT_REALPIX,), ENTRY, '&Delete', None, DELETE),
 		((features.EDIT_REALPIX,), CASCADE, 'Insert image &object', (
@@ -425,12 +429,14 @@ POPUP_HVIEW_STRUCTURE = (
 #			)),
 		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
 		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
+		(FLAG_ALL, ENTRY, 'Copy Properties...', None, COPYPROPERTIES),
 		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_UNDER),
 #		(FLAG_ALL, CASCADE, 'Paste &special', (
 #			(FLAG_ALL, ENTRY, '&Before', None, PASTE_BEFORE),
 #			(FLAG_ALL, ENTRY, '&Within', None, PASTE_UNDER),
 #			)),
 		(FLAG_ALL, ENTRY, 'Paste &file', None, PASTE_FILE),
+		(FLAG_ALL, ENTRY, 'Paste Properties', None, PASTEPROPERTIES),
 		(FLAG_ALL, SEP,),
 #		(FLAG_PRO, ENTRY, 'Edit in Temporal view', None, EDIT_TVIEW),
 		(FLAG_ALL, CASCADE, '&Insert', (

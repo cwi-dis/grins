@@ -116,22 +116,12 @@ class HierarchyView(HierarchyViewDialog):
 
 	def __add_commands(self):
 		# Add the user-interface commands that are used for this window.
+
+		# commands that are always available
+		# all other commands require a focus
 		self.commands = [
 			CLOSE_WINDOW(callback = (self.hide, ())),
-
-			COPY(callback = (self.copycall, ())),
-			COPYPROPERTIES(callback = (self.copypropertiescall, ())),
-			PASTEPROPERTIES(callback = (self.pastepropertiescall, ())),
-
-			ATTRIBUTES(callback = (self.attrcall, ())),
-			CONTENT(callback = (self.editcall, ())),
-
-			EXPANDALL(callback = (self.expandallcall, (1,))),
-			COLLAPSEALL(callback = (self.expandallcall, (0,))),
-
 			COMPUTE_BANDWIDTH(callback = (self.bandwidthcall, ())),
-			CREATE_EVENT_SOURCE(callback = (self.set_event_source, ())),
-			FIND_EVENT_SOURCE(callback = (self.find_event_source, ())),
 			DRAG_PAR(),
 			DRAG_SEQ(),
 			DRAG_SWITCH(),
@@ -142,6 +132,18 @@ class HierarchyView(HierarchyViewDialog):
 			DRAG_BRUSH(),
 			TIMESCALE(callback = (self.timescalecall, ('global',))),
 			TOGGLE_BWSTRIP(callback = (self.timescalecall, ('bwstrip',))),
+			]
+		self.anyfocuscommands = [
+			COPY(callback = (self.copycall, ())),
+			CREATE_EVENT_SOURCE(callback = (self.set_event_source, ())),
+			FIND_EVENT_SOURCE(callback = (self.find_event_source, ())),
+			]
+		self.singlefocuscommands = [
+			COPYPROPERTIES(callback = (self.copypropertiescall, ())),
+			ATTRIBUTES(callback = (self.attrcall, ())),
+			CONTENT(callback = (self.editcall, ())),
+			EXPANDALL(callback = (self.expandallcall, (1,))),
+			COLLAPSEALL(callback = (self.expandallcall, (0,))),
 			]
 
 		self.interiorcommands = self._getmediaundercommands(self.toplevel.root.context) + [
@@ -176,6 +178,9 @@ class HierarchyView(HierarchyViewDialog):
 				PASTE_BEFORE(callback = (self.pastebeforecall, ())),
 				PASTE_AFTER(callback = (self.pasteaftercall, ())),
 				]
+		self.pastepropertiescommands = [
+			PASTEPROPERTIES(callback = (self.pastepropertiescall, ())),
+			]
 		self.notatrootcommands = [
 				DELETE(callback = (self.deletecall, ())),
 				CUT(callback = (self.cutcall, ())),
@@ -369,7 +374,8 @@ class HierarchyView(HierarchyViewDialog):
 		# Enable "paste" commands depending on what is in the clipboard.
 		nodeList = self.editmgr.getclip()
 		for node in nodeList:
-			if node.getClassName() == 'MMNode':
+			cname = node.getClassName()
+			if cname == 'MMNode':
 				if node.GetType() in ('anchor', 'animpar'):
 					# anchors and animpars can only occur under media nodes
 					if fntype in MMTypes.mediatypes:
@@ -384,6 +390,9 @@ class HierarchyView(HierarchyViewDialog):
 						# can't paste before/after root node
 						commands = commands + self.pastenotatrootcommands
 				break
+			elif cname == 'Properties':
+				commands = commands + self.pastepropertiescommands
+
 		# commands is not mutable here.
 		return commands
 
@@ -404,12 +413,16 @@ class HierarchyView(HierarchyViewDialog):
 
 		widgets = self.get_selected_widgets()
 
+		commands = self.commands[:] # Use a copy.. the original is a template.
+
 		if len(widgets) < 1:
+			self.setcommands(commands)
 			return
 
-		commands = self.commands # Use a copy.. the original is a template.
+		commands = commands + self.anyfocuscommands
 
 		if len(widgets) == 1:# If there is one selected element:
+			commands = commands + self.singlefocuscommands
 			widget = widgets[0]
 			if isinstance(widget, StructureWidgets.TransitionWidget):
 				# set dynamic cascade entries for transition popup
@@ -1023,18 +1036,29 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return
 		node = self.get_selected_node()
+		if node is None:
+			windowinterface.beep()
+			return
 		context = node.GetContext()
-		attrlist = node.getattrnames()
-		defattrlist = attrlist[:]
-		# Remove ones we don't normally copy
-		if 'name' in defattrlist:
-			defattrlist.remove('name')
-		if 'file' in defattrlist:
-			defattrlist.remove('file')
+		# figure out the "long" names for the attributes and present those to the user
+		attrlist = []		# list of "long" attribute names
+		attrmap = {}		# reverse mapping
+		defattrlist = []	# attributes selected by default
+		for attr in node.getattrnames():
+			attrlabel = MMAttrdefs.getdef(attr)[2]
+			attrmap[attrlabel] = attr
+			attrlist.append(attrlabel)
+			if attr not in ('name', 'file'):
+				defattrlist.append(attrlabel)
 		copylist = windowinterface.mmultchoice('Select properties to copy', attrlist, defattrlist, parent=self.getparentwindow())
 		if not copylist: return
+		# map "long" names to "short" ones
+		ncopylist = []
+		for attr in copylist:
+			ncopylist.append(attrmap[attr])
+		# copy
 		newnode = context.newattrcontainer()
-		dict = self._copyattrdict(node, newnode, copylist)
+		dict = self._copyattrdict(node, newnode, ncopylist)
 
 		if not self.editmgr.transaction():
 			return 0
