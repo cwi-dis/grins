@@ -195,6 +195,7 @@ class HierarchyView(HierarchyViewDialog):
 			]
 		if toplevel.root.context.attributes.get('project_boston', 0):
 			self.notatrootcommands.append(NEW_EXCL(callback = (self.createexclcall, ())))
+		self.animatecommands = self._getanimatecommands(toplevel.root.context)
 		self.createanchorcommands = [
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			]
@@ -265,6 +266,8 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))))
 		if not slide and (heavy or ctx.compatchannels(chtype='html')):
 			rv.append(NEW_UNDER_HTML(callback = (self.createundercall, ('html',))))
+		if not slide:
+			rv.append(NEW_UNDER_ANIMATION(callback = (self.createundercall, ('animate',))))
 		if compatibility.G2 == features.compatibility:
 			if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
 				rv.append(NEW_UNDER_SLIDESHOW(callback = (self.createundercall, ('RealPix',))))
@@ -317,13 +320,23 @@ class HierarchyView(HierarchyViewDialog):
 		if compatibility.G2 == features.compatibility:
 			if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
 				rv.append(NEW_AFTER_SLIDESHOW(callback = (self.createaftercall, ('RealPix',))))
+		if not slide:
+			rv.append(NEW_BEFORE_ANIMATION(callback = (self.createbeforecall, ('animate',))))
+			rv.append(NEW_AFTER_ANIMATION(callback = (self.createaftercall, ('animate',))))
+		return rv
+
+	def _getanimatecommands(self, ctx, slide = 0):
+		rv = []
+		rv.append(NEW_BEFORE_ANIMATION(callback = (self.createbeforecall, ('animate',))))
+		rv.append(NEW_AFTER_ANIMATION(callback = (self.createaftercall, ('animate',))))
+		rv.append(NEW_UNDER_ANIMATION(callback = (self.createundercall, ('animate',))))
 		return rv
 
 	def aftersetfocus(self):
 		import Clipboard
 		commands = self.commands
 		fnode = self.focusnode
-		fntype = fnode.GetType()
+		fntype = fnode.GetType()	
 		is_realpix = fntype == 'ext' and fnode.GetChannelType() == 'RealPix'
 		if fnode.__class__ is SlideMMNode:
 			popupmenu = self.slide_popupmenu
@@ -362,6 +375,8 @@ class HierarchyView(HierarchyViewDialog):
 				commands = commands + self.navigatecommands[3:4]
 			if findex < len(pchildren) - 1:
 				commands = commands + self.navigatecommands[2:3]
+		if fntype in MMNode.leaftypes and fnode.GetChannelType() != 'animate':
+			commands = commands + self.animatecommands[2:3]
 		t, n = Clipboard.getclip()
 		if t == 'node' and n is not None:
 			# can only paste if there's something to paste
@@ -664,6 +679,19 @@ class HierarchyView(HierarchyViewDialog):
 				"Can't insert before/after the root",
 				mtype = 'error', parent = self.window)
 			return
+
+		if chtype=='animate':
+			animlist = ['animate','set','animateMotion', 'animateColor',]
+			i = windowinterface.multchoice('Choose animation element', animlist, 0, parent = self.window)
+			if i < 0: return # cancel creation
+			newnode = self.root.context.newanimatenode(animlist[i])
+			newnode.targetnode = node
+			if self.insertnode(newnode, where, index):
+				if not lightweight:
+					import AttrEdit
+					AttrEdit.showattreditor(self.toplevel, newnode, chtype = chtype)
+			return 
+
 		ctx = node.GetContext()
 		type = node.GetType()
 		if ntype is not None:
@@ -680,6 +708,7 @@ class HierarchyView(HierarchyViewDialog):
 					type = children[0].GetType()
 		else:
 			type = 'ext'
+
 		chname = None
 		if type == 'ext' or type == 'imm':
 			chlist = ctx.compatchannels(url, chtype)
@@ -808,11 +837,12 @@ class HierarchyView(HierarchyViewDialog):
 					mtype = 'error', parent = self.window)
 				node.Destroy()
 				return 0
-		elif where == 0:
+		elif where == 0 and node.GetChannelType()!='animate':
 			ntype = self.focusnode.GetType()
 			if ntype not in MMNode.interiortypes and \
 			   (ntype != 'ext' or
 			    self.focusnode.GetChannelType() != 'RealPix' or
+			    node.GetChannelType() != 'animate' or
 			    node.__class__ is not SlideMMNode):
 				windowinterface.showmessage('Selection is a leaf node!',
 							    mtype = 'error', parent = self.window)
