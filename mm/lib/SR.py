@@ -10,13 +10,15 @@
 # The *STOP events have no corresponding upcalls.
 #
 [NO_EVENT, SCHED, SCHED_DONE, PLAY, PLAY_DONE, SCHED_STOP, PLAY_STOP,\
-	  SYNC, SYNC_DONE, PLAY_ARM, ARM_DONE, SCHED_FINISH] = range(12)
+	  SYNC, SYNC_DONE, PLAY_ARM, ARM_DONE, SCHED_FINISH, BAG_START, \
+	  BAG_STOP, BAG_DONE] = range(15)
 
 ## side_effects = (PLAY, PLAY_STOP, PLAY_ARM)
 
 op_names = [ 'NO_EVENT', 'SCHED', 'SCHED_DONE', 'PLAY', 'PLAY_DONE', \
 	  'SCHED_STOP', 'PLAY_STOP', 'SYNC', 'SYNC_DONE', \
-	  'PLAY_ARM', 'ARM_DONE', 'SCHED_FINISH']
+	  'PLAY_ARM', 'ARM_DONE', 'SCHED_FINISH', 'BAG_START', \
+	  'BAG_STOP', 'BAG_DONE']
 
 def ev2string(ev):
 	try:
