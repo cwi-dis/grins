@@ -3,7 +3,7 @@ TODO for Michael :-)
 
 * THe apply button doesn't work in the event editor
 * help doesn't work.
-* Bug in the arrowing code somewhere.
+*Bug in the arrowing code somewhere (fixed by disabling arrows)
 
 * Make a marker - think about this.
 * two events for toplevels - open() and close

@@ -1353,6 +1353,7 @@ class EventCtrl(AttrCtrl):
 		n = EventEditor.EventStruct(None, node = self._node, action = self._attr.getname())
 		self._value.append(n)
 		self._eventstruct = n
+		self.enableApply()
 		self.update()
 
 	def OnDelete(self, id, code):
@@ -1363,6 +1364,7 @@ class EventCtrl(AttrCtrl):
 			del self._value[a]
 			self._eventstruct = None
 			self.resetlist()
+			self.enableApply()
 			# delete only from the list; this will later be converted to a lack of syncarc.
 		else:
 			print "DEBUG: weirdly selected list member: ", a
@@ -1516,10 +1518,12 @@ class EventCtrl(AttrCtrl):
 		if code == win32con.CBN_SELCHANGE:
 			s = self._eventwidget.getvalue()
 			self._eventstruct.set_event(s)
+			self.enableApply()
 			self.update()
 	def _textwidgetcallback(self, id, code):
 		if not self._eventstruct:
 			return
+		self.enableApply()
 		if code != win32con.EN_KILLFOCUS:
 			return
 		t = self._textwidget.gettext()
@@ -1528,9 +1532,10 @@ class EventCtrl(AttrCtrl):
 			print "ERROR:", error
 		self.update()
 	def _offsetwidgetcallback(self, id, code):
-		if code != win32con.EN_KILLFOCUS:
-			return
 		if not self._eventstruct:
+			return
+		self.enableApply()
+		if code != win32con.EN_KILLFOCUS:
 			return
 		try:
 			self._eventstruct.set_offset(float(self._offsetwidget.gettext()))
@@ -1542,10 +1547,12 @@ class EventCtrl(AttrCtrl):
 		if code == win32con.BN_CLICKED and self._eventstruct:
 			newcause = self._radiobuttons[id]
 			self._eventstruct.set_cause(newcause)
+			self.enableApply()
 			self.update()
 			self.selected_radiobutton = newcause
 	def _repeatwidgetcallback(self, id, code):
 		if code == win32con.EN_KILLFOCUS and self._eventstruct:
+			self.enableApply()
 			e = self._eventstruct.get_event()
 			if e == 'repeat':
 				try:
@@ -1559,6 +1566,7 @@ class EventCtrl(AttrCtrl):
 
 	def _thingbuttoncallback(self, id, code):
 		if code == win32con.BN_CLICKED:
+			self.enableApply()
 			c = self._eventstruct.get_cause()
 			if c == 'wallclock':
 				# TODO: more than just the wallclock.
