@@ -26,6 +26,14 @@ window returns.
 		buttons was pressed and 0 if the No button was
 		pressed.
 
+	multchoice(question, answers, default)
+		Show a dialog box with the given question. Answers is
+		a list of strings with possible answers. Default is
+		the index of the default answer or -1. For backward
+		compatability answers can also be a list of tuples of
+		which the first member should be the string.
+
+
 The appearance of a dialog window can be changed by setting certain
 variables before calling the function.  The variables that can be set
 are as follows.
