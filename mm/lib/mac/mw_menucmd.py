@@ -1,6 +1,7 @@
 import Menu
 MenuMODULE=Menu  # Silly name clash with FrameWork.Menu
 import MenuTemplate
+import flags
 
 #
 # Stuff imported from other mw_ modules
@@ -135,9 +136,10 @@ class ContextualPopupMenu:
 		self._cmd_to_item = {}
 		
 	def _fill_menu(self, menu, list, callbackfunc):
+		curflags = flags.curflags()
 		for item in list:
 			flag = item[0]
-			if not extra_command_dict[flag]:
+			if not (flag & curflags):
 				continue
 			if item[1] == MenuTemplate.SEP:
 				menu.addseparator()
@@ -240,11 +242,7 @@ class CommandHandler:
 	def __init__(self, menubartemplate):
 		import settings
 		import features
-		self._extra_commands = extra_command_dict
-		self._extra_commands[''] = 1
-		self._extra_commands['cmif'] = settings.get('cmif')
-		self._extra_commands['debug'] = settings.get('debug')
-		self._extra_commands['full'] = not features.lightweight
+		self.curflags = flags.curflags()
 		self.cmd_to_menu = {}
 		self.cmd_enabled = {}
 ##		self.must_update_window_menu = 1
@@ -252,8 +250,8 @@ class CommandHandler:
 		self.all_cmd_groups = [None, None, None]
 		self.menubartraversal = []
 		for menutemplate in menubartemplate:
-			optional, entrytype, title, content = menutemplate
-			if self._extra_commands[optional]:
+			flag, entrytype, title, content = menutemplate
+			if flag & self.curflags:
 				menu = mw_globals.toplevel._addmenu(title)
 				rv = self.fillmenu(menu, entrytype, content)
 				self.menubartraversal.append(rv)
@@ -289,8 +287,8 @@ class CommandHandler:
 	def makemenu(self, menu, content):
 		itemlist = []
 		for entry in content:
-			optional = entry[0]
-			if not self._extra_commands[optional]:
+			flags = entry[0]
+			if not (flags & self.curflags):
 				continue
 			entry_type = entry[1]
 			if entry_type in (MenuTemplate.ENTRY,
