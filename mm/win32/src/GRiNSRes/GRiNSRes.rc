@@ -479,18 +479,20 @@ BEGIN
                     WS_DISABLED,7,7,317,160
 END
 
-IDD_CHANNEL_UNDEF DIALOG DISCARDABLE  0, 0, 227, 58
+IDD_CHANNEL_UNDEF DIALOG DISCARDABLE  0, 0, 227, 85
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Channel is undefined"
+CAPTION "No channel selected"
 FONT 8, "MS Sans Serif"
 BEGIN
-    EDITTEXT        IDC_CHANNEL_NAME,114,10,105,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,11,38,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,170,38,50,14
-    PUSHBUTTON      "Leave undefined",IDC_LEAVE_UNDEF,78,38,75,14
-    LTEXT           "Create channel named:",-1,35,12,75,8
-    ICON            IDI_GRINS_QUESTION,IDC_STATIC_ICON,6,6,20,20,NOT 
+    EDITTEXT        IDC_CHANNEL_NAME,115,39,105,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Create",IDOK,170,64,50,14
+    PUSHBUTTON      "Back to dialog",IDCANCEL,7,64,65,14
+    PUSHBUTTON      "Leave undefined",IDC_LEAVE_UNDEF,83,64,75,14
+    LTEXT           "Channel name:",IDC_STATIC,33,41,75,8
+    ICON            IDI_GRINS_QUESTION,IDC_STATIC_ICON,6,6,21,20,NOT 
                     WS_VISIBLE
+    LTEXT           "You have not selected a channel on which the node will be played. You may want to create a new channel, or go back to select one.",
+                    IDC_STATIC,33,7,187,27
 END
 
 
@@ -674,7 +676,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 220
         TOPMARGIN, 7
-        BOTTOMMARGIN, 51
+        BOTTOMMARGIN, 78
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -771,8 +773,8 @@ BEGIN
     VK_F7,          IDUC_CVIEW,             VIRTKEY, NOINVERT
     VK_F8,          IDUC_LAYOUT,            VIRTKEY, NOINVERT
     VK_SPACE,       IDUC_MAGIC_PLAY,        VIRTKEY, CONTROL, NOINVERT
+    "W",            IDUC_CLOSE_WINDOW,      VIRTKEY, CONTROL, NOINVERT
     "X",            IDUC_CUT,               VIRTKEY, CONTROL, NOINVERT
-    "X",            IDUC_CLOSE_WINDOW,      VIRTKEY, ALT, NOINVERT
     "Z",            IDUC_UNDO,              VIRTKEY, CONTROL, NOINVERT
 END
 
