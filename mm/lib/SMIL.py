@@ -348,6 +348,7 @@ class SMIL:
 	__media_object = ['audio', 'video', 'text', 'img', 'animation',
 			  'textstream', 'ref', __null, __cmif, __shell,
 			  __socket]
+	__animate = ['animate', 'set', 'animateMotion', 'animateColor']
 
 	__at = None
 	for __el in __media_object:
@@ -363,7 +364,7 @@ class SMIL:
 	del __el, __at
 
 	__schedule = ['par', 'seq', 'excl', __choice, __bag] + __media_object
-	__container_content = __schedule + ['switch', 'a']
+	__container_content = __schedule + ['switch', 'a'] + __animate
 	__assoc_link = ['anchor', 'area']
 
 	# all entities with their allowed content
