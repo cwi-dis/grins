@@ -48,25 +48,39 @@ class VideoThread : public Thread
 	HANDLE m_hPlaybackEvent;
 	};
 
-// xxx: take into account frame rate
 DWORD VideoThread::Run()
 	{
 	HANDLE handles[] = {GetStopHandle(), m_hPlaybackEvent};
 	DWORD wres = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 	if(wres == WAIT_OBJECT_0) return 0;
 
-	Sleep(20);
+	double rate = m_decoder.get_frame_rate();
+	DWORD msecs = (DWORD)floor(0.5+1000.0/rate);
+
+	m_decoder.reset_framenum();
+	
+	DWORD t0 = GetTickCount();
 	m_decoder.decode_picture();
+	long dt = (long)(GetTickCount() - t0);
+	long wait = msecs - dt;
+	if(wait>0) Sleep(wait);
+
 	wres = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 	if(wres == WAIT_OBJECT_0) return 0;
+
 	m_decoder.update_framenum();
 
 	while(m_decoder.parse_picture_header())
 		{
-		Sleep(20);
+		DWORD t0 = GetTickCount();
 		m_decoder.decode_picture();
+		long dt = (long)(GetTickCount() - t0);
+		long wait = msecs - dt;
+		if(wait>0) Sleep(wait);
+		
 		wres = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 		if(wres == WAIT_OBJECT_0) return 0;
+
 		m_decoder.update_framenum();
 		}
 	m_decoder.write_last_sequence_frame();
@@ -93,22 +107,33 @@ MpegPlayer::~MpegPlayer()
 bool MpegPlayer::can_decode(int handle)
 	{
 	decoder = new MpegDecoder();
-	if(!decoder->check(handle))
+	if(!decoder->check(handle) || !decoder->parse_picture_header())
 		{
 		decoder->detach_file_handle();
-		return false;
-		}
-	if(!decoder->parse_picture_header())
-		{
-		decoder->detach_file_handle();
+		delete decoder;
+		decoder = 0;
 		return false;
 		}
 	decoder->initialize_sequence();
 	decoder->get_display_info(*di);
-	display = new MpegDisplay(*di);
-	decoder->set_display(display);
-	decoder->reset_framenum();
 	return true;
+	}
+
+double MpegPlayer::get_duration()
+	{
+	if(decoder == 0) return 0.0;
+	decoder->reset_framenum();
+	decoder->decode_picture();
+	decoder->update_framenum();
+	while(decoder->parse_picture_header())
+		{
+		decoder->decode_picture();
+		decoder->update_framenum();
+		}
+	decoder->write_last_sequence_frame();
+	double rate = decoder->get_frame_rate();
+	int nframes = decoder->get_sequence_framenum() + 1;
+	return nframes/rate;
 	}
 
 void MpegPlayer::close()
@@ -121,8 +146,7 @@ void MpegPlayer::close()
 		}
 	if(decoder != 0) 
 		{
-		if(display != 0)
-			decoder->finalize_sequence();
+		decoder->finalize_sequence();
 		delete decoder;
 		decoder = 0;
 		}
@@ -144,16 +168,26 @@ int MpegPlayer::get_height() const
 	return di->vertical_size;
 	}
 
-double MpegPlayer::get_duration() const
+double MpegPlayer::get_frame_rate() const
 	{
-	// not implemented yet
-	return 10.0;
+	if(decoder != 0)
+		return decoder->get_frame_rate();
+	return 1.0;
+	}
+
+double MpegPlayer::get_bit_rate() const
+	{
+	if(decoder != 0)
+		return decoder->get_bit_rate();
+	return 10000.0;
 	}
 
 void MpegPlayer::prepare_playback(surface<color_repr_t> *psurf)
 	{
-	if(decoder != 0 && display != 0)
+	if(decoder != 0)
 		{
+		display = new MpegDisplay(*di);
+		decoder->set_display(display);
 		display->set_surface(psurf);
 		pVideoThread = new VideoThread(*decoder);
 		pVideoThread->Start();
