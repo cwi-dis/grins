@@ -846,7 +846,8 @@ class ChannelWrapper(Wrapper):
 		return '<ChannelWrapper, name=' + `self.channel.name` + '>'
 
 	def close(self):
-		del self.channel.attreditor
+		if haschannelattreditor(self.channel):
+			del self.channel.attreditor
 		del self.channel
 		Wrapper.close(self)
 
