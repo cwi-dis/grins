@@ -4404,6 +4404,9 @@ class MMNode(MMTreeElement):
 			return -1, maybecached
 		end = start + d
 		if end < 0:
+			if t0 is not None and end <= t0:
+				# we tried and failed to find a next one
+				return -1, maybecached
 			# find next one
 			return self.__calcendtime(syncbase, sctx, end, first)
 		return end, maybecached
