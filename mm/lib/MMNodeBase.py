@@ -52,7 +52,7 @@ class MMNodeContext:
 		if self.dirname:
 			filename = MMurl.basejoin(self.dirname, filename)
 		return filename
-		
+
 	def newnodeuid(self, type, uid):
 		node = self.nodeclass(type, self, uid)
 		self.knownode(uid, node)
