@@ -49,7 +49,7 @@ class ImageChannel(ChannelWindow):
 			if len(args) != 4:
 				print 'ImageChannel: funny-sized anchor'
 				continue
-			if a[A_TYPE] in DestOnlyAnchors:
+			if a[A_TYPE] in WholeAnchors:
 				continue
 ## 			if args == [0, 0, 1, 1]:
 ## 			    continue
