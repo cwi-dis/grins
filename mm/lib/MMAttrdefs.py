@@ -276,15 +276,15 @@ def parsevalue(name, string, context):
 # Initialize the attrdefs table.
 #
 def initattrdefs():
-	if os.name == 'mac':
-		# Mac-specific: try loading atc file from a resource
-		import Res
-		try:
-			atcres = Res.GetNamedResource('CMat', 'Attrdefs')
-		except Res.Error:
-			pass
-		else:
-			return marshal.loads(atcres.data)
+##	if os.name == 'mac':
+##		# Mac-specific: try loading atc file from a resource
+##		import Res
+##		try:
+##			atcres = Res.GetNamedResource('CMat', 'Attrdefs')
+##		except Res.Error:
+##			pass
+##		else:
+##			return marshal.loads(atcres.data)
 
 	import cmif
 	filename = cmif.findfile(os.path.join('lib', 'Attrdefs'))
