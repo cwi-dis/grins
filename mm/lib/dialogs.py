@@ -224,5 +224,9 @@ def multchoice(prompt, list, defindex):
 			answer = DEFBUTTON + answer
 		args = args + (answer,)
 	rv = apply(showdialog, args)
-	return rv
+	if type(rv) == type(''):
+		for i in range(len(args)):
+			if rv == args[i]:
+				return i - 1	# offset due to prompt
+	return None
 		
