@@ -103,6 +103,7 @@ class HierarchyView(HierarchyViewDialog):
 ##		self.destroynode = None	# node to be destroyed later
 
 		self.arrow_list = []	# A list of arrows to be drawn after everything else.
+		self.__select_arrow_list = [] # Used for working out the selected arrows.
 
 	def __add_commands(self):
 		# Add the user-interface commands that are used for this window.
@@ -568,14 +569,15 @@ class HierarchyView(HierarchyViewDialog):
 		self.need_redraw_selection = 0
 		self.redrawing = 0
 
-	def add_arrow(self, color, source, dest):
+	def add_arrow(self, caller, color, source, dest):
 		# Draw arrows on top of everything else.
-		self.arrow_list.append((color,source, dest))
+		self.arrow_list.append((caller, color,source, dest))
 
 	def draw_arrows(self, displist):
 		for i in self.arrow_list:
-			color,source,dest = i
+			caller, color,source,dest = i
 			displist.drawarrow(color, source, dest)
+		self.__select_arrow_list = self.arrow_list
 		self.arrow_list = []	# You need to remake it every time.
 
 	def hide(self, *rest):
@@ -1535,6 +1537,10 @@ class HierarchyView(HierarchyViewDialog):
 	# I'm not quite sure how to do right-clicks on a mac. Sorry. -mjvdg.
 	def click(self, x, y):
 		# Called only from self.mouse, which is the event handler.
+		for i in self.__select_arrow_list:
+			caller, colour, src, dest = i
+			if self.window.hitarrow((x,y), src, dest):
+				print "Arrow hit!", caller
 		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
 		clicked_widget.mouse0press((x,y))
 		self.select_widget(clicked_widget, scroll=0)
