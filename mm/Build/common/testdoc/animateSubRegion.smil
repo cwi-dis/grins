@@ -5,10 +5,10 @@
 	Author: Kleanthis Kleanthous		
 	Version: Aug 24, 2000, v1		
 	Module: animate		
-	Feature: animate subregion
+	Feature: animate subregion, accelerate-decelerate, autoReverse
 	File Name: animateSubRegion.smil
 	Media Components: 1 JPG
-	Expected Behavior: the picture moves along the path in an "ease-in, ease-out" fashion
+	Expected Behavior: the picture makes a complete vertical oscilation
 -->
 <smil>
   <head>
@@ -23,7 +23,7 @@
   <body>
     <par id="Animate-motion-compose">
       <img id="image1" region="unnamed-region-0" fill="freeze" src="jbeans.jpg"/>
-      <animate id="movetop" dur="5s" attributeName="top" targetElement="image1" accelerate="0.5" decelerate="0.5" by="200" additive="sum"/>
+      <animate id="movetop" dur="5s" attributeName="top" targetElement="image1" autoReverse='true' accelerate="0.5" decelerate="0.5" by="200" additive="sum"/>
     </par>
   </body>
 </smil>
