@@ -38,15 +38,16 @@ class ImageWindow() = ChannelWindow():
 	#
 	def setimage(self, (filename, scale)):
 		self.parray = None
-		self.xsize, self.ysize = image.imgsize(filename)
-		#print 'xsize =', self.xsize, 'ysize =', self.ysize
+		try:
+			self.xsize, self.ysize = image.imgsize(filename)
+		except:
+			print 'Cannot get size of image file', `filename`
+			return
 		self.scale = scale
 		tempfile = image.cachefile(filename)
 		f = open(tempfile, 'r')
 		f.seek(8192)
 		self.parray = f.read()
-		#print 'len =', len(self.parray),
-		#print 'expected =', self.xsize*self.ysize*4
 		if self.wid:
 			gl.winset(self.wid)
 			self.render()
