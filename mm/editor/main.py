@@ -13,8 +13,8 @@ def usage(msg):
 	print '-p         : start playing right away'
 	print '-s         : report statistics (guru only)'
 	print '-n         : no pre-arming (guru only)'
-	print '-T         : open Time chart window right away'
-	print '-H         : open Hierarchy window right away'
+	print '-C         : open Channel view right away'
+	print '-H         : open Hierarchy view right away'
 	print '-P         : open Player window right away'
 	print '-S         : open Style sheet window right away'
 	print '-L         : open Hyperlinks window right away'
@@ -25,7 +25,7 @@ def usage(msg):
 def main():
 	#
 	try:
-		opts, files = getopt.getopt(sys.argv[1:], 'qpsnh:THPSL')
+		opts, files = getopt.getopt(sys.argv[1:], 'qpsnh:CHPSL')
 	except getopt.error, msg:
 		usage(msg)
 	if not files:
@@ -76,7 +76,7 @@ def main():
 		top.setwaiting()
 		top.show()
 		for opt, arg in opts:
-			if opt == '-T':
+			if opt == '-C':
 				top.channelview.show()
 			elif opt == '-H':
 				top.hierarchyview.show()
@@ -138,6 +138,16 @@ def main():
 			MMNode._prstats()
 
 
+# A copy of cmif.findfile().  It is copied here rather than imported
+# because the result is needed to extend the Python search path to
+# find the cmif module!
+
+# WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+# *********  If you change this, also change ../lib/cmif.py   ***********
+# WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+
+DEFAULTDIR = '/ufs/guido/mm/demo'	# Traditional default
+
 cmifpath = None
 
 def findfile(name):
@@ -153,11 +163,14 @@ def findfile(name):
 		elif os.environ.has_key('CMIF'):
 			cmifpath = [os.environ['CMIF']]
 		else:
-			cmifpath = ['/ufs/guido/mm/demo'] # Traditional default
+			cmifpath = [DEFAULTDIR]
 	for dir in cmifpath:
 		fullname = os.path.join(dir, name)
 		if os.path.exists(fullname):
 			return fullname
 	return name
+
+
+# Call the main program
 
 main()

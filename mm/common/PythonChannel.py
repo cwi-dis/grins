@@ -51,7 +51,8 @@ class PythonChannel(Channel):
 				cmd = string.joinfields(list, '\n') + '\n'
 				file = '<commands>'
 			else:
-				file = MMAttrdefs.getattr(node, 'file')
+				file = \
+				    self.player.toplevel.getattr(node, 'file')
 				cmd = 'execfile(' + `file` + ')\n'
 			self.env['node'] = node
 			try:

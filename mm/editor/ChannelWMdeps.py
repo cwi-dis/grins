@@ -209,3 +209,8 @@ class Channel:
 
 	def setready(self):
 		pass
+
+	# Get a node's filename, resolve it using the context's dirname
+
+	def getfilename(self, node):
+		return node.context.findfile(MMAttrdefs.getattr(node, 'file'))

@@ -34,7 +34,8 @@ class ShellChannel(Channel):
 				prog = '/bin/sh'
 				argv = ['sh', '-c', cmd]
 			else:
-				prog = MMAttrdefs.getattr(node, 'file')
+				prog = \
+				    self.player.toplevel.getattr(node, 'file')
 				argv = [prog]
 			self.pid = startprog(prog, argv)
 		Channel.play(self, node, callback, arg)
