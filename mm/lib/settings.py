@@ -37,6 +37,7 @@ elif os.name == 'mac':
 	fss = macfs.FSSpec((vrefnum, dirid, 'GRiNS Preferences'))
 	PREFSFILENAME=fss.as_pathname()
 else:
+	default_settings['html_control'] = 0	# which HTML control to use
 	PREFSFILENAME='grprefs.txt'
 
 def restore():
