@@ -100,6 +100,7 @@ channelhierarchy = {
 		'null'],
     'ole': ['word'],
     }
+SMILchanneltypes = ['null', 'html', 'image', 'sound', 'video', 'layout']
 
 ct = channelmap.keys()
 ct.sort()
@@ -130,3 +131,11 @@ shortcuts = {
 	'word':		'W',
 	'external':	'X',
 	}
+
+def getvalidchanneltypes():
+	"""Return the list of channels to be shown in menus and such.
+	Either the full list or the SMIL-supported list is returned."""
+	import settings
+	if settings.get('cmif'):
+		return commonchanneltypes + otherchanneltypes
+	return SMILchanneltypes
