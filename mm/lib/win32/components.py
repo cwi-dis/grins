@@ -879,3 +879,45 @@ class ControlsDict:
 	def values(self): return self._subwnddict.values()
 	def has_key(self, key): return self._subwnddict.has_key(key)
 	def get(self, key, default): return self._subwnddict.get(key, default)
+
+##############################
+class KeyTimesSlider(window.Wnd):
+	def __init__(self, dlg, id):
+		self._parent = dlg
+		hwnd = Sdk.GetDlgItem(dlg.GetSafeHwnd(),id)
+		window.Wnd.__init__(self, win32ui.CreateWindowFromHandle(hwnd))
+		
+		self.SetTicFreq(5)
+		self.SetLineSize(5)
+		self.SetPageSize(20)
+		self.SetRange(0, 100)
+
+		self._keyTimes = [0.0, 0.25, 0.5, 1.0]
+		self._markerColor = 0, 0, 0
+
+		dlg.HookNotify(self.OnReleaseCapture, commctrl.NM_RELEASEDCAPTURE)
+
+	def drawOn(self, dc):
+		l, t, r, b = self.GetWindowRect()
+		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
+		rc = l + 100, b - 8, l + 104, b+8
+		x0 = l + 9 # first tick in pixels or pos zero 
+		w = r-l-19 # last tick in pixels or pos 100
+		for p in self._keyTimes:
+			x = int(p*w + 0.5)
+			pts = [(x0+x-3, b+8), (x0+x, b), (x0+x+3, b+8)]
+			win32mu.FillPolygon(dc, pts, self._markerColor)
+
+	def OnReleaseCapture(self, std, extra):
+		pos = self.GetPos()
+		print 0.01*pos, ' dur'
+
+	def setTime(self, t):
+		self.SetPos(int(t*100+0.5))
+
+	def setKeyTimes(self, keyTimes):
+		self._keyTimes = keyTimes
+		l, t, r, b = self.GetWindowRect()
+		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
+		self._parent.InvalidateRect( (l, b, r, b+8) )
+
