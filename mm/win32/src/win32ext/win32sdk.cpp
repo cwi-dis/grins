@@ -686,6 +686,19 @@ sdk_show_window(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
+ // @pymethod |PyWin32Sdk|DestroyWindow|Destroy window
+static PyObject *
+sdk_destroy_window(PyObject *self, PyObject *args)
+	{
+	HWND hWnd;
+	if (!PyArg_ParseTuple (args, "i",&hWnd))
+		return NULL;
+	GUI_BGN_SAVE;
+	BOOL res = DestroyWindow(hWnd);  
+	GUI_END_SAVE;
+	return Py_BuildValue("i",res);
+	}
+
 // @sdkproto HWND GetDlgItem(HWND hDlg,int nIDDlgItem);     
 // @pymethod |PyWin32Sdk|GetDlgItem|Returns the window handle of the given control
 // Return Values: The integer identifier of the control
@@ -1263,6 +1276,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"MoveWindow",sdk_move_window,1}, // @pymeth MoveWindow|Move window.
 	{"GetWindowRect",sdk_get_window_rect,1}, // @pymeth GetWindowRect|Get the windows rectangle.
 	{"ShowWindow",sdk_show_window,1}, // @pymeth ShowWindow|sets the specified window's show state
+	{"DestroyWindow",sdk_destroy_window,1}, // @pymeth DestroyWindow|Destroy the specified window
 	{"SetClassLong",sdk_set_class_long,1}, // @pymeth SetClassLong|
 	{"SetWindowLong",sdk_set_window_long,1}, 
 	{"GetWindowLong",sdk_get_window_long,1}, 
