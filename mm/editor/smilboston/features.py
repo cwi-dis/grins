@@ -8,13 +8,15 @@ import sys
 
 feature_set = [EXPORT_CMIF, EXPORT_SMIL2, EXPORT_QT, EXPORT_WMP,
 				PLAYER_VIEW, STRUCTURE_VIEW, TIMELINE_VIEW, LAYOUT_VIEW, HYPERLINKS_VIEW, CHANNEL_VIEW,
-				TEMPORAL_VIEW,
 				USER_GROUPS, TRANSITION_VIEW,
 				UNIFIED_FOCUS,
 #				H_VBANDWIDTH,
 				H_MODIFY_STRUCTURE, CUSTOM_REGIONS,
 				];
 #
+if sys.platform == 'win32':
+	feature_set.append(TEMPORAL_VIEW)
+
 version = 'pro'                         # I'm not sure here.. mjvdg
 compatibility = Boston
 compatibility_short = 'SMIL2'
