@@ -21,6 +21,7 @@ class ListenerWnd(GenWnd.GenWnd):
 		GenWnd.GenWnd.__init__(self)
 		self._toplevel = toplevel
 		self.create()
+		self._docmap = {}
 		self.HookMessage(self.OnOpen, WM_USER_OPEN)
 		self.HookMessage(self.OnClose, WM_USER_CLOSE)
 		self.HookMessage(self.OnPlay, WM_USER_PLAY)
@@ -37,33 +38,34 @@ class ListenerWnd(GenWnd.GenWnd):
 		try:
 			func, arg = self._toplevel.get_embedded(event)
 			func(arg, self, event, filename)
+			self._docmap[params[2]] = self._toplevel.get_most_recent_docframe()
 		except:
 			pass
 
 	def OnClose(self, params):
-		wnd = self._toplevel.getmainwnd()
-		wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CLOSE].id)
+		wnd = self._docmap.get(params[2])
+		if wnd: wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CLOSE].id)
 
 	def OnPlay(self, params):
-		wnd = self._toplevel.getmainwnd()
-		wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PLAY].id)
+		wnd = self._docmap.get(params[2])
+		if wnd: wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PLAY].id)
 
 	def OnStop(self, params):
-		wnd = self._toplevel.getmainwnd()
-		wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.STOP].id)
+		wnd = self._docmap.get(params[2])
+		if wnd: wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.STOP].id)
 
 	def OnPause(self, params):
-		wnd = self._toplevel.getmainwnd()
-		wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PAUSE].id)
+		wnd = self._docmap.get(params[2])
+		if wnd: wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PAUSE].id)
 
 	def OnGetStatus(self, params):
 		print 'OnGetStatus'
 
 	def OnSetWindow(self, params):
-		self._toplevel.set_embedded_hwnd(params[3])
+		self._toplevel.set_embedded_hwnd(params[2], params[3])
 
 	def OnUpdate(self, params):
-		wnd = self._toplevel.get_embedded_wnd()
+		wnd = self._toplevel.get_embedded_wnd(params[2])
 		if wnd: wnd.update()
 
 ############################
@@ -101,8 +103,8 @@ class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 		self.HookMessage(self.onLButtonUp, win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouseMove, win32con.WM_MOUSEMOVE)
 
-	def OnDestroy(self, msg):		
-		pass
+	def OnDestroy(self, msg):
+		self.destroyDDLayer()		
 
 	def OnClose(self):
 		self._cmdframe.PostMessage(win32con.WM_COMMAND, usercmdui.class2ui[usercmd.CLOSE].id)
@@ -117,6 +119,7 @@ class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 		return not self._obj_ or not self.IsWindow()
 
 	def closeViewport(self, viewport):
+		self.destroyDDLayer()
 		self.DestroyWindow()
 	
 	def settitle(self,title):
@@ -159,6 +162,7 @@ class EmbeddedWnd(window.Wnd, win32window.Window, win32window.DDWndLayer):
 		self.EndPaint(paintStruct)
 			
 	def update(self, rc=None, exclwnd=None):
+		if self.is_closed(): return
 		if not self._ddraw or not self._frontBuffer or not self._backBuffer:
 			return
 		if self._frontBuffer.IsLost():
