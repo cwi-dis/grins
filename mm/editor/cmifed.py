@@ -68,7 +68,7 @@ class Main(MainDialog):
 		import MMurl
 		import windowinterface
 		if features.lightweight and len(files) > 1:
-			windowinterface.showmessage('Cannot open multiple files in this version')
+			windowinterface.showmessage('Cannot open multiple files in this product.')
 			files = files[:1]
 		self._license = license
 ##		if not self._license.have('save'):
@@ -163,7 +163,7 @@ class Main(MainDialog):
 			try:
 				attrs = SMILTreeRead.ReadMetaData(pathname)
 			except IOError:
-				windowinterface.showmessage('Invalid template: %s'%file)
+				windowinterface.showmessage('Error in template: %s'%file)
 			name = attrs.get('template_name', file)
 			description = attrs.get('template_description', '')
 			image = attrs.get('template_snapshot', None)
@@ -191,7 +191,7 @@ class Main(MainDialog):
 			names, descriptions = self.template_info
 			windowinterface.TemplateDialog(names, descriptions,self._new_ok_callback, parent=self.getparentwindow())
 		else:
-			windowinterface.showmessage("No Templates found, creating empty document")
+			windowinterface.showmessage("Missing templates, creating empty document.")
 			top = TopLevel.TopLevel(self, self.getnewdocumentname(mimetype="application/x-grins-project"), 1)
 			self.new_top(top)
 	
@@ -217,10 +217,10 @@ class Main(MainDialog):
 			top = TopLevel.TopLevel(self, self.getnewdocumentname(filename), template_url)
 		except IOError:
 			import windowinterface
-			windowinterface.showmessage('error opening document %s' % filename)
+			windowinterface.showmessage('Cannot open: %s' % filename)
 		except MSyntaxError:
 			import windowinterface
-			windowinterface.showmessage('parsing document %s failed' % filename)
+			windowinterface.showmessage('Parse error in document: %s' % filename)
 		except UserCancel:
 			return
 		except TopLevel.Error:
@@ -259,16 +259,16 @@ class Main(MainDialog):
 		import TopLevel
 		for top in self.tops:
 			if top.is_document(url):
-				windowinterface.showmessage("%s is already open"%url)
+				windowinterface.showmessage("Already open: %s"%url)
 				return
 		try:
 			top = TopLevel.TopLevel(self, url, 0)
 		except IOError:
 			import windowinterface
-			windowinterface.showmessage('error opening document %s' % url)
+			windowinterface.showmessage('Cannot open: %s' % url)
 		except MSyntaxError:
 			import windowinterface
-			windowinterface.showmessage('parsing document %s failed' % url)
+			windowinterface.showmessage('Parse error in document: %s' % url)
 		except UserCancel:
 			return
 		except TopLevel.Error:
@@ -352,7 +352,7 @@ class Main(MainDialog):
 			windowinterface.showmessage('Unable to check for upgrade. You can try again later, or visit www.oratrix.com with your webbrowser.')
 			return
 		if not data:
-			windowinterface.showmessage('You are running the latest version of the software')
+			windowinterface.showmessage('You are running the latest version of the software.')
 			return
 		cancel = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to hear more?')
 		if cancel:
