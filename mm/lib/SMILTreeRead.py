@@ -921,10 +921,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		# connect to the register point
 		if attributes.has_key('regPoint'):
-			if not self.__regpoints.has_key(attributes['regPoint']) and \
-				not attributes['regPoint'] in ('topLeft', 'topMid',
-				'topRight','midLeft','center','midRight',
-				'bottomLeft','bottomMid','bottomRight'):
+			if not self.__context.regpoints.has_key(attributes['regPoint']):
 				self.syntax_error('the registration point '+attributes['regPoint']+" doesn't exist")
 				del attributes['regPoint']				
 		if attributes.has_key('regAlign'):
@@ -1085,55 +1082,101 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if region not in self.__childregions[None]:
 				self.__childregions[None].append(region)
 		import ChannelMap
-		if not ChannelMap.isvisiblechannel(mtype):
-			# not visible region
-			pass
-		elif self.__tops[top]['width'] > 0 and \
-		   self.__tops[top]['height'] > 0:
-			# we don't have to calculate minimum sizes
-			pass
-#		elif (type(l) is type(0)) + (type(w) is type(0)) + (type(r) is type(0)) >= 2 and \
-#		     (type(t) is type(0)) + (type(h) is type(0)) + (type(b) is type(0)) >= 2:
-			# size and position is given in pixels
-#			pass
-		elif mtype in ('image', 'movie', 'video', 'mpeg',
-			       'RealPix', 'RealText', 'RealVideo'):
-			# if we don't know the region size and
-			# position in pixels, we need to look at the
-			# media objects to figure out the size to use.
-			if node.attrdict.has_key('file'):
-				url = self.__context.findurl(node.attrdict['file'])
-				try:
-					import Sizes
-					width, height = Sizes.GetSize(url, mediatype, subtype)
-				except:
-					# want to make them at least visible...
-					width = 100
-					height = 100
+		
+		# not visible region
+		# if top region weight and height are already specify or 
+		# top region weight and height are already specify in pixels
+		if (not ChannelMap.isvisiblechannel(mtype)) or \
+			(self.__tops[top]['width'] > 0 and \
+			   self.__tops[top]['height'] > 0) or \
+			(w != None and type(w) is type(0) and \
+				h != None and type(h) is type(0)):
+	
+			needMinSize = 0
+		else:
+			needMinSize = 1
+			
+		if needMinSize:
+			mediaWidth = 100
+			mediaHeight = 100
+			if mtype in ('image', 'movie', 'video', 'mpeg',
+				       'RealPix', 'RealText', 'RealVideo'):
+				# if we don't know the region size and
+				# position in pixels, we need to look at the
+				# media objects to figure out the size to use.
+				if node.attrdict.has_key('file'):
+					url = self.__context.findurl(node.attrdict['file'])
+					try:
+						import Sizes
+						mediaWidth, mediaHeight = Sizes.GetSize(url, mediatype, subtype)
+					except:
+						# want to make them at least visible...
+						mediaWidth = 100
+						mediaHeight = 100
+					else:
+						# want to make them at least visible...
+						if mediaWidth == 0: mediaWidth = 100
+						if mediaHeight == 0: mediaHeight = 100
+						node.__size = mediaWidth, mediaHeight
 				else:
 					# want to make them at least visible...
-					if width == 0: width = 100
-					if height == 0: height = 100
-					node.__size = width, height
-		elif mtype in ('text', 'label', 'html', 'graph', 'brush'):
-			# want to make them at least visible...
-			width = 200
-			height = 100
+					mediaWidth = 100
+					mediaHeight = 100
+				
+			elif mtype in ('text', 'label', 'html', 'graph', 'brush'):
+				# want to make them at least visible...
+				mediaWidth = 200
+				mediaHeight = 100
+			else:	
+				# want to make them at least visible...
+				if mediaWidth == 0: mediaWidth = 100
+				if mediaHeight == 0: mediaHeight = 100
 		
-		# to calculate the minsize, we take account of subregion positioning
-		width = _minsize(node.attrdict.get('left'),
-				 None,
-				 node.attrdict.get('right'),
-				 width)
-		height = _minsize(node.attrdict.get('top'),
-				 None,
-				 node.attrdict.get('bottom'),
-				 height)
+			# we take account of subregion positioning
+			width = _minsize(node.attrdict.get('left'),
+					 None,
+					 node.attrdict.get('right'),
+					 mediaWidth)
+			height = _minsize(node.attrdict.get('top'),
+					 None,
+					 node.attrdict.get('bottom'),
+					 mediaHeight)
+					 
+			# we take account of registrationpoints
+			regPointId = attributes.get('regPoint')
+			regAlignId = attributes.get('regAlign')
+			
+			if regPointId != None or regAlignId != None:
+				# first get the defined regPoint in context
+				if regPointId == None:
+					regPointId = 'topLeft'
+				regPoint = self.__context.regpoints.get(regPointId)
+				if regPoint == None:
+					# normaly : impossible case, just avoid a crash if bug
+					regPoint = self.__context.regpoints.get('topLeft')				
+										
+				# then get the regAlign specified in regpoint or overide in media node					
+				regAlignX, regAlignY = regPoint.getxyAlign(regAlignId)
+				
+				# convert value to pixel relative to the media
+				regAlignW1 = int (regAlignX * mediaWidth + 0.5)
+				regAlignW2 = int ((1-regAlignX) * mediaWidth + 0.5)
+				
+				regAlignH1 = int (regAlignY * mediaHeight + 0.5)
+				regAlignH2 = int ((1-regAlignY) * mediaHeight + 0.5)
+				
+				width = _minsizeRp(regPoint['left'],
+						 regPoint['right'],
+						 regAlignW1, regAlignW2, width)
+					 
+				height = _minsizeRp(regPoint['top'],
+						 regPoint['bottom'],
+					         regAlignH1, regAlignH2, height)
 
-		if ch['minwidth'] < width:
-			ch['minwidth'] = width
-		if ch['minheight'] < height:
-			ch['minheight'] = height
+				if ch['minwidth'] < width:
+					ch['minwidth'] = width
+				if ch['minheight'] < height:
+					ch['minheight'] = height
 
 		# clip-* attributes for video
 		clip_begin = attributes.get('clipBegin')
@@ -2074,6 +2117,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__seen_smil = 1
 		self.__in_smil = 1
 		self.NewContainer('seq', attributes)
+		self.__set_defaultregpoints()
 
 	def end_smil(self):
 		from realnode import SlideShow
@@ -2105,7 +2149,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node.slideshow = SlideShow(node, self.__new_file)
 		del self.__realpixnodes
 		self.FixAnimateTargets()
-		self.FixRegpoints()
 		metadata = string.join(self.__metadata, '')
 		self.__context.metadata = metadata
 		MMAttrdefs.flushcache(self.__root)
@@ -2136,7 +2179,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__seen_body = 1
 		self.__in_body = 1
 		self.AddAttrs(self.__root, attributes)
-		self.__set_defaultregpoints()
 
 	def end_body(self):
 		self.end_seq()
@@ -2250,6 +2292,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
+		# add regpoints defined inside the layout tag
+		# notice: the default regpoint are already defined (from start_smil)
+		self.FixRegpoints()		
 
 	def start_region(self, attributes, checkid = 1):
 		if not self.__in_layout:
@@ -3633,7 +3678,7 @@ def _minsize(start, extent, end, minsize):
 	elif type(end) is type(0.0):
 		# no start, end is fraction
 		if end <= 0:
-			return 0
+			return minsize
 		if type(extent) is type(0):
 			# extent is pixel value
 			if extent == 0:
@@ -3648,6 +3693,89 @@ def _minsize(start, extent, end, minsize):
 		return int(minsize / extent + 0.5)
 	return minsize
 
+# Determine the minimum new size for region according to the regpoint/regalign
+# wR1 is the size from region left edge to regpoint.
+# wR2 is the size from regpoint to region right edge)
+# wR1 and wR2 are in pourcent (float) or pixel (integer). You can't have the both in the same time
+# wM1 is the size from media left edge to alignPoint
+# wM2 is the size from alignpoint to media right edge
+# wM1 and wM2 are pixel only (integer). You have to specify the both in the same time
+def _minsizeRp(wR1, wR2, wM1, wM2, minsize):
+	
+	# for now. Avoid to have in some case some to big values
+	MAX_REGION_SIZE = 5000
+	
+	if wR1 != None and wR2 != None:
+		# conflict regpoint attribute
+		return minsize
+
+	if wM1 == None or wM2 == None:
+		# bad parameters
+		raise minsize
+			
+	# first constraint
+	newsize = minsize
+	if type(wR1) is type (0.0):
+		if wR1 == 1.0:
+			raise error, 'regpoint with impossible alignment'
+		wN = wM2 / (1-wR1) + 0.5
+		if wN > newsize:
+			newsize = wN
+	elif type(wR1) is type (0):
+		wN = wR1 + wM2
+		if wN > newsize:
+			newsize = wN
+	elif type(wR2) is type (0.0):
+		if wR2 == 0.0:
+			# the media will stay invisible whichever the value
+			# we keep the same size
+			pass
+		else:
+			wN = wM2 / wR2 + 0.5
+			# test if the size is acceptable
+			if wN > MAX_REGION_SIZE:
+				 wN = MAX_REGION_SIZE
+			if wN > newsize:
+				newsize = wN				
+	elif type(wR2) is type (0):
+		# keep the same size
+		pass
+	else:
+		# no constraint
+		pass
+	
+	# second constraint
+	if type(wR2) is type (0.0):
+		if wR2 == 1.0:
+			raise error, 'regpoint with impossible alignment'
+		wN = wM1 / (1.0-wR2) + 0.5
+		if wN > newsize:
+			newsize = wN
+	elif type(wR2) is type (0):
+		# don't change anything
+		pass
+	elif type(wR1) is type (0.0):
+		if wR1 == 0.0:
+			# the media will stay invisible whichever the value
+			# we keep the same size
+			pass
+		else:
+			wN = wM1 / wR1 + 0.5
+			# test if the size is acceptable
+			if wN > MAX_REGION_SIZE:
+				 wN = MAX_REGION_SIZE
+			if wN > newsize:
+				newsize = wN
+	elif type(wR1) is type (0):
+		wN = wR2 + wM1
+		if wN > newsize:
+			newsize = wN
+	else:
+		# no constraint
+		pass
+		
+	return newsize
+	
 def _uniqname(namelist, defname):
 	if defname is not None and defname not in namelist:
 		return defname
