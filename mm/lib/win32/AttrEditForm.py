@@ -2015,6 +2015,10 @@ class PreviewPage(AttrPage):
 		del self._renderer
 
 	def OnSetActive(self):
+		if self._initdialog:
+			c = self.getctrl(self._aname)
+			rurl = string.strip(c.getvalue())
+			self._renderer.load(rurl)
 		return self._obj_.OnSetActive()
 
 	def OnKillActive(self):
@@ -2034,11 +2038,11 @@ class PreviewPage(AttrPage):
 		if attr.getname()==self._aname:
 			self._renderer.load(string.strip(val))
 
-	def onAttrChange(self):
-		if not self._initdialog: return
-		c=self.getctrl(self._aname)
-		rurl=string.strip(c.getvalue())
-		self._renderer.load(rurl)
+##	def onAttrChange(self):
+##		if not self._initdialog: return
+##		c=self.getctrl(self._aname)
+##		rurl=string.strip(c.getvalue())
+##		self._renderer.load(rurl)
 	
 	def OnPlay(self):
 		if not self._armed:
