@@ -537,7 +537,6 @@ class LayoutView2(LayoutViewDialog2):
 		# self.stopSelectedMediaList = []
 
 		self.showName = 0
-		self.asOutLine = 0
 		self.showAllRegions = 1
 		
 		# define the valid command according to the node selected
@@ -3699,18 +3698,6 @@ class Region(Node):
 			for child in self._children:
 				child.updateAllShowNames(value)
 
-	def updateAllAsOutLines(self, value):
-		if value:
-			self._curattrdict['transparent'] = 1
-		else:
-			self._curattrdict['transparent'] = 0
-
-		if self.isShowed():
-			self._graphicCtrl.setAttrdict(self._curattrdict)
-
-		for child in self._children:
-			child.updateAllAsOutLines(value)
-
 	#
 	# end update mothods
 	#
@@ -4015,13 +4002,6 @@ class Viewport(Node):
 	def updateAllShowNames(self, value):
 		for child in self._children:
 			child.updateAllShowNames(value)
-
-	def updateAllAsOutLines(self, value):
-		for child in self._children:
-			child.updateAllAsOutLines(value)
-		# for now refresh all
-		self.updateAllAttrdict()
-#		self.showAllNodes()
 
 	#
 	# end update visualization mothods
