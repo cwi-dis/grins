@@ -1996,8 +1996,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						break
 			elif attrtype == 'int':
 				for v in vals:
-					try: if v: v = string.atoi(v)
-					except string.atoi_error: self.syntax_error('invalid %s values' % attributeName)
+					try: 
+						if v:
+							v = string.atoi(v)
+					except string.atoi_error: 
+						self.syntax_error('invalid %s values' % attributeName)
 					break
 		else:
 			v1 = attributes.get('from')
