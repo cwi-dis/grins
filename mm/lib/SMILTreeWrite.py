@@ -724,6 +724,7 @@ class SMILWriter(SMIL):
 
 		# must come after second pass
 		self.aid2name = {}
+		self.anchortype = {}
 		self.calcanames(node)
 
 		if len(self.top_levels) > 1:
@@ -969,6 +970,7 @@ class SMILWriter(SMIL):
 		alist = MMAttrdefs.getattr(node, 'anchorlist')
 		for id, type, args, times in alist:
 			aid = (uid, id)
+			self.anchortype[aid] = type
 			if type in SourceAnchors:
 				if isidre.match(id) is None or \
 				   self.ids_used.has_key(id):
@@ -1359,7 +1361,11 @@ class SMILWriter(SMIL):
 						tag = None
 			else:
 				href = ''
-				tag = self.uid2name[uid2]
+				if self.anchortype.get(a2) == ATYPE_NORMAL and \
+				   self.aid2name.has_key(a2):
+					tag = self.aid2name[a2]
+				else:
+					tag = self.uid2name[uid2]
 			if tag:
 				href = href + '#' + tag
 		else:
@@ -1414,9 +1420,9 @@ class SMILWriter(SMIL):
 				attrlist.append(('coords', coords))
 			elif args:
 				print '** Unparseable args on', aid, args
-			else:
-				attrlist.append(('%s:fragment-id' % NSprefix,
-						 id))
+##			else:
+##				attrlist.append(('%s:fragment-id' % NSprefix,
+##						 id))
 		begin, end = times
 		if begin:
 			attrlist.append(('begin', '%.3fs' % begin))
