@@ -1448,7 +1448,65 @@ class _CommonWindow:
 		
 # 		rv = _Window(self, wid, 0, 0, w, h, 1, pixmap, title, adornments, canvassize, commandlist)
 
-class _Window(_CommonWindow, _WindowGroup, _ScrollMixin):
+class _AdornmentsMixin:
+	def __init__(self):
+		self._cmd_to_cntl = {}
+		
+	def _add_addornments(self, adornments):
+		if not adornments:
+			return
+		if 0:
+			x, y, w, h = self._rect
+			xo, yo, wo, ho = adornments['offset']
+			self._rect = x+xo, y+yo, w+wo, h+ho
+		if adornments.has_key('toolbar'):
+			#
+			# Create the buttons
+			#
+			for type, resid, cmd in adornments['toolbar']:
+				try:
+					cntl = Ctl.GetNewControl(resid, self._wid)
+				except Ctl.Error, arg:
+					print 'CNTL resource %d not found: %s'%(resid, arg)
+				else:
+					self._cmd_to_cntl[cmd] = cntl
+			#
+			# Create the toolbar
+			#
+			resid, height = MenuTemplate.TOOLBAR
+			try:
+				cntl = Ctl.GetNewControl(resid, self._wid)
+			except Ctl.Error, arg:
+				print 'CNTL resource %d not found: %s'%(resid, arg)
+			cntl.HiliteControl(255)
+			self._cmd_to_cntl[None] = cntl
+				
+	def close(self):
+		del self._cmd_to_cntl
+			
+	def set_commandlist(self, cmdlist):
+		enabled = {}
+		# First pass: enable all commands featuring in cmdlist
+		for item in cmdlist:
+			cmd = item.__class__
+			if self._cmd_to_cntl.has_key(cmd):
+				cntl = self._cmd_to_cntl[cmd]
+				cntl.HiliteControl(0)
+				enabled[cmd] = 1
+		# Second pass: disable the others
+		for cmd in self._cmd_to_cntl.keys():
+			if not enabled.has_key(cmd):
+				cntl = self._cmd_to_cntl[cmd]
+				cntl.HiliteControl(255)
+
+	def set_toggle(self, cmd, onoff):
+		if self._cmd_to_cntl.has_key(cmd):
+			cntl = self._cmd_to_cntl[cmd]
+			value = cntl.GetControlMinimum() + onoff
+			cntl.SetControlValue(value)
+			print 'TOGGLE', cmd, value #DBG
+		
+class _Window(_CommonWindow, _WindowGroup, _ScrollMixin, _AdornmentsMixin):
 	"""Toplevel window"""
 	
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
@@ -1456,20 +1514,24 @@ class _Window(_CommonWindow, _WindowGroup, _ScrollMixin):
 		
 		self._istoplevel = 1
 		_CommonWindow.__init__(self, parent, wid)
-		_WindowGroup.__init__(self, title, commandlist)
 		
 		self._transparent = 0
 		
 		# Note: the toplevel init routine is called with pixel coordinates,
 		# not fractional coordinates
+		# XXXX Should move down.
 		w, h = _ScrollMixin.__init__(self, w, h, canvassize)
 		self._rect = 0, 0, w, h
+		_AdornmentsMixin.__init__(self)
+		self._add_addornments(adornments)
 		
 		self._hfactor = parent._hfactor / (float(w) / _x_pixel_per_mm)
 		self._vfactor = parent._vfactor / (float(h) / _y_pixel_per_mm)
+		_WindowGroup.__init__(self, title, commandlist)
 	
 	def close(self):
 		_ScrollMixin.close(self)
+		_AdornmentsMixin.close(self)
 		_CommonWindow.close(self)
 		# XXXX Not WindowGroup?
 		
@@ -1481,6 +1543,14 @@ class _Window(_CommonWindow, _WindowGroup, _ScrollMixin):
 		if title == None:
 			title = ''
 		self._wid.SetWTitle(title)
+		
+	def set_toggle(self, cmd, onoff):
+		_AdornmentsMixin.set_toggle(self, cmd, onoff)
+		_WindowGroup.set_toggle(self, cmd, onoff)
+		
+	def set_commandlist(self, cmdlist):
+		_AdornmentsMixin.set_commandlist(self, cmdlist)
+		_WindowGroup.set_commandlist(self, cmdlist)
 		
 	def getgeometry(self, units=UNIT_MM):
 		rect = self._wid.GetWindowPort().portRect
