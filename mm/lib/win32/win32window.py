@@ -125,15 +125,16 @@ class Window:
 
 	# Call registered callback
 	def onEvent(self,event,params=None):
-		try:
-			func, arg = self._callbacks[event]			
-		except KeyError:
-			pass
+		if self._callbacks.has_key(event):
+			func, arg = self._callbacks[event]
+		elif hasattr(self, '_viewport') and self._viewport._callbacks.has_key(event):
+			func, arg = self._viewport._callbacks[event]
 		else:
-			try:
-				func(arg, self, event, params)
-			except Continue:
-				return 0
+			return 1
+		try:
+			func(arg, self, event, params)
+		except Continue:
+			return 0
 		return 1
 	
 	# Call registered callback with return value
