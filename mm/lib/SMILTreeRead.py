@@ -514,9 +514,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad %s attribute' % attr)
 			elif attr in ('mediaSize', 'mediaTime', 'bandwidth'):
 				try:
-					if val[-1]!='%':
-						raise error, 'bad %s attribute' % attr
-					attrdict[attr] = string.atof(val[:-1])
+					if val[-1]=='%':
+						p = string.atof(val[:-1])
+					elif attr in ('mediaSize', 'bandwidth'):
+						p = string.atof(val)
+					elif attr == 'mediaTime':
+						p = self.__parsecounter(val) 
+					attrdict[attr] = val;	
 				except string.atof_error:
 					self.syntax_error('bad %s attribute' % attr)
 				except error, msg:

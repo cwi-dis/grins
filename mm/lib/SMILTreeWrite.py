@@ -994,9 +994,9 @@ smil_attrs=[
 	("transIn", lambda writer, node:gettransition(writer, node, "transIn")),
 	("transOut", lambda writer, node:gettransition(writer, node, "transOut")),
 
-	("mediaSize", lambda writer, node:getpercentage(writer, node, "mediaSize")),
-	("mediaTime", lambda writer, node:getpercentage(writer, node, "mediaTime")),
-	("bandwidth", lambda writer, node:getpercentage(writer, node, "bandwidth")),
+	("mediaSize", lambda writer, node:getstringattr(writer, node, "mediaSize")),
+	("mediaTime", lambda writer, node:getstringattr(writer, node, "mediaTime")),
+	("bandwidth", lambda writer, node:getstringattr(writer, node, "bandwidth")),
 
 ]
 prio_attrs = [
