@@ -55,5 +55,9 @@ class TopLevelDialog:
 ##		if rv > 0: return 0
 ##		return 1
 
+	# set the list of command specific to the system
+	def set_commandlist(self):
+		pass
+	
 	def setcommands(self, commandlist):
 		self.window.set_commandlist(commandlist)
