@@ -922,6 +922,8 @@ class Channel:
 		if self._playcontext is ctx:
 			if self._playstate in (PLAYING, PLAYED):
 				self.stopplay(self._played_node)
+			if hasattr(self, 'window') and self.window:
+				self.window.freeze_content(None)
 			self._playcontext = None
 		if self._armcontext is ctx:
 			if self._armstate in (ARMING, ARMED):
@@ -1992,11 +1994,11 @@ class ChannelWindow(Channel):
 		return 0
 		
 ## Scheduler doesn't support this yet	
-##	def end_extended_fill(self):
-##		# End a fill=hold
-##		self.window.freeze_content(None)
-##		if self._hide_pending:
-##			self.updateToInactiveState()
+	def end_extended_fill(self):
+		# End a fill=hold
+		self.window.freeze_content(None)
+		if self._hide_pending:
+			self.updateToInactiveState()
 
 	def playstop(self):
 		self.cleanup_transitions() # XXXX incorrect!
