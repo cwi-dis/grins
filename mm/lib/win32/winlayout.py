@@ -913,6 +913,7 @@ class LayoutWnd:
 
 		fd = {'name':'Arial','height':10,'weight':700}
 		self._hsmallfont = Sdk.CreateFontIndirect(fd)
+		self._bmp = None
 				
 		self._tipwnd = None
 		self._lbuttondown = None
@@ -981,6 +982,7 @@ class LayoutWnd:
 		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
 		self.HookMessage(self.onLButtonDblClk,win32con.WM_LBUTTONDBLCLK)
+		self.HookMessage(self.onSize,win32con.WM_SIZE)
 		
 	def onKeyDown(self, params):
 		key = params[2]
@@ -1022,6 +1024,13 @@ class LayoutWnd:
 		if self._tipwnd:
 			self._tipwnd.DestroyWindow()
 			self._tipwnd = None
+		if self._bmp is not None:
+			self._bmp.DeleteObject()
+			self._bmp = None
+		if self._bmp is not None:
+			self._bmp.DeleteObject()
+			self._bmp = None
+
 	#
 	#  DrawContext listener interface
 	#
@@ -1127,6 +1136,21 @@ class LayoutWnd:
 	def onNCLButton(self, params):
 		self._drawContext.onNCButton()
 
+	def onSize(self, params):
+		if self._bmp is not None:
+			self._bmp.DeleteObject()
+			self._bmp = None
+		msg = win32mu.Win32Msg(params)
+		if msg.minimized(): 
+			return
+		self._bmp = win32ui.CreateBitmap()
+		try:
+			dc = self.GetDC()
+			self._bmp.CreateCompatibleBitmap(dc, msg.width(), msg.height())
+			dc.DeleteDC()
+		except:
+			pass
+
 	#
 	# Painting
 	#
@@ -1178,15 +1202,16 @@ class LayoutWnd:
 			
 		# draw to offscreen bitmap for fast looking repaints
 
-		dcc = dc.CreateCompatibleDC()
+		dcc = dc.CreateCompatibleDC(dc)
 
-		bmp = win32ui.CreateBitmap()
-		try:
-			bmp.CreateCompatibleBitmap(dc, wc, hc)
-		except:
-			dc.FillSolidRect((lc, tc, rc, bc), win32mu.RGB(self._bgcolor or (255,255,255)))
-			print 'Create offscreen bitmap %d x %d failed' % (wc, hc)
-			return 
+		if self._bmp is None:
+			self._bmp = win32ui.CreateBitmap()
+			try:
+				self._bmp.CreateCompatibleBitmap(dc, wc, hc)
+			except:
+				dc.FillSolidRect((lc, tc, rc, bc), win32mu.RGB(self._bgcolor or (255,255,255)))
+				print 'Create offscreen bitmap %d x %d failed' % (wc, hc)
+				return 
 
 		# called by win32ui
 		#self.OnPrepareDC(dcc)
@@ -1194,7 +1219,7 @@ class LayoutWnd:
 		# offset origin more because bitmap is just piece of the whole drawing
 		dcc.OffsetViewportOrg((-lc, -tc))
 		dcc.SetWindowOrg((0,0))
-		oldBitmap = dcc.SelectObject(bmp)
+		oldBitmap = dcc.SelectObject(self._bmp)
 		dcc.SetBrushOrg((lc % 8, tc % 8))
 		dcc.IntersectClipRect((lc, tc, rc, bc))
 		# dcc has now the same clip box as the original dc
@@ -1211,7 +1236,6 @@ class LayoutWnd:
 		# clean up
 		dcc.SelectObject(oldBitmap)
 		dcc.DeleteDC()
-		del bmp
 
 	def paintOn(self, dc):
 		lc, tc, rc, bc = dc.GetClipBox()
