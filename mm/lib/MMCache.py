@@ -52,7 +52,7 @@ def dumpcache(root, filename):
 	if os.name == 'mac':
 		import macfs
 		import macostools
-		fss = macfs.FSSpec(filename)
+		fss = macfs.FSSpec(cache)
 		fss.SetCreatorType('CMIF', 'CMC ')
 		macostools.touched(fss)
 	print 'Successfully wrote CMIF cache', cache
