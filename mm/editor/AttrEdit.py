@@ -293,8 +293,39 @@ class NodeWrapper(Wrapper):
 		return 1
 					
 	def maketitle(self):
+		# This code should go to MMNode
 		name = MMAttrdefs.getattr(self.node, 'name')
-		return 'Properties of node ' + name
+		if name:
+			return 'Properties of node ' + name
+		if self.node.GetType() == 'imm':
+			value = ' '.join(self.node.GetValues())
+			if value:
+				str = ''
+				if len(value) > 16:
+					value = value[:15] + '...'
+				for ch in value:
+					if ' ' < ch < chr(0x7f):
+						str = str + ch
+					else:
+						str = str + ' '
+				return 'Properties of node "%s"' % str
+		url = MMAttrdefs.getattr(self.node, 'file')
+		if url and url != '#':
+			import urlcache
+			import urlparse
+			import posixpath
+			mimetype = urlcache.mimetype(self.root.context.findurl(url))
+			if mimetype:
+				mimetype = string.split(mimetype, '/')[0]
+			if not mimetype:
+				mimetype = ''
+			path = urlparse.urlparse(url)[2]
+			filename = posixpath.split(path)[1]
+			if url and filename:
+				return 'Properties of node (%s %s)' % (mimetype, filename)
+			if filename:
+				return 'Properties of node (%s)' % filename
+		return 'Properties of node'
 
 	def getattr(self, name): # Return the attribute or a default
 		if name == '.type':
