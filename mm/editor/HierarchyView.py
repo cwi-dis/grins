@@ -95,6 +95,8 @@ class HierarchyView(ViewDialog):
 		self.save_geometry()
 		self.window.close()
 		self.window = None
+		self.displist = None
+		self.new_displist = None
 		self.cleanup()
 		self.editmgr.unregister(self)
 		self.toplevel.checkviews()
