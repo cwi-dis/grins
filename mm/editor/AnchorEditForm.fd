@@ -9,7 +9,7 @@ Number of forms: 1
 Name: form
 Width: 350.000000
 Height: 230.000000
-Number of Objects: 13
+Number of Objects: 14
 
 --------------------
 class: 1
@@ -29,7 +29,7 @@ argument:
 --------------------
 class: 71
 type: 2
-box: 10.000000 90.000000 180.000000 130.000000
+box: 10.000000 130.000000 180.000000 90.000000
 boxtype: 2
 colors: 47 3
 alignment: 1
@@ -204,6 +204,21 @@ lcol: 0
 label: Edit...
 name: edit_button
 callback: edit_callback
+argument: 0
+
+--------------------
+class: 31
+type: 0
+box: 70.000000 90.000000 120.000000 30.000000
+boxtype: 2
+colors: 13 5
+alignment: 2
+style: 0
+size: 10.000000
+lcol: 0
+label: Id:
+name: id_input
+callback: id_callback
 argument: 0
 
 ==============================
