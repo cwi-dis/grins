@@ -491,7 +491,8 @@ class HierarchyView(HierarchyViewDialog):
 		return self.window is not None
 
 	def destroy(self):
-		self.scene_graph.destroy();
+		if self.scene_graph is not None:
+			self.scene_graph.destroy();
 		self.scene_graph = None;
 		self.hide()
 
