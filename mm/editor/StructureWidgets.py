@@ -334,9 +334,14 @@ class StructureObjWidget(MMNodeWidget):
             self.collapsebutton.draw(displist)
 
 class SeqWidget(StructureObjWidget):
+    HAS_CHANNEL_BOX = 0
     def __init__(self, node, root):
-        self.dropbox = DropBoxWidget(root);
-        StructureObjWidget.__init__(self, node, root);
+        self.dropbox = DropBoxWidget(root)
+        if self.HAS_CHANNEL_BOX:
+            self.channelbox = ChannelBoxWidget(node, root)
+        else:
+            self.channelbox = None
+        StructureObjWidget.__init__(self, node, root)
     
     def draw(self, display_list):
         if self.selected: 
@@ -346,6 +351,8 @@ class SeqWidget(StructureObjWidget):
             display_list.drawfbox(SEQCOLOR, self.get_box())
             display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
 
+        if self.channelbox and not self.iscollapsed():
+            self.channelbox.draw(display_list)
         if self.root.pushbackbars and not self.iscollapsed():
             for i in self.children:
                 if isinstance(i, MediaWidget):
@@ -353,7 +360,7 @@ class SeqWidget(StructureObjWidget):
 
         StructureObjWidget.draw(self, display_list)
         if self.root.dropbox and not self.iscollapsed():
-            self.dropbox.draw(display_list);
+            self.dropbox.draw(display_list)
 
     def get_nearest_node_index(self, pos):
         # Return the index of the node at the specific drop position.
@@ -365,25 +372,30 @@ class SeqWidget(StructureObjWidget):
         x,y = pos;
         # Working from left to right:
         for i in range(len(self.children)):
-            l,t,w,h = self.children[i].get_box();
+            l,t,w,h = self.children[i].get_box()
             if x <= l+(w/2.0):
-                return i;
-        return -1;
+                return i
+        return -1
 
     def get_minsize(self):
         # Return the minimum size that I can be.
 
         if len(self.children) == 0 or self.iscollapsed():
-            boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE;
-            return self.get_relx(boxsize), self.get_rely(boxsize);
+            boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
+            return self.get_relx(boxsize), self.get_rely(boxsize)
 
         min_width = 0.0; min_height = 0.0
         
+        xgap = self.get_relx(sizes_notime.GAPSIZE)
+        if self.channelbox:
+            min_width, min_height = self.channelbox.get_minsize()
+            min_width = min_width + xgap
+            
         for i in self.children:
             w, h = i.get_minsize()
             if self.root.pushbackbars and isinstance(i, MediaWidget):
-                pushover = self.get_relx(i.downloadtime_lag);
-                min_width = min_width + pushover;
+                pushover = self.get_relx(i.downloadtime_lag)
+                min_width = min_width + pushover
             else:
                 pushover = 0.0;
             #assert w < 1.0 and w > 0.0
@@ -391,7 +403,6 @@ class SeqWidget(StructureObjWidget):
             min_width = min_width + w;
             if h > min_height:
                 min_height = h
-        xgap = self.get_relx(sizes_notime.GAPSIZE)
 #        handle = self.get_relx(sizes_notime.HANDLESIZE);
 #        droparea = self.get_relx(sizes_notime.DROPAREASIZE);
         #assert min_width < 1.0
@@ -416,6 +427,10 @@ class SeqWidget(StructureObjWidget):
             return boxsize, boxsize
 
         mw=0; mh=0
+        if self.channelbox:
+            mw, mh = self.channelbox.get_minsize_abs()
+            mw = mw + sizes_notime.GAPSIZE
+
         for i in self.children:
             if self.root.pushbackbars and isinstance(i, MediaWidget):
                 pushover = i.downloadtime_lag
@@ -473,6 +488,11 @@ class SeqWidget(StructureObjWidget):
 
         b = float(b) - self.get_rely(sizes_notime.VEDGSIZE)
 
+        if self.channelbox:
+            w, h = self.channelbox.get_minsize()
+            self.channelbox.moveto((l, t, l+w, b))
+            l = l + w + self.get_relx(sizes_notime.GAPSIZE)
+            
         for medianode in self.children:    # for each MMNode:
             if self.root.pushbackbars and isinstance(medianode, MediaWidget):
 #                print "TODO: test downloadtime pushover and sequence lags."
@@ -526,6 +546,8 @@ class SeqWidget(StructureObjWidget):
         StructureObjWidget.recalc(self);
 
 class TimeStripSeqWidget(SeqWidget):
+    HAS_COLLAPSE_BUTTON = 0
+    HAS_CHANNEL_BOX = 1
     pass
     
 class DropBoxWidget(Widgets.Widget):
@@ -540,6 +562,46 @@ class DropBoxWidget(Widgets.Widget):
         return sizes_notime.MINSIZE, sizes_notime.MINSIZE;
     # Hmm.. as I said. Easy.
         
+class ChannelBoxWidget(Widgets.Widget):
+    def __init__(self, node, root):
+        self.node = node
+        Widgets.Widget.__init__(self, root)
+        
+    def get_minsize(self):
+        return self.get_relx(sizes_notime.MINSIZE), self.get_rely(sizes_notime.MINSIZE);
+
+    def get_minsize_abs(self):
+        return sizes_notime.MINSIZE, sizes_notime.MINSIZE;
+
+    def draw(self, displist):
+        x,y,w,h = self.get_box()     
+        
+        # Draw the image.
+        image_filename = self.__get_image_filename()
+        if image_filename != None:
+            try:
+                box = displist.display_image_from_file(
+                    self.__get_image_filename(),
+                    center = 1,
+                    # The coordinates should all be floating point numbers.
+                    coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6)),
+                    scale = -2
+                    )
+            except windowinterface.error:
+                pass
+            displist.fgcolor(TEXTCOLOR)
+            displist.drawbox(box)
+    
+    def __get_image_filename(self):
+        # I just copied this.. I don't know what it does. -mjvdg.
+                
+        channel_type = MMAttrdefs.getattr(self.node, 'project_default_type')
+        if not channel_type:
+            channel_type = 'null'
+        f = os.path.join(self.root.datadir, '%s.tiff'%channel_type)
+        if not os.path.exists(f):
+            f = os.path.join(self.root.datadir, 'null.tiff')
+        return f
 
 class UnseenVerticalWidget(StructureObjWidget):
     HAS_COLLAPSE_BUTTON = 0
