@@ -222,8 +222,27 @@ class Player(PlayerCore, PlayerDialog):
 			state = PLAYING
 		self.setstate(state)
 
-	def setstarttime(self, starttime):
+	def isplaying(self):
+		return self.playing
+
+	def setstarttime(self, starttime, apply=1):
 		self.userstarttime = starttime
+		if self.playing and apply:
+			# XXX: not correct 
+			gototime = starttime
+			seek_node = self.userplayroot # XXX: improve by building doc timing context
+			self.scheduler.setpaused(1)
+			timestamp = self.scheduler.timefunc()
+			sctx = self.scheduler.sctx_list[0]
+			self.scheduler.settime(gototime)
+			x = seek_node
+			path = []
+			while x is not None:
+				path.append(x)
+				x = x.GetSchedParent()
+			path.reverse()
+			sctx.gototime(path[0], gototime, timestamp, path)
+			self.scheduler.setpaused(0)
 
 	def makemenu(self):
 		channels = []
