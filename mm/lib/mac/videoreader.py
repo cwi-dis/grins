@@ -11,7 +11,7 @@ import imgformat
 import os
 sys.path.append('swdev:jack:cmif:pylib:')
 import audio.format
-import urllib
+import MMurl
 import macfs
 
 class VideoFormat:
@@ -36,7 +36,7 @@ class VideoFormat:
 		
 class _Reader:
 	def __init__(self, url):
-		path = urllib.url2pathname(url)
+		path = MMurl.urlretrieve(url)[0]
 		fsspec = macfs.FSSpec(path)
 		fd = Qt.OpenMovieFile(fsspec, 0)
 		self.movie, d1, d2 = Qt.NewMovieFromFile(fd, 0, 0)
