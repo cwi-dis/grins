@@ -518,10 +518,8 @@ class _Window:
 		self._cursor = cursor
 		_setcursor(self._form, cursor)
 
-	def newdisplaylist(self, *bgcolor):
-		if bgcolor != ():
-			bgcolor = bgcolor[0]
-		else:
+	def newdisplaylist(self, bgcolor = None):
+		if bgcolor is None:
 			bgcolor = self._bgcolor
 		return _DisplayList(self, bgcolor)
 
