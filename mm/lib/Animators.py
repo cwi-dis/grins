@@ -4,6 +4,9 @@ __version__ = "$Id$"
 import MMAttrdefs
 import string
 
+# An Animator entity implements the interpolation part
+# of animate elements taking into account the calc mode.
+# It also implements the semantics of the 'accumulate' attr.
 class Animator:
 	def __init__(self, attr, domval, values, dur, mode='linear', times=None, splines=None, transf=None):
 		self._attr = attr
@@ -16,8 +19,7 @@ class Animator:
 
 		# assertions
 		if len(values)==0: raise AssertionError
-		if len(values)==1:
-			if mode != 'discrete': raise AssertionError
+		if len(values)==1 and mode != 'discrete': raise AssertionError
 		if times:
 			if len(times)!=len(values): raise AssertionError
 		if splines and times:
@@ -29,7 +31,7 @@ class Animator:
 		elif mode=='spline': self._inrepol = self._spline
 		else: self._inrepol = self._linear
 
-		# return value transformation (for example int())
+		# return value convertion (for example int())
 		self._transf = transf
 
 		# construct boundaries of time intervals
@@ -54,6 +56,15 @@ class Animator:
 			for p in times:
 				self._efftimes.append(p*dur)	
 
+		# accumulate attribute
+		self._accumulate = 'none'
+
+		# repeat counter
+		self._repeatCounter = 0
+
+		# cashed acc value
+		self.__accValue = 0
+
 	def getDOMValue(self):
 		return self._domval
 
@@ -65,7 +76,10 @@ class Animator:
 			return self._domval
 		if self._dur == 0:
 			return self._values[0]
-		v = self._inrepol(t)
+		if self._accumulate=='sum' and self.__accValue:
+			v = self.__accValue + self._inrepol(t)
+		else:
+			v = self._inrepol(t)
 		if self._transf:
 			return self._transf(v)
 		return v
@@ -112,6 +126,20 @@ class Animator:
 		ix, pdt = self._getinterval(t)
 		return vl[ix] + (vl[ix+1]-vl[ix])*self.bezier(pdt, el[ix])
 
+	def _setAccumulate(self, acc):
+		if acc not in ('none', 'sum'):
+			print 'invalid accumulate value:',acc
+			self._accumulate = 'none'
+		else:
+			self._accumulate = acc
+
+	def repeat(self):
+		self._repeatCounter = self._repeatCounter + 1
+		if self._accumulate=='sum':
+			n = len(self._values)
+			last = self._values[n-1]
+			self.__accValue = self._repeatCounter*last
+
 	# temporary parametric form
 	def bezier(self, t, e = (0,0,1,1)):
 		res = 20
@@ -127,43 +155,78 @@ class Animator:
 				return b*e[1] + c*e[3] + d
 			s = s + step
 
-# return values transformations
+###########################
+# values convertions methods
 def _round(val):
 	return int(val+0.5)
 
-
+###########################
+# a constant value animator specialization
 class ConstAnimator(Animator):
 	def __init__(self, attr, domval, val, dur):
 		Animator.__init__(self, attr, domval, (val,), dur, mode='discrete')
 
+# set element animator specialization
+class SetAnimator(Animator):
+	pass
 
-# SequenceAnimator can be used for example for 2D or 3D positions
-class SequenceAnimator(Animator):	
-	def __init__(self, attr, domval, values, dur, mode='linear', times=None, splines=None):
-		Animator.__init__(self, attr, domval, values, dur, mode, times, splines)
-		self.__animators = []
-		# create an animator for each component
-		# ...
+# animateColor animator specialization
+class ColorAnimator(Animator):
+	pass
 
-	def getValue(self, t):
-		if t<0 or t>self._dur:
-			return self._domval
-		if self._dur == 0:
-			return self._values[0]
-		n = len(self.__animators)
-		l = []
-		for anim in self.__animators:
-			l.append(self.__animators.getValue(t))
-		return tuple(l)
+# animateMotion animator specialization
+class MotionAnimator(Animator):
+	pass
 
 
-# Impl. rem:
-# * on syntax error: we must ignore animation
-# * we need an attr types map
+###########################
+# An EffectiveAnimator is responsible to combine properly
+# all animations of the same attribute and the base value 
+# to give the final display value. 
+# This is the entity that knows and keeps the attr display value
+# taking into account all animations and the dom value.
+# Implements animations composition semantics
+#	'additive' attribute + priorities
+#  and is an entity at a higher level than animators (and thus channels).
+
+# impl rem: 
+# lower if previously started
+# if sync: lower if sync base source else first in doc
+# restart element raises priority but not repeat
+
+class EffectiveAnimator:
+	def __init__(self, attr, domval):
+		self._attr = attr
+		self._domval = domval
+		self._animators = []
+
+
+###########################
+# AnimateContext is an EffectiveAnimator repository
+# We need a well-known repository so that we can find EffectiveAnimators
+# from Animators (channel) context.
+# Implements also operations that apply to all EffectiveAnimator objects
+# and is a document level entity.
+
+class AnimateContext:
+	def __init__(self):
+		self._effAnimators = {}
+
+
+###########################
+# Gen Impl. rem:
+# * implement specializations for elements: set, animateColor, animatePosition
+# * support additive and accumulate attributes
+# * if 'by' and not 'from': additive='sum'
+# * if 'to' and not 'from': additive= <mixed> (start from base but reach to)
+# * restart doc removes all anim effects even frozen val
+# * big remaining: smil-boston timing
+# * on syntax error: we must ignore animation effects but not timing
 # * use f(0) if duration is undefined
 # * ignore keyTimes if dur indefinite
 
 
+###########################
 # Animation semantics parser
 class AnimateElementParser:
 	# args anim and target are MMNode objects
@@ -205,8 +268,10 @@ class AnimateElementParser:
 		times = self.__getInterpolationKeyTimes() 
 		splines = self.__getInterpolationKeySplines()
 
-		
-		# 3. Return expicitly any special animators
+		# 1+: force first value display (fulfil: use f(0) if duration is undefined)
+		if not dur: dur=0
+
+		# 3. Return explicitly animators for special attributes
 		## Begin temp grins extensions
 		# position animation
 		if self.__grinsext:
