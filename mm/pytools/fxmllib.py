@@ -404,7 +404,7 @@ class XMLParser:
             seenstates[s] = 1
             del states[0]
             for tag in dfa[s].keys():
-                if possibles.has_key(tag):
+                if tag and possibles.has_key(tag):
                     self.__error("non-deterministic content model for `%s'" % tagname, data, i, fatal = 0)
                 possibles[tag] = 1
             for s in dfa[s].get('', []):
@@ -1245,8 +1245,6 @@ class TestXMLParser(XMLParser):
         print 'reading %s' % name
         try:
             import urllib
-            if type(syslit) is type(u'a'):
-                syslit = syslit.encode('latin-1')
             u = urllib.urlopen(syslit)
             data = u.read()
             u.close()
@@ -1317,8 +1315,6 @@ class CanonXMLParser(XMLParser):
             return self.__cache[publit]
         try:
             import urllib
-            if type(syslit) is type(u'a'):
-                syslit = syslit.encode('latin-1')
             u = urllib.urlopen(syslit)
             data = u.read()
             u.close()
@@ -1370,8 +1366,6 @@ class CheckXMLParser(XMLParser):
             return self.__cache[publit]
         try:
             import urllib
-            if type(syslit) is type(u'a'):
-                syslit = syslit.encode('latin-1')
             u = urllib.urlopen(syslit)
             data = u.read()
             u.close()
