@@ -58,13 +58,13 @@ class AttrCtrl:
 		pass
 
 	def enableApply(self,flag=-1):
-		if self._wnd._form._prsht:
+		if self._wnd._form:
 			if flag==-1:
 				if self._attr.getcurrent()!=self.getvalue():
 					flag=1
 				else:
 					flag=0	
-			self._wnd._form._prsht.enableApply(flag)
+			self._wnd._form.enableApply(flag)
 
 # temp stuff not safe
 def atoft(str):
@@ -1793,6 +1793,7 @@ class AttrEditForm(GenFormView):
 		self._a2p={}
 		self._pages=[]
 		self._tid=None
+		self._nattrchanged=0
 
 	# Creates the actual OS window
 	def createWindow(self,parent):
@@ -2005,6 +2006,17 @@ class AttrEditForm(GenFormView):
 			if a.getname()==name:
 				return a
 		return None
+
+	def enableApply(self,flag):
+		if flag!=0: 
+			self._nattrchanged=self._nattrchanged+1
+		else:
+			self._nattrchanged=self._nattrchanged-1
+		self._nattrchanged=max(0,self._nattrchanged)
+		if self._nattrchanged>0 and self._prsht:
+			self._prsht.enableApply(1)
+		elif self._prsht:
+			self._prsht.enableApply(0)
 
 	# cmif specific interface
 	# Called by the core system to get a value from the list
