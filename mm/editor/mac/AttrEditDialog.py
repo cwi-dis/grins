@@ -1372,6 +1372,7 @@ class FadeoutTabPage(MultiTabPage, ColorTabPage):
 		
 class AreaTabPage(MultiDictTabPage):
 	"""Not useable on its own: subclassed further down"""
+	ITEM_WHOLE = None	# Possibly overriden by subclasses
 			
 	def init_controls(self, item0):
 		rv = MultiDictTabPage.init_controls(self, item0)
@@ -1386,6 +1387,8 @@ class AreaTabPage(MultiDictTabPage):
 			return 1
 		elif item-self.item0 in self._xywhfields:
 			self._labels_to_preview()
+			if self.ITEM_WHOLE:
+				self.attreditor._setbutton(self.item0+self.ITEM_WHOLE, 0)
 			return 1
 		elif item-self.item0 in self._otherfields:
 			return 1
@@ -1450,6 +1453,8 @@ class AreaTabPage(MultiDictTabPage):
 		self.attreditor._setlabel(self.item0+self.ITEM_Y, `y`)
 		self.attreditor._setlabel(self.item0+self.ITEM_W, `w`)
 		self.attreditor._setlabel(self.item0+self.ITEM_H, `h`)
+		if self.ITEM_WHOLE:
+			self.attreditor._setbutton(self.item0+self.ITEM_WHOLE, 0)
 		
 	def _getlabelpixel(self, item):
 		str = self.attreditor._getlabel(self.item0+item)
