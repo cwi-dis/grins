@@ -30,14 +30,14 @@ class ShellChannel(Channel):
 			print 'ShellChannel.playdone('+`self`+')'
 		if self.pid:
 			try:
-				pid, sts = os.waitpid(self.pid, 1)
+				pid, sts = os.waitpid(self.pid, 0100)
 			except os.error, msg:
 				print 'waitpid:', msg
 				pid, sts = 0, 0
 			if pid == 0:
 				# Try again in a second
 				self._qid = self._scheduler.enter(1, 0, \
-					self.playdone, 0)
+					self.playdone, (0,))
 				return
 			if sts <> 0:
 				print 'Exit status:', hex(sts)
