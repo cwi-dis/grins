@@ -1257,12 +1257,12 @@ class _Window:
 		headersize = decomp.ReadHeader(header)
 		xsize = decomp.GetParam(CL.IMAGE_WIDTH)
 		ysize = decomp.GetParam(CL.IMAGE_HEIGHT)
-		if _is_entry_indigo:
-			original_format = CL.RGB
-			zsize = 1
-		else:
-			original_format = CL.RGBX
-			zsize = 4
+##		if _is_entry_indigo:		-- doesn't seem to work
+##			original_format = CL.RGB
+##			zsize = 1
+##		else:
+		original_format = CL.RGBX
+		zsize = 4
 		params = [CL.ORIGINAL_FORMAT, original_format, \
 			  CL.ORIENTATION, CL.BOTTOM_UP, \
 			  CL.FRAME_BUFFER_SIZE, \
