@@ -475,6 +475,7 @@ class NodeWrapper(Wrapper):
 			('clipbegin',), ('clipend',),	# More time stuff
 			('top',), ('height',), ('bottom',),
 			('left',), ('width',), ('right',),
+			('scale',),
 			('fill',), ('fillDefault',), ('erase',),
 			('syncBehavior',), ('syncBehaviorDefault',),
 			'title', ('abstract',), ('alt',), ('longdesc',), ('readIndex',), 'author',
@@ -548,6 +549,7 @@ class NodeWrapper(Wrapper):
 					namelist.append('top')
 					namelist.append('height')
 					namelist.append('bottom')
+					namelist.append('scale')
 				
 			# specific time preference
 			namelist.append('immediateinstantiationmedia')
@@ -1278,6 +1280,8 @@ class AttrEditor(AttrEditorDialog):
 				C = FileAttrEditorField
 			elif displayername == 'font':
 				C = FontAttrEditorField
+			elif displayername == 'timelist':
+				C = TimelistAttrEditorField
 			elif displayername == 'color':
 				C = ColorAttrEditorField
 			elif displayername == 'csscolor':
@@ -1814,6 +1818,49 @@ class TupleAttrEditorField(AttrEditorField):
 			return value
 		return AttrEditorField.valuerepr(self, value)
 
+class TimelistAttrEditorField(AttrEditorField):
+	type = 'text'
+
+	def valuerepr(self, value):
+		s = []
+		for a in value:
+			if a.wallclock is not None:
+				yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = a.wallclock
+				if yr is not None:
+					date = '%04d-%02d-%02dT' % (yr, mt, dy)
+				else:
+					date = ''
+				time = '%02d:%02d:%05.2f' % (hr, mn, sc)
+				if tzhr is not None:
+					tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
+				else:
+					tz = ''
+				s = s.append(date + time + tz)
+				continue
+			if a.marker is not None:
+				s.append('')
+				continue
+			if a.delay is None:
+				s.append('indefinite')
+				continue
+			if a.channel is not None:
+				s.append('')
+				continue
+			if a.accesskey is not None:
+				s.append('accessKey(%s)' % a.accesskey)
+				continue
+			if a.srcnode == 'syncbase':
+				s.append('%gs' % a.delay)
+			elif a.srcnode == 'prev':
+				s.append('prev.%s+%gs' % (a.event, a.delay))
+			else:
+				s.append('')
+				continue
+		return string.join(s, '\n')
+
+	def parsevalue(self, str):
+		return []
+
 import colors
 class ColorAttrEditorField(TupleAttrEditorField):
 	type = 'color'
@@ -1981,8 +2028,8 @@ class UnitsAttrEditorField(PopupAttrEditorFieldNoDefault):
 		return self.__values[self.__valuesmap.index(value)]
 
 class ScaleAttrEditorField(PopupAttrEditorFieldNoDefault):
-	__values = ['actual size', 'show whole image', 'fill whole region']
-	__valuesmap = [1, 0, -1]
+	__values = ['actual size', 'show whole image', 'fill whole region', 'show whole image in whole region']
+	__valuesmap = [1, 0, -1, -3]
 
 	# Choose from a list of unit types
 	def getoptions(self):
@@ -2162,7 +2209,7 @@ class QualityAttrEditorField(PopupAttrEditorFieldNoDefault):
 		return self.__values[self.__valuesmap.index(value)]
 
 class TransitionAttrEditorField(PopupAttrEditorField):
-	default = 'None'
+	default = 'No transition'
 
 	def getoptions(self):
 		list = self.wrapper.context.transitions.keys()
@@ -2170,7 +2217,9 @@ class TransitionAttrEditorField(PopupAttrEditorField):
 		return [self.default] + list
 		
 	def parsevalue(self, str):
-		if type(str) == type(''):
+		if str == self.default:
+			return None
+		if type(str) is type(''):
 			return (str,)
 		return str
 		
