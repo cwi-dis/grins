@@ -23,8 +23,6 @@ class TemporalView(TemporalViewDialog):
 		self.just_selected = None	# prevents the callback from the editmanager from doing too much work.
 		
 		self.time = 0		# Currently selected "time" - in seconds.
-		self.zoomfactorx = 0	# Scale everything to this! Done in the Widgets for this
-					# node rather than the geometric primitives!
 		self.__add_commands()
 		self.showing = 0
 		
@@ -32,6 +30,9 @@ class TemporalView(TemporalViewDialog):
 		self.scene = None	# This is the collection of widgets which define the behaviour of the geo privs.
 		self.editmgr = self.root.context.editmgr
 		self.recurse_lock = 0	# a lock to prevent recursion.
+
+		self.zoomfactorx = 1.0	# Scale everything to this! Done in the Widgets for this
+					# node rather than the geometric primitives!
 
 
 	def destroy(self):
@@ -48,6 +49,8 @@ class TemporalView(TemporalViewDialog):
 			COLLAPSEALL(callback = (self.expandallcall, (0,))),
 			PLAYNODE(callback = (self.playcall, ())),
 			PLAYFROM(callback = (self.playfromcall, ())),
+			CANVAS_ZOOM_IN(callback = (self.zoomincall, ())),
+			CANVAS_ZOOM_OUT(callback = (self.zoomoutcall, ())),
 			]
 		self.navigatecommands = [
 			TOPARENT(callback = (self.toparent, ())),
@@ -103,7 +106,7 @@ class TemporalView(TemporalViewDialog):
 		if self.is_showing():
 			TemporalViewDialog.show(self)
 			return
-		self.showing = 1
+ 		self.showing = 1
 		self.init_scene()
 		self.editmgr.register(self, 1)
 		title = 'Channel View (' + self.toplevel.basename + ')'
@@ -158,7 +161,7 @@ class TemporalView(TemporalViewDialog):
 		self.draw()
 
 	def recalc(self):
-		self.scene.recalc()
+		self.scene.recalc(zoom=self.zoomfactorx)
 
 	def get_geometry(self):
 		# (?!) called when this window is saved.
@@ -481,3 +484,11 @@ class TemporalView(TemporalViewDialog):
 
 	def pasteundercall(self):
 		if self.focusobj: self.focusobj.pasteundercall()
+
+	def zoomincall(self):
+		self.zoomfactorx = self.zoomfactorx * 2
+		self.redraw()
+
+	def zoomoutcall(self):
+		self.zoomfactorx = self.zoomfactorx / 2
+		self.redraw()

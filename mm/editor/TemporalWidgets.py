@@ -168,7 +168,8 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		t = 0
 		MMNodeWidget.moveto(self, (l,t,r,b))
 
-	def recalc(self):
+	def recalc(self, zoom=1):
+		print "DEBUG: zoom is: ", zoom
 		t = 2
 		l = 2
 		r = 2 + CHANNELWIDTH
@@ -185,7 +186,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		self.channeltree.recalc()
 
 		# nwidth is the needed width for this.
-		nwidth = self.mainnode.get_width(self.timescale)
+		nwidth = self.mainnode.get_width(self.timescale) * zoom
 		# Make it a reasonable value.
 		#while nwidth > 2000:
 		#	nwidth = nwidth / 2
