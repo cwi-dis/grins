@@ -43,7 +43,8 @@ class Window:
 		self._curcursor = ''
 
 		self._isvisible = 1
-		self._convcolor = None
+
+		self._convbgcolor = None
 
 	def create(self, parent, coordinates, units, z=0, transparent=0):
 		self.__setparent(parent)
@@ -57,11 +58,11 @@ class Window:
 	def fgcolor(self, color):
 		r, g, b = color
 		self._fgcolor = r, g, b
-		self._convcolor = None
 
 	def bgcolor(self, color):
 		r, g, b = color
 		self._bgcolor = r, g, b
+		self._convbgcolor = None
 
 	def newdisplaylist(self, bgcolor = None):
 		if bgcolor is None:
@@ -923,10 +924,10 @@ class SubWindow(Window):
 	def __paintOnDDS(self, dds, rel=None):
 		x, y, w, h = self.getwindowpos(rel)
 		if self._transparent == 0:
-			if self._convcolor == None:
+			if self._convbgcolor == None:
 				r, g, b = self._bgcolor
-				self._convcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
-			dds.BltFill((x, y, x+w, y+h), self._convcolor)
+				self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+			dds.BltFill((x, y, x+w, y+h), self._convbgcolor)
 		if self._active_displist:
 			hdc = dds.GetDC()
 			dc = win32ui.CreateDCFromHandle(hdc)
@@ -1043,14 +1044,13 @@ class SubWindow(Window):
 				break
 		else:
 			parent._subwindows.append(self)
-		self.update()
+		self._parent.update()
 	
 	def updatebgcolor(self, color):
-		r, g, b = color
-		self._bgcolor = r, g, b
+		self.bgcolor(color)
 		if self._active_displist:
 			self._active_displist.updatebgcolor(color)
-			self._parent.update()
+		self.update()
 
 
 	#
