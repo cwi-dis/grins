@@ -91,6 +91,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		#self.__duration = node.GetAttrDef('duration', None)
 		self.__duration = self.__animator.getTimeManipulatedDur()
 
+		self.event('beginEvent')
 		self.__startAnimate()
 
 	def stopplay(self, node):
