@@ -1292,8 +1292,6 @@ class AnimateElementParser:
 			x = x - dx
 			y = y - dy
 			retstr = retstr + '%d, %d;' % (x, y)
-			if pt!=None:
-				coords.append(pt)
 		if retstr:
 			return retstr[:-1]
 		return values
