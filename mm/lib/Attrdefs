@@ -29,9 +29,6 @@
 
 (abstract (string) '' 'Abstract' default 'A brief description of the contents (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
-(align (string) 'left' 'Alignment' default
-	'Alignment of short datasets' channel (cmif))
-
 (alt (string) '' 'Alternate text' default
 	'Alternate text for media object' raw (g2 qt smil10 smil2 cmif snap))
 
@@ -42,9 +39,6 @@
 	'Time needed to arm this event before displaying' raw (g2 qt smil10 smil2 cmif snap))
 
 (author (string) '' 'Author' default 'Author (informational only)' raw (g2 qt smil10 smil2 cmif snap))
-
-(axis (tuple (float) (float)) (-1.0 -1.0) 'Axis' default
-	'Draw axis if >0, specifies tick-interval' channel (cmif))
 
 (bag_index (name) undefined 'Choice index' childnodename
 	'Name of child auto-started when choice node plays' normal (cmif))
@@ -148,9 +142,6 @@
 (font (string) 'Times-Roman' 'Font' font
 	'Font used to display text' channel (cmif))
 
-(gtype (string) 'line' 'Graphtype' default
-	'Type of graph: bar, line, hline' channel (cmif))
-
 (hicolor (tuple (int) (int) (int)) (255 0 0) 'Highlight color' color
 	'Color used for highlighted anchors in window' channel (cmif))
 
@@ -184,17 +175,8 @@
 (loop (float) 1 'Repeat count' default
 	'Number of times the node should repeat' raw (g2 qt smil10 smil2 cmif))
 
-(macprog (string) '' 'Mac program signature' default
-	'4-byte application signature (mac only)' channel (cmif))
-
 (max (float) -1.0 'Maximum duration' default
 	'Maximum duration of a node or subtree' normal (smil2 snap))
-
-(mcgroup (string) '' 'Multicast group' default
-	'IP Multicast group address to listen to' raw (cmif))
-
-(mcttl (int) 3 'Multicast TTL' default
-	'TTL for outgoing multicast messages' raw (cmif))
 
 (mediaRepeat (enum strip preserve) preserve 'Media repeat' default
 	'Whether to obey or ignore intrinsic repeat in media' raw (cmif smil2))
@@ -225,9 +207,6 @@
 
 (player_winsize (tuple (float) (float)) (83.544921875 46.09375) 'Player winsize' hidden
 	 'Window size for player control panel' raw (g2 qt smil10 smil2 cmif snap))
-
-(port (int) 7000 'UDP port' default
-	'UDP port for external hyperjumps' raw (cmif))
 
 (pointsize (float) 0 'Point size' default
 	'Point size of text displayed in window' channel (cmif))
@@ -417,14 +396,8 @@
 (visible (bool) 1 'Channel visibility' default
 	'Are nodes played to the channel actually rendered?' raw (cmif))
 
-(wanturl (bool) 0 'Pass URL' default
-	'Pass URL to program (otherwise pass filename)' channel (cmif))
-	
 (winpos (tuple (float) (float)) (-1 -1) 'Window position' hidden
 	'Initial window position (x, y)' raw (g2 qt smil10 smil2 cmif))
-
-(winprog (string) '' 'Windows program name' default
-	'Application name (windows only)' channel (cmif))
 
 (winsize (tuple (float) (float)) (0 0) 'Window size' default
 	'Initial window size' raw (g2 qt smil10 cmif))
