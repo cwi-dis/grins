@@ -42,10 +42,10 @@ class REMatch
 	int end(int i) const 
 		{assert(m_isvalid && i<m_ngroups); return m_pmatch[i+1].rm_eo;}
 
-	std::string getString(const char* pstr) const 
+	std::string get_group(const char* pstr) const 
 		{return std::string(pstr+begin(), pstr+end());}
 
-	std::string getString(const char* pstr, int i) const 
+	std::string get_group(const char* pstr, int i) const 
 		{return std::string(pstr+begin(i), pstr+end(i));}
 
 	// RE access 
