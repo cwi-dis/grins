@@ -1,3 +1,4 @@
+from debug import debug
 from Channel import Channel
 import string
 import os
