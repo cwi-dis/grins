@@ -128,7 +128,7 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, CASCADE, 'Region', (
 #			(FLAG_PRO, ENTRY, 'New node...', 'K', NEW_AFTER),
-			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_SWITCH),
+			(FLAG_ALL, ENTRY, 'Within', None, NEW_REGION),
 		)),
 		(FLAG_BOSTON, ENTRY, 'TopLayout', 'T', NEW_TOPLAYOUT),
 		(FLAG_PRO, SEP,),
