@@ -721,7 +721,7 @@ class FileDialog:
 				ret = self.cb_cancel()
 				if ret:
 					if type(ret) is StringType:
-						showmessage(ret)
+						showmessage(ret, parent = self)
 					must_close = FALSE
 					return
 		finally:
@@ -742,21 +742,21 @@ class FileDialog:
 			return
 		dir, file = os.path.split(filename)
 		if not os.path.isdir(dir):
-			showmessage("path to file `%s' does not exist or is not a directory" % filename)
+			showmessage("path to file `%s' does not exist or is not a directory" % filename, parent = self)
 			return
 		if existing:
 			if not os.path.exists(filename):
-				showmessage("file `%s' does not exist" % filename)
+				showmessage("file `%s' does not exist" % filename, parent = self)
 				return
 		else:
 			if os.path.exists(filename):
-				showmessage("file `%s' exists, use anyway?" % filename, mtype = 'question', callback = (self._confirm_callback, (filename,)))
+				showmessage("file `%s' exists, use anyway?" % filename, mtype = 'question', callback = (self._confirm_callback, (filename,)), parent = self)
 				return
 		if self.cb_ok:
 			ret = self.cb_ok(filename)
 			if ret:
 				if type(ret) is StringType:
-					showmessage(ret)
+					showmessage(ret, parent = self)
 				return
 		self.close()
 
@@ -765,7 +765,7 @@ class FileDialog:
 			ret = self.cb_ok(filename)
 			if ret:
 				if type(ret) is StringType:
-					showmessage(ret)
+					showmessage(ret, parent = self)
 				return
 		self.close()
 
@@ -826,7 +826,7 @@ class SelectionDialog:
 			return
 		ret = self.NomatchCallback(call_data.value)
 		if ret and type(ret) is StringType:
-			showmessage(ret, mtype = 'error')
+			showmessage(ret, mtype = 'error', parent = self)
 
 	def _ok_callback(self, widget, client_data, call_data):
 		if _in_create_box or self.is_closed():
@@ -839,7 +839,8 @@ class SelectionDialog:
 			ret = func(call_data.value)
 			if ret:
 				if type(ret) is StringType:
-					showmessage(ret, mtype = 'error')
+					showmessage(ret, mtype = 'error',
+						    parent = self)
 				return
 		self.close()
 
@@ -854,7 +855,8 @@ class SelectionDialog:
 			ret = func()
 			if ret:
 				if type(ret) is StringType:
-					showmessage(ret, mtype = 'error')
+					showmessage(ret, mtype = 'error',
+						    parent = self)
 				return
 		self.close()
 
@@ -2274,7 +2276,10 @@ class Window(_WindowHelpers, _MenuSupport):
 				if hasattr(parent, '_main'):
 					parent = parent._main
 					break
-				parent = parent._parent
+				if hasattr(parent, '_parent'):
+					parent = parent._parent
+				else:
+					parent = toplevel
 			for key, val in wattrs.items():
 				attrs[key] = val
 			self._form = parent.CreateFormDialog('grabDialog', attrs)
