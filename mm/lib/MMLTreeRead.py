@@ -127,6 +127,13 @@ class MMLParser(xmllib.XMLParser):
 		self.AddAttrs(node, attributes)
 		self.__container._addchild(node)
 		node.__mediatype = mediatype
+		try:
+			channel = attributes['loc']
+		except KeyError:
+			self.syntax_error(self.lineno, 'node without loc attribute')
+		else:
+			if not self.__channels.has_key(channel):
+				self.syntax_error(self.lineno, 'unknown loc')
 		if self.__in_a:
 			# deal with hyperlink
 			href, ltype, id = self.__in_a
@@ -214,6 +221,8 @@ class MMLParser(xmllib.XMLParser):
 			if mediatype in ('image', 'video', 'text'):
 				# deal with channel with window
 				if not self.__channels.has_key(channel):
+					self.warning('no tuner %s in layout' %
+						     channel)
 					self.__in_layout = LAYOUT_MML
 					self.start_tuner({'loc': channel})
 					self.__in_layout = LAYOUT_NONE
@@ -299,6 +308,7 @@ class MMLParser(xmllib.XMLParser):
 	# methods for start and end tags
 
 	# mml contains everything
+	mml_attributes = ['lipsync', 'id']
 	def start_mml(self, attributes):
 		if self.__seen_mml:
 			self.error('more than 1 mml tag')
@@ -314,12 +324,14 @@ class MMLParser(xmllib.XMLParser):
 
 	# head/body sections
 
+	head_attributes = ['id']
 	def start_head(self, attributes):
 		self.__in_head = 1
 
 	def end_head(self):
 		self.__in_head = 0
 
+	body_attributes = ['id']
 	def start_body(self, attributes):
 		if not self.__in_mml:
 			self.error('body not in mml')
@@ -332,6 +344,7 @@ class MMLParser(xmllib.XMLParser):
 
 	# layout section
 
+	layout_attributes = ['type']
 	def start_layout(self, attributes):
 		if not self.__in_mml:
 			self.error('layout not in mml')
@@ -345,6 +358,7 @@ class MMLParser(xmllib.XMLParser):
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
 
+	tuner_attributes = ['loc', 'x', 'y', 'z', 'width', 'height']
 	def start_tuner(self, attributes):
 		if not self.__in_layout:
 			self.error('tuner not in layout')
@@ -409,11 +423,13 @@ class MMLParser(xmllib.XMLParser):
 
 	# container nodes
 
+	par_attributes = ['id', 'endsync', 'lipsync', 'pace', 'dur', 'begin', 'end']
 	def start_par(self, attributes):
 		self.NewContainer('par', attributes)
 
 	end_par = EndContainer
 
+	seq_attributes = ['id', 'dur', 'begin', 'end']
 	def start_seq(self, attributes):
 		self.NewContainer('seq', attributes)
 
@@ -424,6 +440,7 @@ class MMLParser(xmllib.XMLParser):
 
 	end_bag = EndContainer
 
+	switch_attributes = ['id']
 	def start_switch(self, attributes):
 		if not self.__in_head:
 			self.NewContainer('alt', attributes)
@@ -434,36 +451,42 @@ class MMLParser(xmllib.XMLParser):
 
 	# media items
 
+	text_attributes = ['id', 'href', 'type', 'loc', 'dur', 'begin', 'end']
 	def start_text(self, attributes):
 		self.NewNode('text', attributes)
 
 	def end_text(self):
 		pass
 
+	audio_attributes = text_attributes
 	def start_audio(self, attributes):
 		self.NewNode('audio', attributes)
 
 	def end_audio(self):
 		pass
 
+	img_attributes = text_attributes
 	def start_img(self, attributes):
 		self.NewNode('image', attributes)
 
 	def end_img(self):
 		pass
 
+	video_attributes = text_attributes
 	def start_video(self, attributes):
 		self.NewNode('video', attributes)
 
 	def end_video(self):
 		pass
 
+	cmif_cmif_attributes = text_attributes
 	def start_cmif_cmif(self, attributes):
 		self.NewNode('cmif_cmif', attributes)
 
 	def end_cmif_cmif(self):
 		pass
 
+	cmif_shell_attributes = text_attributes
 	def start_cmif_shell(self, attributes):
 		self.NewNode('cmif_shell', attributes)
 
@@ -472,6 +495,7 @@ class MMLParser(xmllib.XMLParser):
 
 	# linking
 
+	a_attributes = ['href', 'show']
 	def start_a(self, attributes):
 		try:
 			href = attributes['href']
@@ -501,6 +525,7 @@ class MMLParser(xmllib.XMLParser):
 	def end_a(self):
 		self.__in_a = None
 
+	hlink_attributes = ['show']
 	def start_hlink(self, attributes):
 		if self.__in_hlink:
 			self.syntax_error(self.lineno, 'recursive hlink')
@@ -573,6 +598,7 @@ class MMLParser(xmllib.XMLParser):
 		self.__links.append((snode, (sid, stype, sargs), dattr['href'],
 				     self.__hlink_type))
 
+	anchor_attributes = ['href', 'role', 'time', 'shape', 'coords']
 	def start_anchor(self, attributes):
 		if not self.__in_hlink:
 			self.error('anchor not in hlink')
