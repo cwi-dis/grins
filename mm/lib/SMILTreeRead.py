@@ -2650,6 +2650,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ch['type'] = chtype = 'layout'
 			ch['chsubtype'] = chsubtype
 			self.__fillchannel(ch, attrdict, chtype)
+			if attrdict.get('isDefault'):
+				ctx.setDefaultRegion(ch)
 				
 
 	def FixLayouts(self):

@@ -440,6 +440,9 @@ class TreeHelper:
 					# No region defined, return the default region
 					self.hasDefaultRegion = 1
 					return self._context.context.getDefaultRegion()
+			elif region.isDefault():
+				self.hasDefaultRegion = 1
+				return region
 			else:
 				# the region may be moved from the document to the clipboard. In that case,
 				# we don't show the media in the default region

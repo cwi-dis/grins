@@ -776,7 +776,10 @@ class MMNodeContext:
 			defaultRegion['base_window'] = defaultViewport.name
 			defaultRegion['isDefault'] = 1
 			defaultRegion.addOwner(OWNER_DOCUMENT)
-			self.__defaultRegion = defaultRegion
+			self.setDefaultRegion(defaultRegion)
+
+	def setDefaultRegion(self, region):
+		self.__defaultRegion = region
 		
 	# create a new linked SMILCssResolver
 	# it uses the context instance since it absorbed css attrs

@@ -473,9 +473,10 @@ def getdescr(writer, node, attr):
 	return node.GetRawAttrDef(attr, None) or None
 
 def getregionname(writer, node):
-	ch = node.GetDefinedChannel()
-	if not ch or ch.isDefault():
+	from MMTypes import mediatypes
+	if node.type not in mediatypes:
 		return None
+	ch = node.GetChannel()
 	return writer.ch2name[ch.GetLayoutChannel()]
 
 def getdefaultregion(writer, node):
@@ -1839,7 +1840,7 @@ class SMILWriter(SMIL):
 			return
 
 		# don't write the default region
-		if ch.isDefault():
+		if ch.isDefault() and not self.context.hasDefaultRegion(self.root):
 			return
 
 		attrlist = [('id', self.ch2name[ch])]
