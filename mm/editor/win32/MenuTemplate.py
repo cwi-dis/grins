@@ -253,7 +253,7 @@ MENUBAR=(
 ##			)),
 		(FLAG_CMIF, SEP,),
 ##		(FLAG_ALL, DYNAMICCASCADE, '&Layout navigation', LAYOUTS),
-		(FLAG_ALL, TOGGLE, 'Show A&ll Properties', None, SHOWALLPROPERTIES),
+#		(FLAG_ALL, TOGGLE, 'Show A&ll Properties', None, SHOWALLPROPERTIES),
 		)
 	 ),
  
