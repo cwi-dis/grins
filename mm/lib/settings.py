@@ -13,6 +13,8 @@ G2 = 'g2'
 
 # Defaults:
 default_settings = {
+	'license': 'A-XEKA-Q4BBB-DA-DDDH',
+
 	'lightweight': 0,		# Lightweight version
 
 	'system_bitrate': 14400,	# Slow modem
@@ -23,7 +25,7 @@ default_settings = {
 ##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
 	'system_required': (),		# Needs special handling in match...
-	'license': '',
+##	'license': '',
 	'license_user' : '',
 	'license_organization' : '',
 	'compatibility': G2,		# Try to be compatible with...
