@@ -80,7 +80,7 @@ class ChildFrame(window.MDIChildWnd):
 		style = win32con.WS_CHILD | win32con.WS_OVERLAPPEDWINDOW
 		self.CreateWindow(None, title, style, rect, parent)
 		if maximize and parent:parent.maximize(self)
-		#self.HookMessage(self.onMdiActivate,win32con.WM_MDIACTIVATE)
+		self.HookMessage(self.onMdiActivate,win32con.WM_MDIACTIVATE)
 		self.ShowWindow(win32con.SW_SHOW)
 
 
@@ -96,8 +96,16 @@ class ChildFrame(window.MDIChildWnd):
 		(flags,showCmd,ptMinPosition,ptMaxPosition,rcNormalPosition)=\
 			self.GetWindowPlacement()
 		return rcNormalPosition
-
-
+	
+	def onMdiActivate(self,params):
+		msg=win32mu.Win32Msg(params)
+		hwndChildDeact = msg._wParam; # child being deactivated 
+		hwndChildAct = msg._lParam; # child being activated
+		if hwndChildAct == self.GetSafeHwnd():
+			self._view.activate()
+		elif hwndChildDeact == self.GetSafeHwnd():
+			self._view.deactivate()
+ 
 	# Creates and activates the view 	
 	# create view (will be created by default if)
 	def OnCreateClient(self, cp, context):
