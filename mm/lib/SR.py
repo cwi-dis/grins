@@ -49,5 +49,5 @@ def evlist2string(evlist):
 
 def sr2string((prereq, actions)):
 	return evlist2string(prereq) + ':\t' + evlist2string(actions)
-	
-	
+
+
