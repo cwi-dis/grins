@@ -66,7 +66,6 @@ def WriteFile(root, filename):
 	fp = IndentedFile(open(filename, 'w'))
 	writer = SMILEWriter(root, fp, filename)
 	writer.write()
-	fp.write('\n')
 	fp.close()
 
 #
