@@ -1,6 +1,9 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
+* Optimise the structure view.
+* Disable the 'thing' field when it's a wallclock.
+
 * Editing a wallclock attribute.
 * Get rid of all the debug messages.
 * markers.
@@ -8,6 +11,8 @@ TODO for Michael :-)
 * Editing events directly from the Structure view.
 * Events seem to be a bit wrong in the structure view! Test them.
 * Test if editing the document makes the events stay properly.
+
+* Selecting events from the Event editor somehow.
 
 * Undo - doesn't work with drag and drop in the StructureView.
 
@@ -19,10 +24,5 @@ TODO for Michael :-)
 	- delete
 	- properties
 	- multiple focus issues.
-
-* Errors in the player - make them selectable in a menu somewhere.
-
-* Show whether a node is empty or not (in the Hierarchy View?).
-* Bug - right-clicking on a node first doesn't work.
 
 * Structure widgets optimisation - make them constructed with MMNodes.

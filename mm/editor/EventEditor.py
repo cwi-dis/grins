@@ -179,14 +179,14 @@ class EventStruct:
 			return "marker('"+marker+"')"
 		elif c == 'wallclock':
 			if s is None and self._setwallclock:
-				wc = self._setwallclock
+				wc = SMILTreeWrite.wallclock2string(self._setwallclock)
 			elif s is None and not self._setwallclock:
 				wc = ""
 			elif s.wallclock:
-				wc = s.wallclock
+				wc = SMILTreeWrite.wallclock2string(s.wallclock)
 			else:
 				wc = ""
-			return "wallclock( "+wc+" )"
+			return wc
 
 		# Now for the offset things
 		elif c == 'node':
@@ -326,9 +326,9 @@ class EventStruct:
 		elif c == 'wallclock':
 			name = "Wallclock:"
 			if self._setwallclock:
-				thing = self._setwallclock
-			elif isinstance(self._syncarc, MMNode.MMSyncArc):
-				thing = self._syncarc.wallclock
+				thing = SMILTreeWrite.wallclock2string(self._setwallclock)
+			elif isinstance(self._syncarc, MMNode.MMSyncArc) and self._syncarc.wallclock:
+				thing = SMILTreeWrite.wallclock2string(self._syncarc.wallclock)
 			else:
 				thing = ""
 			#return ("Clock time:", self._syncarc.wallclock, 0, 0)
@@ -346,8 +346,6 @@ class EventStruct:
 			self._setnode = newthing
 		elif c == 'region':
 			self._setregion = newthing
-		elif c == 'wallclock':
-			self._setwallclock = newthing
 		elif c == 'accesskey':
 			self._setkey = newthing
 		elif c in CAUSES:
@@ -377,3 +375,12 @@ class EventStruct:
 			return None
 	def set_repeat(self, repeat):
 		self._setrepeat = repeat
+	def get_wallclock(self):
+		if self._setwallclock:
+			return self._setwallclock
+		elif self._syncarc.wallclock:
+			return self._syncarc.wallclock
+		else:
+			return (None, None, None, 12, 0, 0.0, None, None, None)
+	def set_wallclock(self, value):
+		self._setwallclock = value

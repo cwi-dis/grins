@@ -203,6 +203,7 @@
 #define IDI_ICON_EXCLCLOSED             406
 #define IDD_EDITATTR_EVENTLIST          407
 #define IDD_ASSETSBAR                   408
+#define IDD_WALLCLOCKPOPUP              409
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -269,6 +270,7 @@
 #define IDC_RADIO6                      1069
 #define IDC_EDIT7                       1070
 #define IDC_EDIT9                       1071
+#define IDC_SC                          1071
 #define IDC_LIST1                       1072
 #define IDC_LIST3                       1073
 #define IDC_LEFT_MENU                   1074
@@ -310,10 +312,14 @@
 #define IDC_ATTR_INFO                   1134
 #define IDUC_RESET1                     1136
 #define IDC_EDIT12                      1137
+#define IDC_TZMN                        1137
 #define IDC_EDIT3                       1138
 #define IDC_EDIT4                       1139
+#define IDC_DY                          1139
 #define IDC_EDIT6                       1140
+#define IDC_HR                          1140
 #define IDC_EDIT8                       1141
+#define IDC_MN                          1141
 #define IDC_EDIT10                      1142
 #define IDC_EDIT14                      1143
 #define IDC_EDIT15                      1144
@@ -450,6 +456,7 @@
 #define IDC_EVENTCAUSE1                 1296
 #define IDC_EVENTTYPE                   1297
 #define IDC_EDIT11                      1298
+#define IDC_TZHR                        1298
 #define IDC_EDIT13                      1299
 #define IDC_81                          1300
 #define IDC_LAYOUT_SHOW_ALLREGIONS      1301
@@ -498,6 +505,12 @@
 #define IDC_EVENTLASSOO                 1347
 #define IDC_RADIO_ALL                   1348
 #define IDC_RADIO_UNUSED                1349
+#define IDC_RESULT                      1350
+#define IDC_YR                          1351
+#define IDC_CBDATE                      1353
+#define IDC_CBTZ                        1354
+#define IDC_TZSG                        1355
+#define IDC_MT                          1356
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -584,9 +597,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        409
+#define _APS_NEXT_RESOURCE_VALUE        411
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1350
+#define _APS_NEXT_CONTROL_VALUE         1357
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
