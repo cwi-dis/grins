@@ -13,6 +13,7 @@ from SocketChannel import SocketChannel
 from MpegChannel import MpegChannel
 from CmifChannel import CmifChannel
 from HtmlChannel import HtmlChannel
+from GraphChannel import GraphChannel
 
 channelmap = {
 	'null': 	NullChannel,
@@ -27,6 +28,7 @@ channelmap = {
 	'mpeg':		MpegChannel,
 	'cmif':		CmifChannel,
 	'html':		HtmlChannel,
+	'graph':	GraphChannel,
 	}
 
 channeltypes = ['null', 'text', 'image']

@@ -1016,6 +1016,51 @@ class _DisplayList:
 		return oldx, oldy, maxx - oldx, \
 			  newy - oldy + self._fontheight - self._baseline
 
+	def drawline(self, color, points):
+		window = self._window
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if debug: print `self`+'.drawline'+`points`
+		d = self._displaylist
+		if self._curcolor != color:
+			d.append(gl.RGBcolor, color)
+			self._curcolor = color
+		d.append(gl.linewidth, self._linewidth)
+		d.append(gl.bgnline)
+		x0, y0 = points[0]
+		for x, y in points:
+			x, y, h, w = window._convert_coordinates(x, y, 0, 0)
+			d.append(gl.v2f, (x, y))
+		d.append(gl.endline)
+
+	def drawfbox(self, color, *coordinates):
+		window = self._window
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if len(coordinates) == 1 and type(coordinates) == type(()):
+			coordinates = coordinates[0]
+		if len(coordinates) != 4:
+			raise TypeError, 'arg count mismatch'
+		if debug: print `self`+'.drawfbox'+`coordinates`
+		x, y, w, h = coordinates
+		d = self._displaylist
+		x0, y0, x1, y1 = window._convert_coordinates(x, y, w, h)
+		if self._curcolor != color:
+			d.append(gl.RGBcolor, color)
+			self._curcolor = color
+		d.append(gl.linewidth, self._linewidth)
+		d.append(gl.bgnpolygon)
+		d.append(gl.v2f, (x0, y0))
+		d.append(gl.v2f, (x0, y1))
+		d.append(gl.v2f, (x1, y1))
+		d.append(gl.v2f, (x1, y0))
+		d.append(gl.endpolygon)
+
+
 class _Window:
 	def __init__(self, is_toplevel, parent, x, y, w, h, title):
 		self._parent_window = parent
