@@ -159,8 +159,7 @@ class EditMgr:
 	#
 	def setglobalfocus(self, focustype, focusobject):
 		# Jack: Thank you for this elaborately documented code. We have absolutely
-		# no idea what type of object "focustype" is. Not only that, but it is
-		# probably not going to be used because we can always do isinstance(focusobject)==...
+		# no idea what type of object "focustype" is. 
 
 		# Pas op all functions calling this: The focusobject may be None.. 
 		

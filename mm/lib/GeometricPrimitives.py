@@ -87,10 +87,14 @@ class Box(GeoClientWidget):
 	def set_color(self, color):
 		self.color = color
 
+class FBox(GeoClientWidget):
+	color = (0,0,0)
+	def redraw(self):
+		self.displist.drawfbox(self.color, self.get_box())
 
-#class FBox(GeoClientWidget):
-#	pass;
-FBox=Box # TODO
+	def set_color(self, color):
+		self.color = color
+#FBox=Box # Use this for debugging.
 
 class Marker(GeoClientWidget):
 	pass;

@@ -276,122 +276,122 @@ class Widget:
 
 ##############################################################################
 	
-class MultiWidget(Widget):
-	# An MultiWidget is a container for Widget objects.
-	# This is a nestable container, so you can add and remove objects from it.
-	# The idea of this class is to have a container of objects which have
-	# their own position and z-index - objects float infront of and behind each
-	# other.
+##class MultiWidget(Widget):
+##	# An MultiWidget is a container for Widget objects.
+##	# This is a nestable container, so you can add and remove objects from it.
+##	# The idea of this class is to have a container of objects which have
+##	# their own position and z-index - objects float infront of and behind each
+##	# other.
 
 
-	# This object behaves like a collection - you can add and remove Widgets from
-	# it. 
+##	# This object behaves like a collection - you can add and remove Widgets from
+##	# it. 
 
-	def __init__(self, root):
-		Widget.__init__(self, root)
-		self.widgets = []
-		
-	def draw(self, displist):
-		# Draw widgets, starting with the furthest (z-index = 0)
-		for i in self.widgets:
-			i.draw(displist)			
-
-	def click(self, pos):
-		# Find the closest widget (z-index is greatest)
-		# if it is one of my sub-children:
-		for i in range(len(self.widgets)-1, -1, -1):
-			if self.widgets[i].is_hit(pos):
-				self.widgets[i].click(pos)
-				return
-		# else: 
-		self.select()
-		
-
-	def double_click(self, pos):
-		# Find the closest widget (z-index is greatest)
-		for i in range(len(self.widgets)-1, -1, -1):
-			if self.widgets[i].is_hit(pos):
-				self.widgets[i].double_click(pos)
-				return
-
-	def right_click(self, pos):
-		# Find the closest widget (z-index is greatest)
-		for i in range(len(self.widgets)-1, -1, -1):
-			if self.widgets[i].is_hit(pos):
-				self.widgets[i].right_click(pos)
-				return
-
-	## List handling functions
-	
-	def __len__(self):
-		return len(self.widgets)
-
-	def __getitem__(self, key):
-		return self.widgets[key]
-
-	def __setitem__(self, key, value):
-		self.insert(value)
-
-	def __delitem__(self, key): # incorrect arguments
-		del self.widgets[key]
-
-	def __add__(self):				  # incorrect arguments.
-		assert 0 # not useful.
-
-	def append(self, node):
-		assert isinstance(node, Widget)
-		node.parent = self
-		node.pos_z = self.pos_z + 1
-		self.insert(node)
-
-	def count(self):
-		assert 0 # not useful.
-
-
-	## Maintaining the z-index:
-
-	def insert(self, intact):
-		# Keep the Widgets ordered by z-index.
-		# intact is the Widget widget to insert by z-index.
-		self.widgets.append(intact)
-		self.resort()
-
-	# alternatively (untested):
-#	 def insert(self, intact):
-#		 element = 0
-#		 for i in range(len(self.widgets)):
-#			 if self.widgets[i].pos_z = intact.pos_z:
-#				 element = i
-#				 break
-#		 head = self.widgets[:i]
-#		 tail = self.widgets[i:]
-#		 self.widgets = head + intact + tail
-
-	def resort(self):
-		# Ensure that the list is sorted by z-index.
-		# Using the python built-in sort function..
-		# Sjoerd reckons this is faster..
-		tuple_list = []
-		for i in self.widgets:
-			tuple_list.append((i.pos_z, i))
-		tuple_list.sort()
-		
-		new_widgetlist = []
-		for k,v in tuple_list:
-			new_widgetlist.append(v)
-
-		self.widgets = new_widgetlist
-
-##	def destroy(self):
-##		Widget.destroy(self)
-##		for i in self.widgets:
-##			i.destroy()
+##	def __init__(self, root):
+##		Widget.__init__(self, root)
 ##		self.widgets = []
-	
-#	def get_minsize(self):
-#		# The minimum size of a container is the sum of all of it's children.
-#		print "TODO"
+		
+##	def draw(self, displist):
+##		# Draw widgets, starting with the furthest (z-index = 0)
+##		for i in self.widgets:
+##			i.draw(displist)			
 
-#	def get_maxsize(self):
-#		# the maximum size of a container is the sum of all of it's children.
- #	   print "TODO"
+##	def click(self, pos):
+##		# Find the closest widget (z-index is greatest)
+##		# if it is one of my sub-children:
+##		for i in range(len(self.widgets)-1, -1, -1):
+##			if self.widgets[i].is_hit(pos):
+##				self.widgets[i].click(pos)
+##				return
+##		# else: 
+##		self.select()
+		
+
+##	def double_click(self, pos):
+##		# Find the closest widget (z-index is greatest)
+##		for i in range(len(self.widgets)-1, -1, -1):
+##			if self.widgets[i].is_hit(pos):
+##				self.widgets[i].double_click(pos)
+##				return
+
+##	def right_click(self, pos):
+##		# Find the closest widget (z-index is greatest)
+##		for i in range(len(self.widgets)-1, -1, -1):
+##			if self.widgets[i].is_hit(pos):
+##				self.widgets[i].right_click(pos)
+##				return
+
+##	## List handling functions
+	
+##	def __len__(self):
+##		return len(self.widgets)
+
+##	def __getitem__(self, key):
+##		return self.widgets[key]
+
+##	def __setitem__(self, key, value):
+##		self.insert(value)
+
+##	def __delitem__(self, key): # incorrect arguments
+##		del self.widgets[key]
+
+##	def __add__(self):				  # incorrect arguments.
+##		assert 0 # not useful.
+
+##	def append(self, node):
+##		assert isinstance(node, Widget)
+##		node.parent = self
+##		node.pos_z = self.pos_z + 1
+##		self.insert(node)
+
+##	def count(self):
+##		assert 0 # not useful.
+
+
+##	## Maintaining the z-index:
+
+##	def insert(self, intact):
+##		# Keep the Widgets ordered by z-index.
+##		# intact is the Widget widget to insert by z-index.
+##		self.widgets.append(intact)
+##		self.resort()
+
+##	# alternatively (untested):
+###	 def insert(self, intact):
+###		 element = 0
+###		 for i in range(len(self.widgets)):
+###			 if self.widgets[i].pos_z = intact.pos_z:
+###				 element = i
+###				 break
+###		 head = self.widgets[:i]
+###		 tail = self.widgets[i:]
+###		 self.widgets = head + intact + tail
+
+##	def resort(self):
+##		# Ensure that the list is sorted by z-index.
+##		# Using the python built-in sort function..
+##		# Sjoerd reckons this is faster..
+##		tuple_list = []
+##		for i in self.widgets:
+##			tuple_list.append((i.pos_z, i))
+##		tuple_list.sort()
+		
+##		new_widgetlist = []
+##		for k,v in tuple_list:
+##			new_widgetlist.append(v)
+
+##		self.widgets = new_widgetlist
+
+####	def destroy(self):
+####		Widget.destroy(self)
+####		for i in self.widgets:
+####			i.destroy()
+####		self.widgets = []
+	
+###	def get_minsize(self):
+###		# The minimum size of a container is the sum of all of it's children.
+###		print "TODO"
+
+###	def get_maxsize(self):
+###		# the maximum size of a container is the sum of all of it's children.
+## #	   print "TODO"
