@@ -147,7 +147,7 @@
 	'Wait for "close window" action to proceed' channel)
 
 (winpos (tuple (int) (int)) (-1 -1) 'Window position' default
-	'Initial window position (x, y) (x axis pointing down!)' channel)
+	'Initial window position (x, y) (x axis pointing down!)' raw)
 
 (winsize (tuple (int) (int)) (0 0) 'Window size' default
-	'Initial window size (width, height)' channel)
+	'Initial window size (width, height)' raw)
