@@ -26,7 +26,7 @@ PASSWD=os.path.join(DIR, ".htpasswd")
 
 RESPONSE_MESSAGE=os.path.join(grinsdb.DATABASE, ".mailresponse")
 RESPONSE_SENDER="grins-request@oratrix.com"
-RESPONSE_URL="http://www.cwi.nl/GRiNS/player/index.html"
+RESPONSE_URL="http://www.oratrix.com/GRiNS/Download/down-sw1.html"
 
 SENDMAIL="/usr/lib/sendmail -t"
 
