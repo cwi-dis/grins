@@ -5,6 +5,7 @@
 
 import Win
 import Qd
+import QuickDraw
 import Res
 import Fm
 import Ctl
@@ -18,6 +19,8 @@ import htmllib
 import urllib
 import img
 import imgformat
+import mac_image
+import formatter
 
 LEFTMARGIN=4
 TOPMARGIN=4
@@ -247,10 +250,6 @@ class HTMLWidget:
 		pass # Do nothing.				
 		
 	def insert_html(self, data, url):
-		import htmllib
-		import formatter
-		print 'html widget: ', url
-		
 		Qd.SetPort(self.wid)
 		Qd.RGBBackColor(self.bg_color)
 		
@@ -261,7 +260,7 @@ class HTMLWidget:
 			self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
 			Win.InvalRect(self.rect)
 			return
-		f = formatter.AbstractFormatter(self)
+		f = MyFormatter(self)
 		
 		# Remember where we are, and don't update
 		Qd.SetPort(self.wid)
@@ -377,6 +376,13 @@ class HTMLWidget:
 		data = string.expandtabs(data)
 		self.ted.WEInsert(data, None, None)
 		
+	def send_image(self, data):
+		self.ted.WEInsertObject('GIF ', data, (0, 0))
+		
+class MyFormatter(formatter.AbstractFormatter):
+
+	def my_add_image(self, image):
+		self.writer.send_image(image)
 			
 class MyHTMLParser(htmllib.HTMLParser):
 	
@@ -396,16 +402,13 @@ class MyHTMLParser(htmllib.HTMLParser):
 		self.do_p(())
 	
 	def handle_image(self, src, alt, ismap, align, width, height):
-		print 'IMAGE', src, alt, ismap, align, width, height
 		url = urllib.basejoin(self.url, src)
-		print 'URL=', url
 		fname = urllib.urlretrieve(url)[0]
-		print 'filename=', fname
 		image = img.reader(imgformat.macrgb16, fname)
 		data = image.read()
-		print 'size=', image.width, image.height, len(data)
-		handle = _gifkeeper.new(fname, width, height, data)
-		self.handle_data(alt)
+		handle = _gifkeeper.new(fname, image.width, image.height, data)
+		#self.handle_data(alt)
+		self.formatter.my_add_image(handle)
 		# self.handle_gif(handle)
 
 
@@ -438,22 +441,31 @@ def drawRuler((l, t, r, b), obj):
 	return 0
 	
 def freeRuler(*args):
-	print 'FREERULER', args
 	return 0
 	
 def newGIF(obj):
-	handle = WEGetObjectDataHandle()
-	width, height, pixmap = _gifkeeper.get(handle.data)	
+	handle = obj.WEGetObjectDataHandle()
+	width, height, pixmap = _gifkeeper.get(handle.data)
 	return width, height
 	
 def drawGIF((l,t,r,b),obj):
-	handle = WEGetObjectDataHandle()
+	handle = obj.WEGetObjectDataHandle()
 	width, height, pixmap = _gifkeeper.get(handle.data)
+	srcrect = 0, 0, r-l, b-t
+	dstrect = l, t, r, b
+	port = Qd.GetPort()
+	bg = port.rgbBkColor
+	Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+##	Qd.CopyBits(pixmap, port.portBits, srcrect, dstrect,
+##		QuickDraw.srcCopy+QuickDraw.ditherCopy, None)
+	Qd.CopyBits(pixmap, port.portBits, srcrect, dstrect,
+		QuickDraw.srcCopy, None)
+	Qd.RGBBackColor(bg)
 	# XXXX paste pixmap on screen
 	return 0
 	
 def freeGIF(obj):
-	handle = WEGetObjectDataHandle()
+	handle = obj.WEGetObjectDataHandle()
 	_gifkeeper.delete(handle.data)
 	return 0
 	
