@@ -126,6 +126,8 @@ class EXPORT_HTML(_CommandBase):
 	help = 'Create a template webpage linking to your presentation'
 class EXPORT_WINCE(_CommandBase):
 	help = 'Create SMIL file for Handheld Device'
+class EXPORT_TEMPLATE(_CommandBase):
+	help = 'Create GRiNS template'
 class RESTORE(_CommandBase):
 	help = 'Restore document from file (undo all unsaved changes)'
 class PROPERTIES(_CommandBase):
