@@ -37,20 +37,6 @@ DIALOG 617 LinkEditView
 16.2 This button is disabled because you have not selected a link above
 17.1 Press this button to delete the link selected above
 17.2 This button is disabled because you have not selected a link above
-20.1 Select this if the link should go from the left anchor to the right anchor
-20.3 The link is left-to-right: when you press the left anchor you will end up at the right anchor
-21.1 Select this if the link should go from the right anchor to the left anchor
-21.3 The link is right-to-left: when you press the right anchor you will end up at the left anchor
-22.1 Select this if the link should go both ways
-22.3 The link goes both ways: pressing either anchor will take you to the other one
-24.1 Select this if following the link should replace the original presentation with the new one
-24.3 Following the link will replace the original presentation with the new one
-25.1 Select this if the original presentation should be paused when following the link
-25.3 Following the link will pause the original presentation
-26.1 Select this if following the link should create a new, independent presentation while keeping the old one running too
-26.3 Following the link will create a new, independent presentation while keeping the old one running too
-27.1 Press this button if you want to forget the changes made to the link
-28.1 Press this button to create the new link, or accept the link modifications made above
 END-DIALOG
 DIALOG 618 Anchor edit dialog
 1.1 Select an anchor here if you want to edit or delete it. The changes are really made when you press "OK" or "apply"
@@ -140,4 +126,20 @@ DIALOG 627 NewChannelDialog
 2.1 Press this button to cancel the whole channel creation operation
 3.1 Enter the name of the channel here
 5.* Select the type of the channel here. Channel types are required in CMIF but not supported in SMIL, where each channel is mapped to a region
+END-DIALOG
+DIALOG 630 LinkEditEditorView
+2.1 Select this if the link should go from the left anchor to the right anchor
+2.3 The link is left-to-right: when you press the left anchor you will end up at the right anchor
+3.1 Select this if the link should go from the right anchor to the left anchor
+3.3 The link is right-to-left: when you press the right anchor you will end up at the left anchor
+4.1 Select this if the link should go both ways
+4.3 The link goes both ways: pressing either anchor will take you to the other one
+6.1 Select this if following the link should replace the original presentation with the new one
+6.3 Following the link will replace the original presentation with the new one
+7.1 Select this if the original presentation should be paused when following the link
+7.3 Following the link will pause the original presentation
+8.1 Select this if following the link should create a new, independent presentation while keeping the old one running too
+8.3 Following the link will create a new, independent presentation while keeping the old one running too
+9.1 Press this button if you want to forget the changes made to the link
+10.1 Press this button to create the new link, or accept the link modifications made above
 END-DIALOG
