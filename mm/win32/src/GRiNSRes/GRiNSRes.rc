@@ -3076,6 +3076,31 @@ BEGIN
     GROUPBOX        "Active duration",IDC_STATIC,6,6,287,60
 END
 
+IDD_EDITATTR_ANCHOR DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "Anchor settings",IDC_STATIC,6,6,287,117
+    LTEXT           "Coordinates:",IDC_ACOORDSL,13,20,40,8
+    EDITTEXT        IDC_ACOORDSV,73,17,211,14,ES_AUTOHSCROLL
+    LTEXT           "Fragment name:",IDC_FRAGMENTL,13,41,52,8
+    EDITTEXT        IDC_FRAGMENTV,73,39,68,14,ES_AUTOHSCROLL
+    LTEXT           "Access key:",IDC_ACCESSL,13,63,40,8
+    EDITTEXT        IDC_ACCESSV,73,61,68,14,ES_AUTOHSCROLL
+    LTEXT           "Tab index:",IDC_TABINDEXL,161,63,34,8
+    EDITTEXT        IDC_TABINDEXV,216,61,68,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_ASHAPEV,73,83,68,77,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Shape:",IDC_ASHAPEL,13,85,24,8
+    LTEXT           "Type:",IDC_ACTUATEL,161,85,19,8
+    COMBOBOX        IDC_ACTUATEV,216,83,68,84,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Send to:",IDC_SENDTOL,13,105,28,8
+    COMBOBOX        IDC_SENDTOV,73,103,68,82,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -5093,6 +5093,32 @@ class MachineGroup(StringGroupNoTitle):
 class ForeignGroup(StringGroup):
 	data = attrgrsdict['foreign']
 
+class AnchorGroup(AttrGroup):
+	data=attrgrsdict['anchor']
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+		
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_ANCHOR
+	
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('acoords')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_ACOORDSL,grinsRC.IDC_ACOORDSV))
+		a = self.getattr('tabindex')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_TABINDEXL,grinsRC.IDC_TABINDEXV))
+		a = self.getattr('fragment')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_FRAGMENTL,grinsRC.IDC_FRAGMENTV))
+		a = self.getattr('accesskey')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_ACCESSL,grinsRC.IDC_ACCESSV))
+		a = self.getattr('ashape')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_ASHAPEL, grinsRC.IDC_ASHAPEV))
+		a = self.getattr('actuate')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_ACTUATEL, grinsRC.IDC_ACTUATEV))
+		a = self.getattr('sendTo')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_SENDTOL, grinsRC.IDC_SENDTOV))
+		return cd
+
 ############################
 # platform dependent association
 # what we have implemented, anything else goes as singleton
@@ -5184,6 +5210,8 @@ groupsui={
 	'machine':MachineGroup,
 
 	'foreign':ForeignGroup,
+
+	'anchor':AnchorGroup,
 	}
 
 ###########################
