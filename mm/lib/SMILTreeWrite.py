@@ -308,13 +308,28 @@ def getsrc(writer, node):
 		if features.compatibility == features.G2:
 			val = MMurl.unquote(val)
 		return val
-	if chtype == 'RealPix':
+	if chtype == 'RealPix' or (chtype == 'video' and val and val[:33] == 'data:image/vnd.rn-realpix;base64,'):
 		# special case code for RealPix file
-		if not hasattr(node, 'slideshow'):
-			import realnode
-			node.slideshow = realnode.SlideShow(node)
 		import realsupport
-		rp = node.slideshow.rp
+		if chtype == 'RealPix':
+			if not hasattr(node, 'slideshow'):
+				import realnode
+				node.slideshow = realnode.SlideShow(node)
+			rp = node.slideshow.rp
+		else:
+			f = MMurl.urlopen(url)
+			head = f.read(4)
+			if head != '<imf':
+				f.close()
+				# delete rptmpfile attr if it exists
+				node.rptmpfile = None
+				del node.rptmpfile
+				return url # ???
+			rp = realsupport.RPParser(url)
+			rp.feed(head)
+			rp.feed(f.read())
+			f.close()
+			rp.close()
 		otags = rp.tags
 		ntags = []
 		for i in range(len(otags)):
