@@ -10,7 +10,7 @@
       These are the release notes for the GR<i>i</i>NS player for
       Silicon Graphics IRIX 6.X, Release 0.5, patchlevel 0.  More
       information on GR<i>i</i>NS can be obtained at
-      <a href="http://www.oratrix.com/GRiNS">http://www.oratrix.com/GRiNS</a>,
+      <a href="http://www.oratrix.com/GRiNS">http://www.oratrix.com/GR<i>i</i>NS</a>,
       or by email to
       <a href="mailto:grins-request@oratrix.com">grins-request@oratrix.com</a>.
     </p>
@@ -21,6 +21,11 @@
     </p>
 
     <h3>Prerequisites</h3>
+    <p>
+      The GR<i>i</i>NS editor and player have only been tested on an
+      SGI O2 running IRIX 6.3 and 6.5.  Other versions may or may not
+      work.
+    </p>
     <p>
       The GR<i>i</i>NS editor and player use a number of system shared
       libraries.  Not all of these libraries are installed by
@@ -39,7 +44,60 @@
       <li>x_eoe.sw.eoe</li>
     </ul>
 
-        <h3>Feedback</h3>
+    <h3>Installation instructions</h3>
+    <p>
+      For IRIX-6.3 (and later) on SGI systems, you have two options
+      when installing the GR<i>i</i>NS Editor and Player: using the SGI inst
+      tools or using the gzipped Tar distribution.
+    </p>
+    <ol>
+      <li>
+	<p>
+	  Using <code>grins.tardist</code> or
+	  <code>grinsed.tardist</code>: Download the file
+	  (<code>grins.tardist</code> for the Player-only or
+	  <code>grinsed.tardist</code> for the Editor and Player). If
+	  your browser is setup correctly, it will start the SGI
+	  Software Manager automatically. If not, you can extract the
+	  tardist file in a new directory and start the Software
+	  Manager (<code>swmgr</code>) or <code>inst</code>
+	  manually. Point either program to the directory with the
+	  extracted files reside to start the installation
+	  process. From the Software Manager or inst, select the
+	  subsystems you want to install:
+	</p>
+	<ul>
+	  <li>grins.sw.player contains the GR<i>i</i>NS Player and is required.</li>
+	  <li>grins.help contains help information and is recommended.</li>
+	  <li>grins.relnotes contains the release notes and is also
+	    recommended.</li>
+	</ul>
+	<p>
+	  Important Note: You need superuser (root) privileges to use
+	  the inst installation method. The GR<i>i</i>NS Player and Editor (and
+	  the supporting files) will be installed in
+	  /usr/local/grins.
+	</p>
+      </li>
+      <li>
+	<p>
+	  Using <code>grins.tar.gz</code> or
+	  <code>grinsed.tar.gz</code>: If you don't have super-user
+	  privileges, download the appropriate file
+	  (<code>grins.tar.gz</code> for the Player-only version of
+	  GR<i>i</i>NS and <code>grinsed.tar.gz</code> for the Editor and
+	  Player) and extract it in a directory of your choice. The
+	  command to do this is something like this:
+	  <code>gzip -cd grins.tar.gz | tar xf -</code>
+	  (for the GR<i>i</i>NS Player), or
+	  <code>gzip -cd grinsed.tar.gz | tar xf -</code> (for the
+	  GR<i>i</i>NS Editor). The tar file contains the same files as the
+	  tardist files and in the same relative configuration.
+	</p>
+      </li>
+    </ol>
+
+    <h3>Feedback</h3>
     <p>
       Bug reports and other technical feedback should be sent to
       <a href="mailto:grins-support@oratrix.com">grins-support@oratrix.com</a>,
@@ -120,11 +178,12 @@
 
 
 
+
     <hr>
     <address><a href="http://www.oratrix.com/GRiNS/">the GRiNS support staff</a></address>
-<!-- Created: Fri Mar 26 14:07:42 MET 1999 -->
+<!-- Created: Fri Mar 26 13:09:28 MET 1999 -->
 <!-- hhmts start -->
-Last modified: Fri Mar 26 14:12:52 MET 1999
+Last modified: Fri Mar 26 15:05:11 MET 1999
 <!-- hhmts end -->
   </body>
 </html>
