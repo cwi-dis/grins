@@ -349,7 +349,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if info:
 				viewname = VIEWNUM2NAME[viewno]
 				viewinfo.append((viewname, info))
-		for i in viewinfo: print 'VIEWINFO', i
+##		for i in viewinfo: print 'VIEWINFO', i
 		return viewinfo
 
 	def destroy(self):
