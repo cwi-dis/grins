@@ -250,10 +250,18 @@ class Widget:
     def destroy(self):
         # Python garbage collection is prone to circular references.
         # Remove the self.esteem from this object.
-        self.root = None
-        self.appended_to = None
-        self.context_menu = None
-        self.parent = None
+        todestroy = []
+        for name in dir(self):
+            w = getattr(self, name)
+            if isinstance(w, Widget) and w is not self:
+                todestroy.append(w)
+            elif type(w) is type([]):
+                for c in w:
+                    if isinstance(c, Widget) and c is not self:
+                        todestroy.append(c)
+            setattr(self, name, None)
+        for w in todestroy:
+            w.destroy()
 
 ##############################################################################
 
@@ -367,11 +375,11 @@ class MultiWidget(Widget):
 
         self.widgets = new_widgetlist
 
-    def destroy(self):
-        Widget.destroy(self)
-        for i in self.widgets:
-            i.destroy()
-        self.widgets = []
+##    def destroy(self):
+##        Widget.destroy(self)
+##        for i in self.widgets:
+##            i.destroy()
+##        self.widgets = []
     
 #    def get_minsize(self):
 #        # The minimum size of a container is the sum of all of it's children.
