@@ -523,6 +523,7 @@ class Channel:
 			self._has_pause = 1
 		else:
 			self._has_pause = 0
+		self._has_pause = 1
 		for (name, type, button, times) in self._played_anchors:
 			if name is None and type is None:
 				f = self.onclick
@@ -844,6 +845,14 @@ class Channel:
 			print 'Channel.setpaused('+`self`+','+`paused`+')'
 		self._paused = paused
 
+	def pause(self, node, action):
+		if node is self._played_node:
+			self.setpaused(1)
+
+	def resume(self, node):
+		if node is self._played_node:
+			self.setpaused(0)
+		
 	#
 	# Methods used by derived classes.
 	#
