@@ -37,12 +37,8 @@ import settings
 # Color settings
 from AppDefaults import *
 
+######################################################################
 class HierarchyView(HierarchyViewDialog):
-
-	#################################################
-	# Outside interface                             #
-	#################################################
-
 	def __init__(self, toplevel):
 		self.toplevel = toplevel
 
@@ -438,7 +434,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	######################################################################
 		# Redrawing the Structure View.
-	######################################################################
 	# A small note about redrawing:
 	# * Only call at the end of (every) top-level event handlers just before you return to the
 	#   event loop.
@@ -715,7 +710,106 @@ class HierarchyView(HierarchyViewDialog):
 			self.draw()
 ##			print "Done drawing. ", time.time()
 
+
+	######################################################################
+	#
+	#	 Operations on nodes.
+	#	 (i.e. interface to the edit manager.
+	#
+	######################################################################
+	#
+	# There is a general pattern to all of these functions.
+	# 1. Get the necessary information. If something is generic, stick it in Editablenode.py
+	# 2. em.transaction()
+	# 3. Do the editmanager operations.
+	# 4. em.commit.
+	#
+	# # # # # # # # # # # # # # # # # # 
+	# Operations on nodes.
+	#
+	# Always: Add, delete(/remove), Edit.
+	#
+	# Nodes
+	# -----
+	# * Add a node
+	# * Delete a node
+	# * Edit a node (pop up properties)
+	# * Copy a node
+	# * Cut a node
+	# * Paste a node
+	# * Drag and drop
+	#   - Move
+	#   - Copy
+	#   - Move to another view (not implemented?)
+	#   - Drop a file
+	#
+	# Multiple selection (only nodes selected)
+	# ------------------
+	# * Multiple selections cannot be added.
+	# * Delete
+	# * Edit (multiple properties??)
+	# * Copy
+	# * Cut
+	# * Paste
+	# * Drag and drop a multiple selection
+	#   - Move a selection (Makes all nodes children of the target).
+	#   - Copy a selection (ditto)
+	#   - Drop multiple files?
+	#   - Move multiple nodes to another view?
+
+	######################################################################
+	# Adding a node.
+	# This code is near the end of this class under various createbefore.. createafter.. callbacks.
+	
+	# Delete a node
+	def deletecall(self):
+		if self.selected_widget: self.selected_widget.deletecall()
+
+	######################################################################
+	# Edit a node
+	def attrcall(self):
+		if self.selected_widget: self.selected_widget.attrcall()
+
+	def infocall(self):
+		if self.selected_widget: self.selected_widget.infocall()
+
+	def editcall(self):
+		if self.selected_widget: self.selected_widget.editcall()
+
+	# win32++
+	def _editcall(self):
+		if self.selected_widget: self.selected_widget._editcall()
+	def _opencall(self):
+		if self.selected_widget: self.selected_widget._opencall()
+
+	######################################################################
+	# Copy a node.
+	def copycall(self):
+		if self.selected_widget: self.selected_widget.copycall()
+
+	######################################################################
+	# Cut a node.
+	def cutcall(self):
+		if self.selected_widget: self.selected_widget.cutcall()
+
+	######################################################################
+	# Paste a node.
+	def pastebeforecall(self):
+		if self.selected_widget: self.selected_widget.pastebeforecall()
+
+	def pasteaftercall(self):
+		if self.selected_widget: self.selected_widget.pasteaftercall()
+
+	def pasteundercall(self):
+		if self.selected_widget: self.selected_widget.pasteundercall()
+
+	######################################################################
+	# Drag and drop
+	# TODO: find this code.
+	
+
 	def cvdrop(self, node, window, event, params):
+		# Change to an external node and re-drop it.
 		em = self.editmgr
 		if not em.transaction():
 			return
@@ -1451,21 +1545,6 @@ class HierarchyView(HierarchyViewDialog):
 	def playfromcall(self):
 		if self.selected_widget: self.selected_widget.playfromcall()
 
-	def attrcall(self):
-		if self.selected_widget: self.selected_widget.attrcall()
-
-	def infocall(self):
-		if self.selected_widget: self.selected_widget.infocall()
-
-	def editcall(self):
-		if self.selected_widget: self.selected_widget.editcall()
-
-	# win32++
-	def _editcall(self):
-		if self.selected_widget: self.selected_widget._editcall()
-	def _opencall(self):
-		if self.selected_widget: self.selected_widget._opencall()
-
 	def anchorcall(self):
 		if self.selected_widget: self.selected_widget.anchorcall()
 
@@ -1477,15 +1556,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	def rpconvertcall(self):
 		if self.selected_widget: self.selected_widget.rpconvertcall()
-
-	def deletecall(self):
-		if self.selected_widget: self.selected_widget.deletecall()
-
-	def cutcall(self):
-		if self.selected_widget: self.selected_widget.cutcall()
-
-	def copycall(self):
-		if self.selected_widget: self.selected_widget.copycall()
 
 	def createbeforecall(self, chtype=None):
 		if self.selected_widget: self.selected_widget.createbeforecall(chtype)
@@ -1516,15 +1586,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	def createaltcall(self):
 		if self.selected_widget: self.selected_widget.createaltcall()
-
-	def pastebeforecall(self):
-		if self.selected_widget: self.selected_widget.pastebeforecall()
-
-	def pasteaftercall(self):
-		if self.selected_widget: self.selected_widget.pasteaftercall()
-
-	def pasteundercall(self):
-		if self.selected_widget: self.selected_widget.pasteundercall()
 
 	def create_begin_event_source(self):
 		if self.selected_widget:
