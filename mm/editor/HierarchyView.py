@@ -670,9 +670,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.vergap = float(GAPSIZE) / rh
 		self.horsize = float(MINSIZE) / rw
 		self.versize = float(MINSIZE + LABSIZE) / rh
-		print 'DBG canvassize, horedge, veredge, horgap, vergap, title, horsize, versize', \
-			self.canvassize, self.horedge, self.veredge, self.horgap, self.vergap, \
-			self.titleheight, self.horsize, self.versize
 		list = []
 		self.makeboxes(list, self.root, (0, 0, 1, 1))
 		for item in list:
