@@ -362,7 +362,7 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 				node = self.context.mapuid(anchor[0])
 			else:
 				node = None
-			str.buttons_setsensitive(node is not None and node.GetType() in leaftypes and self.findanchor(anchor)[A_TYPE] != ATYPE_DEST)
+			str.buttons_setsensitive(node is not None)
 		else:
 			str.buttons_setsensitive(0)
 		if str.node:
