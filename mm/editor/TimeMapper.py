@@ -216,21 +216,21 @@ class TimeMapper:
 					for off in (0,10,5,2,4,6,8,1,3,7,9):
 						t = (xtime + off) * fac / float(div)
 						if self.interptime2pixel(t) == pxl:
-							return t
+							return t, 0
 					# didn't find any, use fallback mechanism
 					time = int(time * div / fac + .5) * fac / float(div)
-					return time
+					return time, 0
 				# before left edge
 				# extrapolate first interval to the left
 				for tm2 in self.times: # find first time that's different
 					if tm2 != tm:
 						# extrapolate
-						return tm + (pos - mp) * (tm2 - tm) / float(self.minpos[tm2] - mp)
+						return tm + (pos - mp) * (tm2 - tm) / float(self.minpos[tm2] - mp), 0
 				# no multiple times, use pixel == second
-				return tm + (pos - mp)
+				return tm + (pos - mp), 0
 			if mp <= pos <= mp + cd:
 				# inside "grey area": time is exact
-				return tm
+				return tm, 1
 			lastpos = mp + cd
 			lasttime = tm
 		# beyond right edge
@@ -239,8 +239,8 @@ class TimeMapper:
 		times.reverse()
 		for tm2 in times:
 			if tm2 != tm:
-				return tm + (pos - mp) * (tm2 - tm) / float(self.minpos[tm2] - mp)
-		return tm + (pos - mp)
+				return tm + (pos - mp) * (tm2 - tm) / float(self.minpos[tm2] - mp), 0
+		return tm + (pos - mp), 0
 
 	def __pixel2pixel(self, pos):
 		if self.width == 0:
