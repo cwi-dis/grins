@@ -233,6 +233,7 @@ def encodequery(query):
 	return (name, value)
 
 def encodestring(s):
+	if not s: return ''		# Catches None as well!
 	r = ''
 	for c in s:
 		r = r + encoding[c]

@@ -14,7 +14,7 @@ from MpegChannel import MpegChannel
 from CmifChannel import CmifChannel
 try:
 	from HtmlChannel import HtmlChannel
-except:
+except ImportError:
 	from PseudoHtmlChannel import HtmlChannel
 	print 'WARNING: cheap plastic imitation of HTML channel loaded'
 from GraphChannel import GraphChannel
