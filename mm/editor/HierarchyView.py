@@ -797,7 +797,7 @@ class HierarchyView(HierarchyViewDialog):
 		if chtype == None:
 			chtype = pnode.guessChannelType(type, mimetype)
 
-		chname = None
+		dftchannel = None
 		if type == 'ext' or type == 'imm':
 			# See whether the current node specifies a default channel.
 			# XXXX Because this is actually a regionname we have a bit of work
