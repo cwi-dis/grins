@@ -102,13 +102,14 @@ class NodeInfo(NodeInfoDialog):
 
 	def calcchannelnames(self):
 		layout = MMAttrdefs.getattr(self.node, 'layout')
-		layoutchannels = self.context.layouts.get(layout, [])
-		if layout:
-			channelnames1 = self.newchannels[:]
-			channelnames2 = []
-		else:
+		if layout == 'undefined':
+			layoutchannels = []
 			channelnames1 = []
 			channelnames2 = self.newchannels[:]
+		else:
+			layoutchannels = self.context.layouts.get(layout, [])
+			channelnames1 = self.newchannels[:]
+			channelnames2 = []
 		for ch in layoutchannels:
 			channelnames1.append(ch.name)
 		channelnames1.sort()
@@ -245,7 +246,7 @@ class NodeInfo(NodeInfoDialog):
 		# if the node belongs to a layout, add the new channel
 		# to that layouf
 		layout = MMAttrdefs.getattr(self.node, 'layout')
-		if context.layouts.has_key(layout):
+		if layout != 'undefined' and context.layouts.has_key(layout):
 			em.addlayoutchannel(layout, ch)
 
 	def guesstype(self):

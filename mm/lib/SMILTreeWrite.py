@@ -111,13 +111,15 @@ def getid(writer, node):
 		return name
 
 def getcmifattr(writer, node, attr):
-	val = node.GetRawAttrDef(attr, None)
+	val = MMAttrdefs.getattr(node, attr)
 	if val is not None:
 		val = str(val)
 	return val
 
-def geturlattr(writer, node, attr):
-	val = getcmifattr(writer, node, attr)
+def getrawcmifattr(writer, node, attr):
+	val = node.GetRawAttrDef(attr, None)
+	if val is not None:
+		val = str(val)
 	return val
 
 def getchname(writer, node):
@@ -131,8 +133,8 @@ def getchname(writer, node):
 	return writer.ch2name[ch]
 
 def getduration(writer, node, attr):
-	duration = node.GetRawAttrDef(attr, 0)
-	if duration == 0:
+	duration = MMAttrdefs.getattr(node, attr)
+	if not duration:		# 0 or None
 		return None
 	if duration < 0:		# infinite duration...
 		return 'indefinite'
@@ -247,7 +249,7 @@ def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
 	return '%.3fs' % delay
 
 def getterm(writer, node):
-	terminator = node.GetRawAttrDef('terminator', 'LAST')
+	terminator = MMAttrdefs.getattr(node, 'terminator')
 	if terminator == 'LAST':
 		return
 	if terminator == 'FIRST':
@@ -260,7 +262,7 @@ def getterm(writer, node):
 	      node.GetUID()
 
 def getrepeat(writer, node):
-	value = node.GetRawAttrDef('loop', 1)
+	value = MMAttrdefs.getattr(node, 'loop')
 	if value == 1:
 		return
 	elif value == 0:
@@ -297,7 +299,7 @@ def getbagindex(writer, node):
 def getugroup(writer, node):
 	if not node.GetContext().usergroups:
 		return
-	u_group = node.GetAttrDef('u_group', 'undefined')
+	u_group = MMAttrdefs.getattr(node, 'u_group')
 	if u_group == 'undefined':
 		return
 	return writer.ugr2name[u_group]
@@ -305,7 +307,7 @@ def getugroup(writer, node):
 def getlayout(writer, node):
 	if not node.GetContext().layouts:
 		return
-	layout = node.GetAttrDef('layout', 'undefined')
+	layout = MMAttrdefs.getattr(node, 'layout')
 	if layout == 'undefined':
 		return
 	return writer.layout2name[layout]
@@ -317,7 +319,7 @@ def getlayout(writer, node):
 smil_attrs=[
 	("id", getid),
 	("region", getchname),
-	("src", lambda writer, node:geturlattr(writer, node, "file")),
+	("src", lambda writer, node:getcmifattr(writer, node, "file")),
 	("dur", lambda writer, node: getduration(writer, node, 'duration')),
 	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
@@ -325,13 +327,13 @@ smil_attrs=[
 	("clip-end", lambda writer, node: getcmifattr(writer, node, 'clipend')),
 	("endsync", getterm),
 	("repeat", lambda writer, node:getrepeat(writer, node)),
-	("system-bitrate", lambda writer, node:getcmifattr(writer, node, "system_bitrate")),
+	("system-bitrate", lambda writer, node:getrawcmifattr(writer, node, "system_bitrate")),
 	("system-captions", getcaptions),
-	("system-language", lambda writer, node:getcmifattr(writer, node, "system_language")),
-	("system-overdub-or-captions", lambda writer, node:getcmifattr(writer, node, "system_overdub_or_captions")),
-	("system-required", lambda writer, node:getcmifattr(writer, node, "system_required")),
+	("system-language", lambda writer, node:getrawcmifattr(writer, node, "system_language")),
+	("system-overdub-or-captions", lambda writer, node:getrawcmifattr(writer, node, "system_overdub_or_captions")),
+	("system-required", lambda writer, node:getrawcmifattr(writer, node, "system_required")),
 	("system-screen-size", getscreensize),
-	("system-screen-depth", lambda writer, node:getcmifattr(writer, node, "system_screen_depth")),
+	("system-screen-depth", lambda writer, node:getrawcmifattr(writer, node, "system_screen_depth")),
 	("%s:bag-index" % NSprefix, getbagindex),
 	("%s:u-group" % NSprefix, getugroup),
 	("%s:layout" % NSprefix, getlayout),
@@ -617,7 +619,7 @@ class SMILWriter(SMIL):
 	def calcanames(self, node):
 		"""Calculate unique names for anchors"""
 		uid = node.GetUID()
-		alist = node.GetAttrDef('anchorlist', [])
+		alist = MMAttrdefs.getattr(node, 'anchorlist')
 		for id, type, args in alist:
 			aid = (uid, id)
 			if type in SourceAnchors:
@@ -807,12 +809,17 @@ class SMILWriter(SMIL):
 				mime = mime + ';charset=ISO-8859-1'
 			imm_href = 'data:%s,%s' % (mime, MMurl.quote(data))
 
+		attributes = self.attributes[mtype]
 		for name, func in smil_attrs:
 			if name == 'src' and type == 'imm':
 				value = imm_href
 			else:
 				value = func(self, x)
-			if value:
+			# only write attributes that have a value and are
+			# legal for the type of node
+			# other attributes are caught below
+			if value and attributes.has_key(name) and \
+			   value != attributes[name]:
 				attrlist.append((name, value))
 		for key, val in x.GetAttrDict().items():
 			if key[-7:] != '_winpos' and \
@@ -839,7 +846,7 @@ class SMILWriter(SMIL):
 		# XXXX Not correct for imm
 		pushed = 0		# 1 if has whole-node source anchor
 		hassrc = 0		# 1 if has other source anchors
-		alist = x.GetAttrDef('anchorlist', [])
+		alist = MMAttrdefs.getattr(x, 'anchorlist')
 		# deal with whole-node source anchors
 		for id, type, args in alist:
 			if type == ATYPE_WHOLE:
