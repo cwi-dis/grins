@@ -1249,6 +1249,7 @@ class SMILWriter(SMIL):
 			if (not hasanyprefix) or \
 			   ((hasGRiNSprefix and self.uses_grins_namespace) or \
 			   (hasQTprefix and self.uses_qt_namespace)):
+			        if val is None: print tag, attr
 				write(' %s=%s' % (attr, nameencode(val)))
 		self.__isopen = 1
 		self.__stack.append((tag, hasprefix))
@@ -1764,7 +1765,7 @@ class SMILWriter(SMIL):
 				attrlist.append(('%s:drawbox' % NSGRiNSprefix, '1'))
 			
 			# we save the showBackground attribute only if it's not the default value
-			showBackground = ch.get('showBackground')
+			showBackground = ch.get('showBackground', 'always')
 			if showBackground != 'always':
 				attrlist.append(('showBackground', showBackground))
 			

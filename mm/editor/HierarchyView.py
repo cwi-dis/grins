@@ -21,6 +21,16 @@ import MMmimetypes
 import features
 import compatibility
 
+# mjvdg: Enable or disable the slideshow view (make the heirachy flat!)
+try:
+	if features.slideshow_view:
+		slideshow_view = 1;
+	else:
+		slideshow_view = 0;
+except AttributeError:
+	# slideshow_view was not defined in features.py
+	slideshow_view = 0;
+
 import settings
 DISPLAY_VERTICAL = settings.get('vertical_structure')
 hierarchy_minimum_sizes = settings.get('hierarchy_minimum_sizes')
@@ -230,8 +240,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.new_displist = None
 		self.last_geometry = None
 		self.toplevel = toplevel
-		self.root = self.toplevel.root
-		self.focusnode = self.prevfocusnode = self.root
+		self.root = self.toplevel.root # : MMNode - the root of the MMNode heirachy
+		self.focusnode = self.prevfocusnode = self.root	# : MMNode
 		self.editmgr = self.root.context.editmgr
 		self.destroynode = None	# node to be destroyed later
 		self.expand_on_show = 1
@@ -509,7 +519,9 @@ class HierarchyView(HierarchyViewDialog):
 		self.dropfile(node, window, event, params)
 
 	def dropfile(self, maybenode, window, event, params):
+		# Called when a file is dragged-and-dropped onto this HeirachyView
 		x, y, filename = params
+
 		if maybenode is not None:
 			self.setfocusnode(maybenode)
 			obj = self.whichobj(maybenode)
@@ -519,12 +531,24 @@ class HierarchyView(HierarchyViewDialog):
 				windowinterface.beep()
 				return
 			self.setfocusobj(obj) # give the focus to the object which was dropped on.
+			
+		if slideshow_view:	# mjvdg 28-sept-2000
+			# The dropped object will be put into the left-most free node.
+			# Now, obj is the object which had a file dropped on it.
+			prev = obj.GetPrevious();
+			while prev != None and prev.HasNoURL(): # While this object has no URL
+				obj = prev;
+				prev = obj.GetPrevious();
+			prev = None;		# Garbage collect.
+
+
 		if event == WMEVENTS.DropFile:
 			url = MMurl.pathname2url(filename)
 		else:
 			url = filename
-		ctx = obj.node.GetContext()
-		t = obj.node.GetType()
+
+		ctx = obj.node.GetContext() # ctx is the node context (MMNodeContext)
+		t = obj.node.GetType()	# t is the type of node (String)
 		if t == 'imm':
 			self.render()
 			windowinterface.showmessage('destination node is an immediate node, change to external?', mtype = 'question', callback = (self.cvdrop, (obj.node, window, event, params)), parent = self.window)
@@ -537,7 +561,11 @@ class HierarchyView(HierarchyViewDialog):
 			interior = (obj.node.GetType() in MMNode.interiortypes)
 		# make URL relative to document
 		url = ctx.relativeurl(url)
+
+		# 'interior' is true if the type of node is in ['seq', 'par', 'excl'...]
+		# in other words, interior is false if this is a leaf node (TODO: confirm -mjvdg)
 		if interior:
+			# If the node is in ('par'...) then it is vertical
 			horizontal = (t in ('par', 'alt', 'excl', 'prio')) == DISPLAY_VERTICAL
 			i = -1
 			# if node is expanded, determine where in the node
@@ -586,7 +614,16 @@ class HierarchyView(HierarchyViewDialog):
 						obj.node.SetAttr('subregionwh',(w,h))
 					if MMAttrdefs.getattr(obj.node, 'fullimage'):
 						obj.node.SetAttr('imgcropwh', (w,h))
+
+			if slideshow_view:				
+				# If this node is the final node in a sequence (or par), add another.
+				if obj.node.GetNext()==None: # then this is the last node
+					nextnode = obj.node.DeepCopy()
+					self.editmgr.setnodeattr(nextnode, 'file', None)
+					em.addnode(obj.node.parent, -1, nextnode)
+				
 			em.commit()
+
 
 	def dragfile(self, dummy, window, event, params):
 		x, y = params
@@ -839,6 +876,7 @@ class HierarchyView(HierarchyViewDialog):
 	def insertnode(self, node, where, index = -1):
 		# 'where' is coded as follows: -1: before; 0: under; 1: after
 		if where <> 0:
+			# Get the parent
 			parent = self.focusnode.GetParent()
 			if parent is None:
 				windowinterface.showmessage(
@@ -863,7 +901,7 @@ class HierarchyView(HierarchyViewDialog):
 			node.Destroy()
 			return 0
 
-		if where == 0:
+		if where == 0:		# insert under (within? -mjvdg)
 			# Add (using editmgr) a child to the node with focus
 			# Index is the index in the list of children
 			# Node is the new node
@@ -872,14 +910,32 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			children = parent.GetChildren()
 			i = children.index(self.focusnode)
-			if where > 0:
-				i = i+1
-			em.addnode(parent, i, node)
+			if where > 0:	# Insert after
+				i = i+1;
+				em.addnode(parent, i, node);
+				# This code is actually unreachable - I suspect this function is
+				# only ever called when the node being added has no URL. -mjvdg
+# 				print "DEBUG: coming very close to untested code."
+# 				if slideshow_view and node.attrdict.has_key("file"): # mjvdg 28-sept-2000
+# 					# If this is the final node, insert a blank node after
+# 					# (copying this node to preserve all attr's)
+# 					print "DEBUG: Maybe add a node after the current?"
+# 					if obj.GetNext() == None:
+# 						print "DEBUG: entered untested code";
+# 						nextnode = node.DeepCopy();
+# 						em.setnodeattr(nextnode.node, "file", None);
+# 						em.addnode(parent, i+1, nextnode);
+				
+			else:		# Insert before
+				em.addnode(parent, i, node)
+
+
 		self.prevfocusnode = self.focusnode
 		self.focusnode = node
 		self.aftersetfocus()
 		em.commit()
 		return 1
+
 
 	#################################################
 	# Internal subroutines                          #
@@ -1532,11 +1588,13 @@ class Object:
 	
 	# Initialize an instance
 	def __init__(self, mother, item):
-		self.mother = mother	# Hierarchy view 
+		# mother is a HierachyView
+		# item is a tuple of (MMNode, int, box) where box is (float, float, float, float)
+		self.mother = mother	# : HierarchyView
 		node, self.boxtype, self.box = item
 		node.box = self.box	# Assigning the coords to the MMNode
 		node.set_infoicon = self.set_infoicon # Temp override of class method
-		self.node = node
+		self.node = node	# : MMNode
 		self.iconbox = None
 		if self.node.__class__ is SlideMMNode:
 			self.name = MMAttrdefs.getattr(node, 'tag')
@@ -1840,6 +1898,25 @@ class Object:
 				return 'linkdst'
 			else:
 				return ''
+
+	def GetPrevious(self):		# mjvdg 27-sept-2000
+		# returns the object prior to this one.
+		if isinstance(self.node, MMNode.MMNode):
+			#import pdb;
+			#pdb.set_trace()
+			return self.mother.whichobj(self.node.GetPrevious());
+		else:
+			# This shouldn't happen.. in theory.
+			print "DEBUG: Object does not have an MMNode!";
+			return None;
+
+	def HasNoURL(self):		# mjvdg 27-sept-2000
+		# returns True if this object's URL is empty.
+		if isinstance(self.node, MMNode.MMNode):
+			return not self.node.attrdict.has_key('file');
+		else:
+			return 0;
+	
 
 	#
 	# Menu handling functions, aka callbacks.
