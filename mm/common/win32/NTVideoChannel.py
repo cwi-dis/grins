@@ -261,12 +261,12 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if not outside_induced:
 			self.__playing = None
 
-	def stopplay(self, node, no_extend = 0):
+	def stopplay(self, node):
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
 		self.__stopplayer()
-		Channel.ChannelWindowAsync.stopplay(self, node, no_extend)
+		Channel.ChannelWindowAsync.stopplay(self, node)
 
 	# Define the anchor area for visible medias
 	def prepare_anchors(self, node, window, coordinates):
