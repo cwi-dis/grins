@@ -260,8 +260,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__errorList = []
 		self.__viewinfo = []
 		self.__progressCallback = progressCallback # tuple of (callback fnc, interval of time updated (max))
-		self.__progressTimeToUpdate = 0  # next time to update the progress bar (if progresscallback is not none
-		self.linenumber = 1 # number of lines. Useful to determinate the progress value
+		self.__progressTimeToUpdate = 0	# next time to update the progress bar (if progresscallback is not none
+		self.__nlines = 0		# number of lines. Useful to determine the progress value
 		self.__animateParSet = {}
 		
 		# experimental code for switch layout
@@ -275,6 +275,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__validchannels[chtype] = 1
 		for chtype in ChannelMap.SMILBostonChanneltypes:
 			self.__validchannels[chtype] = 1
+
+	def feed(self, data):
+		self.__nlines = data.count('\n')
+		xmllib.XMLParser.feed(self, data)
 
 	def close(self):
 		xmllib.XMLParser.close(self)
@@ -1461,10 +1465,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		attrdict['RTIPA_server'] = val
 	# RTIPA end
 
+	def __do_xmlbase(self, node, attr, val, attrdict):
+		# XXX need to implement
+		pass
+
 	def __do_pass(self, node, attr, val, attrdict):
 		pass
 
 	__parseattrdict = {
+		'xml:base': __do_xmlbase,
 		'id': __do_id,
 		'abstract': __do_literal,
 		'copyright': __do_literal,
@@ -2349,12 +2358,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if region is None:
 			return
 		regCssId = region.getCssId()
-		if regCssId == None:
+		if regCssId is None:
 			return
 		cssResolver = self.__context.cssResolver
 		subRegCssId = node.getSubRegCssId()
 		mediaCssId = node.getMediaCssId()
-		if subRegCssId == None or mediaCssId == None:
+		if subRegCssId is None or mediaCssId is None:
 			return
 		self.__cssIdTmpList.append(subRegCssId)
 		self.__cssIdTmpList.append(mediaCssId)
@@ -2625,7 +2634,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			
 		layout['close'] = close
 		layout['open'] = open
-		if traceImage != None:
+		if traceImage is not None:
 			layout['traceImage'] = traceImage
 		
 	def FixBaseWindow(self):
@@ -3044,15 +3053,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__context.attributes['project_boston'] = 0
 		elif ns in SMIL2ns:
 			self.__context.attributes['project_boston'] = 1
-		for attr in attributes.keys():
-			if attr != 'id':
-				if self.__context.attributes.get('project_boston') == 0:
+		if self.__context.attributes.get('project_boston') == 0:
+			for attr in attributes.keys():
+				if attr != 'id':
 					self.syntax_error('body attribute %s not compatible with SMIL 1.0' % attr)
 					if not features.editor:
 						del attributes[attr]
 					else:
 						self.__context.attributes['project_boston'] = 1
-				break
 		id = self.__checkid(attributes)
 		if self.__seen_smil:
 			self.error('more than 1 smil tag', self.lineno)
@@ -3284,7 +3292,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def __parsePercent(self, val, attr):
 		try:
-			if val[-1] == '%':
+			if val[-1:] == '%':
 				val = float(val[:-1]) / 100.0
 				if val < 0:
 					self.syntax_error('volume with negative %s' % attr)
@@ -3509,7 +3517,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			attrdict['base_window'] = self.__viewport
 			self.__childregions[self.__viewport].append(id)
 		else:
-			if self.__rootLayoutId == None:
+			if self.__rootLayoutId is None:
 				attrdict['base_window'] = layout_name
 			else:
 				attrdict['base_window'] = self.__rootLayoutId					
@@ -3795,6 +3803,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if not attributes.has_key('type'):
 			self.syntax_error("required attribute `type' missing in transition element")
 			attributes['type'] = 'fade'
+		self.AddCoreAttrs(dict, attributes)
+		self.AddTestAttrs(dict, attributes)
 		for name, value in attributes.items():
 			if name == 'id':
 				continue
@@ -4006,7 +4016,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if parsedebug: print 'start seq', attributes
 		if not settings.MODULES['NestedTimeContainers']:
 			if len(filter(lambda x: x.GetType() in ('par','seq'), self.__container.GetPath())) >= 2:
-				self.unknown_starttag('par', attributes)
+				self.unknown_starttag('seq', attributes)
 				return
 		id = self.__checkid(attributes)
 		self.NewContainer('seq', attributes)
@@ -4681,6 +4691,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# catch all
 
 	def unknown_starttag(self, tag, attrs):
+		if __debug__:
+			if parsedebug: print 'start foreign', tag, attrs
 		if self.__in_body:
 			node = self.__context.newnode('foreign')
 			self.__container._addchild(node)
@@ -4706,7 +4718,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__printdata.append(msg)
 		else:
 			print msg
-		if line != None:
+		if line is not None:
 			line = line-1
 		self.__errorList.append((msg, line))
 		
@@ -4720,7 +4732,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			print msg
 		line = lineno
-		if line != None:
+		if line is not None:
 			line = lineno-1
 		self.__errorList.append((msg, line))
 
@@ -4736,7 +4748,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			message = 'Unrecoverable error, line %d: %s' % (lineno, message)
 		line = lineno
-		if line != None:
+		if line is not None:
 			line = lineno-1
 		self.__errorList.insert(0,(msg+message, line))
 		raise MSyntaxError, msg + message
@@ -4883,20 +4895,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				method = None
 		if method is not None:
 			self.handle_endtag(tagname, method)
-		if self.__in_body and self.__container is not None and self.__container.GetType() == 'foreign':
+		elif self.__in_body and self.__container is not None and self.__container.GetType() == 'foreign':
 			self.__container = self.__container.GetParent()
 
 	# update progress bar if needed
 	def __updateProgressHandler(self):
 		import time
-		if self.__progressCallback != None:
+		if self.__progressCallback is not None:
 			callback, intervalTime = self.__progressCallback
 			if time.time() > self.__progressTimeToUpdate:
 				# determinate the next time to update
 				self.__progressTimeToUpdate = time.time()+intervalTime
-				if self.linenumber != 0:
+				if self.__nlines:
 					# update the handler. 
-					callback(float(self.lineno)/self.linenumber)
+					callback(float(self.lineno)/self.__nlines)
 				
 class SMILMetaCollector(xmllib.XMLParser):
 	# Collect the meta attributes from a smil file
@@ -5044,7 +5056,6 @@ def __doParse(parser, data):
 	try:
 ##		from time import time
 ##		t0 = time()
-		parser.linenumber = data.count('\n')
 		parser.feed(data)
 		parser.close()
 ##		t1 = time()
