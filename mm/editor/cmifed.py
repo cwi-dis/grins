@@ -16,17 +16,8 @@ import getopt
 def usage(msg):
 	sys.stdout = sys.stderr
 	print msg
-	print 'usage: cmifed [-qpsnTHPSL] [-h helpdir] file ...'
+	print 'usage: cmifed [-q] [-h helpdir] file ...'
 	print '-q         : quiet (don\'t print anything to stdout)'
-	print '-p         : start playing right away'
-	print '-j name    : start playing at given global anchor'
-	print '-s         : report statistics (guru only)'
-	print '-n         : no pre-arming (guru only)'
-	print '-C         : open Channel view right away'
-	print '-H         : open Structure view right away'
-	print '-P         : open Player window right away'
-##	print '-S         : open Style sheet window right away'
-	print '-L         : open Hyperlinks window right away'
 	print '-h helpdir : specify help directory'
 	print 'file ...   : one or more CMIF files'
 	sys.exit(2)
@@ -110,12 +101,13 @@ class Main(MainDialog):
 			self.commandlist.append(
 				HELP(callback = (self.help_callback, ())))
 		import settings
-		if settings.get('debug'):
-			self.commandlist = self.commandlist + [
-				TRACE(callback = (self.trace_callback, ())),
-				DEBUG(callback = (self.debug_callback, ())),
-				CRASH(callback = (self.crash_callback, ())),
-				]
+		if __debug__:
+			if settings.get('debug'):
+				self.commandlist = self.commandlist + [
+					TRACE(callback = (self.trace_callback, ())),
+					DEBUG(callback = (self.debug_callback, ())),
+					CRASH(callback = (self.crash_callback, ())),
+					]
 
 		if self.splash is not None:
 			self.splash.unsplash()
@@ -130,7 +122,7 @@ class Main(MainDialog):
 		if ENABLE_FNORB_SUPPORT:
 			import CORBA.services
 			self.corba_services = CORBA.services.services(sys.argv)
-			
+
 		if settings.get('registered') == 'notyet' and \
 				not self._license.is_evaluation_license():
 			answer = windowinterface.RegisterDialog()
@@ -182,7 +174,7 @@ class Main(MainDialog):
 	def new_callback(self):
 		import TopLevel
 		import windowinterface
-		
+
 		if not self.canopennewtop():
 			return
 		if self.template_info is None:
@@ -194,7 +186,7 @@ class Main(MainDialog):
 			windowinterface.showmessage("Missing templates, creating empty document.")
 			top = TopLevel.TopLevel(self, self.getnewdocumentname(mimetype="application/x-grins-project"), 1)
 			self.new_top(top)
-	
+
 	def help_callback(self, params=None):
 		import Help
 		Help.showhelpwindow()
@@ -228,7 +220,7 @@ class Main(MainDialog):
 		self.new_top(top)
 		if htmltemplate:
 			top.context.attributes['project_html_page'] = htmltemplate
-		
+
 	def getnewdocumentname(self, templatename=None, mimetype=None):
 		name = 'Untitled%d'%self._untitled_counter
 		self._untitled_counter = self._untitled_counter + 1
@@ -238,7 +230,7 @@ class Main(MainDialog):
 		else:
 			dummy, ext = os.path.splitext(templatename)
 		return name + ext
-		
+
 	def canopennewtop(self):
 		# Return true if a new top can be opened (only one top in the light version)
 		if not features.lightweight:
@@ -276,12 +268,12 @@ class Main(MainDialog):
 		else:
 			self.new_top(top)
 			self._update_recent(url)
-			
+
 	def open_recent_callback(self, url):
 		if not self.canopennewtop():
 			return
 		self.openURL_callback(url)
-		
+
 	def _update_recent(self, url):
 		if url:
 			self.add_recent_file(url)
@@ -318,22 +310,23 @@ class Main(MainDialog):
 		windowinterface.setwaiting()
 		self.do_exit(exitcallback)
 
-	def crash_callback(self):
-		raise 'Crash requested by user'
-		
-	def debug_callback(self):
-		import pdb
-		pdb.set_trace()
+	if __debug__:
+		def crash_callback(self):
+			raise 'Crash requested by user'
 
-	def trace_callback(self):
-		import trace
-		if self._tracing:
-			trace.unset_trace()
-			self._tracing = 0
-		else:
-			self._tracing = 1
-			trace.set_trace()
-			
+		def debug_callback(self):
+			import pdb
+			pdb.set_trace()
+
+		def trace_callback(self):
+			import trace
+			if self._tracing:
+				trace.unset_trace()
+				self._tracing = 0
+			else:
+				self._tracing = 1
+				trace.set_trace()
+
 	def preferences_callback(self):
 		import AttrEdit
 		AttrEdit.showpreferenceattreditor()
@@ -404,7 +397,7 @@ class Main(MainDialog):
 			apply(rtn, arg)
 		else:
 			raise SystemExit, 0
-		
+
 	def run(self):
 		import windowinterface
 		windowinterface.mainloop()
@@ -444,7 +437,7 @@ class Main(MainDialog):
 
 	def cansave(self):
 		return 1
-	
+
 	def wanttosave(self):
 ##		import license
 ##		import windowinterface
@@ -459,12 +452,9 @@ class Main(MainDialog):
 
 def main():
 	try:
-		opts, files = getopt.getopt(sys.argv[1:], 'qsnh:')
+		opts, files = getopt.getopt(sys.argv[1:], 'qh:')
 	except getopt.error, msg:
 		usage(msg)
-
-	if os.environ.has_key('PRELOADDOC') and not files:
-		files.append(os.environ['PRELOADDOC'])
 
 	if sys.argv[0] and sys.argv[0][0] == '-':
 		sys.argv[0] = 'cmifed'
@@ -478,43 +468,21 @@ def main():
 
 	import settings
 	kbd_int = KeyboardInterrupt
-	if ('-q', '') in opts:
+	if ('-q', '') in opts and sys.platform not in ('mac', 'win32'):
+		# no sense doing this on Mac or Windows
 		sys.stdout = open('/dev/null', 'w')
-	elif settings.get('debug'):
-		try:
-			import signal, pdb
-		except ImportError:
-			pass
-		else:
-			signal.signal(signal.SIGINT,
-				      lambda s, f, pdb=pdb: pdb.set_trace())
-			kbd_int = 'dummy value to prevent interrupts to be caught'
+	else:
+		if __debug__:
+			if settings.get('debug'):
+				try:
+					import signal, pdb
+				except ImportError:
+					pass
+				else:
+					signal.signal(signal.SIGINT,
+						      lambda s, f, pdb=pdb: pdb.set_trace())
+					kbd_int = 'dummy value to prevent interrupts from being caught'
 
-## 	for fn in files:
-## 		try:
-## 			# Make sure the files exist first...
-## 			f = open(fn, 'r')
-## 			f.close()
-## 		except IOError, msg:
-## 			import types
-## 			if type(msg) is types.InstanceType:
-## 				msg = msg.strerror
-## 			else:
-## 				msg = msg[1]
-## 			sys.stderr.write('%s: cannot open: %s\n' % (fn, msg))
-## 			sys.exit(2)
-
-## 	# patch the module search path
-## 	# so we are less dependent on where we are called
-## 	sys.path.append(findfile('lib'))
-## 	sys.path.append(findfile('video'))
-
-##	import mimetypes, grins_mimetypes
-##	mimetypes.types_map.update(grins_mimetypes.mimetypes)
-
-	import Channel
-	#
-	stats = 0
 	#
 ##	import Help
 ##	if hasattr(Help, 'sethelpprogram'):
@@ -524,14 +492,9 @@ def main():
 ##		else:
 ##			Help.sethelpprogram('editor')
 	for opt, arg in opts:
-		if opt == '-s':
-			stats = 1
-		if opt == '-n':
-			Channel.disable_prearm()
 		if opt == '-h':
 			import Help
 			Help.sethelpdir(arg)
-	#
 
 	m = Main(opts, files, splash)
 
@@ -572,9 +535,6 @@ def main():
 	finally:
 		import windowinterface
 		windowinterface.close()
-		if stats:
-			import MMNode
-			MMNode._prstats()
 
 
 # A copy of cmif.findfile().  It is copied here rather than imported

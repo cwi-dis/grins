@@ -51,111 +51,112 @@ verbose = 0
 
 # Parse a file containing attribute definitions.
 #
-def readattrdefs(fp, filename):
-	filename_py = filename + '.py'
-	if verbose:
-		print 'Reading attributes from', filename, '...'
-	parser = MMParser.MMParser(fp, None)	# Note -- no context!
-	dict = {}
-	#
-	try:
-		while parser.peektoken():
-			parser.open()
-			attrname = parser.getnamevalue(None)
-			typedef = parser.gettypevalue(None)
-			xtypedef= typedef
-			if typedef[0] in ('tuple', 'list',
-					  'dict', 'namedict', 'attrdict'):
-				xtypedef = 'enclosed', typedef
-			defaultvalue = parser.getgenericvalue(
-				usetypedef(xtypedef,
-					   MMParser.MMParser.basicparsers))
-			labeltext = parser.getstringvalue(None)
-			displayername = parser.getnamevalue(None)
-			helptext = parser.getstringvalue(None)
-			inheritance = parser.getenumvalue(
-				['raw', 'normal', 'inherited', 'channel', 'region'])
-			xtypedef = 'enclosed', ('list', ('enum', ['advanced', 'template', 'g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'qt', 'smil10', 'smil2', 'cmif', 'snap', 'all']))
-			flags = parser.getgenericvalue(
-				usetypedef(xtypedef,
-				        MMParser.MMParser.basicparsers))
-			parser.close()
-			if dict.has_key(attrname):
-				if verbose:
-					print 'Warning: duplicate attr def', attrname
-		  
-			# WARNING: HACK
-			# for instance, the conversion is turn off for QuickTime docucment.
-			# In order to supress a specific traitment, in future we should extend the attrdef management 
-			import compatibility
-			import features
-			if compatibility.QT == features.compatibility and attrname == 'project_convert':
-				defaultvalue = 0
-
-			binary_flags = 0
-			for fl in flags:
-				if fl == 'advanced':
-					binary_flags = binary_flags | FLAG_ADVANCED
-				if fl == 'template':
-					binary_flags = binary_flags | FLAG_TEMPLATE
-				if fl == 'g2_light':
-					binary_flags = binary_flags | FLAG_G2_LIGHT
-				elif fl == 'g2_pro':
-					binary_flags = binary_flags | FLAG_G2_PRO
-				elif fl == 'qt_light':
-					binary_flags = binary_flags | FLAG_QT_LIGHT
-				elif fl == 'qt_pro':
-					binary_flags = binary_flags | FLAG_QT_PRO
-				elif fl == 'smil10':
-					binary_flags = binary_flags | FLAG_SMIL_1_0
-				elif fl == 'smil2':
-					binary_flags = binary_flags | FLAG_BOSTON
-				elif fl == 'cmif':
-					binary_flags = binary_flags | FLAG_CMIF
-				elif fl == 'g2':
-					binary_flags = binary_flags | FLAG_G2
-				elif fl == 'qt':
-					binary_flags = binary_flags | FLAG_QT
-				elif fl == 'snap':
-					binary_flags = binary_flags | FLAG_SNAP
-				elif fl == 'all':
-					binary_flags = binary_flags | FLAG_ALL
-
-			dict[attrname] = typedef, defaultvalue, labeltext, \
-				displayername, helptext, inheritance, binary_flags
-	except EOFError:
-		parser.reporterror(filename, 'Unexpected EOF', sys.stderr)
-		raise EOFError
-	except MSyntaxError, msg:
-		if type(msg) is type(()):
-			gotten, expected = msg
-			msg = 'got "'+gotten+'", expected "'+expected+'"'
-		parser.reporterror(filename,
-				'Syntax error: ' + msg, sys.stderr)
-		raise MSyntaxError, msg
-	except MTypeError, msg:
-		if type(msg) is type(()):
-			gotten, expected = msg
-			msg = 'got "'+gotten+'", expected "'+expected+'"'
-		parser.reporterror(filename, 'Type error: ' + msg, sys.stderr)
-		raise MTypeError, msg
-	#
-	try:
-		sf = os.stat(filename)
-		fpc = open(filename_py, 'w')
-		import pprint
+if __debug__:
+	def readattrdefs(fp, filename):
+		filename_py = filename + '.py'
 		if verbose:
-			print 'Writing compiled attributes to', filename_py
-		fpc.write('mtime = %s\nAttrdefs = ' % sf[ST_MTIME])
-		fpc.write(pprint.pformat(dict))
-		fpc.write('\n')
-		fpc.close()
-	except IOError, msg:
-		print 'Can\'t write compiled attributes to', filename_py
-		print msg[1]
-	if verbose:
-		print 'Done.'
-	return dict
+			print 'Reading attributes from', filename, '...'
+		parser = MMParser.MMParser(fp, None)	# Note -- no context!
+		dict = {}
+		#
+		try:
+			while parser.peektoken():
+				parser.open()
+				attrname = parser.getnamevalue(None)
+				typedef = parser.gettypevalue(None)
+				xtypedef= typedef
+				if typedef[0] in ('tuple', 'list',
+						  'dict', 'namedict', 'attrdict'):
+					xtypedef = 'enclosed', typedef
+				defaultvalue = parser.getgenericvalue(
+					usetypedef(xtypedef,
+						   MMParser.MMParser.basicparsers))
+				labeltext = parser.getstringvalue(None)
+				displayername = parser.getnamevalue(None)
+				helptext = parser.getstringvalue(None)
+				inheritance = parser.getenumvalue(
+					['raw', 'normal', 'inherited', 'channel', 'region'])
+				xtypedef = 'enclosed', ('list', ('enum', ['advanced', 'template', 'g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'qt', 'smil10', 'smil2', 'cmif', 'snap', 'all']))
+				flags = parser.getgenericvalue(
+					usetypedef(xtypedef,
+						MMParser.MMParser.basicparsers))
+				parser.close()
+				if dict.has_key(attrname):
+					if verbose:
+						print 'Warning: duplicate attr def', attrname
+
+				# WARNING: HACK
+				# for instance, the conversion is turn off for QuickTime docucment.
+				# In order to supress a specific traitment, in future we should extend the attrdef management 
+				import compatibility
+				import features
+				if compatibility.QT == features.compatibility and attrname == 'project_convert':
+					defaultvalue = 0
+
+				binary_flags = 0
+				for fl in flags:
+					if fl == 'advanced':
+						binary_flags = binary_flags | FLAG_ADVANCED
+					if fl == 'template':
+						binary_flags = binary_flags | FLAG_TEMPLATE
+					if fl == 'g2_light':
+						binary_flags = binary_flags | FLAG_G2_LIGHT
+					elif fl == 'g2_pro':
+						binary_flags = binary_flags | FLAG_G2_PRO
+					elif fl == 'qt_light':
+						binary_flags = binary_flags | FLAG_QT_LIGHT
+					elif fl == 'qt_pro':
+						binary_flags = binary_flags | FLAG_QT_PRO
+					elif fl == 'smil10':
+						binary_flags = binary_flags | FLAG_SMIL_1_0
+					elif fl == 'smil2':
+						binary_flags = binary_flags | FLAG_BOSTON
+					elif fl == 'cmif':
+						binary_flags = binary_flags | FLAG_CMIF
+					elif fl == 'g2':
+						binary_flags = binary_flags | FLAG_G2
+					elif fl == 'qt':
+						binary_flags = binary_flags | FLAG_QT
+					elif fl == 'snap':
+						binary_flags = binary_flags | FLAG_SNAP
+					elif fl == 'all':
+						binary_flags = binary_flags | FLAG_ALL
+
+				dict[attrname] = typedef, defaultvalue, labeltext, \
+					displayername, helptext, inheritance, binary_flags
+		except EOFError:
+			parser.reporterror(filename, 'Unexpected EOF', sys.stderr)
+			raise EOFError
+		except MSyntaxError, msg:
+			if type(msg) is type(()):
+				gotten, expected = msg
+				msg = 'got "'+gotten+'", expected "'+expected+'"'
+			parser.reporterror(filename,
+					'Syntax error: ' + msg, sys.stderr)
+			raise MSyntaxError, msg
+		except MTypeError, msg:
+			if type(msg) is type(()):
+				gotten, expected = msg
+				msg = 'got "'+gotten+'", expected "'+expected+'"'
+			parser.reporterror(filename, 'Type error: ' + msg, sys.stderr)
+			raise MTypeError, msg
+		#
+		try:
+			sf = os.stat(filename)
+			fpc = open(filename_py, 'w')
+			import pprint
+			if verbose:
+				print 'Writing compiled attributes to', filename_py
+			fpc.write('mtime = %s\nAttrdefs = ' % sf[ST_MTIME])
+			fpc.write(pprint.pformat(dict))
+			fpc.write('\n')
+			fpc.close()
+		except IOError, msg:
+			print 'Can\'t write compiled attributes to', filename_py
+			print msg[1]
+		if verbose:
+			print 'Done.'
+		return dict
 
 
 # Map a typedef to a (func, arg) pair.
@@ -377,7 +378,6 @@ def valuerepr(name, value):
 
 
 def parsevalue(name, string, context):
-	import MMParser
 	typedef = ('enclosed', getdef(name)[0])
 	return MMParser.parsevalue('('+string+')', typedef, context)
 
@@ -397,26 +397,28 @@ def initattrdefs():
 ##		else:
 ##			return marshal.loads(atcres.data)
 
-	import cmif
-	filename = cmif.findfile(os.path.join('lib', 'Attrdefs'))
-	try:
-		fp = open(filename, 'r')
-	except IOError:
-		fp = None
-	try:
-		import Attrdefs
-	except ImportError:
-		pass
-	else:
-		if fp is None:
-			return Attrdefs.Attrdefs
-		sf = os.stat(filename)
-		if Attrdefs.mtime == sf[ST_MTIME]:
-			return Attrdefs.Attrdefs
-	attrdefs = readattrdefs(fp, filename)
-	fp.close()
-	return attrdefs
-
+	if __debug__:
+		import cmif
+		filename = cmif.findfile(os.path.join('lib', 'Attrdefs'))
+		try:
+			fp = open(filename, 'r')
+		except IOError:
+			fp = None
+		try:
+			import Attrdefs
+		except ImportError:
+			pass
+		else:
+			if fp is None:
+				return Attrdefs.Attrdefs
+			sf = os.stat(filename)
+			if Attrdefs.mtime == sf[ST_MTIME]:
+				return Attrdefs.Attrdefs
+		attrdefs = readattrdefs(fp, filename)
+		fp.close()
+		return attrdefs
+	import Attrdefs
+	return Attrdefs.Attrdefs
 
 # Call the initialization
 #
