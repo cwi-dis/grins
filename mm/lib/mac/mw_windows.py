@@ -853,7 +853,8 @@ class _CommonWindow:
 		# not schedule redraws or invalidate clipping regions.
 		x, y, w, h = self._rect
 		self._rect = x+deltax, y+deltay, w, h
-		self._sizes = self._parent._pxl2rel(self._rect)
+		if not self._istoplevel:
+			self._sizes = self._parent._pxl2rel(self._rect)
 		for w in self._subwindows:
 			w._do_move(deltax, deltay)
 		
