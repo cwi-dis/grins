@@ -1593,6 +1593,10 @@ class LayoutView2(LayoutViewDialog2):
 			self.geomFieldWidget.updateMediaGeom(geom)
 	
 	def onSelect(self, nodeRefList):
+		# XXX in the case, if the focus is change from the tree widget, the focus in the control field is not updated.
+		# So we have to force any apply.
+		self.flushChangement()
+		
 		self.setglobalfocus(nodeRefList)
 
 		self.updateFocus()	
