@@ -1258,15 +1258,15 @@ class ChannelWindow(Channel):
 			apply(apply, self.__callback)
 			return
 		buttons = value[2]
-		if len(buttons) == 0:
-			if self.__transparent:
-				raise windowinterface.Continue		
-##			if hasattr(self._player, 'editmgr'):
-##				self.highlight()
-		else:
+		if buttons:
 			button = buttons[0]
 			button.highlight()
 			_button = button
+##		else:
+##			if self.__transparent:
+##				raise windowinterface.Continue		
+##			if hasattr(self._player, 'editmgr'):
+##				self.highlight()
 
 	def mouserelease(self, arg, window, event, value):
 		# arg is a tuple of (x, y, buttons, params)
@@ -1277,10 +1277,7 @@ class ChannelWindow(Channel):
 ##		if hasattr(self._player, 'editmgr'):
 ##			self.unhighlight()
 		buttons = value[2]
-		if len(buttons) == 0:
-			if self.__transparent:
-				raise windowinterface.Continue		
-		elif self._paused not in ('hide', 'disable'):
+		if buttons and self._paused not in ('hide', 'disable'):
 			button = buttons[0]
 			if _button is button:
 				try:
@@ -1291,6 +1288,9 @@ class ChannelWindow(Channel):
 					a = self.setanchorargs(a, button, value)
 					self._player.toplevel.setwaiting()
 					dummy = apply(f, a) # may close channel
+##		elif len(buttons) == 0:
+##			if self.__transparent:
+##				raise windowinterface.Continue		
 		if _button and not _button.is_closed():
 			_button.unhighlight()
 		_button = None
