@@ -71,6 +71,8 @@ class _rbtk:
 		for win in sw:
 			b=win.getsizes()
 			if b != (0, 0, 1, 1):
+				if win._showing:
+					d.fgcolor(win._showing)
 				d.drawbox(b)
 		self._topwindow.ShowWindows(win32con.SW_HIDE)
 
