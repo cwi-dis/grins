@@ -5,11 +5,16 @@ Other possibilities are values of the type
 	:pserver:USERNAME@oratrix.oratrix.nl:/ufs/mm/CVSPRIVATE
 where USERNAME has to be replaced by the actual value.
 
+Prerequisites
+
+WinCvs (we use version 1.1b6) from http://www.wincvs.org/
+Visual C++ 6.0 (we use Service Pack 3).
+
 Getting the Sources
 
-Create a directory where you're going to put the sources.  When using
-WinCVS, change the browser location to this directory.  Then execute
-the following commands (in WinCVS, use Admin -> CommandLine...):
+Create a directory where you're going to put the sources.  Change the WinCvs
+browser location to this directory (use View -> Change browser location...).
+Then execute the following commands (use Admin -> CommandLine...):
 
 cvs -d CVSROOT checkout -d cmif mm/demo
 cvs -d :pserver:pythoncvs@cvs.python.org:/projects/cvsroot checkout -d python python/dist/src
@@ -26,6 +31,9 @@ Release" and then build everything.
 This will compile a lot of files and copy a number of files to
 cmif\bin\win32.
 
+After the compilation completed successfully, you should run the batch 
+file cmif\win32\DXMedia\bin\reg.bat.
+
 Configuring and Testing
 
 If you didn't install things into D:\ufs\mm you need to make a few
@@ -33,7 +41,8 @@ changes to various files.
 
 Edit cmif\bin\pythonwin.ini and replace all occurences of the string
 "d:\ufs\mm" (or "D:\ufs\mm") to the absolute path name of the folder
-you created above.
+you created above.  In other words, to the folder with the cmif and
+python subfolders.  Also make the same change in cmif\iGRiNS.py.
 
 You should now be able to double click cmif\bin\win32\pythonwin.exe
 which should start a Python interpreter in a window.  If this works,
@@ -43,7 +52,12 @@ window, you get something like
 (the hexadecimal value may be different than this).  If you get
 something else, you should try setting the environment variable
 PYTHONHOME to the absolute path name of the python folder inside the
-directory you created at the beginning and try again.
+directory you created at the beginning and try again.  You can do that
+either in the (per user or system wide) environment, or you can add
+the line
+	set PYTHONHOME=d:\ufs\mm\python
+to the top of the cmif\bin\win32\runit.bat batch file (with the same
+change made to this value as the one you made above).
 
 If this works, you should be able to run the batch file
 cmif\bin\win32\runit.bat to start the GRiNS editor.  This is a version 
@@ -74,3 +88,4 @@ e) follow the same two steps for "GRiNS files" for the player.
 Thats all.
 
 
+  
