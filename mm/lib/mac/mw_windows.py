@@ -1211,7 +1211,8 @@ class _ScrollMixin:
 			w = float(w)/_x_pixel_per_mm
 			h = float(h)/_y_pixel_per_mm
 		elif units == UNIT_PXL:
-			pass
+			w = int(w)
+			h = int(h)
 		elif units == UNIT_SCREEN:
 			l, t, r, b = Qd.qd.screenBits.bounds
 			t = t + _screen_top_offset
@@ -1264,21 +1265,35 @@ class _ScrollMixin:
 		self._adjust_scrollbar_max()
 		self._do_resize0()
 		
-	def adjustcanvasforresize(self, width, height):
+	def mustadjustcanvasforresize(self, old_w, old_h):
+		"""About to resize. Return 1 if the resize has to be handled by higher layers,
+		0 if we can handle it by enabling scrollbars"""
 		if not self._barx:
-			return
-		self._canvassize = 1, 1	# Not very elegant, but better than nothing
-		self._adjust_scrollbar_max()
-		return
-		x, y, w, h = self._rect
-		wf, hf = self._canvassize
-		virtual_w, virtual_h = w*wf, h*hf
-		new_wf = virtual_w / width
-		new_hf = virtual_h / height
+			return 1
+##		self._canvassize = 1, 1	# Not very elegant, but better than nothing
+##		self._adjust_scrollbar_max()
+##		return 1
+		x, y, new_w, new_h = self._rect
+		old_wf, old_hf = self._canvassize
+		old_virtual_w, old_virtual_h = int(old_w*old_wf+0.5), int(old_h*old_hf+0.5)
+		new_wf = float(old_virtual_w) / new_w
+		new_hf = float(old_virtual_h) / new_h
 		if new_wf < 1: new_wf = 1
 		if new_hf < 1: new_hf = 1
+##		print 'OLD WINDOW SIZE', old_w, old_h
+##		print 'OLD FACTORS', old_wf, old_hf
+##		print 'OLD VIRTUAL SIZE', old_virtual_w, old_virtual_h
 		self.arrowcache = {}
-		self._canvassize = wf, hf
+		self._canvassize = new_wf, new_hf
+		self._adjust_scrollbar_max()
+		new_wf, new_hf = self._canvassize
+		new_virtual_w , new_virtual_h = int(new_w*new_wf+0.5), int(new_h*new_hf+0.5)
+##		print 'NEW WIDTH HEIGHT', new_w, new_h
+##		print 'NEW VIRTUAL SIZE', new_virtual_w, new_virtual_h
+##		print 'NEW FACTORS', new_wf, new_hf
+		if (old_virtual_w, old_virtual_h) != (new_virtual_w, new_virtual_h):
+			return 1
+		return 0
 		
 	def _adjust_scrollbar_max(self):
 		"""Adjust scrollbar maximum for new window/canvassize. This may update
@@ -1308,19 +1323,21 @@ class _ScrollMixin:
 		else:
 			newmax = canvassize - windowsize
 			oldvalue = bar.GetControlValue()
-			if oldvalue:
-				# XXXX Should be done better
-				oldmax = bar.GetControlMaximum()
-				factor = float(newmax)/oldmax
-				hw = windowsize/2
-				newvalue = int(oldvalue*factor+hw*factor-hw)
+##			if oldvalue:
+##				# XXXX Should be done better
+##				oldmax = bar.GetControlMaximum()
+##				factor = float(newmax)/oldmax
+##				hw = windowsize/2
+##				newvalue = int(oldvalue*factor+hw*factor-hw)
+##			else:
+##				newvalue = 0
+			if oldvalue > newmax:
+				newvalue = newmax
 			else:
-				newvalue = 0
-			bar.SetControlValue(newvalue)
+				newvalue = oldvalue
 			bar.SetControlMaximum(newmax)
+			bar.SetControlValue(newvalue)
 			bar.HiliteControl(0)
-			
-		
 
 class _AdornmentsMixin:
 	"""Class to handle toolbars and other adornments on toplevel windows"""
@@ -1635,19 +1652,20 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 				pass
 			mycreatebox._next_create_box[0:0] = next_create_box
 			
-		for d in self._displists[:]:
-			d.close()
 		self._wid.SizeWindow(width, height, 1)
 		Qd.SetPort(self._wid)
 		Win.InvalRect(self.qdrect())
 		self._clipchanged()
 
-		_ScrollMixin.adjustcanvasforresize(self, width, height)
-		x, y = self._rect[:2]
+		x, y, old_w, old_h = self._rect
 		self._rect = x, y, width, height
 		_AdornmentsMixin._resized(self)
 		_ScrollMixin._resized(self)
-		self._do_resize0()
+		mustresize = _ScrollMixin.mustadjustcanvasforresize(self, old_w, old_h)
+		if mustresize:
+			for d in self._displists[:]:
+				d.close()
+			self._do_resize0()
 		if mycreatebox:
 			mycreatebox._rb_end()
 			raise _rb_done
@@ -1655,12 +1673,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 	def _do_resize0(self):
 		"""Common code for resize and double width/height"""
 		x, y, width, height = self._rect
-
-		# convert pixels to mm
-		parent = self._parent
-		_x_pixel_per_mm, _y_pixel_per_mm = \
-				 mw_globals.toplevel._getmmfactors()
-		hf, vf = self._scrollsizefactors()
 
 		for w in self._subwindows:
 			w._do_resize1()
@@ -1784,8 +1796,6 @@ class _SubWindow(_CommonWindow):
 			raise 'Empty subwindow', coordinates
 		self._sizes = coordinates
 		
-		hf, vf = self._scrollsizefactors()
-		
 		if parent._transparent:
 			self._transparent = parent._transparent
 		else:
@@ -1890,12 +1900,12 @@ class _SubWindow(_CommonWindow):
 		xscrolloff, yscrolloff = parent._scrolloffset()
 		x, y = x+xscrolloff, y+yscrolloff
 		self._rect = x, y, w, h
-		w, h = self._sizes[2:]
-		if w == 0:
-			w = float(self._rect[_WIDTH]) / parent._rect[_WIDTH]
-		if h == 0:
-			h = float(self._rect[_HEIGHT]) / parent._rect[_HEIGHT]
-		hf, vf = self._scrollsizefactors()
+##		w, h = self._sizes[2:]
+##		if w == 0:
+##			w = float(self._rect[_WIDTH]) / parent._rect[_WIDTH]
+##		if h == 0:
+##			h = float(self._rect[_HEIGHT]) / parent._rect[_HEIGHT]
+##		hf, vf = self._scrollsizefactors()
 		# We don't have to clear _clip, our parent did that.
 		self._active_displist = None
 		for d in self._displists[:]:
