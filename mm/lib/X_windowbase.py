@@ -1621,6 +1621,7 @@ _fontmap = {
 	  'Greek-Bold': ['-*-arial-bold-r-*--*-*-*-*-p-*-iso8859-7',
 			 '-*-*-bold-r-*-*-*-*-*-*-*-*-iso8859-7'],
 	  'Greek-Italic': '-*-arial-regular-i-*-*-*-*-*-*-p-*-iso8859-7',
+	  'Amie': '-sgi-amie-medium-r-normal--*-*-*-*-p-*--ascii',
 	  }
 fonts = _fontmap.keys()
 
@@ -1690,8 +1691,11 @@ def findfont(fontname, pointsize):
 	pixelsize = pointsize * toplevel._dpi_y / 72.0
 	bestsize = 0
 	psize = pointsize
+	scfont = None
+	thefont = None
 	for font in fontlist:
 		parsedfont = _parsefontname(font)
+## scaled fonts don't look very nice, so this code is disabled
 ##		# scale the font if possible
 ##		if parsedfont[_PIXELS] == '0':
 ##			# scalable font
@@ -1703,6 +1707,10 @@ def findfont(fontname, pointsize):
 ##			thefont = _makefontname(parsedfont)
 ##			psize = pointsize
 ##			break
+		# remember scalable font in case no other sizes available
+		if parsedfont[_PIXELS] == '0':
+			scfont = parsedfont
+			continue
 		p = string.atoi(parsedfont[_PIXELS])
 		# either use closest, or use next smaller
 		if abs(pixelsize - p) < abs(pixelsize - bestsize): # closest
@@ -1710,6 +1718,20 @@ def findfont(fontname, pointsize):
 			bestsize = p
 			thefont = font
 			psize = p * 72.0 / toplevel._dpi_y
+	if thefont is None:
+		# didn't find a font
+		if scfont is not None:
+			# but we found a scalable font, so use it
+			scfont[_PIXELS] = '*'
+			scfont[_POINTS] = `int(pointsize * 10)`
+			scfont[_RES_X] = `toplevel._dpi_x`
+			scfont[_RES_Y] = `toplevel._dpi_y`
+			scfont[_AVG_WIDTH] = '*'
+			thefont = _makefontname(scfont)
+			psize = pointsize
+		else:
+			# no font available, complain.  Loudly.
+			raise error, "can't find any fonts"
 	fontobj = _Font(thefont, psize)
 	_fontcache[key] = fontobj
 	return fontobj	
