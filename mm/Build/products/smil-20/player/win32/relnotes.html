@@ -11,7 +11,7 @@
 
     <p>
       These are the release notes for GRiNS Player beta for SMIL 2.0,
-      Release Notes for Windows, build 33, October 30, 2000. A more
+      Release Notes for Windows, build 35, November 22, 2000. A more
       recent version of these release notes, as well as more recent
       builds of the player, may be available through <a
       href="http://www.oratrix.com/GRiNS/SMIL-2.0/">
@@ -23,6 +23,36 @@
       been tested very thoroughly with large documents. You may
       experience instabilities.
     </p>
+
+    <h2>Changes Since Build 33</h2><ul>
+      <li>All attributes that are valid according to the current SMIL
+	2.0 Language Profile are now recognized, although not all
+	attributes are implemented.</li>
+      <li>The SMIL 2.0 default namespace is now
+	http://www.w3.org/2000/SMIL20/CR/Language older namespaces are
+	recognized but result in a warning message.</li>
+      <li>The fill="hold" attribute value has been implemented.</li>
+      <li>The fill="transition attribute value has been implemented.</li>
+      <li>A problem was fixed when the presentation was paused while
+	there were children in an excl elements that were paused due to
+	excl/priorityClass semantics.</li>
+      <li>A problem was fixed with container elements that need to be
+	frozen from the start.</li>
+      <li>A problem was fixed when jumping to an element in a sequence
+	where one of the elements before the target element had
+	indefinite duration.</li>
+      <li>A problem was fixed with playing a video element in a region
+	that didn't fit in it's parent region (and was therefore clipped
+	to the size of the parent region).</li>
+      <li>A problem was fixed in the Preferences dialog.  The check
+	marks for the systemOverdubOrSubtitle and systemCaptions
+	attributes were exchanged.</li>
+      <li>The override="uid-only" attribute value on customTest
+	elements has been implemented.</li>
+      <li>The param element is now recognized.</li>
+      <li>The syntax for multiple values in the systemRequired and
+	customTest attributes has been implemented.</li>
+    </ul>
 
     <h2>Changes Since Build 32</h2>
     <ul>
