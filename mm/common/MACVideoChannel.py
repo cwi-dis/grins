@@ -40,7 +40,7 @@ class VideoChannel(ChannelWindow):
 		self.__rc = None
 		
 	def do_show(self, pchan):
-		if not ChannelWindow.do_show(self):
+		if not ChannelWindow.do_show(self, pchan):
 			return 0
 		try:
 			from RealChannel import RealChannel
@@ -59,7 +59,7 @@ class VideoChannel(ChannelWindow):
 		if debug: print 'VideoChannel: arm', node
 		fn = self.getfileurl(node)
 		import mimetypes, string
-			mtype = mimetypes.guess_type(url)[0]
+		mtype = mimetypes.guess_type(url)[0]
 		node.__type = ''
 		if string.find(mtype, 'real') >= 0:
 			node.__type = 'real'

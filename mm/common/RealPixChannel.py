@@ -4,7 +4,7 @@ from RealWindowChannel import RealWindowChannel
 
 class RealPixChannel(RealWindowChannel):
 	node_attrs = RealWindowChannel.node_attrs + \
-		     ['size', 'aspect', 'bitrate', 'maxfps', 'preroll', 'href']
+		     ['size', 'aspect', 'bitrate', 'maxfps', 'preroll', 'href', 'captionchannel']
 
 	def getfileurl(self, node):
 		if hasattr(node, 'tmpfile'):
