@@ -67,7 +67,7 @@ item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=c:\documents and settings\sjoerd\my documents\src\cmif22\build\products\smil-20\lllicense.txt
+  Source=..\products\smil-20\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
 end
@@ -258,7 +258,7 @@ item: Remark
 end
 item: Set Variable
   Variable=BRANDING
-  Value=1
+  Value=0
 end
 item: If/While Statement
   Variable=BRANDING
@@ -576,287 +576,6 @@ item: Custom Dialog Set
       Text Dutch=<&Terug
       Text Norwegian=<&Tilbake
       Text Swedish=< &Tillbaka
-    end
-  end
-end
-item: Custom Dialog Set
-  Name=Get Registration Information
-  Display Variable=DISPLAY
-  item: Dialog
-    Title=Registration Information
-    Title French=%APPTITLE%
-    Title German=%APPTITLE%
-    Title Portuguese=%APPTITLE%
-    Title Spanish=%APPTITLE%
-    Title Italian=%APPTITLE%
-    Title Danish=%APPTITLE%
-    Title Dutch=%APPTITLE%
-    Title Norwegian=%APPTITLE%
-    Title Swedish=%APPTITLE%
-    Width=280
-    Height=224
-    Font Name=Helv
-    Font Size=8
-    item: Static
-      Rectangle=90 22 262 61
-      Create Flags=01010000000000000000000000000000
-      Text=Please enter the name and company of the registered owner and the license key of %APPTITLE% into the fields below. All fields must be filled in to proceed.
-      Text French=Veuillez entrer le nom et la société du propriétaire enregistré de %APPTITLE% dans les champs ci-dessous. Tous les champs doivent être complétés afin de pouvoir poursuivre
-      Text German=Bitte tragen Sie in den Feldern unten den Namen und das Unternehmen des registrierten Eigentümers von %APPTITLE% ein. Um fortzufahren müssen alle Felder ausgefüllt sein.
-      Text Portuguese=É favor introduzir o nome e a companhia do proprietário registado de %APPTITLE% nos campos abaixo. Todos os campos devem ser preenchidos para prosseguir.
-      Text Spanish=Introduzca el nombre y la empresa del propietario autorizado de %APPTITLE% en los campos que se ofrecen a continuación. Para continuar deben rellenarse todos los campos.
-      Text Italian=Inserisci il nome e la società del proprietario registrato di  %APPTITLE% nei campi sotto. Per poter procedere devi completare tutti i campi.
-      Text Danish=Indtast navn og selskab for den indregistrerede ejer af %APPTITLE% i nedenstående felter. Alle felter skal udfyldes, inden man kan fortsætte.
-      Text Dutch=Voer de naam en het bedrijf van de geregistreerde eigenaar van %APPTITLE% in onderstaande velden in. Alle velden moeten ingevuld zijn voordat u verder kunt.
-      Text Norwegian=Tast inn personnavnet og firmaet til den registrerte eieren av %APPTITLE% i feltet nedenfor. Alle felt må fylles inn før du kan fortsette.
-      Text Swedish=Ange namn och företag för den registrerade ägaren till %APPTITLE% i fälten nedan. Samtliga fält måste vara ifyllda för att du ska kunna fortsätta.
-    end
-    item: Static
-      Rectangle=90 75 250 84
-      Create Flags=01010000000000000000000000000000
-      Flags=0000000000000001
-      Name=Arial
-      Font Style=-11 0 0 0 700 0 0 0 0 3 2 1 34
-      Text=Name:
-      Text French=Nom
-      Text German=Name:
-      Text Portuguese=Nome:
-      Text Spanish=Nombre:
-      Text Italian=Nome e cognome:
-      Text Danish=Navn:
-      Text Dutch=Naam
-      Text Norwegian=Navn:
-      Text Swedish=Namn:
-    end
-    item: Editbox
-      Rectangle=90 85 260 97
-      Variable=NAME
-      Help Context=16711681
-      Create Flags=01010000100000010000000010000000
-      Text=%NAME%
-      Text French=%NAME%
-      Text German=%NAME%
-      Text Portuguese=%NAME%
-      Text Spanish=%NAME%
-      Text Italian=%NAME%
-      Text Danish=%NAME%
-      Text Dutch=%NAME%
-      Text Norwegian=%NAME%
-      Text Swedish=%NAME%
-    end
-    item: Static
-      Rectangle=90 110 251 119
-      Create Flags=01010000000000000000000000000000
-      Flags=0000000000000001
-      Name=Arial
-      Font Style=-11 0 0 0 700 0 0 0 0 3 2 1 34
-      Text=Company:
-      Text French=Société
-      Text German=Gesellschaft:
-      Text Portuguese=Companhia:
-      Text Spanish=Empresa:
-      Text Italian=Società:
-      Text Danish=Selskab:
-      Text Dutch=Bedrijf
-      Text Norwegian=Firma:
-      Text Swedish=Företag:
-    end
-    item: Editbox
-      Rectangle=90 120 260 132
-      Variable=COMPANY
-      Help Context=16711681
-      Create Flags=01010000100000010000000010000000
-      Text=%COMPANY%
-      Text French=%COMPANY%
-      Text German=%COMPANY%
-      Text Portuguese=%COMPANY%
-      Text Spanish=%COMPANY%
-      Text Italian=%COMPANY%
-      Text Danish=%COMPANY%
-      Text Dutch=%COMPANY%
-      Text Norwegian=%COMPANY%
-      Text Swedish=%COMPANY%
-    end
-    item: Static
-      Rectangle=90 145 251 154
-      Enabled Color=00000000000000001111111111111111
-      Create Flags=01010000000000000000000000000000
-      Flags=0000000000000001
-      Name=Arial
-      Font Style=-11 0 0 0 700 0 0 0 0 3 2 1 34
-      Text=License Key:
-    end
-    item: Editbox
-      Rectangle=90 155 260 167
-      Variable=LICENSE
-      Help Context=16711681
-      Enabled Color=00000000000000001111111111111111
-      Create Flags=01010000100000010000000010000000
-      Text=%LICENSE%
-    end
-    item: Push Button
-      Rectangle=172 185 214 199
-      Variable=DIRECTION
-      Value=N
-      Create Flags=01010000000000010000000000000001
-      Text=&Next >
-      Text French=&Suivant>
-      Text German=&Weiter>
-      Text Portuguese=&Próximo>
-      Text Spanish=&Siguiente >
-      Text Italian=&Avanti >
-      Text Danish=&Næste>
-      Text Dutch=&Volgende>
-      Text Norwegian=&Neste>
-      Text Swedish=&Nästa >
-    end
-    item: Push Button
-      Rectangle=130 185 172 199
-      Variable=DIRECTION
-      Value=B
-      Create Flags=01010000000000010000000000000000
-      Flags=0000000000000001
-      Text=< &Back
-      Text French=<&Retour
-      Text German=<&Zurück
-      Text Portuguese=<&Retornar
-      Text Spanish=<&Retroceder
-      Text Italian=< &Indietro
-      Text Danish=<&Tilbage
-      Text Dutch=<&Terug
-      Text Norwegian=<&Tilbake
-      Text Swedish=< &Tillbaka
-    end
-    item: Push Button
-      Rectangle=222 185 264 199
-      Action=3
-      Create Flags=01010000000000010000000000000000
-      Text=Cancel
-      Text French=Annuler
-      Text German=Abbrechen
-      Text Portuguese=Cancelar
-      Text Spanish=Cancelar
-      Text Italian=Annulla
-      Text Danish=Annuller
-      Text Dutch=Annuleren
-      Text Norwegian=Avbryt
-      Text Swedish=Avbryt
-    end
-    item: Static
-      Rectangle=9 177 263 178
-      Action=3
-      Create Flags=01010000000000000000000000000111
-    end
-  end
-end
-item: Custom Dialog Set
-  Name=Display Registration Information
-  Display Variable=DISPLAY
-  item: Dialog
-    Title=Registration Information
-    Title French=%APPTITLE%
-    Title German=%APPTITLE%
-    Title Portuguese=%APPTITLE%
-    Title Spanish=%APPTITLE%
-    Title Italian=%APPTITLE%
-    Title Danish=%APPTITLE%
-    Title Dutch=%APPTITLE%
-    Title Norwegian=%APPTITLE%
-    Title Swedish=%APPTITLE%
-    Width=280
-    Height=224
-    Font Name=Helv
-    Font Size=8
-    item: Static
-      Rectangle=95 85 270 121
-      Create Flags=01010000000000000000000000000000
-      Text=%NAME%
-      Text=%COMPANY%
-      Text French=%NAME%
-      Text French=%COMPANY%
-      Text German=%NAME%
-      Text German=%COMPANY%
-      Text Portuguese=%NAME%
-      Text Portuguese=%COMPANY%
-      Text Spanish=%NAME%
-      Text Spanish=%COMPANY%
-      Text Italian=%NAME%
-      Text Italian=%COMPANY%
-      Text Danish=%NAME%
-      Text Danish=%COMPANY%
-      Text Dutch=%NAME%
-      Text Dutch=%COMPANY%
-      Text Norwegian=%NAME%
-      Text Norwegian=%COMPANY%
-      Text Swedish=%NAME%
-      Text Swedish=%COMPANY%
-    end
-    item: Static
-      Rectangle=95 34 270 80
-      Create Flags=01010000000000000000000000000000
-      Text=This software has already been installed by the following person. If you are not licensed to use this software you may not install this software onto your computer.
-      Text French=Ce logiciel a déjà été installé par la personne nommée ci-dessous. Si vous n'avez pas l'autorisation d'utiliser ce logiciel, veuillez ne pas l'installer sur votre ordinateur
-      Text German=Diese Software wurde bereits von der folgenden Person installiert. Ohne Lizenz zur Verwendung dieser Software dürfen Sie diese Software nicht auf Ihrem Computer installieren.
-      Text Portuguese=Este programa já foi instalado pela seguinte pessoa. Se não tiver a licença para utilizar este programa, não pode instalar este programa no seu computador.
-      Text Spanish=La persona que se cita a continuación ya ha instalado este software. Si no está autorizado para usar este software no debe instalarlo en su ordenador.
-      Text Italian=Questo software è stato già installato dal seguente utente. Se non possiedi la licenza per usare questo software non puoi installarlo sul tuo computer.
-      Text Danish=Denne software er allerede installeret af denne person. Hvis du ikke har licens til at benytte denne software, må du ikke installere dette software software på computeren.
-      Text Dutch=Deze software is reeds door de volgende persoon ge•nstalleerd. Als u niet bevoegd bent om deze software te gebruiken, mag u deze software niet op uw computer installeren.
-      Text Norwegian=Denne programvaren har allerede blitt installert av følgende person. Hvis du ikke har lisens til å bruke denne programvaren kan du ikke installere den på datamaskinen din.
-      Text Swedish=Denna programvara har redan installerats av personen nedan. Om du inte har licens att använda denna programvara får du inte installera programvaran på din dator.
-    end
-    item: Push Button
-      Rectangle=172 185 214 199
-      Variable=DIRECTION
-      Value=N
-      Create Flags=01010000000000010000000000000001
-      Text=&Next >
-      Text French=&Suivant>
-      Text German=&Weiter>
-      Text Portuguese=&Próximo>
-      Text Spanish=&Siguiente >
-      Text Italian=&Avanti >
-      Text Danish=&Næste>
-      Text Dutch=&Volgende>
-      Text Norwegian=&Neste>
-      Text Swedish=&Nästa >
-    end
-    item: Push Button
-      Rectangle=130 185 172 199
-      Variable=DIRECTION
-      Value=B
-      Create Flags=01010000000000010000000000000000
-      Flags=0000000000000001
-      Text=< &Back
-      Text French=<&Retour
-      Text German=<&Zurück
-      Text Portuguese=<&Retornar
-      Text Spanish=<&Retroceder
-      Text Italian=< &Indietro
-      Text Danish=<&Tilbage
-      Text Dutch=<&Terug
-      Text Norwegian=<&Tilbake
-      Text Swedish=< &Tillbaka
-    end
-    item: Push Button
-      Rectangle=222 185 264 199
-      Action=3
-      Create Flags=01010000000000010000000000000000
-      Text=Cancel
-      Text French=Annuler
-      Text German=Abbrechen
-      Text Portuguese=Cancelar
-      Text Spanish=Cancelar
-      Text Italian=Annulla
-      Text Danish=Annuller
-      Text Dutch=Annuleren
-      Text Norwegian=Avbryt
-      Text Swedish=Avbryt
-    end
-    item: Static
-      Rectangle=9 177 263 178
-      Action=3
-      Create Flags=01010000000000000000000000000111
     end
   end
 end
@@ -1680,6 +1399,14 @@ item: Install File
   Destination=%MAINDIR%\grprefs.txt
   Flags=0000000010001010
 end
+item: If/While Statement
+  Variable=BRANDING
+  Value=1
+end
+item: If/While Statement
+  Variable=LICENSE
+  Flags=00000001
+end
 item: Insert Line into Text File
   Pathname=%MAINDIR%\grprefs.txt
   New Text=license = '%LICENSE%'
@@ -1694,6 +1421,10 @@ item: Insert Line into Text File
   Pathname=%MAINDIR%\grprefs.txt
   New Text=license_organization = '%COMPANY%'
   Line Number=0
+end
+item: End Block
+end
+item: End Block
 end
 item: Install File
   Source=..\..\bin\win32\Qt.pyd
