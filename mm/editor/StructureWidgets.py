@@ -2,7 +2,7 @@
 
 # TODO: rename everything to "widgets"
 
-import Interactive
+import Widgets
 import Bandwidth
 import MMurl, MMAttrdefs, MMmimetypes
 import features
@@ -13,7 +13,7 @@ from AppDefaults import *
 import whrandom
 
 
-def create_MMNode_view(node, root):
+def create_MMNode_widget(node, root):
     #assert root != None
     ntype = node.GetType()
     if ntype == 'seq':
@@ -37,16 +37,16 @@ def create_MMNode_view(node, root):
         print "Node appears to be a ", ntype
         return None
 
-class MMNodeWidget(Interactive.Interactive):
+class MMNodeWidget(Widgets.Widget):
     # View of a Node within the Hierarchy view
     def __init__(self, node, root):
-        Interactive.Interactive.__init__(self, root)
+        Widgets.Widget.__init__(self, root)
         self.node = node               # : MMNode
         self.node.views['struct_view'] = self
         
     def destroy(self):
         # Prevent cyclic dependancies.
-        Interactive.Interactive.destroy(self)
+        Widgets.Widget.destroy(self)
         del self.node.views['struct_view']
         self.node = None
         
@@ -59,7 +59,7 @@ class MMNodeWidget(Interactive.Interactive):
 ##		Help.givehelp('Hierarchy_view')
 
     def select(self):
-        Interactive.Interactive.select(self)
+        Widgets.Widget.select(self)
 
     def expandcall(self):
         # 'Expand' the view of this node.
@@ -182,14 +182,14 @@ class MMNodeWidget(Interactive.Interactive):
 
 
 class StructureObjWidget(MMNodeWidget):
-    # TODO: make this inherit only from Interactive.Interactive and aggregate a list.
+    # TODO: make this inherit only from Widgets.Widget and aggregate a list.
     # A view of a seq, par, excl or something else that might exist.
     def __init__(self, node, root):
         MMNodeWidget.__init__(self, node, root)
         # Create more nodes under me if there are any.
         self.children = []
         for i in self.node.children:
-            bob = create_MMNode_view(i, root)
+            bob = create_MMNode_widget(i, root)
             if bob == None:
                 print "TODO: you haven't written all the code yet, have you Mike?"
             else:
@@ -393,7 +393,7 @@ class SeqWidget(StructureObjWidget):
         self.dropbox.moveto((l,t,r,b));
 
 
-class DropBoxWidget(Interactive.Interactive):
+class DropBoxWidget(Widgets.Widget):
     # This is the stupid drop-box at the end of a sequence. Looks like a
     # MediaNode, acts like a MediaNode, but isn't a MediaNode.
     def draw(self, displist):
@@ -721,18 +721,18 @@ class MediaWidget(MMNodeWidget):
         else:
             return None
 
-class TransitionWidget(Interactive.Interactive):
-    # TODO: implement and use the append functionality of the Interactive class.
+class TransitionWidget(Widgets.Widget):
+    # TODO: implement and use the append functionality of the Widget class.
 
     def __init__(self, root, inorout):
         self.in_or_out = inorout
-        Interactive.Interactive.__init__(self, root)
+        Widgets.Widget.__init__(self, root)
     
     def draw(self, displist):
         displist.drawfbox((255,255,255), self.get_box())
         displist.drawbox(self.get_box())
 
-class PushBackBarWidget(Interactive.Interactive):
+class PushBackBarWidget(Widgets.Widget):
     def draw(self, displist):
         # TODO: draw color based on something??
         displist.fgcolor(TEXTCOLOR)
