@@ -18,8 +18,10 @@ EVENT_SRC_LButtonDown, EVENT_SRC_Expanded, EVENT_SRC_KeyDown = range(3)
 import MenuTemplate
 
 class TreeCtrl(window.Wnd):
-	CF_REGION = Sdk.RegisterClipboardFormat('Region')
-	CF_FILE = Sdk.RegisterClipboardFormat('FileName')
+	dropMap = {}
+	dropMap['Region'] = Sdk.RegisterClipboardFormat('Region')
+	dropMap['Media'] = Sdk.RegisterClipboardFormat('Media')
+	dropMap['FileName'] = Sdk.RegisterClipboardFormat('FileName')
 
 	def __init__ (self, dlg=None, resId=None, ctrl=None):
 		# if the tree res is specified from a dialox box, we just create get the existing instance
@@ -37,6 +39,7 @@ class TreeCtrl(window.Wnd):
 		self._selections = []
 		self._multiSelListeners = []
 		self._expandListeners = []
+		self._dragdropListener = []
 		self._selEventSource = None
 
 		self.__selecting = 0
@@ -192,28 +195,59 @@ class TreeCtrl(window.Wnd):
 	#
 	#  drag and drop support methods
 	#
+	
 	def OnBeginDrag(self, std, extra):
 		pt = win32api.GetCursorPos()
 		pt = self.ScreenToClient(pt)
 		flags, item = self.HitTest(pt)
 		if flags & commctrl.TVHT_ONITEM:
-			print 'Drag Region'
-			self.DoDragDrop(self.CF_REGION, '%d' % item)
+			if self._dragdropListener:
+				self._dragdropListener.OnBeginDrag(item)
 
 	def OnDragOver(self, dataobj, kbdstate, x, y):
-		print 'OnDragOver'
+		pt = win32api.GetCursorPos()
+		pt = self.ScreenToClient(pt)
+		flags, item = self.HitTest(pt)
+		if flags & commctrl.TVHT_ONITEM:
+			if self._dragdropListener:
+				for key, value in self.dropMap.items():
+					objectId = dataobj.GetGlobalData(value)
+					if objectId != None:
+						return self._dragdropListener.OnDragOver(item, key, objectId)
 		return appcon.DROPEFFECT_NONE
 
 	def OnDragEnter(self, dataobj, kbdstate, x, y):
-		print 'OnDragEnter'
 		return self.OnDragOver(dataobj, kbdstate, x, y)
 				
 	def OnDrop(self, dataobj, effect, x, y):
-		print 'OnDrop'
+		pt = win32api.GetCursorPos()
+		pt = self.ScreenToClient(pt)
+		flags, item = self.HitTest(pt)
+		if flags & commctrl.TVHT_ONITEM:
+			if self._dragdropListener:
+				for key, value in self.dropMap.items():
+					objectId = dataobj.GetGlobalData(value)
+					if objectId != None:
+						return self._dragdropListener.OnDrop(item, key, objectId)
 		return 0
 
 	def OnDragLeave(self):
-		print 'OnDragLeave'
+		pass
+
+	# set a drag and drop listener 
+	def setDragdropListener(self, listener):
+		self._dragdropListener = listener
+
+	# remove drag and drop listener
+	def removeDragdropListener(self, listener):
+		if listener is self._dragdropListener:
+			self._dragdropListener = None
+
+	# object id have to be a string
+	def beginDrag(self, type, objectId):
+		cf = self.dropMap.get(type)
+		if cf != None:
+			self.DoDragDrop(cf, objectId)
 
 	#
 	#
