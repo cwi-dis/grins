@@ -23,6 +23,7 @@ interface IGRiNSPlayerAuto : IUnknown
 	HRESULT play();
 	HRESULT stop();
 	HRESULT pause();
+	HRESULT update();
 	}
 
 // {8443A49C-5957-4019-AEC5-D13CEBF3FCF3}
