@@ -259,6 +259,10 @@ EngineObject::EventOccurred(PyObject *self, PyObject *args)
 	pn_event.window = 0;
 	pn_event.param1 = &ev;
 	pn_event.param2 = 0;
+	res = pEngine->EventOccurred(&pn_event);
+#else
+#ifdef _UNIX
+	res = pEngine->EventOccurred(NULL);
 #else
 	/* What _may_ work on unix is passing a zeroed struct. See the main program of
 	** the minimal playback engine for details.
@@ -268,7 +272,7 @@ EngineObject::EventOccurred(PyObject *self, PyObject *args)
 			"rma PNxEvent mapping not implemented on this platform yet");
 	return NULL;
 #endif
-	res = pEngine->EventOccurred(&pn_event);
+#endif
 	return Py_BuildValue("i", res);
 }
 

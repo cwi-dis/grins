@@ -50,7 +50,11 @@ protected:
 #endif
 
 private:
-	bool SetContext();
+	bool SetContext(void *hwnd,
+#ifdef _UNIX
+			void *dpy,
+#endif
+			int x, int y, int w, int h);
 	void ReleaseObjects();
 
 	PyObject *pEngine;
@@ -91,7 +95,15 @@ PlayerObject::~PlayerObject()
 
 PyObject *PlayerObject::CreateInstance(PyObject *engine, PyObject *args)
 {
-	CHECK_NO_ARGS(args);
+	int hwnd, x, y, w, h;
+#ifdef _UNIX
+	int dpy;
+	if (!PyArg_ParseTuple(args, "(ii)((ii)(ii))", &hwnd, &dpy, &x, &y, &w, &h))
+		return NULL;
+#else
+	if (!PyArg_ParseTuple(args, "i((ii)(ii))", &hwnd, &x, &y, &w, &h))
+		return NULL;
+#endif
 	IRMAClientEngine *pClientEngine = GetEngine(engine);
 	PlayerObject *obj = (PlayerObject*) RMAObject::make(PlayerObject::type);
 	obj->pEngine = engine;
@@ -101,7 +113,11 @@ PyObject *PlayerObject::CreateInstance(PyObject *engine, PyObject *args)
 		Py_DECREF(obj);
 		return NULL;
 	}
-	obj->SetContext();
+	obj->SetContext((void *) hwnd,
+#ifdef _UNIX
+			(void *) dpy,
+#endif
+			x, y, w, h);
 	return obj;
 }
 
@@ -278,16 +294,26 @@ PlayerObject::SetOsWindow(PyObject *self, PyObject *args)
 		return NULL;
 	(void)PyArg_ParseTuple(args, "O", &pywin);
 #else
+#ifdef _UNIX
+	long hwnd, d;
+	if (!PyArg_ParseTuple(args, "(ll)", &hwnd, d))
+		return NULL;
+#else
 	/* Windows */
 	int hwnd;
 	if (!PyArg_ParseTuple(args, "i", &hwnd))
 		return NULL;
 #endif
+#endif
 	ExampleClientContext *pCC = ((PlayerObject*)self)->pContext;
 	if(pCC) {
 		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
 		if (ss)
-			ss->SetOsWindow((void*)hwnd, pywin);
+			ss->SetOsWindow((void*)hwnd,
+#ifdef _UNIX
+					(void*)d,
+#endif
+					pywin);
 		else
 			RETURN_ERR("Context has no SiteSupplier");
 	}
@@ -306,7 +332,11 @@ PlayerObject::ShowInNewWindow(PyObject *self, PyObject *args)
 	if(pCC) {
 		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
 		if (ss)
-			ss->SetOsWindow((void *)0, (PyObject *)0);
+			ss->SetOsWindow((void *)0,
+#ifdef _UNIX
+					(void *) 0,
+#endif
+					(PyObject *)0);
 		else
 			RETURN_ERR("Context has no SiteSupplier");
 	}
@@ -367,14 +397,22 @@ TypeObject PlayerObject::type("PyRMPlayer",
 			      GET_PY_CTOR(PlayerObject));
 
 bool
-PlayerObject::SetContext()
+PlayerObject::SetContext(void *hwnd,
+#ifdef _UNIX
+			 void *dpy,
+#endif
+			 int x, int y, int w, int h)
 {
 	if ((pContext = new ExampleClientContext()) == NULL)
 		return false;
 
 	pContext->AddRef();
 
-	pContext->Init(pPlayer);
+	pContext->Init(pPlayer, hwnd,
+#ifdef _UNIX
+		       dpy,
+#endif
+		       x, y, w, h);
 	pPlayer->SetClientContext(pContext);
 
 	pPlayer->QueryInterface(IID_IRMAErrorSinkControl, 
