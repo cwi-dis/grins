@@ -166,7 +166,6 @@ class TemporalView(TemporalViewDialog):
 		self.minimal_channels = 1
 		self.init_scene()
 		self.redraw()
-		self.minimal_channels = 0
 
 	def draw(self):
 		self.geodl.redraw()
