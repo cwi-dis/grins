@@ -1109,7 +1109,7 @@ class MMNode:
 		if debug: print 'resetall', `self`
 		self.reset()
 		for c in self.children:
-			c.resetall(sched)
+			c.resetall(sched)f
 		for arc in self.FilterArcList(MMAttrdefs.getattr(self, 'beginlist') + MMAttrdefs.getattr(self, 'endlist')) + self.durarcs:
 			refnode = self.__find_refnode(arc)
 			if arc in refnode.sched_children:
@@ -2854,7 +2854,7 @@ class MMNode:
 		duration = self.attrdict.get('duration')
 		repeatDur = self.attrdict.get('repeatdur')
 		repeatCount = self.attrdict.get('loop')
-		endlist = self.attrdict.get('endlist')
+		endlist = self.attrdict.get('endlist', [])
 		endlist = self.FilterArcList(endlist)
 		if endlist is not None and duration is None and \
 		   repeatCount is None and repeatDur is None:
