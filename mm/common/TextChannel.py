@@ -19,25 +19,29 @@ class TextWindow() = (glwindow.glwindow)():
 		self.name = name
 		self.attrdict = attrdict
 		self.text = '' # Initially, display no text
-		gl.foreground() # Fight silly GL default
+		self.wid = 0
+		return self
+	#
+	def show(self):
+		if self.wid <> 0: return
 		self.resetfont()
 		# Get the window size (given in lines and characters!)
 		if self.attrdict.has_key('winsize'):
-			width, height = attrdict['winsize']
+			width, height = self.attrdict['winsize']
 			width = width * self.avgcharwidth
 			height = height * self.fontheight
 		else:
 			width, height = 0, 0
 		# Get the preferred position (in pixels, "hv" coordinates)
-		if attrdict.has_key('winpos'):
-			h, v = attrdict['winpos']
+		if self.attrdict.has_key('winpos'):
+			h, v = self.attrdict['winpos']
 		else:
 			h, v = 0, 0
 		glwindow.setgeometry(h, v, width, height)
 		# Actually create the window
-		wid = gl.winopen(name)
+		self.wid = gl.winopen(self.name)
 		# Immediately register it with the main loop
-		self.register(wid)
+		self.register(self.wid)
 		# Let the user resize it
 		gl.winconstraints()
 		# Use RGB mode; in colormap mode FORMS sometimes
@@ -47,7 +51,15 @@ class TextWindow() = (glwindow.glwindow)():
 		# Clear it immediately (looks better)
 		gl.RGBcolor(255, 255, 255)
 		gl.clear()
-		return self
+	#
+	def hide(self):
+		if self.wid <> 0:
+			self.unregister()
+			gl.winclose(self.wid)
+			self.wid = 0
+	#
+	def destroy(self):
+		self.hide()
 	#
 	def resetfont(self):
 		# Get the default font and point size for the window
@@ -71,6 +83,7 @@ class TextWindow() = (glwindow.glwindow)():
 		self.redraw()
 	#
 	def redraw(self):
+		if self.wid = 0: return
 		gl.winset(self.wid)
 		gl.reshapeviewport()
 		x0, x1, y0, y1 = gl.getviewport()
@@ -95,6 +108,15 @@ class TextChannel() = Channel():
 		self = Channel.init(self, (name, attrdict, player))
 		self.window = TextWindow().init(name, attrdict)
 		return self
+	#
+	def show(self):
+		self.window.show()
+	#
+	def hide(self):
+		self.window.hide()
+	#
+	def destroy(self):
+		self.window.destroy()
 	#
 	def getduration(self, node):
 		wait = MMAttrdefs.getattr(node, 'wait_for_close')
@@ -124,6 +146,7 @@ class TextChannel() = Channel():
 		self.window.settext(self.getstring(node))
 		#
 	def getstring(self, node):
+		# XXX Doesn't use self...
 		if node.type = 'imm':
 			return string.join(node.GetValues())
 		elif node.type = 'ext':
