@@ -63,6 +63,8 @@ class MainDialog:
 		pass
 		
 	def _ae_opendoc(self, aliases, **kwargs):
+		if not type(aliases) in (type(()), type([])):
+			aliases=[aliases]
 		for alias in aliases:
 			try:
 				fss, changed = alias.Resolve()
