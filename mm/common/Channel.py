@@ -279,11 +279,9 @@ class Channel:
 
 				if self._attrdict.get('showBackground') == 'whenActive':
 					return
-			else:
+			elif self._attrdict.get('open', 'onStart') == 'whenActive':
 				# case for the top window
-				if self._attrdict.has_key('open'):
-					if self._attrdict['open'] == 'whenActive':
-						return
+				return
 
 		# Indicate that the channel must enter the SHOWN state.
 		self._want_shown = 1
@@ -367,17 +365,16 @@ class Channel:
 		if debug: print 'Channel.hide('+`self`+')'
 
 		self.need_reshow = 0
-		# force equal 0 is used only in internal. By default the channel is hide
-		# only when showBackground attribute equal whenActive
+		# force equal 0 is used only internally. By default
+		# the channel is hidden only when showBackground
+		# attribute is "whenActive".
 		if not force:
 			if self._get_parent_channel() is not None:
 				if self._attrdict.get('showBackground', 'always') == 'always':
 					return
-			else:
+			elif self._attrdict.get('close', 'onRequest') == 'onRequest':
 				# case for the top window
-				if self._attrdict.has_key('close'):
-					if self._attrdict['close'] == 'onRequest':
-						return
+				return
 
 		self._want_shown = 0
 		self._highlighted = None
