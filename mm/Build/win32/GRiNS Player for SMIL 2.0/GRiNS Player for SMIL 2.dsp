@@ -217,10 +217,6 @@ SOURCE=.\M_afxres.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AnchorDefs.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_AnimateChannel.c
 # End Source File
 # Begin Source File
