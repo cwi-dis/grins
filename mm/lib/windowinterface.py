@@ -120,12 +120,12 @@ class _Event:
 ##			_toplevel._win_lock.release()
 
 	def _readevent(self):
-##		if debug: print 'Event.readevent()'
+		if debug: print 'Event._readevent()'
 		dev, val = gl.qread()
 		return self._dispatch(dev, val)
 
 	def _dispatch(self, dev, val):
-##		if debug: print 'Event.dispatch'+`dev,val`
+		if debug: print 'Event._dispatch'+`dev,val`
 		if dev == DEVICE.REDRAW:
 			self._savemouse = None
 			if _window_list.has_key(val):
@@ -210,7 +210,7 @@ class _Event:
 		return self._curwin, dev, val
 
 	def _getevent(self, block):
-##		if debug: print 'Event.getevent('+`block`+')'
+		if debug > 1: print 'Event._getevent('+`block`+')'
 		qtest = gl.qtest()
 		while 1:
 			while qtest:
@@ -229,7 +229,7 @@ class _Event:
 			qtest = 1	# block on next round
 
 	def _doevent(self, dev, val):
-##		if debug: print 'Event.doevent'+`dev,val`
+		if debug: print 'Event._doevent'+`dev,val`
 		event = self._dispatch(dev, val)
 		for winkey in _window_list.keys():
 			win = _window_list[winkey]
@@ -238,22 +238,22 @@ class _Event:
 		return event
 		
 	def enterevent(self, win, event, arg):
-##		if debug: print 'Event.enterevent'+`win,event,arg`
+		if debug: print 'Event.enterevent'+`win,event,arg`
 		self._queue.append((win, event, arg))
 
 	def readevent(self):
-##		if debug: print 'Event.readevent()'
+		if debug: print 'Event.readevent()'
 		dummy = self._getevent(1)
 		event = self._queue[0]
 		del self._queue[0]
 		return event
 
 	def testevent(self):
-##		if debug: print 'Event.testevent()'
+		if debug > 1: print 'Event.testevent()'
 		return self._getevent(0)
 
 	def pollevent(self):
-##		if debug: print 'Event.pollevent()'
+		if debug > 1: print 'Event.pollevent()'
 		# Return the first event in the queue if there is one.
 		if self.testevent():
 			return self.readevent()
@@ -261,7 +261,7 @@ class _Event:
 			return None
 
 	def peekevent(self):
-##		if debug: print 'Event.peekevent()'
+		if debug > 1: print 'Event.peekevent()'
 		# Return the first event in the queue if there is one,
 		# but don't remove it.
 		if self.testevent():
@@ -270,7 +270,7 @@ class _Event:
 			return None
 
 	def waitevent(self):
-##		if debug: print 'Event.waitevent()'
+		if debug: print 'Event.waitevent()'
 		# Wait for an event to occur, but don't return it.
 		dummy = self._getevent(1)
 
@@ -329,6 +329,7 @@ class _Font:
 
 class _Button:
 	def init(self, dispobj, x, y, w, h):
+		if debug: print 'Button.init()'
 		self._dispobj = dispobj
 		window = dispobj._window
 		self._corners = x, y, x + w, y + h
@@ -1015,6 +1016,7 @@ class _Window:
 			win._resize()
 
 	def _redraw(self):
+		if debug: print 'Window._redraw()'
 		if self._active_display_list:
 			self._active_display_list.render()
 		else:

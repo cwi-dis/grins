@@ -23,14 +23,14 @@ def create_box(window, *box):
 			if r:
 				dialog.close()
 				return None
+	if display and not display.is_closed():
+		d = display.clone()
+	else:
+		d = window.newdisplaylist()
+	d.fgcolor(255, 0, 0)
+	d.drawbox(box)
+	d.render()
 	while 1:
-		if display and not display.is_closed():
-			d = display.clone()
-		else:
-			d = window.newdisplaylist()
-		d.fgcolor(255, 0, 0)
-		d.drawbox(box)
-		d.render()
 		win, ev, val = windowinterface.readevent()
 		if win == window and ev == EVENTS.Mouse0Press:
 			x, y = val[0:2]
@@ -47,21 +47,28 @@ def create_box(window, *box):
 			d.close()
 			if constrainx and constrainy:
 				box = window.movebox(box, 0, 0)
-				continue
-			if x < box[0] + box[2] / 2:
-				x0 = box[0] + box[2]
-				w = - box[2]
 			else:
-				x0 = box[0]
-				w = box[2]
-			if y < box[1] + box[3] / 2:
-				y0 = box[1] + box[3]
-				h = -box[3]
+				if x < box[0] + box[2] / 2:
+					x0 = box[0] + box[2]
+					w = - box[2]
+				else:
+					x0 = box[0]
+					w = box[2]
+				if y < box[1] + box[3] / 2:
+					y0 = box[1] + box[3]
+					h = -box[3]
+				else:
+					y0 = box[1]
+					h = box[3]
+				box = window.sizebox((x0, y0, w, h), \
+					  constrainx, constrainy)
+			if display and not display.is_closed():
+				d = display.clone()
 			else:
-				y0 = box[1]
-				h = box[3]
-			box = window.sizebox((x0, y0, w, h), \
-				  constrainx, constrainy)
+				d = window.newdisplaylist()
+			d.fgcolor(255, 0, 0)
+			d.drawbox(box)
+			d.render()
 		else:
 			r = dialog.checkevent(win, ev, val)
 			if r:
