@@ -176,6 +176,14 @@ SOURCE=.\common\CmifChannel.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\common\compatibility.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\DefCompatibilityCheck.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\ExternalChannel.py
 # End Source File
 # Begin Source File
@@ -621,10 +629,6 @@ SOURCE=.\editor\ChannelView.py
 # Begin Source File
 
 SOURCE=.\editor\cmifed.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\compatibility.py
 # End Source File
 # Begin Source File
 
