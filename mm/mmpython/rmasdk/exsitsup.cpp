@@ -4,7 +4,6 @@
  *  
  */
 
-
 /****************************************************************************
  * Includes
  */
@@ -14,20 +13,8 @@
 #include "rmawin.h"
 #include "rmapckts.h"
 #include "rmacomm.h"
-
-#ifdef _WIN16
-    #include <windows.h>
-#endif
-
 #include "fivemmap.h"
 #include "exsitsup.h"
-
-
-#include "rmasite2.h"
-#include "fivemlist.h"
-#include "rmavsurf.h"
-#include "exvsurf.h"
-#include "exnwsite.h"
 
 
 /****************************************************************************
@@ -40,20 +27,21 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer)
     , m_pSiteManager(NULL)
     , m_pCCF(NULL)
     , m_pUnkPlayer(pUnkPlayer)
-    , m_pWindowlessSite(NULL)
-	, m_pyVideoSurface(NULL)
-{
+
+	,m_showInNewWnd(FALSE)
+	{
     if (m_pUnkPlayer)
-    {
-	m_pUnkPlayer->QueryInterface(IID_IRMASiteManager,
+		{
+		m_pUnkPlayer->QueryInterface(IID_IRMASiteManager,
 			(void**)&m_pSiteManager);
 
-	m_pUnkPlayer->QueryInterface(IID_IRMACommonClassFactory,
+		m_pUnkPlayer->QueryInterface(IID_IRMACommonClassFactory,
 			(void**)&m_pCCF);
 
-	m_pUnkPlayer->AddRef();
-    }
-};
+		m_pUnkPlayer->AddRef();
+		}
+	memset(&m_PNxWindow,0,sizeof(PNxWindow));
+	};
 
 
 /****************************************************************************
@@ -62,20 +50,12 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer)
  *  Destructor
  */
 ExampleSiteSupplier::~ExampleSiteSupplier()
-{
-	Py_XDECREF(m_pyVideoSurface);
+	{
     PN_RELEASE(m_pSiteManager);
     PN_RELEASE(m_pCCF);
     PN_RELEASE(m_pUnkPlayer);
-}
-
-void ExampleSiteSupplier::SetPyVideoSurface(PyObject *obj)
-	{
-	Py_XDECREF(m_pyVideoSurface);
-	if(obj==Py_None)m_pyVideoSurface=NULL;
-	else m_pyVideoSurface=obj;
-	Py_XINCREF(m_pyVideoSurface);
 	}
+
 
 // IRMASiteSupplier Interface Methods
 
@@ -83,49 +63,36 @@ void ExampleSiteSupplier::SetPyVideoSurface(PyObject *obj)
  *  IRMASiteSupplier::SitesNeeded                              ref:  rmawin.h
  *
  */
+
 STDMETHODIMP 
 ExampleSiteSupplier::SitesNeeded
-(
+	(
     UINT32	uRequestID,
     IRMAValues*	pProps
-)
-{
+	)
+	{
     /*
      * If there are no properties, then we can't really create a
      * site, because we have no idea what type of site is desired!
      */
-    if (!pProps)
-    {
-	return PNR_INVALID_PARAMETER;
-    }
+    if (!pProps)return PNR_INVALID_PARAMETER;
 
     HRESULT		hres		= PNR_OK;
     IRMAValues*		pSiteProps	= NULL;
+    IRMASiteWindowed*	pSiteWindowed	= NULL;
     IRMABuffer*		pValue		= NULL;
     UINT32		style		= 0;
     IRMASite*		pSite		= NULL;
 
+    // Just let the RMA client core create a windowed site for us.
+    hres = m_pCCF->CreateInstance(CLSID_IRMASiteWindowed,(void**)&pSiteWindowed);
+    if (PNR_OK != hres)goto exit;
 
-    // instead of using the CCF to create a IRMASiteWindowed, create our windowless
-    // site here...
-    m_pWindowlessSite = new ExampleWindowlessSite(m_pUnkPlayer);
-    if (!m_pWindowlessSite)
-    {
-	goto exit;
-    }
-    m_pWindowlessSite->AddRef();
-	m_pWindowlessSite->m_pVideoSurface->SetPyVideoSurface(m_pyVideoSurface);
-    hres = m_pWindowlessSite->QueryInterface(IID_IRMASite,(void**)&pSite);
-    if (PNR_OK != hres)
-    {
-	goto exit;
-    }
+    hres = pSiteWindowed->QueryInterface(IID_IRMASite,(void**)&pSite);
+    if (PNR_OK != hres)goto exit;
 
-    hres = m_pWindowlessSite->QueryInterface(IID_IRMAValues,(void**)&pSiteProps);
-    if (PNR_OK != hres)
-    {
-	goto exit;
-    }
+    hres = pSiteWindowed->QueryInterface(IID_IRMAValues,(void**)&pSiteProps);
+    if (PNR_OK != hres)goto exit;
 
     /*
      * We need to figure out what type of site we are supposed to
@@ -135,29 +102,40 @@ ExampleSiteSupplier::SitesNeeded
      */
     hres = pProps->GetPropertyCString("playto",pValue);
     if (PNR_OK == hres)
-    {
-	pSiteProps->SetPropertyCString("channel",pValue);
-	PN_RELEASE(pValue);
-    }
+		{
+		pSiteProps->SetPropertyCString("channel",pValue);
+		PN_RELEASE(pValue);
+		}
     else
-    {
-	hres = pProps->GetPropertyCString("name",pValue);
-	if (PNR_OK == hres)
-	{
-	    pSiteProps->SetPropertyCString("LayoutGroup",pValue);
-    	    PN_RELEASE(pValue);
-	}
-    }
+		{
+		hres = pProps->GetPropertyCString("name",pValue);
+		if (PNR_OK == hres)
+			{
+			pSiteProps->SetPropertyCString("LayoutGroup",pValue);
+    			PN_RELEASE(pValue);
+			}
+		}
+
+#ifdef _WINDOWS
+	if(m_PNxWindow.window)
+		style = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN;
+	else
+		style = WS_SYSMENU | WS_OVERLAPPED | WS_VISIBLE | WS_CLIPCHILDREN;
+#endif
+
+	if(m_showInNewWnd || !m_PNxWindow.window)
+		hres = pSiteWindowed->Create(m_PNxWindow.window,style);
+	else
+		hres=pSiteWindowed->AttachWindow(&m_PNxWindow);
+
+    if (PNR_OK != hres)goto exit;
 
     /*
      * We need to wait until we have set all the properties before
      * we add the site.
      */
     hres = m_pSiteManager->AddSite(pSite);
-    if (PNR_OK != hres)
-    {
-	goto exit;
-    }
+    if (PNR_OK != hres)goto exit;
 
     m_CreatedSites.SetAt((void*)uRequestID,pSite);
     pSite->AddRef();
@@ -165,10 +143,11 @@ ExampleSiteSupplier::SitesNeeded
 exit:
 
     PN_RELEASE(pSiteProps);
+    PN_RELEASE(pSiteWindowed);
     PN_RELEASE(pSite);
 
     return hres;
-}
+	}
 
 
 /****************************************************************************
@@ -177,28 +156,35 @@ exit:
  */
 STDMETHODIMP 
 ExampleSiteSupplier::SitesNotNeeded(UINT32 uRequestID)
-{
-    IRMASite*		pSite = NULL;
-    void*		pVoid = NULL;
+	{
+    IRMASite* pSite = NULL;
+    IRMASiteWindowed* pSiteWindowed = NULL;
+    void* pVoid = NULL;
 
     if (!m_CreatedSites.Lookup((void*)uRequestID,pVoid))
-    {
-	return PNR_INVALID_PARAMETER;
-    }
+		return PNR_INVALID_PARAMETER;
     pSite = (IRMASite*)pVoid;
-
     m_pSiteManager->RemoveSite(pSite);
 
-    // delete our windowless site now (sets to NULL)
-    PN_RELEASE(m_pWindowlessSite);
+	pSite->QueryInterface(IID_IRMASiteWindowed,(void**)&pSiteWindowed);
+	if(m_showInNewWnd)
+		pSiteWindowed->Destroy();
+	else 
+		{
+		pSiteWindowed->DetachWindow();
+#ifdef _WINDOWS
+		::InvalidateRect((HWND)m_PNxWindow.window,NULL,TRUE);
+#endif
+		}
+	pSiteWindowed->Release();
 
-    // ref count = 1; deleted from this object's view!
+	// ref count = 1; deleted from this object's view!
     pSite->Release();
 
     m_CreatedSites.RemoveKey((void*)uRequestID);
 
     return PNR_OK;
-}
+	}
 
 
 /****************************************************************************
@@ -207,9 +193,9 @@ ExampleSiteSupplier::SitesNotNeeded(UINT32 uRequestID)
  */
 STDMETHODIMP 
 ExampleSiteSupplier::BeginChangeLayout()
-{
+	{
     return PNR_OK;
-}
+	}
 
 
 /****************************************************************************
@@ -218,9 +204,9 @@ ExampleSiteSupplier::BeginChangeLayout()
  */
 STDMETHODIMP 
 ExampleSiteSupplier::DoneChangeLayout()
-{
+	{
     return PNR_OK;
-}
+	}
 
 
 // IUnknown COM Interface Methods
@@ -235,10 +221,9 @@ ExampleSiteSupplier::DoneChangeLayout()
  */
 STDMETHODIMP_(ULONG32) 
 ExampleSiteSupplier::AddRef()
-{
-	Py_XINCREF(m_pyVideoSurface);
+	{
     return InterlockedIncrement(&m_lRefCount);
-}
+	}
 
 
 /****************************************************************************
@@ -250,22 +235,12 @@ ExampleSiteSupplier::AddRef()
  */
 STDMETHODIMP_(ULONG32) 
 ExampleSiteSupplier::Release()
-{
-	if(m_pyVideoSurface && m_pyVideoSurface->ob_refcnt==1)
-		{
-		Py_XDECREF(m_pyVideoSurface);
-		m_pyVideoSurface=NULL;
-		}
-	else Py_XDECREF(m_pyVideoSurface);
-
+	{
     if (InterlockedDecrement(&m_lRefCount) > 0)
-    {
         return m_lRefCount;
-    }
-
     delete this;
     return 0;
-}
+	}
 
 
 /****************************************************************************
@@ -279,20 +254,20 @@ ExampleSiteSupplier::Release()
  */
 STDMETHODIMP 
 ExampleSiteSupplier::QueryInterface(REFIID riid, void** ppvObj)
-{
+	{
     if (IsEqualIID(riid, IID_IUnknown))
-    {
-	AddRef();
-	*ppvObj = (IUnknown*)(IRMASiteSupplier*)this;
-	return PNR_OK;
-    }
+		{
+		AddRef();
+		*ppvObj = (IUnknown*)(IRMASiteSupplier*)this;
+		return PNR_OK;
+		}
     else if (IsEqualIID(riid, IID_IRMASiteSupplier))
-    {
-	AddRef();
-	*ppvObj = (IRMASiteSupplier*)this;
-	return PNR_OK;
-    }
-
+		{
+		AddRef();
+		*ppvObj = (IRMASiteSupplier*)this;
+		return PNR_OK;
+		}
     *ppvObj = NULL;
     return PNR_NOINTERFACE;
-}
+	}
+
