@@ -134,7 +134,7 @@ def main():
 		opts, files = getopt.getopt(sys.argv[1:], 'qj:')
 	except getopt.error, msg:
 		usage(msg)
-	if not files and sys.platform not in ('mac', 'nt'):
+	if not files and sys.platform not in ('mac', 'win32'):
 		usage('No files specified')
 
 	try:
@@ -225,7 +225,7 @@ def main():
 			print
 			pdb.post_mortem(exc_traceback)
 	finally:
-		if sys.platform != 'nt':
+		if sys.platform != 'win32':
 			import windowinterface
 			windowinterface.close()
 
