@@ -1,4 +1,5 @@
 
+#include "afxdisp.h"
 #include "htmlex.h"
 #include "ContainerWnd.h"
 #include "GRiNSRes.h"
