@@ -29,7 +29,6 @@ class Main(MainDialog):
 	def __init__(self, opts, files, splash):
 		import windowinterface
 		import license
-		import features
 		self.splash = splash
 		if hasattr(features, 'expiry_date') and features.expiry_date:
 			import time

@@ -2,7 +2,6 @@ __version__ = "$Id$"
 
 import settings
 import windowinterface
-import features
 
 hierarchy_minimum_sizes = settings.get('hierarchy_minimum_sizes')
 root_expanded = settings.get('root_expanded')
