@@ -1909,6 +1909,10 @@ class _ScrollMixin:
 			return 1, 1
 		return self._canvassize
 		
+	def getscrollposition(self, units=UNIT_PXL):
+		assert units == UNIT_PXL
+		return self._canvaspos + self._rect[2:]
+
 	def scrollvisible(self, coordinates, units = UNIT_MM):
 		"""Try to make the area in coordinates visible. If it doesn't fit make
 		at least the topleft corner visible"""
