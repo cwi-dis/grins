@@ -68,7 +68,7 @@ class _DisplayList:
 		self._canvas = window._canvas
 		self._linewidth = 1
 		self._list = []
-		if window._transparent <= 0 and bgcolor != window._bgcolor:
+		if window._transparent <= 0 or bgcolor is not None:
 			self._list.append(('clear', self._canvas))
 		self._optimdict = {}
 		self._rendered = 0
