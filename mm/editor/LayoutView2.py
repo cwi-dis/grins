@@ -1069,7 +1069,6 @@ class LayoutView2(LayoutViewDialog2):
 			keyTimeIndex = self.getKeyTimeIndex()
 			if keyTimeIndex is not None and keyTimeIndex >= 0:
 				self.updateKeyTimeGeoms(nodeRef, geom)
-				self.updateKeyTimes(nodeRef)
 				self.applyAnimationData(nodeRef)
 				return
 		
@@ -1085,7 +1084,6 @@ class LayoutView2(LayoutViewDialog2):
 			nodeType = self.getNodeType(nodeRef)
 			if nodeType == TYPE_MEDIA:
 				self.updateKeyTimeGeoms(nodeRef, geom)
-				self.updateKeyTimes(nodeRef)
 				self.applyAnimationData(nodeRef)
 				return
 		
@@ -1158,16 +1156,6 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setchannelattr(name, 'width', 400)
 			self.editmgr.setchannelattr(name, 'height', 400)
 			self.editmgr.commit('REGION_TREE')
-
-	def updateKeyTimes(self, nodeRef):
-		# update the key times
-		keyTimeList = self.keyTimeSliderWidget.getKeyTimeList()
-		times = []
-		for keyTime in keyTimeList:
-			# fo now it should be the same value
-			times.append(keyTime)
-		animationData = nodeRef.getAnimationData()
-		animationData.setTimesData(times, animationData.getData())
 		
 	def applyAnimationData(self, nodeRef):		
 		# if the node is animated, compute the animation data according to the MMNode tree
@@ -2266,9 +2254,6 @@ class KeyTimeSliderWidget(LightWidget):
 			self.__updateMedia(nodeRef)
 		else:
 			self.__unselect()
-
-	def getKeyTimeList(self):
-		return self.sliderCtrl.getKeyTimes()
 		
 	#
 	#
