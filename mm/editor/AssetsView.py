@@ -13,19 +13,19 @@ import usercmd
 class AssetsView(AssetsViewDialog):
 	COLUMNLIST={
 		'all':[
-			('left', 50, 'Type'),
-			('left', 100, 'Name'),
+			('left', 120, 'Name'),
+			('left', 70, 'Type'),
 			('right', 50, 'Used'),
 			('left', 200, 'URL'),
 		],
 		'unused':[
-			('left', 50, 'Type'),
-			('left', 100, 'Name'),
+			('left', 120, 'Name'),
+			('left', 70, 'Type'),
 			('left', 200, 'URL'),
 		],
 		'clipboard':[
-			('left', 50, 'Type'),
-			('left', 100, 'Name'),
+			('left', 120, 'Name'),
+			('left', 70, 'Type'),
 		],
 	}
 
@@ -83,12 +83,10 @@ class AssetsView(AssetsViewDialog):
 		self.setviewbutton(which)
 		self.setlistheaders(self.COLUMNLIST[which])
 		if which == 'all':
-			self.setlistdata(self.getallassets())
+			self.listdata = self.getallassets()
+			cmdlist = []
 		elif which == 'unused':
-			self.setlistdata(self.getunusedassets())
-		else:
-			self.setlistdata(self.getclipboard())
-		if which == 'unused':
+			self.listdata = self.getunusedassets()
 			cmdlist = [
 				usercmd.CUT(callback=(self.callback_cut, ())),
 				usercmd.COPY(callback=(self.callback_copy, ())),
@@ -96,20 +94,74 @@ class AssetsView(AssetsViewDialog):
 				usercmd.DELETE(callback=(self.callback_delete, ())),
 			]
 		else:
+			self.listdata = self.getclipboard()
 			cmdlist = []
+		# XXX Sort
+		# Remove first field
+		listdata = map(lambda x:x[1:], self.listdata)
+		self.setlistdata(listdata)
 		self.setcommandlist(cmdlist)
 
 	def callback_cut(self):
-		print "cut"
+		i = self.getselection()
+		if i < 0:
+			print "No selection"
+			return
+		item = self.listdata[i][0]
+		if not self.editmgr.transaction():
+			print "No transaction"
+			return
+		self.editmgr.delasset(item)
+		self.editmgr.commit()
+		self.__clean_clipboard()
+		self.editmgr.setclip('node', item)
 
 	def callback_paste(self):
-		print "paste"
+		tp, data = self.editmgr.getclip()
+		if not tp in ('node', 'multinode'):
+			print 'cannot paste', (tp, data)
+			return
+		if tp == 'node':
+			tp = 'multinode'
+			data = [data]
+		if not self.editmgr.transaction():
+			print 'No transaction'
+			return
+		for node in data:
+			self.editmgr.addasset(node)
+		self.editmgr.commit()
 
 	def callback_copy(self):
-		print "copy"
+		i = self.getselection()
+		if i < 0:
+			print "No selection"
+			return
+		item = self.listdata[i][0]
+		self.__clean_clipboard()
+		self.editmgr.setclip('node', item)
 
 	def callback_delete(self):
-		print "delete"
+		i = self.getselection()
+		if i < 0:
+			print "No selection"
+			return
+		item = self.listdata[i][0]
+		if not self.editmgr.transaction():
+			print "No transaction"
+			return
+		self.editmgr.delasset(item)
+		self.editmgr.commit()
+		# XXX item.Destroy() ???
+
+	def __clean_clipboard(self):
+		# Note: after this call you *MUST* set the clipboard to
+		# a new value
+		t,n = self.editmgr.getclip()
+		if t == 'node' and n is not None:
+			n.Destroy()
+		elif t == 'multinode' and n is not None:
+			for i in n:
+				i.Destroy()
 
 	def getunusedassets(self):
 		assetlist = []
@@ -130,7 +182,7 @@ class AssetsView(AssetsViewDialog):
 				shortname = posixpath.split(pathname)[1]
 				assetlist.append((mimetype, mimetype, shortname, url))
 			else:
-				assetlist.append((tp, tp, name, ''))
+				assetlist.append((node, tp, name, tp, ''))
 		return assetlist
 
 	def getallassets(self):
@@ -147,7 +199,7 @@ class AssetsView(AssetsViewDialog):
 			mimetype, nodelist = v
 			pathname = urlparse.urlparse(url)[2]
 			shortname = posixpath.split(pathname)[1]
-			assetlist.append((mimetype, mimetype, shortname, `len(nodelist)`, url))
+			assetlist.append((None, mimetype, shortname, mimetype, `len(nodelist)`, url))
 		return assetlist
 
 	def _getallassetstree(self, node, dict, intree=1):
@@ -182,9 +234,9 @@ class AssetsView(AssetsViewDialog):
 			for n in data:
 				ntype = n.GetType()
 				name = MMAttrdefs.getattr(n, 'name')
-				rv.append((ntype, ntype, name))
+				rv.append((None, ntype, name, ntype))
 			return rv
-		return [(tp, tp, '')]
+		return [(None, tp, tp, '')]
 
 	# Callbacks from the UI
 	def setview_callback(self, which):
