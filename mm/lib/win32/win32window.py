@@ -750,7 +750,8 @@ class SubWindow(Window):
 		# resizing
 		self._resizing = 0
 		self._scale = 1
-			
+		self._orgrect = self._rect
+				
 	def __repr__(self):
 		return '<_SubWindow instance at %x>' % id(self)
 		
@@ -942,7 +943,6 @@ class SubWindow(Window):
 			x, y = self._pxl2rel(point,self._canvas)
 			for button in self._active_displist._buttons:
 				if button._inside(x,y):
-					print 'yes, inside '
 					if self._cursor != 'hand':
 						self.setcurcursor('hand')
 					return
@@ -965,7 +965,7 @@ class SubWindow(Window):
 		rgn.CombineRgn(rgn,self._parent.getClipRgn(rel),win32con.RGN_AND)
 		return rgn
 
-	def clipRect(self, rc, rgn, rel=None):
+	def clipRect(self, rc, rgn):
 		newrgn = win32ui.CreateRgn()
 		newrgn.CreateRectRgn(self.ltrb(rc))
 		newrgn.CombineRgn(rgn,newrgn,win32con.RGN_AND)
@@ -973,43 +973,51 @@ class SubWindow(Window):
 		newrgn.DeleteObject()
 		return self.xywh(ltrb)
 
-	def __paintOnDDS(self, dds, rel=None):
-		x, y, w, h = self.getwindowpos(rel)
-		rgn = self.getClipRgn(rel)
-		if self._active_displist:
-			hdc = dds.GetDC()
-			dc = win32ui.CreateDCFromHandle(hdc)
+	
+	def __paintOnDDS(self, dds, dst, rgn=None):
+		x, y, w, h = dst
+		if w==0 or h==0:
+			return
+
+		hdc = dds.GetDC()
+		dc = win32ui.CreateDCFromHandle(hdc)
+		if rgn:
 			dc.SelectClipRgn(rgn)
-			x0, y0 = dc.SetWindowOrg((-x,-y))
-			self._active_displist._render(dc,None)
-			if self._redrawfunc:
-				self._redrawfunc()
-			if self._showing:
-				win32mu.FrameRect(dc,self._rect,self._showing)
-			dc.SetWindowOrg((x0,y0))
-			dc.Detach()
-			dds.ReleaseDC(hdc)
+		x0, y0 = dc.SetWindowOrg((-x,-y))
+
+		if self._active_displist:
 			if self._video:
 				vdds, vrcDst, vrcSrc = self._video
-				vrcDst = self.clipRect(vrcDst, rgn, rel)
-				x, y, w, h = vrcSrc
-				vrcSrc = x, y, vrcDst[2],vrcDst[3]
-				if vrcDst[2]!=0 and vrcDst[3]!=0:
-					dds.Blt(self.ltrb(vrcDst), vdds, vrcSrc, ddraw.DDBLT_WAIT)
+				ld, td = vrcDst[:2]
+				wd, hd = vrcDst[2:]
+				if wd!=w or hd!=h: 
+					# need scaling
+					zvdds = self._topwindow.CreateSurface(w,h)
+					zvdds.Blt((0,0,w,h), vdds, vrcSrc, ddraw.DDBLT_WAIT)
+				else: zvdds = vdds
+				zvhdc = zvdds.GetDC()
+				zvdc = win32ui.CreateDCFromHandle(zvhdc)
+				dc.BitBlt((ld,td),(wd,hd),zvdc,(0, 0), win32con.SRCCOPY)
+				zvdc.Detach()
+				zvdds.ReleaseDC(zvhdc)
+			self._active_displist._render(dc,None)
+			if self._showing:
+				win32mu.FrameRect(dc,self._rect,self._showing)
 		elif self._transparent == 0:
-			if self._convbgcolor == None:
-				r, g, b = self._bgcolor
-				self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
-			rc = self.clipRect((x, y, w, h), rgn, rel)
-			dds.BltFill(self.ltrb(rc), self._convbgcolor)
-		rgn.DeleteObject()
-				
+			dc.FillSolidRect(self.ltrb(dst),RGB(self._bgcolor))
+
+		dc.SetWindowOrg((x0,y0))
+		dc.Detach()
+		dds.ReleaseDC(hdc)
+	
+	# paint on surface dds relative to ancestor rel			
 	def paintOnDDS(self, dds, rel=None):
-		x, y, w, h = self.getwindowpos(rel)
-
 		# first paint self
-		self.__paintOnDDS(dds, rel)
-
+		rgn = self.getClipRgn(rel)
+		dst = self.getwindowpos(rel)
+		self.__paintOnDDS(dds, dst, rgn)
+		rgn.DeleteObject()
+		
 		# then paint children bottom up
 		L = self._subwindows[:]
 		L.reverse()
@@ -1017,19 +1025,30 @@ class SubWindow(Window):
 			w.paintOnDDS(dds, rel)
 
 	def bltDDS(self, srfc):
-		rc_dst = self.ltrb(self.getwindowpos())
+		rc_dst = self.getwindowpos()
 		src_w, src_h = srfc.GetSurfaceDesc().GetSize()
 		rc_src = (0, 0, src_w, src_h)
 		buf = self._topwindow._backBuffer
-		buf.Blt(rc_dst, srfc, rc_src, ddraw.DDBLT_WAIT)
+		if rc_dst[2]!=0 and rc_dst[3]!=0:
+			buf.Blt(self.ltrb(rc_dst), srfc, rc_src, ddraw.DDBLT_WAIT)
 
 	# painting while resizing for fit=='meet'
 	def resizeFitMeet(self):
+		# first paint self but on org rect
+		dst = self._orgrect
+		dds = self.createDDS(dst[2],dst[3])
+		self.__paintOnDDS(dds, dst)
+
+		# then paint children bottom up relative to us
+		L = self._subwindows[:]
+		L.reverse()
 		temp = self._rect
 		self._rect = self._orgrect
-		dds = self.createDDS()
-		self.paintOnDDS(dds, self)
+		for w in L:
+			w.paintOnDDS(dds, self)
 		self._rect = temp
+
+		# and scale to current rect
 		self.bltDDS(dds)
 	
 	def paint(self):
@@ -1053,7 +1072,10 @@ class SubWindow(Window):
 			return
 			
 		# first paint self
-		self.__paintOnDDS(self._topwindow._backBuffer)
+		dst = self.getwindowpos(self._topwindow)
+		rgn = self.getClipRgn(self._topwindow._backBuffer)
+		self.__paintOnDDS(self._topwindow._backBuffer, dst, rgn)
+		rgn.DeleteObject()
 
 		# then paint children bottom up
 		L = self._subwindows[:]
@@ -1061,8 +1083,9 @@ class SubWindow(Window):
 		for w in L:
 			w.paint()
 
-	def createDDS(self):
-		x, y, w, h = self._rect
+	def createDDS(self, w=0, h=0):
+		if w==0 or h==0:
+			x, y, w, h = self._rect
 		dds = self._topwindow.CreateSurface(w,h)
 		return dds
 
@@ -1090,15 +1113,16 @@ class SubWindow(Window):
 		x0, y0, w0, h0 = self._rectb
 		x1, y1, w1, h1 = self.getwindowpos()
 		
-		# keep track of the original rect
+		# sense a size change/restore
 		if not self._resizing:
 			if w!=w0 or h!=h0:
 				self._resizing = 1
 				self._scale = scale
 				self._orgrect = self._rect
-		elif self._orgrect == self._rect:
+		elif w==w0 and h==h0:	
 			self._resizing = 0
 			
+				
 		# resize/move
 		self._rect = 0, 0, w, h # client area in pixels
 		self._canvas = 0, 0, w, h # client canvas in pixels
