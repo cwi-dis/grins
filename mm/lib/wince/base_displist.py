@@ -110,7 +110,9 @@ class DisplayList:
 			ld, td, rd, bd = x+xd, y+yd, x+xd+wd, y+yd+hd
 				
 			# destination clip
-			ldc, tdc, rdc, bdc = wnd.ltrb(wnd.rectAnd(rcc, (ld, td, rd-ld, bd-td)) )
+			rca = wnd.rectAnd(rcc, (ld, td, rd-ld, bd-td))
+			if not rca: return
+			ldc, tdc, rdc, bdc = wnd.ltrb(rca)
 				
 			# find src clip ltrb given the destination clip
 			lsc, tsc, rsc, bsc =  wnd._getsrcclip((ld, td, rd, bd), (ls, ts, rs, bs), (ldc, tdc, rdc, bdc))
