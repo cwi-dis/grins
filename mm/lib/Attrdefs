@@ -113,7 +113,7 @@
 	'Whether to erase the media when done playing' raw (cmif smil2))
 
 (fgcolor (tuple (int) (int) (int)) (0 0 0) 'Foreground color' color
-	'Color used for text/images in window' channel (cmif snap))
+	'Color used for text, image or brush in window' channel (cmif snap smil2))
 
 (file (string) '' 'URL' file
 	'URL for the data of this node' normal (g2 qt smil10 smil2 cmif snap))
