@@ -368,6 +368,10 @@ class _Button:
 			raise TypeError, 'arg count mismatch'
 		self._hicolor = color
 
+# XXXX Jack says:
+# is this code correct? It seems that it only highlights the button once,
+# without altering the display list. Also, in the current incarnation if
+# highlighting is done by changing line thickness the unhighlight doesn't work.
 	def highlight(self):
 		if self.is_closed():
 			raise error, 'button already closed'
