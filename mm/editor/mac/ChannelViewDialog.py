@@ -52,7 +52,7 @@ class ChannelViewDialog(ViewDialog):
 
 	def helpcall(self):
 		import Help
-		Help.givehelp('timeline')
+		Help.givehelp('Timeline')
 		
 class GOCommand:
 	def __init__(self):
@@ -60,7 +60,7 @@ class GOCommand:
 
 	def helpcall(self):
 		import Help
-		Help.givehelp('timeline')
+		Help.givehelp('Timeline')
 		
 class BandwidthStripBoxCommand:
 	def __init__(self):
