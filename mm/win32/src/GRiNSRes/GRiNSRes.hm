@@ -1,6 +1,6 @@
 // Microsoft Developer Studio generated Help ID include file.
 // Used by GRiNSRes.rc
 //
-#define HIDC_EVENTLASSOO                0x818c0543    // IDD_EDITATTR_EVENTLIST [English (U.S.)]
-#define HIDC_EVENTLASSOO2               0x81a30544    // IDD_EDITATTR_EVENTLIST2 [English (U.S.)]
-#define HIDC_STATIC                     0x80f4ffff    // IDD_LICENSE [English (U.S.)]
+#define HIDC_EVENTLASSOO                0x81970543    // IDD_EDITATTR_EVENTLIST
+#define HIDC_EVENTLASSOO2               0x81970544    // IDD_EDITATTR_EVENTLIST2
+#define HIDC_STATIC                     0x80f4ffff    // IDD_LICENSE
