@@ -22,7 +22,7 @@ real_interiortypes = ('par', 'seq', 'alt', 'excl')
 def changedtimes(node):
 	if hasattr(node, 'initial_arms'):
 		del node.initial_arms
-	for child in node.GetSchedChildren(0):
+	for child in node.GetChildren():
 		changedtimes(child)
 
 def hastimes(node):
@@ -138,7 +138,7 @@ def cleanup(node):
 	del node.deps
 	type = node.GetType()
 	if type in interiortypes:
-		for c in node.GetSchedChildren(0):
+		for c in node.GetChildren():
 			cleanup(c)
 
 
@@ -256,13 +256,13 @@ def propdown(node, stoptime, dftstarttime=0):
 		node.t1 = stoptime
 		node.timing_discont = node.t1 - node.t0 - 0.1
 
-	if not node.t0t1_inherited:
+	if not hasattr(node, 't0t1_inherited') or not node.t0t1_inherited:
 		stoptime = node.t1
-	if tp in ('par', 'alt', 'excl'):
-		for c in node.GetSchedChildren(0):
+	if tp in ('par', 'alt', 'excl', 'prio'):
+		for c in node.GetChildren():
 			propdown(c, stoptime, node.t0)
 	elif tp == 'seq': # XXX not right!
-		children = node.GetSchedChildren(0)
+		children = node.GetChildren()
 		if not children:
 			return
 		lastchild = children[-1]
@@ -291,7 +291,7 @@ def decrement(q, delay, node, side):
 	if x > 0:
 		return
 	if x < 0:
-		raise CheckError, 'counter below zero!?!?'
+		raise ChseckError, 'counter below zero!?!?'
 	if side == HD:
 		node.t0 = q.timefunc()
 	elif side == TL:
