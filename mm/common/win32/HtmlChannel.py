@@ -59,6 +59,10 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.played_str = ()
 		self.__errors=[]
 		self._tempmap={}
+		
+		# release any resources on exit
+		windowinterface.addclosecallback(self.release_res,())
+		
 		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
@@ -75,6 +79,10 @@ class HtmlChannel(Channel.ChannelWindow):
 			self.window.setredrawfunc(None)
 		self.cleartemp()
 		Channel.ChannelWindow.destroy(self)
+
+	def release_res(self):
+		if self.window and hasattr(self.window,'DestroyHtmlCtrl'):
+			self.window.DestroyHtmlCtrl()
 
 	def do_arm(self, node, same=0):
 		if not same:
