@@ -1,6 +1,7 @@
 #
 # Mac CMIF Player wrapper
 #
+# This new comment line tests MacCVS in remote mode
 import os
 import sys
 import string
