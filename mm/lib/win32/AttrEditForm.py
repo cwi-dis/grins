@@ -883,7 +883,9 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		v=_CmifView._CmifPlayerView(docview.Document(docview.DocTemplate()))
 		v.createWindow(self)
 		x,y,w,h=self.getboundingbox()
-		rc=(self._layoutpos[0],self._layoutpos[1],w,h)
+		dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)
+		dh=2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)
+		rc=(self._layoutpos[0],self._layoutpos[1],w+dw,h+dh)
 		v.init(rc,'Untitled',units=UNIT_PXL)
 		v.SetWindowPos(self.GetSafeHwnd(),rc,
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
@@ -902,23 +904,13 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		rc=(x,y,x+w,y+h)
 		rc = v._convert_coordinates(rc, units = bunits)
 		rc=self._scale.layoutbox(rc,UNIT_PXL)
-		v.drawTk.SetBRect(self.assertBounded(rc,v))
+		v.drawTk.SetBRect(rc)
 
 		(x,y,w,h),bunits=self._form.GetCBox()
 		rc=(x,y,x+w,y+h)
 		rc = v._convert_coordinates(rc, units = bunits)
 		rc=self._scale.layoutbox(rc,UNIT_PXL)
 		v.drawTk.SetCRect(rc)
-	
-	def assertBounded(self,rc,wnd):
-		x,y,w,h = rc
-		l,t,r,b=wnd.GetClientRect()
-		if x<l:x=l
-		if y<t:y=t
-		if w>(r-l):w=r-l
-		if h>(b-t):h=b-t
-		rc=(x,y,w,h)
-		return rc
 
 	def createLayoutContext(self,winsize=None,units=appcon.UNIT_PXL):
 		if winsize:
