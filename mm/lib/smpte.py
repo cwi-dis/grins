@@ -29,6 +29,8 @@ Instances have the following methods:
 - GetTime() - returns the time
 '''
 
+__version__ = "$Id$"
+
 from types import *
 import string
 import re
