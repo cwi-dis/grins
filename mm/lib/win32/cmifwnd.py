@@ -22,14 +22,10 @@ toplevel=None # set by AppTopLevel
 
 
 class _CmifWnd:
-	def __init__(self, parent):
-		self._parent = parent
+	def __init__(self):
 		self._subwindows = []
 		self._displists = []
 		self._active_displist = None
-		self._bgcolor = parent._bgcolor
-		self._fgcolor = parent._fgcolor
-		self._cursor = parent._cursor
 		self._curcursor = ''
 		self._curpos = None
 		self._callbacks = {}
@@ -50,13 +46,25 @@ class _CmifWnd:
 		self._resize_flag = 0
 		self._render_flag = 0		
 		self._sizes = None
-
 		self._canvas=None
 		self._canscroll = 0
+
+		self._parent = None
+		self._bgcolor = toplevel._bgcolor
+		self._fgcolor = toplevel._fgcolor
+		self._cursor = ''
 
 		# temp sigs
 		self._wnd = None
 		self._hWnd = 0
+
+
+	def _do_init(self,parent):
+		self._parent = parent
+		self._bgcolor = parent._bgcolor
+		self._fgcolor = parent._fgcolor
+		self._cursor = parent._cursor
+
 	
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
 		raise error, 'overwrite newwindow'
@@ -91,11 +99,6 @@ class _CmifWnd:
 			return
 		else:
 			self.ShowWindow(win32con.SW_HIDE)
-
-	def is_showing(self):
-		if self_obj_:
-			return self.IsWindowVisible()
-		return 0
 
 	def close(self):
 		self.arrowcache = {}
@@ -354,15 +357,16 @@ class _CmifWnd:
 		
 
 	# response to channel highlight
-	def showwindow(self):
+	def showwindow(self,color=(255,0,0)):
 		self._showing = 1
-		win32mu.DrawWndRectangle(self, self.GetClientRect(), (255,0,0), " ")
-
-	#	response to channel unhighlight
+		win32mu.DrawWndRectangle(self, self.GetClientRect(), color, " ")
+	# response to channel unhighlight
 	def dontshowwindow(self):
 		if self._showing:
 			self._showing = 0
 			win32mu.DrawWndRectangle(self,self.GetClientRect(),self._bgcolor, " ")
+	def is_showing(self):
+		return self._showing
 
 	def setcanvassize(self, how):
 		x,y,w,h=self._canvas
@@ -374,7 +378,7 @@ class _CmifWnd:
 			w = w * 2
 			h = h * 2
 		else: # RESET_CANVAS
-			w, h = self._rect[2],self._rect[3]#self._canvas_reset[2:]
+			w, h = self._rect[2],self._rect[3]
 		self._canvas = (x,y,w,h)
 
 		self._scroll(how)

@@ -93,57 +93,26 @@ class _WindowHelpers:
 ##################################################################
 class Window(_WindowHelpers,_MenuSupport):
 	def __init__(self, title, resizable = 0, grab = 0,
-		     Name = 'windowShell', Class = None, havpar=1, **options):
-		#if not resizable:
-		#	self.resizePolicy = Xmd.RESIZE_NONE
-		#else:
-		#	self.resizePolicy = Xmd.RESIZE_ANY
+		     Name = 'windowShell', Class = None, **options):
 		attrs = {}
 		if not title:
 			title = ''
 		self._title = title
-		#wattrs = {'title': title,
-		#	  'minWidth': 60, 'minHeight': 60,
-		#	  'colormap': toplevel._default_colormap,
-		#	  'visual': toplevel._default_visual,
-		#	  'depth': toplevel._default_visual.depth}
 		wattrs = {'title': title,
 			  'minWidth': 60, 'minHeight': 60}
-		#attrs = {'allowOverlap': FALSE,
-		#	 'resizePolicy': self.resizePolicy}
-		#if not resizable:
-		#	attrs['noResize'] = TRUE
-		#	attrs['resizable'] = FALSE
 		if grab:
-			#global _in_create_box
-			#_in_create_box = self
-			#attrs['dialogStyle'] = \
-			#		     Xmd.DIALOG_FULL_APPLICATION_MODAL
 			for key, val in wattrs.items():
 				attrs[key] = val
-			#self._form = toplevel._main.CreateFormDialog(
-			#	'grabDialog', attrs)
-
 			try:
 				self.deleteCallback = options['deleteCallback']
 			except KeyError:
 				pass
 		else:
 			wattrs['iconName'] = title
-			#self._shell = toplevel._main.CreatePopupShell(Name,
-			#	Xt.ApplicationShell, wattrs)
-			#self._form = self._shell.CreateManagedWidget(
-			#	'windowForm', Xm.Form, attrs)
 			try:
 				self.deleteCallback = options['deleteCallback']
 			except KeyError:
 				pass
-			#else:
-			#	self._shell.AddWMProtocolCallback(
-			#		toplevel._delete_window,
-			#		self._delete_callback,
-			#		deleteCallback)
-			#	self._shell.deleteResponse = Xmd.DO_NOTHING
 		self._showing = FALSE
 		self._not_shown = []
 		self._shown = []
@@ -290,37 +259,18 @@ class Window(_WindowHelpers,_MenuSupport):
 	def show(self):
 		if not self._fixed:
 			self.fix()
-		#try:
-		#	self._shell.Popup(0)
-		#except AttributeError:
-		#	pass
 		self._showing = TRUE
 		for w in self._not_shown:
-		#	if not w.is_closed() and \
-		#	   not w._form.IsSubclass(Xm.Gadget):
-		#		w._form.UnmapWidget()
 			if not w.is_closed():
 				w._form.ShowWindow(win32con.SW_HIDE)
 		for w in self._shown:
-		#	if not w.is_closed() and \
-		#	   not w._form.IsSubclass(Xm.Gadget):
-		#		w._form.MapWidget()
 			w._form.ShowWindow(win32con.SW_SHOW)
 		self._not_shown = []
 		self._shown = []
 		self._wnd.ShowWindow(win32con.SW_SHOW)
-		#for w in self._fixkids:
-		#	if w.is_showing():
-		#		w.show()
-		#	else:
-		#		w.hide()
 		self._fixkids = []
 
 	def hide(self):
-		#try:
-		#	self._shell.Popdown()
-		#except AttributeError:
-		#	pass
 		self._showing = FALSE
 		if self._wnd:
 			self._wnd.ShowWindow(win32con.SW_HIDE)
@@ -330,27 +280,16 @@ class Window(_WindowHelpers,_MenuSupport):
 
 	def settitle(self, title):
 		if self._title != title:
-			#try:
-			#	self._shell.title = title
-			#	self._shell.iconName = title
-			#except AttributeError:
-			#	self._form.dialogTitle = title
 			self._title = title
 			self._wnd.SetWindowText(title)
-			#cmifex2.SetCaption(self._wnd, title)
 
 	def getgeometry(self):
 		if self.is_closed():
 			raise error, 'window already closed'
-#		x, y  = self._form.TranslateCoords(0, 0)
-#		val = self._form.GetValues(['width', 'height'])
-#		w = val['width']
-#		h = val['height']
 		x, y, w1, h1 = self._wnd.GetWindowPlacement()[4]
 		x1, y1, w, h = self._wnd.GetClientRect()
 		return x / toplevel._hmm2pxl, y / toplevel._vmm2pxl, \
 		       w / toplevel._hmm2pxl, h / toplevel._vmm2pxl
-#		return self._sizes
 
 	def pop(self):
 		pass
@@ -368,11 +307,26 @@ class Window(_WindowHelpers,_MenuSupport):
 		apply(func, args)
 
 
+class WindowV(Window):
+	def __init__(self,view):
+		attrs = {}
+		self._title = ''
+		self._showing = FALSE
+		self._not_shown = []
+		self._shown = []
+		_WindowHelpers.__init__(self)
+		_MenuSupport.__init__(self)
+
+		self._par_wnd = view
+
+		self._wnd = view 
+		toplevel._subwindows.append(self)
+		self._window_type = SINGLE
+		self._align = ''
+
 ##################################################################
 class _SubWindow(_Widget, _WindowHelpers):
 	def __init__(self, parent, name = 'windowSubwindow', **options):
-		#attrs = {'resizePolicy': parent.resizePolicy}
-		#self.resizePolicy = parent.resizePolicy
 		attrs = {}
 		self._attachments(attrs, options)
 		
@@ -381,15 +335,12 @@ class _SubWindow(_Widget, _WindowHelpers):
 		width = attrs['right']
 		height = attrs['bottom']
 		
-		#form = parent._form.CreateManagedWidget(name, Xm.Form, attrs)
-		
-		form = cmifex2.CreateContainerbox(parent._wnd,left,top,width,height)
-		
-		if not hasattr(self, '_wnd'):
-			self._wnd = form
-		
+		if hasattr(parent,'_wnd'):obj=parent._wnd
+		else: obj=parent
+		self._wnd = cmifex2.CreateContainerbox(obj,left,top,width,height)
+				
 		_WindowHelpers.__init__(self)
-		_Widget.__init__(self, parent, form)
+		_Widget.__init__(self, parent, self._wnd)
 		parent._fixkids.append(self)
 		self._window_type = SINGLE
 		self._align = ''
@@ -404,17 +355,11 @@ class _SubWindow(_Widget, _WindowHelpers):
 	def fix(self):
 		for w in self._fixkids:
 			w.fix()
-		#self._form.ManageChild()
 		self._fixed = TRUE
 
 	def show(self):
 		_Widget.show(self)
 		if self._fixed:
-			#for w in self._fixkids:
-			#	if w.is_showing():
-			#		w.show()
-			#	else:
-			#		w.hide()
 			self._fixkids = []
 
 
@@ -442,10 +387,6 @@ class _AltSubWindow(_SubWindow):
 class _AlternateSubWindow(_Widget):
 	def __init__(self, parent, name = 'windowAlternateSubwindow',
 		     **options):
-		#attrs = {'resizePolicy': parent.resizePolicy,
-		#	 'allowOverlap': TRUE}
-		#self.resizePolicy = parent.resizePolicy
-		
 		attrs = {'allowOverlap': TRUE}
 		self._attachments(attrs, options)
 
@@ -454,15 +395,11 @@ class _AlternateSubWindow(_Widget):
 		width = attrs['right']
 		height = attrs['bottom']
 
-		#form = parent._form.CreateManagedWidget(name, Xm.Form, attrs)
-
-		form = cmifex2.CreateContainerbox(parent._wnd,left,top,width,height)
+		self._wnd = cmifex2.CreateContainerbox(parent._wnd,left,top,width,height)
 		
-		if not hasattr(self, '_wnd'):
-			self._wnd = form
 		
 		self._windows = []
-		_Widget.__init__(self, parent, form)
+		_Widget.__init__(self, parent, self._wnd)
 		parent._fixkids.append(self)
 		self._fixkids = []
 		self._children = []
@@ -494,7 +431,5 @@ class _AlternateSubWindow(_Widget):
 	def fix(self):
 		for w in self._fixkids:
 			w.fix()
-		#for w in self._windows:
-		#	w._form.ManageChild()
 
 
