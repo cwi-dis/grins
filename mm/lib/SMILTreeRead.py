@@ -2155,26 +2155,26 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			for attr in ('from', 'to', 'by'):
 				val = attributes.get(attr)
 				if val is None:
-					return
+					continue
 				if tagname == 'animateMotion' and not fppairre.match(val):
 					if fppairre_bad.match(val):
-						self.syntax_error("missing parentheses in from value")
+						self.syntax_error("missing parentheses in %s value" % attr)
 						# fix up value since we know how
 						attributes[attr] = '(' + val + ')'
 					else:
-						self.syntax_error("invalid from value")
+						self.syntax_error("invalid %s value" % attr)
 						del attributes[attr]
 				elif tagname == 'animateColor' and not self.__convert_color(val):
-					self.syntax_error("invalid from value")
+					self.syntax_error("invalid %s value" % attr)
 					del attributes[attr]
 				elif attrtype == 'coord' and not coordre.match(val):
-					self.syntax_error("invalid from value")
+					self.syntax_error("invalid %s value" % attr)
 					del attributes[attr]
 				elif attrtype == 'int':
 					try:
 						v = int(val)
 					except ValueError:
-						self.syntax_error('invalid from value')
+						self.syntax_error('invalid %s value' % attr)
 						del attributes[attr]
 
 			# remaining attributes are valid, now determine animation type
