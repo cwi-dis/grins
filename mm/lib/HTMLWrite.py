@@ -160,7 +160,7 @@ class HTMLWriter:
 
 		self.ch2name = {}
 		self.top_levels = []
-		self.calcchnames1(node)
+		self.calcViewportName(node)
 
 		if exporttype == compatibility.G2:
 			self.objectgenerator = self.outobjectG2
@@ -168,11 +168,6 @@ class HTMLWriter:
 			self.objectgenerator = self.outobjectQT
 		else:
 			raise 'unknown export type'
-
-		if len(self.top_levels) > 1:
-			print '** Document uses multiple toplevel channels'
-			self.uses_cmif_extension = 1
-
 
 	def outtag(self, tag, attrs = None):
 		if attrs is None:
@@ -191,7 +186,7 @@ class HTMLWriter:
 		# with %(name)s constructs that will be filled in later
 		#
 		if not ctxa.has_key('project_html_page'):
-			raise Error, 'Webpage generation skipped: No HTML template selected.'
+			raise Error, 'Webpage generation skipped: No HTML template selected.'		
 		template_name = ctxa['project_html_page']
 		templatedir = findfile('Templates')
 		templatefile = os.path.join(templatedir, template_name)
@@ -220,30 +215,7 @@ class HTMLWriter:
 		outdict['copyright'] = nameencode(ctxa.get('copyright', ''))[1:-1]
 		
 		playername = 'clip_1'
-		
-		out = '<!-- START-GRINS-GENERATED-CODE multiregion -->\n'
-		channels = self.get_visible_channels()
-		for region, x, y, w, h, z in channels:
-			if not w or not h:
-				out = out+'<!-- Region %s used for non-visible media only, skipped-->\n'%region
-				continue
-			tmp2 = 'left:%dpx; top:%dpx; width:%dpx; height:%dpx;'%(x, y, w, h)
-			if z > 0:
-				tmp2 = tmp2+ ' z-index:%d'%z
-			out = out + '<div layout="position:absolute; %s">\n'%tmp2
-			
-			# we have to take account of slider's width and height in dimension calculation
-			out = out + self.objectgenerator(w+20, h+20, [
-				('controls', 'ImageWindow'),
-				('console', playername),
-				('autostart', 'false'),
-				('region', region),
-				('src', MMurl.unquote(self.ramurl))])
 				
-			out = out + '</div>\n'
-		out = out + '<!-- END-GRINS-GENERATED-CODE multiregion -->\n'
-		outdict['multiregion'] = out
-		
 		out = '<!-- START-GRINS-GENERATED-CODE singleregion -->\n'
 
 		if self.top_levels:
@@ -278,25 +250,7 @@ class HTMLWriter:
 		# Step four - Write it
 		#
 		self.fp.write(output)
-		
-	def get_visible_channels(self):
-		if not self.top_levels:
-			return []
-		if len(self.top_levels) > 1:
-			raise Error, "Multiple toplevel windows"
-		top_w, top_h = self.top_channel_size(self.top_levels[0])
-		if not top_w or not top_h:
-			raise Error, "Zero-sized presentation window"
-		rv = []
-		for ch in self.root.GetContext().channels:
-			if not visible_channel_types.has_key(ch['type']):
-				continue
-			name = self.ch2name[ch]
-			x, y, w, h = self.channel_pos(ch, top_w, top_h)
-			z = ch.get('z', 0)
-			rv.append((name, x, y, w, h, z))
-		return rv
-		
+				
 	def outobjectG2(self, width, height, arglist):
 		out = self.outtag('object', [
 			('classid', 'clsid:CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA'),
@@ -324,47 +278,14 @@ class HTMLWriter:
 		out = self.outtag('embed', arglist)
 		return out
 		
-	def calcchnames1(self, node):
+	def calcViewportName(self, node):
 		# Calculate unique names for channels; first pass
 		context = node.GetContext()
-		channels = context.channels
-		for ch in channels:
-			name = identify(ch.name)
-			if not self.ids_used.has_key(name):
-				self.ids_used[name] = 0
-				self.ch2name[ch] = name
-			else:
-				raise Error, "Duplicate region name"
-			if not ch.has_key('base_window') and \
-			   ch['type'] not in ('sound', 'null'):
-				# top-level channel with window
-				self.top_levels.append(ch)
-				if not self.__title:
-					self.__title = ch.name
-		if not self.__title and channels:
-			# no channels with windows, so take very first channel
-			self.__title = channels[0].name
+		self.top_levels = context.getviewports()
+		for viewport in self.top_levels:
+			if not self.__title:
+				self.__title = viewport.name
 			
-	def channel_pos(self, ch, basewidth, baseheight):
-		if not ch.has_key('base_winoff'):
-			return None, None, None, None
-		units = ch.get('units', 2)
-		x, y, w, h = ch['base_winoff']
-		if units == 0:
-			# convert mm to pixels
-			# (assuming 100 dpi)
-			x = round(x / 25.4 * 100.0)
-			y = round(y / 25.4 * 100.0)
-			w = round(w / 25.4 * 100.0)
-			h = round(h / 25.4 * 100.0)
-		if units == 1:
-			x = x * basewidth + .5
-			y = y * baseheight + .5
-			w = w * basewidth + .5
-			h = h * baseheight + .5
-		# else: units are already in pixels
-		return int(x), int(y), int(w), int(h)
-
 	def top_channel_size(self, ch):
 		w = ch.GetAttrDef('width', None)
 		h = ch.GetAttrDef('height', None)
