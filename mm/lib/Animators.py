@@ -113,6 +113,9 @@ class CompositeAnimator:
 
 
 # Impl. rem:
+# *syntax error handling: ignore animation
+# *for discrete 'to' animation set the "to" value for the simple duration
+# but for 'from-to' set the "from" value for the first half and the 'to' for the second
 # *attr types map
 # *use f(0) if duration is undefined
 # *ignore keyTimes if dur indefinite
@@ -203,6 +206,9 @@ class AnimateElementParser:
 	def getKeyTimes(self):
 		return MMAttrdefs.getattr(self.__anim, 'keyTimes')
 
+	def getKeySplines(self):
+		return MMAttrdefs.getattr(self.__anim, 'keySplines')
+
 	def getLoop(self):
 		return MMAttrdefs.getattr(self.__anim, 'loop')
 
@@ -234,7 +240,6 @@ class AnimateElementParser:
 		for name, value in self.__target.GetChannel().attrdict.items():
 			print name, '=', `value`
 		print '----------------------'
-
 
 	# return list of interpolation values
 	def getNumInterpolationValues(self):	
@@ -308,13 +313,42 @@ class AnimateElementParser:
 			if first!=0.0 or last!=1.0: return ()
 		elif self.__calcMode == 'discrete':
 			if first!=0.0: return ()
+		elif self.__calcMode == 'paced':
+			return () # ignore keyTimes for 'paced' mode
 		
 		# values should be increasing and in [0,1]
 		if first>1.0 or first<0:return ()
 		for i in  range(1,len(tt)):
 			if tt[i] < tt[i-1] or tt[i]>1.0 or tt[i]<0:
 				return ()
-
 		return tt
+
+	def getInterpolationKeySplines(self):
+		if self.__calcMode != 'spline':
+			return []
+		keySplines = self.getKeySplines()
+		if not keySplines: return ()
+		sl = string.split(values,';')
+		
+		# len of keySplines must be equal to num of intervals (=len(keyTimes)-1)
+		tt = self.getInterpolationKeyTimes()
+		if len(sl) != len(tt)-1:
+			return []
+		rl = []
+		for e in sl:
+			try:
+				x1, y1, x2, y2 = map(string.atof, string.split(e))
+			except:
+				return []
+			if x1<0.0 or x1>1.0 or x2<0.0 or x2>1.0 or y1<0.0 or y1>1.0 or y2<0.0 or y2>1.0:
+				return []
+			rl.append((x1, y1, x2, y2))
+		return rl
+
+
+
+
+
+
 
 
