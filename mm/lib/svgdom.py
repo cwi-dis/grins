@@ -494,7 +494,7 @@ class AnimateElement(SvgElement, svgtime.TimeElement):
 		return None
 
 	def enterActiveState(self):
-		assert self._state == self.WAITBEGIN and self._interval is not None, 'invalid transition'
+		assert self._state == svgtime.WAITBEGIN and self._interval is not None, 'invalid transition'
 		svgtime.TimeElement.enterActiveState(self)
 		dur = self.getDur()
 		if self.animator and svgtime.isdefinite(dur):
@@ -504,9 +504,9 @@ class AnimateElement(SvgElement, svgtime.TimeElement):
 	def removeElement(self):
 		if not self.isFilled():
 			return
-		svgtime.TimeElement.removeElement(self)
 		if self.animator:
 			self.targetAttr.removeAnimator(self.animator)
+		svgtime.TimeElement.removeElement(self)
 
 	def resetElement(self):
 		svgtime.TimeElement.resetElement(self)
@@ -944,6 +944,12 @@ class SvgDocument(SvgNode):
 
 	def getRoot(self):
 		return self.getFirstChildByType('svg')
+		
+	def getSize(self):
+		root =  self.getRoot()
+		if root is not None:
+			return root.getSize()
+		return 0, 0
 			
 	def getDOMClassName(self, tag):
 		if tag[0] == '#': # internal node
@@ -1393,32 +1399,32 @@ class DocCache:
 
 doccache = DocCache()
 
-
-def GetSvgDocSize(svgdoc):
-	root =  svgdoc.getRoot()
-	if not root or root.getType()!='svg':
-		return 0, 0
-	return root.getSize()
-
 def GetSvgSizeFromSrc(source):
 	svgdoc = SvgDocument(source)
-	return GetSvgDocSize(svgdoc)
+	return svgdoc.getSize()
 
-def GetSvgSize(url):
+import MMurl
+
+def GetSvgDocument(url):
 	if doccache.hasdoc(url):
 		svgdoc = doccache.getDoc(url)
-		return GetSvgDocSize(svgdoc)
-	import MMurl
-	try:
-		u = MMurl.urlopen(url)
-	except:
-		print 'warning: cannot open file %s' % url
-		return 0, 0
-	source = u.read()
-	u.close()
-	svgdoc = SvgDocument(source)
-	doccache.cache(url, svgdoc)
-	return GetSvgDocSize(svgdoc)
+	else:
+		try:
+			u = MMurl.urlopen(url)
+		except IOError, arg:
+			print 'Cannot resolve URL "%s": %s' % (url, arg)
+			return None
+		source = u.read()
+		u.close()
+		svgdoc = SvgDocument(source)
+		doccache.cache(url, svgdoc)
+	return svgdoc
+
+def GetSvgSize(url):
+	svgdoc = GetSvgDocument(url)
+	if svgdoc is not None:
+		return svgdoc.getSize()
+	return 0, 0
 
 ####################################
 # test
