@@ -182,8 +182,8 @@ class MediaChannel:
 		self.__register_for_timeslices()
 		if repeatdur > 0:
 			self.__qid = self.__channel._scheduler.enter(repeatdur, 0, self.__stoprepeat, ())
-		elif self.play_loop == 0 and repeatdur == 0:
-			self.__channel.playdone(0)
+##		elif self.play_loop == 0 and repeatdur == 0:
+##			self.__channel.playdone(0)
 		return 1
 
 	def __stoprepeat(self):
@@ -365,8 +365,8 @@ class VideoStream:
 
 		if repeatdur > 0:
 			self.__qid = self.__channel._scheduler.enter(repeatdur, 0, self.__stoprepeat, ())
-		elif self.play_loop == 0 and repeatdur == 0:
-			self.__channel.playdone(0)
+##		elif self.play_loop == 0 and repeatdur == 0:
+##			self.__channel.playdone(0)
 		
 		window.setvideo(self.__mmstream._dds, self.__channel.getMediaWndRect(), self.__mmstream._rect)
 		self.__window = window
