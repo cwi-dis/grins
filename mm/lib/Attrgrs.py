@@ -17,7 +17,6 @@ attrgrs=(
 		'subregionxy',
 		'subregionwh',
 		'displayfull',
-		'subregionanchor',
 		'aspect',
 		'project_quality',
 		'project_convert',
@@ -31,15 +30,6 @@ attrgrs=(
 		'displayfull',
 		'aspect',
 		'project_quality',
-		]},
-
-	{'name':'subregion4',
-	'title':'Destination rendering',
-	'attrs':[
-		'subregionxy',
-		'subregionwh',
-		'displayfull',
-		'subregionanchor',
 		]},
 
 	{'name':'subregion2',
@@ -212,7 +202,6 @@ attrgrs=(
 		'imgcropxy',
 		'imgcropwh',
 		'fullimage',
-		'imgcropanchor',
 		]},
 
 	{'name':'imgregion1',
