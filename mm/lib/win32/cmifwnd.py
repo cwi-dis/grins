@@ -902,11 +902,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			xsize,ysize,depth=win32ig.size(img)
 			toplevel._image_size_cache[file] = xsize, ysize
 			toplevel._image_cache[file] = img
-			doc=self.getgrinsdoc()
-			if doc in toplevel._image_docmap.keys():
-				toplevel._image_docmap[doc].append(file)
-			else:
-				toplevel._image_docmap[doc]=[file,]
+		self.imgAddDocRef(file)
 		return xsize, ysize
 
 	# Prepare an image for display (load,crop,scale, etc)
@@ -915,18 +911,9 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
 		# depth: depth of window (and image) in bytes
-		toplevel=__main__.toplevel
-		oscale = scale
-		tw = self._topwindow
-		#format = toplevel._imgformat
-		#depth = format.descr['align'] / 8
-		reader = None
 
 		# get image size. If it can't be found in the cash read it.
-		if toplevel._image_size_cache.has_key(file):
-			xsize, ysize = toplevel._image_size_cache[file]
-		else:
-			xsize, ysize = self._image_size(file)
+		xsize, ysize = self._image_size(file)
 
 		# check for valid crop proportions
 		top, bottom, left, right = crop
@@ -961,7 +948,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		left = int(left * scale + .5)
 		right = int(right * scale + .5)
 
-		image = toplevel._image_cache[file]
+		image = __main__.toplevel._image_cache[file]
 		mask=None
 		w=xsize
 		h=ysize
@@ -990,3 +977,13 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 
 		return image, mask, left, top, x, y,\
 			w - left - right, h - top - bottom,rcKeep
+
+	def imgAddDocRef(self,file):
+		toplevel=__main__.toplevel
+		doc=self.getgrinsdoc()
+		if doc==None: doc="__Unknown"
+		if toplevel._image_docmap.has_key(doc):
+			if file not in toplevel._image_docmap[doc]:
+				toplevel._image_docmap[doc].append(file)
+		else:
+			toplevel._image_docmap[doc]=[file,]
