@@ -247,8 +247,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 					self.playdone(0, curtime)
 
 	# toggles between pause and run
-	def setpaused(self, paused):
-		Channel.ChannelWindowAsync.setpaused(self, paused)
+	def setpaused(self, paused, timestamp):
+		Channel.ChannelWindowAsync.setpaused(self, paused, timestamp)
 		if self.__mc is not None:
 			self.__mc.pauseit(paused)
 		elif self.__rc:

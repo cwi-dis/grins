@@ -1133,11 +1133,11 @@ class SchedulerContext:
 			chan = getchannelfunc(xnode)
 			if chan:
 				if debugevents: print 'freeze',`node`,self.parent.timefunc()
-				chan.pause(xnode, action)
+				chan.pause(xnode, action, timestamp)
 		for c in node.GetSchedChildren():
 			self.pause_play(c, action, timestamp)
 		node.playing = MMStates.PAUSED
-		node.set_armedmode(ARM_WAITSTOP) # XXX ?
+		node.set_armedmode(ARM_PAUSING)
 
 	def do_resume(self, node, curtime, timestamp):
 		if debugevents: print 'resume',node,timestamp,self.parent.timefunc()
@@ -1168,7 +1168,7 @@ class SchedulerContext:
 			chan = getchannelfunc(xnode)
 			if chan:
 				if debugevents: print 'resume play',`node`,parent.timefunc()
-				chan.resume(xnode)
+				chan.resume(xnode, timestamp)
 		if node.type == 'excl':
 			for c in node.GetSchedChildren():
 				if c.playing == MMStates.PAUSED and \
@@ -1518,7 +1518,15 @@ class Scheduler(scheduler):
 			    arg.attrdict.get('end') is not None):
 				if debugevents: print 'not stopping (dur/end)',`arg`,self.timefunc()
 				return
-			if arg.GetFill() == 'remove':
+			pnode = arg.GetSchedParent()
+			if pnode is not None and pnode.GetType() == 'excl' and pnode.pausestack and arg not in pnode.pausestack:
+				nnode = pnode.pausestack[0]
+				del pnode.pausestack[0]
+				sctx.do_terminate(arg, curtime, timestamp)
+				if not self.playing:
+					return
+				sctx.do_resume(nnode, curtime, timestamp)
+			elif arg.GetFill() == 'remove':
 				for ch in arg.GetSchedChildren():
 					sctx.do_terminate(ch, curtime, timestamp, chkevent = 0)
 					if not self.playing:
