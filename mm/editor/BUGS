@@ -54,6 +54,14 @@ Kaboo!: None
 > /ufs/guido/mm/demo/mm4/Scheduler.py(72)unfreeze: raise 'Kaboo!'
 
 ------------------------------ BUGS -------------------------------
+(editor only:) Stopping a node (because of pressing stop or a
+hyperjump) on the soundchannel sets it to play_done (according to the
+channelview color).
+
+(editor only:) The movie window has a funny little sub-window in the
+lower-right corner. At least, it has when playing the coffee demo.
+
+(editor only:) The movie window doesn't clear to the correct color.
 
 Pressing "PLAY" while already playing a movie, makes the movie red...
 
