@@ -1377,11 +1377,12 @@ class EventCtrl(AttrCtrl):
 		self.enableApply()
 		self.update()
 		self._list.setcursel(len(self._value)-1) # select new list element
+		self._deletebutton.enable(1)
 
 	def OnDelete(self, id, code):
 		# callback for the "delete" button
 		a = self._list.getselected()
-		if a >= 0 and a < len(self._value):
+		if 0 <= a < len(self._value):
 			#self._list.deletestring(a)
 			del self._value[a]
 			self._eventstruct = None
@@ -1399,8 +1400,11 @@ class EventCtrl(AttrCtrl):
 		self._list.resetcontent()
 		for i in range(0, len(self._value)):
 			self._list.insertstring(i, self._value[i].as_string())
-		if sel >= 0 and sel < len(self._value):
+		if 0 <= sel < len(self._value):
 			self._list.setcursel(sel)
+			self._deletebutton.enable(1)
+		else:
+			self._deletebutton.enable(0)
 
 	def setvalue(self, val):
 		if type(val) is type(()):
@@ -1554,8 +1558,10 @@ class EventCtrl(AttrCtrl):
 			self.dont_update = 1
 			self.initevent()
 			self.dont_update = 0
+			self._deletebutton.enable(1)
 		else:
 			print "error: weirdly selected list member: ", i
+			self._deletebutton.enable(0)
 
 ##	def _causewidgetcallback(self, id, code):
 ##		if not self._eventstruct:
