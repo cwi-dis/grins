@@ -385,40 +385,6 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 			self._menu.AppendMenu(flags, id, label)
 			self._cbld[id]=cbt
 
-	# Create the popup menu from the argument list
-	# cb_entry: (ACCELERATOR,NAME,callback_tuple) | None
-	# callback_tuple: (callback,(arg,))
-	# arg list is a list of cb_entry
-	def create_menu(self, list, title = None):
-		self._title=title #+ '-' + self._title
-		istr = '%s (z=%d t=%d)'%(self._title,self._z,self._transparent)
-
-		self.SetWindowText(title)
-#		list.append(None)
-#		list.append(('','highlight all',(self.showall,(1,))))
-#		list.append(('','unhighlight all',(self.showall,(0,))))
-#		list.append(('','dump hierarchy',(self._topwindow.WndsHierarchy,())))
-#		list.append(('','dump displist',(self.dump_active_displist,())))
-
-		self.destroy_menu()
-		menu = win32menu.Menu() 
-		float = win32menu.Menu() 
-		menu.AppendPopup(float,"menu")
-		
-		if title:
-			list = [istr, None] + list
-		
-		if not hasattr(self,'_cbld'):
-			self._cbld = {}
-		
-		self._accelerators = {}
-		if hasattr(self,'_cbld'):
-			win32menu._create_menu(float, list, 1, self._cbld,
-					self._accelerators)
-
-		self.HookAllKeyStrokes(self._char_callback)
-		self._menu = menu
-	
 	# return commnds class id
 	def get_cmdclass_id(self,cmdcl):
 		if usercmdui.class2ui.has_key(cmdcl):
