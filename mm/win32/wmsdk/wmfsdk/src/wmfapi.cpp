@@ -1819,23 +1819,25 @@ DDWMWriter_SetVideoFormat(DDWMWriterObject *self, PyObject *args)
 	return Py_None;
 	}
 
-static char DDWMWriter_WriteVideoSample__doc__[] =
+static char DDWMWriter_WriteDDSurface__doc__[] =
 ""
 ;
 static PyObject *
-DDWMWriter_WriteVideoSample(DDWMWriterObject *self, PyObject *args)
+DDWMWriter_WriteDDSurface(DDWMWriterObject *self, PyObject *args)
 {
 	BYTE *pBuffer;
-	DWORD dwSampleSize;
+	int pitch, nrows;
 	DWORD msec;
 	DWORD dwFlags=0; // WM_SF_CLEANPOINT
-	if (!PyArg_ParseTuple(args, "iii|i", &pBuffer, &dwSampleSize, &msec, &dwFlags))
+	if (!PyArg_ParseTuple(args, "(iii)i|i", &pBuffer, &pitch, &nrows, &msec, &dwFlags))
 		return NULL;
+
+	DWORD dwSampleSize = nrows*pitch;
 	
 	INSSBuffer *pSample=NULL;
 	HRESULT hr = self->pIWMWriter->AllocateSample(dwSampleSize,&pSample);
 	if (FAILED(hr)){
-		seterror("DDWMWriter_WriteVideoSample:AllocateSample", hr);
+		seterror("DDWMWriter_WriteDDSurface:AllocateSample", hr);
 		return NULL;
 	}
 	BYTE *pbsBuffer;
@@ -1843,16 +1845,19 @@ DDWMWriter_WriteVideoSample(DDWMWriterObject *self, PyObject *args)
 	hr = pSample->GetBufferAndLength(&pbsBuffer,&cbBuffer);
 	if (FAILED(hr)){
 		pSample->Release();
-		seterror("DDWMWriter_WriteVideoSample:GetBufferAndLength", hr);
+		seterror("DDWMWriter_WriteDDSurface:GetBufferAndLength", hr);
 		return NULL;
 	}
-	CopyMemory(pbsBuffer,pBuffer,cbBuffer<dwSampleSize?cbBuffer:dwSampleSize);
-
+	for(int row=nrows-1;row>=0;row--){
+		CopyMemory(pbsBuffer, pBuffer + row*pitch, pitch);
+		pbsBuffer += pitch;
+	}
+		
 	QWORD cnsec = QWORD(msec)*QWORD(10000);
 	hr = self->pIWMWriter->WriteSample(self->dwVideoInputNum, cnsec, dwFlags, pSample);
 	pSample->Release();
 	if (FAILED(hr)){
-		seterror("DDWMWriter_WriteVideoSamle:WriteSample", hr);
+		seterror("DDWMWriter_WriteDDSurface:WriteSample", hr);
 		return NULL;
 	}
 	Py_INCREF(Py_None);
@@ -1875,7 +1880,7 @@ static struct PyMethodDef DDWMWriter_methods[] = {
 	{"QueryIWMWriterAdvanced", (PyCFunction)DDWMWriter_QueryIWMWriterAdvanced, METH_VARARGS, DDWMWriter_QueryIWMWriterAdvanced__doc__},
 	{"QueryIUnknown", (PyCFunction)DDWMWriter_QueryIUnknown, METH_VARARGS, DDWMWriter_QueryIUnknown__doc__},
 	{"SetVideoFormat", (PyCFunction)DDWMWriter_SetVideoFormat, METH_VARARGS, DDWMWriter_SetVideoFormat__doc__},
-	{"WriteVideoSample", (PyCFunction)DDWMWriter_WriteVideoSample, METH_VARARGS, DDWMWriter_WriteVideoSample__doc__},
+	{"WriteDDSurface", (PyCFunction)DDWMWriter_WriteDDSurface, METH_VARARGS, DDWMWriter_WriteDDSurface__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -5389,7 +5394,7 @@ CreateDDWriter(PyObject *self, PyObject *args)
 }
 
 
-static void FillBmp(BITMAPINFOHEADER& infohdr, int width, int height, int depth)
+static void FillBitmapInfoHeader(BITMAPINFOHEADER& infohdr, int width, int height, int depth)
 	{
 	ZeroMemory(&infohdr,sizeof(infohdr) );
 	infohdr.biSize=sizeof(infohdr);
@@ -5406,7 +5411,7 @@ static WMVIDEOINFOHEADER* CreateVideoInfo(int width, int height, int depth, DWOR
 	{
 	WMVIDEOINFOHEADER* pVideoInfo = new WMVIDEOINFOHEADER;
 	BITMAPINFOHEADER& bmi = pVideoInfo->bmiHeader;
-	FillBmp(pVideoInfo->bmiHeader, width, height, depth);
+	FillBitmapInfoHeader(pVideoInfo->bmiHeader, width, height, depth);
 	pVideoInfo->rcSource.left	= 0;
 	pVideoInfo->rcSource.top	= 0;
 	pVideoInfo->rcSource.right	= width;
@@ -5467,7 +5472,7 @@ CreateVideoWMType(PyObject *self, PyObject *args)
 	mt.subtype = subtype;
 	mt.bFixedSizeSamples = FALSE;
 	mt.bTemporalCompression = TRUE;
-	mt.lSampleSize = width*height*4;
+	mt.lSampleSize = width*height*(depth/8);
 	mt.formattype = WMFORMAT_VideoInfo;
 	mt.pUnk = NULL;
 	mt.cbFormat = sizeof(WMVIDEOINFOHEADER);
