@@ -30,6 +30,9 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 			SourceViewDialog.SourceViewDialog.show(self) # creates the text widget
 			self.read_text()
 			self.editmgr.register(self, want_focus = 1)
+		# set the focus, if already there
+		focustype,focusobject = self.editmgr.getglobalfocus()
+		self.__setFocus(focustype, focusobject)
 
 	def hide(self):
 		if not self.is_showing():
@@ -37,10 +40,13 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		self.editmgr.unregister(self)
 		SourceViewDialog.SourceViewDialog.hide(self)
 
-	def globalfocuschanged(self, focustype, focusobject):
+	def __setFocus(self, focustype, focusobject):
 		if hasattr(focusobject, 'char_positions') and focusobject.char_positions:
 			apply(self.select_chars, focusobject.char_positions)
-
+		
+	def globalfocuschanged(self, focustype, focusobject):
+		self.__setFocus(focustype, focusobject)
+		
 	def transaction(self,type):
 		if self.is_changed():
 			q = windowinterface.GetOKCancel("You have unsaved changes in the source view.\nIs it OK to discard these?", self.toplevel.window)
