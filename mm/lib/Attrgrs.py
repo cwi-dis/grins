@@ -243,12 +243,47 @@ attrgrs=(
 		'.anchorlist',
 		]},
 
+	{'name':'convert5',
+	'title':'Conversion',
+	'attrs':[
+		'project_targets',
+		'project_videotype',
+		'project_audiotype',
+		'project_mobile',
+		'project_perfect',
+		]},
+
+	{'name':'convert4',
+	'title':'Conversion',
+	'attrs':[
+		'project_targets',
+		'project_audiotype',
+		'project_mobile',
+		'project_perfect',
+		]},
+
+	{'name':'convert3',
+	'title':'Conversion',
+	'attrs':[
+		'project_targets',
+		'project_videotype',
+		'project_audiotype',
+		]},
+
+	{'name':'convert2',
+	'title':'Conversion',
+	'attrs':[
+		'project_targets',
+		'project_audiotype',
+		]},
+
 	{'name':'clip',
 	'title':'Clip',
 	'attrs':[
 		'clipbegin',
 		'clipend',
 		]},
+
 	)
 
 

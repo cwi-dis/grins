@@ -3236,6 +3236,62 @@ class WipeGroup(AttrGroup):
 		cd[a] = OptionsRadioNocolonCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24,grinsRC.IDC_25))
 		return cd
 
+class Convert2Group(AttrGroup):
+	data = attrgrsdict['convert2']
+
+	def __init__(self):
+		AttrGroup.__init__(self, self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_CONV2
+
+	def createctrls(self, wnd):
+		cd = {}
+		a = self.getattr('project_targets')
+		cd[a] = OptionsCheckMultipleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_16,grinsRC.IDC_17))
+		a = self.getattr('project_audiotype')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
+		return cd
+
+class Convert3Group(Convert2Group):
+	data = attrgrsdict['convert3']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_CONV3
+
+	def createctrls(self, wnd):
+		cd = Convert2Group.createctrls(self, wnd)
+		a = self.getattr('project_videotype')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		return cd
+
+class Convert4Group(Convert2Group):
+	data = attrgrsdict['convert4']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_CONV4
+
+	def createctrls(self, wnd):
+		cd = Convert2Group.createctrls(self, wnd)
+		a = self.getattr('project_perfect')
+		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_41,))
+		a = self.getattr('project_mobile')
+		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_51,))
+		return cd
+
+class Convert5Group(Convert4Group):
+	data = attrgrsdict['convert5']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_CONV5
+
+	def createctrls(self, wnd):
+		cd = Convert4Group.createctrls(self, wnd)
+		a = self.getattr('project_videotype')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		return cd
+
+
 ############################
 # platform dependent association
 # what we have implemented, anything else goes as singleton
@@ -3251,6 +3307,11 @@ groupsui={
 	'subregion2':Subregion2Group,
 	'subregion4':Subregion4Group,
 	'anchorlist':AnchorlistGroup,
+
+	'convert2':Convert2Group,
+	'convert3':Convert3Group,
+	'convert4':Convert4Group,
+	'convert5':Convert5Group,
 
 	'system':SystemGroup,
 	'preferences':PreferencesGroup,
