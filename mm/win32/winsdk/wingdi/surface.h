@@ -186,7 +186,7 @@ class surface
 
 	pointer get_row(size_t y) 
 		{
-		//if(y>=m_height) throw_range_error();
+		if(y>=m_height) return 0; // throw_range_error();
 		uchar_ptr pb = uchar_ptr(m_data) + (m_height - 1 - y)*m_pitch;
 		return pointer(pb);
 		}
@@ -235,16 +235,17 @@ class surface
 			}
 		}
 
-	void copy_transparent(surface<T> *from, uchar_ptr rgb)
+	void copy_transparent(surface<T> *from, uchar_ptr rgb, int from_dx = 0, int from_dy = 0)
 		{
 		le::trible transp(rgb[0], rgb[1], rgb[2]);
 		for (int y=m_height-1;y>=0;y--)
 			{
 			pointer ptr = get_row(y);
-			surface<T>::pointer pfrom = from->get_row(y);
+			surface<T>::pointer pfrom = from->get_row(from_dy + y);
+			if(pfrom == 0) break;
 			for(size_t x=0;x<m_width;x++)
 				{
-				le::trible& tfrom = pfrom[x];
+				le::trible& tfrom = pfrom[from_dx + x];
 				if(tfrom != transp)
 					ptr[x] = tfrom;
 				}

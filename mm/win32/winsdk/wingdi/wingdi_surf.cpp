@@ -245,21 +245,20 @@ inline PyDIBSurf* CreateDIBSurface(HDC hDC, int width, int height)
 	return PyDIBSurf::createInstance(hBmp, psurf);
 	}
 
-inline void CopyDCToSurf(HDC hDC, PyDIBSurf *surf, int x, int y, int width, int height)
+inline BOOL CopyDCToSurf(HDC hDC, int x, int y, int width, int height, PyDIBSurf *surf)
 	{
 	HDC hdst = CreateCompatibleDC(hDC);
 	HBITMAP hdstold = (HBITMAP)SelectObject(hdst, surf->m_hBmp);
-	BitBlt(hdst, 0, 0, width, height, hDC, x, y, SRCCOPY);
+	BOOL res = BitBlt(hdst, 0, 0, width, height, hDC, x, y, SRCCOPY);
 	SelectObject(hdst, hdstold);
 	DeleteDC(hdst);
+	return res;
 	}
 
-inline BOOL StretchBltSurf(PyDIBSurf *surf1, int x1, int y1, int w1, int h1, 
+inline BOOL StretchBltSurf(HDC hDC, PyDIBSurf *surf1, int x1, int y1, int w1, int h1, 
 						   PyDIBSurf *surf2, int x2, int y2, int w2, int h2)
 	{
-	HDC hdc = GetDC(NULL);
-
-	HDC hdst = CreateCompatibleDC(hdc);
+	HDC hdst = CreateCompatibleDC(hDC);
 	HBITMAP hdstold = (HBITMAP)SelectObject(hdst, surf1->m_hBmp);
 
 	HDC hsrc = CreateCompatibleDC(hdst);
@@ -273,14 +272,7 @@ inline BOOL StretchBltSurf(PyDIBSurf *surf1, int x1, int y1, int w1, int h1,
 	SelectObject(hdst, hdstold);
 	DeleteDC(hdst);
 
-	DeleteDC(hdc);
 	return res;
-	}
-
-inline BOOL CopyBits(PyDIBSurf *surf1, PyDIBSurf *surf2, BYTE *rgb_transp)
-	{
-	surf1->m_psurf->copy_transparent(surf2->m_psurf, rgb_transp);
-	return TRUE;
 	}
 
 inline BOOL BlitToDC(HDC hDC, int x, int y, int width, int height, PyDIBSurf *surf)
@@ -309,45 +301,61 @@ PyObject* Wingdi_StretchBltTransparent(PyObject *self, PyObject *args)
 
 	HDC hDC = (HDC)GetGdiObjHandle(dcobj);
 
-	// 1. make a copy of dest (surf1)
+	// 1. preserve bg step
+	// make a copy of dest (surf1)
 	PyDIBSurf *surf1 = CreateDIBSurface(hDC, nWidthDest, nHeightDest);
 	if(surf1 == NULL)
 		{
 		seterror("StretchBltTransparent", GetLastError());
 		return NULL;
 		}
-	CopyDCToSurf(hDC, surf1, nXDest, nYDest, nWidthDest, nHeightDest);
+	if(!CopyDCToSurf(hDC, nXDest, nYDest, nWidthDest, nHeightDest, surf1))
+		{
+		seterror("StretchBltTransparent:CopyDCToSurf", GetLastError());
+		return NULL;
+		}
 
-
-	// 2. blit bmp to a temp surf (surf2)
+	// 2. scaling step
+	// stretch blit bmp to a temp surf (surf2)
 	PyDIBSurf *surf2 = CreateDIBSurface(hDC, nWidthDest, nHeightDest);
 	if(surf2 == NULL)
 		{
+		Py_XDECREF(surf1);
 		seterror("StretchBltTransparent", GetLastError());
 		return NULL;
 		}
-	StretchBltSurf(surf2, 0, 0, nWidthDest, nHeightDest, surfobj, nXSrc, nYSrc, nWidthSrc, nHeightSrc);
-
+	if(!StretchBltSurf(hDC, surf2, 0, 0, nWidthDest, nHeightDest, surfobj, nXSrc, nYSrc, nWidthSrc, nHeightSrc))
+		{
+		Py_XDECREF(surf1);
+		Py_XDECREF(surf2);
+		seterror("StretchBltTransparent:StretchBltSurf", GetLastError());
+		return NULL;
+		}
 
 	// 3. transfer not transparent bits of surf2 -> surf1
-	CopyBits(surf1, surf2, surfobj->m_rgb);
+	surf1->m_psurf->copy_transparent(surf2->m_psurf, surfobj->m_rgb);
 
 	// 4. blit surf1 to dc
-	BlitToDC(hDC, nXDest, nYDest, nWidthDest, nHeightDest, surf1);
+	if(!BlitToDC(hDC, nXDest, nYDest, nWidthDest, nHeightDest, surf1))
+		{
+		Py_XDECREF(surf1);
+		Py_XDECREF(surf2);
+		seterror("StretchBltTransparent:BlitToDC", GetLastError());
+		return NULL;
+		}
 
 	// 5. cleanup temporaries
 	Py_XDECREF(surf1);
 	Py_XDECREF(surf2);
+	return none();
 
 	/*
-	//  ignoring transparency the avove is equivalent to:
+	//  ignoring transparency the above is equivalent to:
 
-	HDC hDestDC = (HDC)GetGdiObjHandle(dcobj);
-
-	HDC hSrcDC = CreateCompatibleDC(hDestDC);
+	HDC hSrcDC = CreateCompatibleDC(hDC);
 	HBITMAP hsrcold = (HBITMAP)SelectObject(hSrcDC, surfobj->m_hBmp);
 
-	BOOL res = StretchBlt(hDestDC, nXDest, nYDest, nWidthDest, nHeightDest, 
+	BOOL res = StretchBlt(hDC, nXDest, nYDest, nWidthDest, nHeightDest, 
 		hSrcDC, nXSrc, nYSrc, nWidthSrc, nHeightSrc, SRCCOPY);
 
 	SelectObject(hSrcDC, hsrcold);
@@ -357,9 +365,9 @@ PyObject* Wingdi_StretchBltTransparent(PyObject *self, PyObject *args)
 		seterror("StretchBltTransparent:StretchBlt()", GetLastError());
 		return NULL;
 		}
+	return none();
 	*/
 
-	return none();
 	}
 
 
