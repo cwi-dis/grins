@@ -46,14 +46,14 @@ MENUBAR=(
 	(FLAG_ALL, CASCADE, 'Play', (
 		(FLAG_ALL, TOGGLE, 'Play', 'P', PLAY),
 		(FLAG_ALL, TOGGLE, 'Stop', 'H', STOP),
-		(FLAG_ALL, TOGGLE, 'Pause', 'B', PAUSE))),
+		(FLAG_ALL, TOGGLE, 'Pause', 'B', PAUSE),
+		(FLAG_CMIF|FLAG_BOSTON, SEP,),
+		(FLAG_BOSTON, DYNAMICCASCADE, 'Custom tests', USERGROUPS),
+		(FLAG_CMIF, DYNAMICCASCADE, 'Channel visibility', CHANNELS))),
 
 	(FLAG_ALL, CASCADE, 'Views', (
 		(FLAG_ALL, SPECIAL, 'Open documents', 'documents'),
 		(FLAG_ALL, SPECIAL, 'Open windows', 'windows'),
-		(FLAG_CMIF, SEP,),
-		(FLAG_CMIF, DYNAMICCASCADE, 'User groups', USERGROUPS),
-		(FLAG_CMIF, DYNAMICCASCADE, 'Channel visibility', CHANNELS),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'View source', None, SOURCE),
 		(FLAG_ALL, ENTRY, 'View help page', '?', HELP))))
