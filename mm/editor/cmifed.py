@@ -420,7 +420,11 @@ def main():
 	#
 	import Help
 	if hasattr(Help, 'sethelpprogram'):
-		Help.sethelpprogram('editor')
+		import settings
+		if settings.get('lightweight'):
+			Help.sethelpprogram('light')
+		else:
+			Help.sethelpprogram('editor')
 	for opt, arg in opts:
 		if opt == '-s':
 			stats = 1
