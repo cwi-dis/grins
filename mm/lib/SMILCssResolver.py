@@ -1165,6 +1165,10 @@ class MediaNode(Node):
 			if regalign in ('bottomLeft', 'bottomMid', 'bottomRight'):
 				area_height = regpoint_y
 
+		elif scale == -4:  #scroll
+			area_height = self.intrinsicHeight
+			area_width = self.intrinsicWidth
+
 		if regalign in ('topLeft', 'topMid', 'topRight'):
 			area_top = regpoint_y
 		if regalign in ('topLeft', 'midLeft', 'bottomLeft'):
