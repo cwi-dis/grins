@@ -379,7 +379,7 @@ class SMIL:
 			      'customTest':None,
 			      },
 ##		'transitionFilter': {'borderWidth':None,
-##				     'childrenClip':None,
+##				     'clipBoundary':None,
 ##				     'color':None,
 ##				     'coordinated':None,
 ##				     'customTest':None,
