@@ -6,8 +6,12 @@ set PYTHONHOME=%GRINS_HOME%\..\python
 set FREEZE_WHAT=grins
 set EXCLUDE_WHAT=editor
 set PRODUCT=smil20
+set EMBEDDED=no
 
 set main_script=%GRINS_HOME%\fGRiNS.py
+IF NOT %EMBEDDED%==yes GOTO gotmainscript
+set main_script=%GRINS_HOME%\feGRiNS.py
+:gotmainscript
 
 set PYTHON_EXE=%PYTHONHOME%\PCbuild\python.exe
 
