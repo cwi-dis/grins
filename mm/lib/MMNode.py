@@ -2865,6 +2865,9 @@ class MMNode:
 			self.channelType = None
 
 	def DelAttr(self, name):
+		if self.isCssAttr(name):
+			self.setCssAttr(name, None)
+			return
 		if not self.attrdict.has_key(name):
 			return		# nothing to do
 		del self.attrdict[name]
