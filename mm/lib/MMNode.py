@@ -54,6 +54,8 @@ class MMNodeContext:
 		self.root = None
 		self.toplevel = None	# This is set in TopLevel.read_it()
 		self.__channeltree = None
+		self._maxsoundlevel = 1.0 # doc max soundLevel
+		self._minsoundlevel = 1.0 # doc min soundLevel
 		from SMILCssResolver import SMILCssResolver
 		self.cssResolver = SMILCssResolver(self)
 
