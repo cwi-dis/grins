@@ -182,7 +182,7 @@ echo -x dshow >> FreezeOpts
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
 
-%PYTHON_EXE% -c "import MMAttrdefs" >> log.txt
+%PYTHON_EXE% -O -c "import MMAttrdefs" >> log.txt
 
 %PYTHON_EXE% -O %COMPILE% >> log.txt
 
