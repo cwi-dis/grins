@@ -28,3 +28,14 @@ the windows).  -mariat
 
 The path used for external anchors is absolute. Need to be changed to
 relative. Currently I have to edit the cmif files manualy.   -mariat 27/1/97
+
+Relative path names should be relative to the directory of the
+document that uses them and not the directory that the editor was
+started from. e.g. I start the editor with a document in a directory
+A. I then open another session of the editor with a document in a
+directory B. If I try to edit a file of this document (open the text
+editor from the info node window) the editor expects to find
+the file in A and not in B. 
+The same happens when I traverse links with external anchors. 
+Playing the document is no problem. It finds the proper files. -mariat 27/1/97
+
