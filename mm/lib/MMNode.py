@@ -761,7 +761,7 @@ class MMSyncArc:
 			ts = ', timestamp = %g' % self.timestamp
 		else:
 			ts = ''
-		return '<MMSyncArc instance, from %s to %s%s>' % (src, dst, ts)
+		return '<MMSyncArc instance %x, from %s to %s%s>' % (id(self), src, dst, ts)
 
 	def refnode(self):
 		node = self.dstnode
@@ -2614,8 +2614,8 @@ class MMNode:
 				t = None
 				if a.event is not None or a.marker is not None or a.wallclock is not None:
 					maybecached = 0
-				if a.isresolved(timefunc) and self.start_time is not None:
-					t = a.resolvedtime(timefunc) - self.start_time
+				if a.isresolved(timefunc) and syncbase is not None:
+					t = a.resolvedtime(timefunc) - syncbase
 				elif a.event == 'begin' or a.event == 'end':
 					n = a.refnode()
 					t0 = n.isresolved()

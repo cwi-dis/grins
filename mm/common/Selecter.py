@@ -255,32 +255,26 @@ class Selecter:
 				gototime = seek_node.time_list[0][0]
 			else:
 				gototime = seek_node.start_time
-			self.scheduler.settime(gototime)
-			self.scheduler.sctx_list[0].gototime(self.root, gototime, timestamp)
-
-##			self.root.sctx.gototime(self.root, gototime, timestamp)
-			self.scheduler.setpaused(0)
-			return 1	# succeeded
-		# XXX
-		x = seek_node
-		path = []
-		while x is not None:
-			path.append(x)
-			resolved = x.isresolved()
-			if resolved is not None:
-				break
-			x = x.GetSchedParent()
-		path.reverse()
-		for x in path:
-			resolved = x.isresolved()
-			if x.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
-				gototime = x.start_time
-			elif x.playing == MMStates.PLAYED:
-				gototime = x.time_list[0][0]
-			elif resolved is not None:
-				gototime = resolved
-			else:
-				x.start_time = gototime
+		else:
+			# XXX
+			x = seek_node
+			path = []
+			while x is not None:
+				resolved = x.isresolved()
+				path.append((x, resolved))
+				if resolved is not None:
+					break
+				x = x.GetSchedParent()
+			path.reverse()
+			for x, resolved in path:
+				if x.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
+					gototime = x.start_time
+				elif x.playing == MMStates.PLAYED:
+					gototime = x.time_list[0][0]
+				elif resolved is not None:
+					gototime = resolved
+				else:
+					x.start_time = gototime
 		self.scheduler.settime(gototime)
 		x = seek_node
 		path = []
@@ -289,7 +283,6 @@ class Selecter:
 			x = x.GetSchedParent()
 		path.reverse()
 		self.scheduler.sctx_list[0].gototime(self.root, gototime, timestamp, path)
-##		self.root.sctx.gototime(self.root, gototime, timestamp, path)
 		self.scheduler.setpaused(0)
 		return 0
 
