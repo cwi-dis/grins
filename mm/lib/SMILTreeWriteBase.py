@@ -263,7 +263,7 @@ class SMILWriterBase:
 		self.bases_used = {}
 		if copyFiles:
 			dir, base = os.path.split(filename)
-			base, ext = os.path.splitext(base)
+##			base, ext = os.path.splitext(base)
 			if tmpcopy:
 				newdir = base + '.tmpdata'
 				self.copydir = os.path.join(dir, newdir)
@@ -599,7 +599,7 @@ class SMILWriterBase:
 ##			# will, currently, to '.rt').
 ##			if self.progress:
 ##				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
-##			file = converttextfile(u, dstdir, file, node)
+##			file = converttextfile(u, srcurl, dstdir, file, node)
 ##			files_generated[file] = ''
 ##			return file
 		if u.headers.maintype == 'text' or u.headers.subtype.find('xml') >= 0:
@@ -611,6 +611,13 @@ class SMILWriterBase:
 			self.progress("Copying %s"%os.path.split(file)[1], None, None, None, None)
 		dstfile = os.path.join(dstdir, file)
 #		print 'DBG verbatim copy', dstfile
+		from realconvert import identicalfiles
+		if identicalfiles(srcurl, dstfile):
+			# src and dst files are the same, don't do anything
+			u.close()
+			if __debug__:
+				print 'src and dst files are identical',dstfile
+			return file
 		try:
 			f = open(dstfile, 'w'+binary)
 			while 1:
