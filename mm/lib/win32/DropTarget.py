@@ -1,6 +1,9 @@
 
 import WMEVENTS
 import win32ui, win32con
+import longpath
+import string
+
 Sdk=win32ui.GetWin32Sdk()
 
 # add missing const
@@ -20,25 +23,84 @@ CF_MEDIA = Sdk.RegisterClipboardFormat('Media')
 CF_URL = Sdk.RegisterClipboardFormat('URL')
 
 # map: format_name -> format_id (int)
-formats = {'FileName':CF_FILE,
+formats = {
+	'FileName':CF_FILE,
+	'URL':CF_URL,
 	'Node':CF_NODE,
 	'Tool':CF_TOOL,
 	'NodeUID':CF_NODEUID,
 	'Region':CF_REGION,
 	'Media':CF_MEDIA,
-	'URL':CF_URL,}
+	}
 
 # extract data from data object and return pair (format_name, data) 
 # or None when not a grins format
-def GetData(dataobj):
+def _GetDragData(dataobj):
 	for name, format in formats.items():
 		data = dataobj.GetGlobalData(format)
 		if data is not None:
 			return name, data
 	if DEBUG:
 		print "No supported format in drag object"
-	return None
+	return None, None
 
+# Extract the format name and data from the drag object.
+# Decode the data according to the format.
+def DecodeDragData(dataobj):
+	name, data = _GetDragData(dataobj)
+	if not name:
+		return name, data
+	if name == 'FileName':
+		rv = longpath.short2longpath(data)
+	elif name == 'URL':
+		rv = data
+	elif name == 'Node':
+		rv = string.split(data)
+		assert len(rv) == 2
+		rv = tuple(map(eval, rv))
+	elif name == 'Tool':
+		cmdid = eval(data)
+		rv = usercmd.id2usercmd(cmdid)
+	elif name == 'NodeUID':
+		context, nodeuid = string.split(data)
+		rv = (eval(context), nodeuid)
+		# We cannot convert these back to a node, as we
+		# don't have access to the context here
+	elif name == 'Region':
+		assert 0
+	elif name == 'Media':
+		assert 0
+	else:
+		print 'Unknown dragformat', name
+		rv = None
+	return name, rv
+
+# Arguments are format name and arguments. Return value is
+# the format id (integer) and an encoded string.
+def EncodeDragData(name, args):
+	if name == 'FileName':
+		return CF_FILE, args
+	if name == 'URL':
+		return CF_URL, args
+	if name == 'Node':
+		return CF_NODE, "%d %d"%args
+	if name == 'Tool':
+		cmdid = usercmd.usercmd2id(args)
+		return CF_TOOL, "%d"%cmdid
+	if name == 'NodeUID':
+		if type(args) == type(()):
+			uid, context = args
+		else:
+			# Convenience: we can pass a node itself
+			node = args
+			uid = node.GetUID()
+			context = id(node.context)
+		return CF_NODEUID, "%d %s"%(context, uid)
+	if name == 'Region':
+		assert 0
+	if name == 'Media':
+		assert 0
+	assert 0
 
 class CoreDropTarget:
 	cfmap = {}
@@ -70,7 +132,7 @@ class CoreDropTarget:
 		return self.OnDragOver(dataobj,kbdstate,x,y)
 
 	def OnDragOver(self,dataobj,kbdstate,x,y):
-		fmt_name, data = GetData(dataobj)
+		fmt_name, data = _GetDragData(dataobj)
 		callbacks = self._dropmap.get(fmt_name)
 		if callbacks:
 			dragcb = callbacks[0]
@@ -80,7 +142,7 @@ class CoreDropTarget:
 		return DROPEFFECT_NONE
 				
 	def OnDrop(self,dataobj,effect,x,y):
-		fmt_name, data = GetData(dataobj)
+		fmt_name, data = _GetDragData(dataobj)
 		callbacks = self._dropmap.get(fmt_name)
 		if callbacks:
 			dropcb = callbacks[1]
@@ -168,7 +230,8 @@ class DropTarget(CoreDropTarget):
 		}
 
 	def dragfile(self,dataobj,kbdstate,x,y):
-		filename=dataobj.GetGlobalData(CF_FILE)
+		flavor, filename=DecodeDragData(dataobj)
+		assert flavor == 'FileName'
 		if filename:
 			x,y=self._DPtoLP((x,y))
 			x,y = self._pxl2rel((x, y),self._canvas)
@@ -176,7 +239,8 @@ class DropTarget(CoreDropTarget):
 		return 0
 
 	def dropfile(self,dataobj,effect,x,y):
-		filename=dataobj.GetGlobalData(CF_FILE)
+		flavor, filename=DecodeDragData(dataobj)
+		assert flavor == 'FileName'
 		if filename:
 			import longpath
 			filename=longpath.short2longpath(filename)
@@ -187,7 +251,8 @@ class DropTarget(CoreDropTarget):
 		return 0
 
 	def dragurl(self,dataobj,kbdstate,x,y):
-		url=dataobj.GetGlobalData(CF_URL)
+		flavor, url=DecodeDragData(dataobj)
+		assert flavor == 'URL'
 		if url:
 			x,y=self._DPtoLP((x,y))
 			x,y = self._pxl2rel((x, y),self._canvas)
@@ -195,7 +260,8 @@ class DropTarget(CoreDropTarget):
 		return 0
 
 	def dropurl(self,dataobj,effect,x,y):
-		url=dataobj.GetGlobalData(CF_URL)
+		flavor, url=DecodeDragData(dataobj)
+		assert flavor == 'URL'
 		if url:
 			x,y=self._DPtoLP((x,y))
 			x,y = self._pxl2rel((x, y),self._canvas)

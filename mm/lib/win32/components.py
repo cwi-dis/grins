@@ -386,6 +386,8 @@ class ListBox(Control):
 
 
 class DnDListBox(ListBox):
+	# XXXX Should this use DropTarget.EncodeDragData??
+
 	def __init__(self,owner=None,id=-1):
 		ListBox.__init__(self, owner, id)
 		self._dragging = None

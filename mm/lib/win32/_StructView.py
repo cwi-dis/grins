@@ -159,20 +159,10 @@ class _StructView(DisplayListView):
 				# experimental: get node at xp, yp
 				xp, yp = self._DPtoLP((xp,yp))
 				xp, yp = self._pxl2rel((xp, yp),self._canvas)
-				obj = self.onEventEx(QueryNode,(xp, yp))
-				print obj.GetUID(), obj
+				flavor, args = self.onEventEx(QueryNode,(xp, yp))
+				flavorid, str = DropTarget.EncodeDragData(flavor, args)
 				
-				# drag-n-drop node cookie
-				str='%d %d' % (xp, yp)
-
-				# Enter C++ code...
-				# this is defined in docview.ScrollView, a superclass.
-				# refer win32view.cpp in python/Extensions/PythonWin
-				# DoDragDrop calls the C++ function "ui_view_do_drag_drop" in
-				# python/Extensions/Pythonwin/win32view.cpp.
-				# The returned value is whether the drop result was successful or not.
-				# ***** DoDragDrop only needs to be called ONCE ***********
-				res = self.DoDragDrop(DropTarget.CF_NODE, str)
+				res = self.DoDragDrop(flavorid, str)
 				self._dragging = None
 				if not res:
 					self.onEvent(DragEnd, point)
@@ -185,11 +175,13 @@ class _StructView(DisplayListView):
 	# we must return DROPEFFECT_NONE
 	# when paste at x, y is not allowed
 	def dragnode(self, dataobj, kbdstate, x, y):
+		print 'DBG: outdated Node drag!'
 		#print "DEBUG: dragging."
 		#import traceback
 		#traceback.print_stack()
-		node=dataobj.GetGlobalData(DropTarget.CF_NODE)
-		if node and self._dragging:
+		flavor, args = DropTarget.DecodeDragData(dataobj)
+		assert flavor == 'Node'
+		if self._dragging:
 			x, y = self._DPtoLP((x,y))
 			x, y = self._pxl2rel((x, y),self._canvas)
 			xf, yf = self._dragging
@@ -207,8 +199,9 @@ class _StructView(DisplayListView):
 
 	def dropnode(self, dataobj, effect, x, y):
 		#print "DEBUG: dropped."
-		node = dataobj.GetGlobalData(DropTarget.CF_NODE) 
-		if node and self._dragging:
+		flavor, args = DropTarget.DecodeDragData(dataobj)
+		assert flavor == 'Node'
+		if self._dragging:
 			
 			# the drag and drop cmd is:
 			# copy or cut (according to arg effect)
@@ -234,9 +227,9 @@ class _StructView(DisplayListView):
 		return DropTarget.DROPEFFECT_NONE
 							
 	def dragtool(self, dataobj, kbdstate, x, y):
-		cmdid=dataobj.GetGlobalData(DropTarget.CF_TOOL)
-		if cmdid:
-			ucmd = usercmdui.id2usercmd(eval(cmdid))
+		flavor, ucmd = DropTarget.DecodeDragData(dataobj)
+		assert flavor == 'Tool'
+		if ucmd:
 			x, y = self._DPtoLP((x,y))
 			x, y = self._pxl2rel((x, y),self._canvas)
 			return self.onEventEx(DragNode,
@@ -244,9 +237,9 @@ class _StructView(DisplayListView):
 		return DropTarget.DROPEFFECT_NONE
 
 	def droptool(self, dataobj, effect, x, y):
-		cmdid = dataobj.GetGlobalData(DropTarget.CF_TOOL)
-		if cmdid:
-			ucmd = usercmdui.id2usercmd(eval(cmdid))
+		flavor, ucmd = DropTarget.DecodeDragData(dataobj)
+		assert flavor == 'Tool'
+		if ucmd:
 			x, y = self._DPtoLP((x,y))
 			x, y = self._pxl2rel((x, y),self._canvas)
 
@@ -255,11 +248,10 @@ class _StructView(DisplayListView):
 		return DropTarget.DROPEFFECT_NONE
 
 	def dragnodeuid(self, dataobj, kbdstate, x, y):
-		data = dataobj.GetGlobalData(DropTarget.CF_NODEUID)
+		flavor, data = DropTarget.DecodeDragData(dataobj)
+		assert flavor == 'NodeUID'
 		if data:
-			contextid, nodeuid = string.split(data, ',')
-			contextid = string.strip(contextid)
-			nodeuid = string.strip(nodeuid)
+			contextid, nodeuid = data
 			ucmd = usercmd.DRAG_NODEUID
 			x, y = self._DPtoLP((x,y))
 			x, y = self._pxl2rel((x, y),self._canvas)
@@ -272,11 +264,10 @@ class _StructView(DisplayListView):
 		return DropTarget.DROPEFFECT_NONE
 
 	def dropnodeuid(self, dataobj, effect, x, y):
-		data = dataobj.GetGlobalData(DropTarget.CF_NODEUID)
+		flavor, data = DropTarget.DecodeDragData(dataobj)
+		assert flavor == 'NodeUID'
 		if data:
-			contextid, nodeuid = string.split(data, ',')
-			contextid = string.strip(contextid)
-			nodeuid = string.strip(nodeuid)
+			contextid, nodeuid = data
 			ucmd = usercmd.DRAG_NODEUID
 			x, y = self._DPtoLP((x,y))
 			x, y = self._pxl2rel((x, y),self._canvas)

@@ -171,23 +171,23 @@ class AssetsView(AssetsViewDialog):
 				value = self.listdata[index][3]
 				tp = 'URL'
 			elif hasattr(iteminfo, 'getClassName') and iteminfo.getClassName() == 'MMNode':
-				contextid = `id(iteminfo.context)`
-				nodeuid = iteminfo.GetUID()
-				value = (contextid, nodeuid)
-				tp = 'node'
+				value = iteminfo
+				tp = 'NodeUID'
 			else:
 				windowinterface.beep()
 				return 0
 			action = self.dodragdrop(tp, value)
 			if action == 'move':
 				# We should remove the item
+				print 'AssetView: Removing item', index
 				item = self.listdata[index][0]
 				if not self.editmgr.transaction():
 					print "No transaction"
 					return 0
 				self.editmgr.delasset(item)
 				self.editmgr.commit()
-			elif action == 'copy' and tp == 'node':
+			elif action == 'copy' and tp == 'NodeUID':
+				print 'AssetView: duplicasting item', index
 				item = self.listdata[index][0]
 				newitem = item.DeepCopy()
 				if not self.editmgr.transaction():

@@ -1618,15 +1618,17 @@ class HierarchyView(HierarchyViewDialog):
 			sx, sy = srcpos
 			srcwidget = self.whichhit(sx, sy)
 			srcnode = srcwidget.node
-			if not srcnode:
-				# shouldn't happen
-				print "Drag-drop from nowhere..."
-				self.draw()
-				return None
-			if cmd == 'copy':
-				cmd = 'link'
-				srcnode = srcnode.DeepCopy()
-				mustdestroy = srcnode
+		if not srcnode:
+			# shouldn't happen
+			print "Drag-drop from nowhere..."
+			self.draw()
+			return None
+		if cmd == 'copy':
+			print 'DBG: was', cmd, srcnode
+			cmd = 'link'
+			srcnode = srcnode.DeepCopy()
+			print 'DBG: now', cmd, srcnode, srcnode.GetParent()
+			mustdestroy = srcnode
 		if srcnode.context is not self.root.context:
 			# Node comes from another document.
 			srcnode = srcnode.CopyIntoContext(self.root.context)

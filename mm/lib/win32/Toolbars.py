@@ -305,7 +305,10 @@ class GRiNSToolbar(window.Wnd):
 			xp, yp = self._dragpos
 			if math.fabs(xp-x)>4 or math.fabs(yp-y)>4:
 				str=`self._dragging`
-				# start drag and drop
+				# start drag and drop. Not much use
+				# in using DropTarget.EncodeDragData here
+				# because it wants the usercmd and we already
+				# have the cmdid here.
 				self.DoDragDrop(DropTarget.CF_TOOL, str)
 				self._dragging = None
 				self.ReleaseCapture()
