@@ -12,23 +12,22 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include <limits.h>
 
 #include "vid2rmuids.h"
+#include "rconvert.h"
 #include "vid2rm.h"
 
 #include <stdio.h>
 
 #define PREVIEW_VIDEO
+//#define SAVE_FRAMES_AS_BMP
 
 namespace RProducer {
-void SetDllCategoryPaths();
-bool Init();
-void SetOutputFilename(const char* szOutputFile);
-void Cleanup();
-bool Prepare();
+bool HasEngine();
+bool SetEngine(IUnknown *p);
+bool SetInputPin(IUnknown *p);
+bool CreateMediaSample();
 void SetVideoInfo(int w,int h,float rate);
 void EncodeSample(BYTE *p,int frame,bool isLast);
-void EncodeSample(BITMAPINFOHEADER* pbi, BYTE *p,int frame,bool isLast);
 void DoneEncoding();
-bool CreateRMBuildEngine();
 }
 
 // Setup data
@@ -78,9 +77,12 @@ int g_cTemplates = 1;
 // Debug log
 FILE *logFile;
 void Log(const char *psz)
-	{
-	if(logFile)fwrite(psz,1,lstrlen(psz),logFile);
+{
+	if(logFile){
+		fwrite(psz,1,lstrlen(psz),logFile);
+		fflush(logFile);
 	}
+}
 
 // This goes in the factory template table to create new filter instances
 //
@@ -107,19 +109,12 @@ CVideoRenderer::CVideoRenderer(TCHAR *pName,
     m_VideoSize.cx = 0;
     m_VideoSize.cy = 0;
 	m_ixframe=0;
-
-	RProducer::SetDllCategoryPaths();
-	if(!RProducer::Init())
-		Log("Failed to ceate engine\n");
-	else 
-		Log("engine created\n");
-
+	m_pVideoImage=NULL;
 } 
 
 
 CVideoRenderer::~CVideoRenderer()
 {
-	RProducer::Cleanup();
     m_pInputPin = NULL;
 	if(logFile) fclose(logFile);
 } 
@@ -230,6 +225,8 @@ STDMETHODIMP CVideoRenderer::NonDelegatingQueryInterface(REFIID riid,void **ppv)
     if (riid == IID_IFileSinkFilter) {
         return GetInterface((IFileSinkFilter *) this, ppv);
 		}
+	else if(riid == IID_IRealConverter)
+        return GetInterface((IRealConverter *) this, ppv);	
     return CBaseVideoRenderer::NonDelegatingQueryInterface(riid,ppv);
 
 } 
@@ -249,15 +246,15 @@ HRESULT CVideoRenderer::DoRenderSample(IMediaSample *pMediaSample)
 	if(logFile)
 		{
 		char sz[256];
-		int n=sprintf(sz,"frame %d size=%d\n",++m_ixframe,pMediaSample->GetActualDataLength());
+		int n=sprintf(sz,"frame %d size=%d\n",m_ixframe,pMediaSample->GetActualDataLength());
 		fwrite(sz,1,n,logFile);
 		//n=sprintf(sz,"%s\n",m_DrawImage.IsUsingImageAllocator()? "IsUsingImageAllocator":"NOT UsingImageAllocator");
 		//fwrite(sz,1,n,logFile);
 		}
 	 SlowRender(pMediaSample);
-    return NOERROR; //m_DrawImage.DrawImage(pMediaSample);
+    return NOERROR; 
 
-} // DoRenderSample
+} 
 
 
 
@@ -283,7 +280,7 @@ HRESULT CVideoRenderer::SetMediaType(const CMediaType *pmt)
     m_ImageAllocator.NotifyMediaType(&m_mtIn);
     return NOERROR;
 
-} // SetMediaType
+}
 
 
 
@@ -335,7 +332,6 @@ void CVideoRenderer::OnReceiveFirstSample(IMediaSample *pMediaSample)
 void CVideoRenderer::SlowRender(IMediaSample *pMediaSample)
 {
     // Get the BITMAPINFOHEADER for the connection
-    ASSERT(m_pMediaType);
 	VIDEOINFOHEADER *pVideoInfo = (VIDEOINFOHEADER *)m_mtIn.Format();
     BITMAPINFOHEADER *pbmi = HEADER(pVideoInfo);
 
@@ -346,20 +342,29 @@ void CVideoRenderer::SlowRender(IMediaSample *pMediaSample)
         return;
     }
 
+	CRefTime rt(pVideoInfo->AvgTimePerFrame);
+
 	// EncodeSample
-	static int ix=0;
-	LONG bufferSize=0;
-	BYTE *pVideoImage=NULL;
-	int w=pVideoInfo->rcSource.right;
-	int h=pVideoInfo->rcSource.bottom;
-	RECT rcSource={0,0,w,h};
-    hr=CopyImage(pMediaSample,pVideoInfo,&bufferSize,&pVideoImage,&rcSource);
-	RProducer::EncodeSample(pVideoImage,ix++,false);
-	delete[] pVideoImage;
+	if(RProducer::HasEngine())
+		{
+		LONG bufferSize=0;
+		if(m_pVideoImage){
+			delete[] m_pVideoImage;
+			m_pVideoImage=NULL;
+		}
+		int w=pVideoInfo->rcSource.right;
+		int h=pVideoInfo->rcSource.bottom;
+		RECT rcSource={0,0,w,h};
+		hr=CopyImage(pMediaSample,pVideoInfo,&bufferSize,&m_pVideoImage,&rcSource);
+		if(SUCCEEDED(hr))
+			RProducer::EncodeSample(m_pVideoImage,m_ixframe*rt.Millisecs(),false);
+		}
+	m_ixframe++;
 
 #ifdef PREVIEW_VIDEO
-	// Preview video
 	HDC hdc=GetDC(NULL);
+	int w=pVideoInfo->rcSource.right;
+	int h=pVideoInfo->rcSource.bottom;
     SetDIBitsToDevice(
             (HDC) hdc,                            // Target device HDC
             0,                      // X sink position
@@ -377,7 +382,7 @@ void CVideoRenderer::SlowRender(IMediaSample *pMediaSample)
 #endif
 
 
-	/* TEST: SAVE BMP FILE
+#ifdef SAVE_FRAMES_AS_BMP
 	char szBmp[256];
 	sprintf(szBmp,"frame%d.bmp",ix);
 	FILE *bmpFile=fopen(szBmp,"wb");
@@ -392,42 +397,46 @@ void CVideoRenderer::SlowRender(IMediaSample *pMediaSample)
 	filehdr.bfSize=filehdr.bfOffBits+pMediaSample->GetActualDataLength();
 
 	fwrite(&filehdr,1,sizeof(BITMAPFILEHEADER),bmpFile);
-	LONG bufferSize=256000;//pMediaSample->GetActualDataLength()+256*3+sizeof(BITMAPINFOHEADER);
-	BYTE *pVideoImage=new BYTE[bufferSize];
-	int w=pVideoInfo->rcSource.right;//m_VideoSize.cx;//pVideoInfo->bmiHeader.biWidth
-	int h=pVideoInfo->rcSource.bottom; //m_VideoSize.cy;//pVideoInfo->bmiHeader.biHeight
+	BYTE *pVideoImage;
+	int w=pVideoInfo->rcSource.right;
+	int h=pVideoInfo->rcSource.bottom; 
 	RECT rcSource={0,0,w,h};
-    hr=CopyImage(pMediaSample,pVideoInfo,&bufferSize,pVideoImage,&rcSource);
+    hr=CopyImage(pMediaSample,pVideoInfo,&bufferSize,&pVideoImage,&rcSource);
 	if(hr==NOERROR)
 		fwrite(pVideoImage,1,bufferSize,bmpFile);
 	delete [] pVideoImage;
 	fclose(bmpFile);
 	}
-	*/
+#endif
+
 }
 
 HRESULT CVideoRenderer::Active()
 {
 	Log("Active\n");
-	RProducer::Prepare();
-    char szFile[MAX_PATH];
-    if(!WideCharToMultiByte(CP_ACP,0,m_pFileName,-1,szFile,MAX_PATH,0,0))
-        return ERROR_INVALID_NAME;
-	RProducer::SetOutputFilename(szFile);
 	VIDEOINFOHEADER *pVideoInfo = (VIDEOINFOHEADER *)m_mtIn.Format();
 	CRefTime rt(pVideoInfo->AvgTimePerFrame);
 	float rate=1000/float(rt.Millisecs());
-	RProducer::SetVideoInfo(pVideoInfo->rcSource.right,
+	if(RProducer::HasEngine())
+		RProducer::SetVideoInfo(pVideoInfo->rcSource.right,
 			pVideoInfo->rcSource.bottom,rate);
+	char sz[128];
+	sprintf(sz,"Rate=%f fps  AvgTimePerFrame=%ld msec\n",rate,rt.Millisecs());
+	Log(sz);
     return CBaseVideoRenderer::Active();
-
 } 
 
 HRESULT CVideoRenderer::Inactive()
 {
-	RProducer::DoneEncoding();
-	RProducer::Cleanup();
-
+	if(RProducer::HasEngine())
+		RProducer::EncodeSample(m_pVideoImage,m_ixframe++,true);
+	if(m_pVideoImage){
+		delete[] m_pVideoImage;
+		m_pVideoImage=NULL;
+	}
+	m_ixframe=0;
+	if(RProducer::HasEngine())
+		RProducer::DoneEncoding();
 	Log("Inactive\n");
 	return CBaseVideoRenderer::Inactive();
 }
@@ -468,7 +477,6 @@ HRESULT CVideoRenderer::CopyImage(IMediaSample *pMediaSample,
     LONG Size = GetBitmapFormatSize(HEADER(pVideoInfo)) - SIZE_PREHEADER;
     LONG Total = Size + DIBSIZE(bih);
 
-    // Make sure we have a large enough buffer
 	*ppVideoImage = new BYTE[Total];
 	*pBufferSize=Total;
 	BYTE *pVideoImage=*ppVideoImage;
@@ -504,6 +512,25 @@ HRESULT CVideoRenderer::CopyImage(IMediaSample *pMediaSample,
     }
     return NOERROR;
 }
+
+
+HRESULT CVideoRenderer::SetInterface(IUnknown *p,LPCOLESTR hint)
+	{
+    char szHint[MAX_PATH];
+    if(!WideCharToMultiByte(CP_ACP,0,hint,-1,szHint,MAX_PATH,0,0))
+        return ERROR_INVALID_NAME;
+	if(lstrcmpi(szHint,"IRMABuildEngine")==0)
+		{
+		if(!RProducer::SetEngine(p))
+			Log("Failed setting engine\n");
+		}
+	else if(lstrcmpi(szHint,"IRMAInputPin")==0)
+		{
+		if(!RProducer::SetInputPin(p))
+			Log("Failed setting InputPin\n");
+		}
+    return NOERROR;
+	}
 
 ////////////////////////////////////////////////
 // CVideoInputPin
