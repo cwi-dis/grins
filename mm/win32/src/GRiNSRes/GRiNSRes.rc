@@ -1399,15 +1399,20 @@ BEGIN
     "V",            IDUC_PASTE,             VIRTKEY, CONTROL, NOINVERT
     "V",            IDUC_PASTEFILE,         VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+    VK_BACK,        IDUC_TOPARENT,          VIRTKEY, NOINVERT
     VK_DELETE,      IDUC_DELETE,            VIRTKEY, NOINVERT
     VK_DELETE,      IDUC_DELETE,            VIRTKEY, CONTROL, NOINVERT
+    VK_DOWN,        IDUC_NEXTSIBLING,       VIRTKEY, NOINVERT
     VK_F5,          IDUC_PLAYER,            VIRTKEY, NOINVERT
     VK_F6,          IDUC_HVIEW,             VIRTKEY, NOINVERT
     VK_F7,          IDUC_CVIEW,             VIRTKEY, NOINVERT
     VK_F8,          IDUC_LAYOUT,            VIRTKEY, NOINVERT
-    VK_RETURN,      IDUC_PLAYNODE,          VIRTKEY, NOINVERT
+    VK_LEFT,        IDUC_PREVSIBLING,       VIRTKEY, NOINVERT
+    VK_RETURN,      IDUC_TOCHILD,           VIRTKEY, NOINVERT
+    VK_RIGHT,       IDUC_NEXTSIBLING,       VIRTKEY, NOINVERT
     VK_SPACE,       IDUC_MAGIC_PLAY,        VIRTKEY, NOINVERT
     VK_SPACE,       IDUC_MAGIC_PLAY,        VIRTKEY, CONTROL, NOINVERT
+    VK_UP,          IDUC_PREVSIBLING,       VIRTKEY, NOINVERT
     "W",            IDUC_CLOSE_WINDOW,      VIRTKEY, CONTROL, NOINVERT
     "X",            IDUC_CLOSE_WINDOW,      VIRTKEY, NOINVERT
     "X",            IDUC_CUT,               VIRTKEY, CONTROL, NOINVERT
