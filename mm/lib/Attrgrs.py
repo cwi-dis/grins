@@ -283,6 +283,17 @@ attrgrs=(
 		'project_smil_url',
 		]},
 
+	{'name':'media',
+	'title':'Media',
+	'attrs':[
+		'file',
+		'clipbegin',
+		'clipend',
+		'readIndex',
+		'sensitivity',
+		'erase',
+		]},
+
 	{'name':'file',
 	'title':'URL',
 	'attrs':[

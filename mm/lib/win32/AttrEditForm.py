@@ -3887,7 +3887,37 @@ class FileGroup(AttrGroup):
 				grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6))
 		return	cd
 
+class MediaGroup(FileGroup):
+	data=attrgrsdict['media']
+	def __init__(self):
+		AttrGroup.__init__(self,MediaGroup.data)
+		self._preview=-1
 
+	def getpageresid(self):
+		if self.canpreview():
+			if self._mtypesig=='image' or self._mtypesig=='html' or self._mtypesig=='text': 
+				# static media
+				return grinsRC.IDD_EDITATTR_PF2
+			else: 
+				# continous media i.e play,stop
+				return grinsRC.IDD_EDITATTR_MF2	
+		else:
+			return grinsRC.IDD_EDITATTR_F2
+
+	def createctrls(self,wnd):
+		cd = FileGroup.createctrls(self,wnd)
+		a = self.getattr('clipbegin')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_CLIPBEGINL, grinsRC.IDC_CLIPBEGINV))
+		a = self.getattr('clipend')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_CLIPENDL, grinsRC.IDC_CLIPENDV))
+		a = self.getattr('readIndex')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_READINDEXL, grinsRC.IDC_READINDEXV))
+		a = self.getattr('sensitivity')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_EVENTSENSITIVITYL, grinsRC.IDC_EVENTSENSITIVITYV))
+		a = self.getattr('erase')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_ERASEL, grinsRC.IDC_ERASEV2, grinsRC.IDC_ERASEV1))
+		return cd
+		
 class TimingFadeoutGroup(AttrGroup):
 	data=attrgrsdict['timingfadeout']
 
@@ -4304,6 +4334,7 @@ groupsui={
 	'webserver':WebserverGroup,
 	'mediaserver':MediaserverGroup,
 	'file':FileGroup,
+	'media':MediaGroup,
 	'wipe':WipeGroup,
 	'clip':ClipGroup,
 	'bandwidth':BandwidthGroup,
