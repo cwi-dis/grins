@@ -19,6 +19,7 @@ feature_set = [
 	STRUCTURE_VIEW,
 	TRANSITION_VIEW,
 	UNIFIED_FOCUS,
+	AUTO_EVALUATE,
 	]
 
 version = 'Real'
@@ -28,3 +29,5 @@ cmif = 0
 lightweight = 0
 editor = 1
 license_features_needed = ('smil2real', sys.platform)
+
+auto_evaluate_period = 7	# 7 days auto-evaluate
