@@ -81,23 +81,7 @@ class _FSPlayerView(window.Wnd, win32window.DDWndLayer):
 	def setcursor(self, strid):
 		if self._curcursor==strid:
 			return
-		if strid=='hand':
-			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_POINT_HAND)
-		elif strid=='channel':
-			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGMOVE)
-		elif strid=='stop':
-			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_STOP)
-		elif strid=='link':
-			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGLINK)
-		elif strid=='' or strid=='arrow':
-			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
-			strid='arrow'
-		elif strid=='draghand':
-			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAG_HAND)
-		else:
-			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
-			strid='arrow'
-
+		cursor = win32window.getcursorhandle(strid)
 		self.SetWndCursor(cursor)
 		self._curcursor = strid
 	

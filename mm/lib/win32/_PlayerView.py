@@ -117,7 +117,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		if self._wndclasscursor == strid: return
 		self._wndclasscursor = strid
 		import win32ui
-		cursor = self.getcursorhandle(strid)
+		cursor = win32window.getcursorhandle(strid)
 		win32ui.GetWin32Sdk().SetClassLong(self.GetSafeHwnd(),win32con.GCL_HCURSOR,cursor)
 
 	def onMouseEvent(self, point, ev, params=None):

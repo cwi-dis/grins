@@ -271,26 +271,12 @@ class _Toplevel:
 
 	# Set the application cursor to the cursor with string id
 	def setcursor(self, strid):
+		if strid == self._cursor:
+			return
 		App=win32ui.GetApp()
-		import grinsRC
-		if strid=='hand':
-			cursor = App.LoadCursor(grinsRC.IDC_POINT_HAND)
-		elif strid=='stop':
-			cursor = App.LoadCursor(grinsRC.IDC_STOP)
-		elif strid=='channel':
-			cursor = App.LoadCursor(grinsRC.IDC_DRAGMOVE)
-		elif strid=='link':
-			cursor = App.LoadCursor(grinsRC.IDC_DRAGLINK)
-		elif strid=='' or strid=='arrow':
-			cursor = App.LoadStandardCursor(win32con.IDC_ARROW)
-			strid='arrow'
-		elif strid=='draghand':
-			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAG_HAND)
-		else:
-			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
-			strid='arrow'
-
-		(win32ui.GetWin32Sdk()).SetCursor(cursor);
+		import win32window
+		cursor = win32window.getcursorhandle(strid)
+		win32ui.GetWin32Sdk().SetCursor(cursor)
 		self._cursor = strid
 
 	# To support the same interface as windows
@@ -487,7 +473,7 @@ class _Toplevel:
 	
 	# Returns the length of a string in pixels	
 	def GetStringLength(wnd,str):
-		dc = wnd.GetDC();
+		dc = wnd.GetDC()
 		cx,cy=dc.GetTextExtent(str)
 		wnd.ReleaseDC(dc)
 		return cx

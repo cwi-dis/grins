@@ -239,93 +239,58 @@ class Window:
 	def onMouseEvent(self,point, ev, params=None):
 		# Called from, for example, self.OnLButtonDown which is called from a view's mouse event.
 		cont, stop = 0, 1
-		if self.is_closed(): return cont
+		rv = self.__recurse(point)
+		if type(rv) is type(()):
+			wnd, (x, y, buttons) = rv
+			wnd.onEvent(ev, (x, y, buttons, params))
+			return 1
+		return rv
+
+	def setcursor_from_point(self, point):
+		rv = self.__recurse(point)
+		if type(rv) is type(()):
+			wnd, (x, y, buttons) = rv
+			if buttons:
+				wnd.setcursor('hand')
+			else:
+				wnd.setcursor('arrow')
+			# we handled it
+			return 1
+		return rv
+
+	def __recurse(self, point):
+		if self.is_closed(): return 0
 		point = self._DPtoLP(point)
 		for wnd in self._subwindows:
 			# test that point is inside the window (not the media space area)
 			if wnd.inside(point):
-				if wnd.onMouseEvent(point, ev, params=params):
-					return stop
+				rv = wnd.__recurse(point)
+				if rv:
+					return rv
+
+		# convert point to subwindow coordinates
+		x, y, w, h = self.getwindowpos()
+		xp, yp = point
+		point= xp-x, yp-y
 
 		disp = self._active_displist
-		if disp is not None:
-			x, y, w, h = self.getwindowpos()
-			xp, yp = point
-			point= xp-x, yp-y
-			if disp.isTransparent(point):
-				# don't consider transparent media
-				if self._transparent:
-					return cont
-				return stop
+		if disp is not None and not disp.isTransparent(point):
+			# we have an active display list, and it's not transparent
+			# figure out the buttons
 			x,y = self._pxl2rel(point,self._canvas)
 			buttons = []
 			for button in disp._buttons:
 				if button._inside(x,y):
 					buttons.append(button)
-			self.onEvent(ev,(x, y, buttons, params))
-			return stop
+			# we're done
+			return (self, (x, y, buttons))
 
-		# at this point, we didn't find a "anchor button" associated to this event
-		if self._transparent==0:
-			# if window is not transparent, we have to stop to look for whichever the
-			# display list (existing or not)
-			return stop
-		else:
-			# not active display list and transparent window. So check the next window
-			return cont
-
-	def setcursor_from_point(self, point):
-		cont, stop = 0, 1
-		point = self._DPtoLP(point)
-		for w in self._subwindows:
-			if w.inside(point):
-				if w.setcursor_from_point(point):
-					return stop
-
-		if self._active_displist:
-			x, y, w, h = self.getwindowpos()
-			xp, yp = point
-			point = xp-x, yp-y
-			x, y = self._pxl2rel(point,self._canvas)
-
-			for button in self._active_displist._buttons:
-				if button._inside(x,y):
-					self.setcursor('hand')
-					return stop
-			
-		# at this point, we don't find a "valid button"
-		if self._transparent==0:
-			# if window is not transparent, we have to stop to look for whichever the
-			# display list
-			self.setcursor(self._cursor)
-			return stop
-		else:
-			if self._active_displist:
-				# if the channel is transparent, we have to check if the event location
-				# is inside or outside the media. Note: the media area depend of media type
-				# Currently, only win32displaylist give this information (it's at least the
-				# case for image).
-				if self._active_displist._insideMedia(x,y):
-					# event inside the media, the behavior depend of the sensitivity attribute on the media (see SMIL2 specification for more details)
-					if self._active_displist._alphaSensitivity == 100:
-						return cont
-					elif self._active_displist._alphaSensitivity == 0:
-						# default value (opaque)
-						self.setcursor(self._cursor)
-						return stop
-					else:
-						# xxx to do: check if the point is transparent.
-						# if yes, return cont
-						if self._active_displist.isTransparent(point):
-							return cont
-						self.setcursor(self._cursor)
-						return stop
-				else:
-					# outside the media, and transparent window. So check the next window
-					return cont
-			else:
-				# not active display list and transparent window. So check the next window
-				return cont 
+		# there is no active display list, or it's transparent, so the window gets the click
+		if self._transparent:
+			# window is transparent, continue looking
+			return 0
+		# window is not transparent, we have to stop looking
+		return 1
 
 	# bring the subwindow infront of windows with the same z	
 	def pop(self, poptop=1):
@@ -2518,3 +2483,31 @@ class _ResizeableDisplayList(_DisplayList):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._list.append(('label', str))
+
+import grinsRC
+def getcursorhandle(strid):
+	if strid == 'hand':
+		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_POINT_HAND)
+	elif strid == 'darrow':
+		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZEWE)
+	elif strid == 'channel':
+		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGMOVE)
+	elif strid == 'stop':
+		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_STOP)
+	elif strid == 'link':
+		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGLINK)
+	elif strid == 'draghand':
+		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAG_HAND)
+	elif strid == 'sizewse':
+		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZEWSE)
+	elif strid == 'sizens':
+		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZENS)
+	elif strid == 'sizenesw':
+		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZENESW)
+	elif strid == 'sizewe':
+		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZEWE)
+	elif strid == 'cross':
+		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_CROSS)
+	else:
+		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_ARROW)
+	return cursor
