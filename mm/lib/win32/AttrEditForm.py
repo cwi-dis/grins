@@ -58,6 +58,15 @@ class AttrCtrl:
 		self._validator=None
 		self._listeners=[]
 
+	def getvalue(self):
+		raise error, 'you have to implement method \'getvalue\' for %s' % self.__class__.__name__
+
+	def setvalue(self,newval):
+		raise error, 'you have to implement method \'setvalue\' for %s' % self.__class__.__name__
+
+	def setoptions(self,list,val):
+		raise error, 'you have to implement method \'setoptions\' for %s' % self.__class__.__name__
+
 	def sethelp(self):
 		if not self._initctrl: return
 		if not hasattr(self._wnd,'_attrinfo'): return
