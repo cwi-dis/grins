@@ -2006,7 +2006,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			# check attribute values for validity
 			for attr in ('from', 'to', 'by'):
-				val = attributes[attr]
+				val = attributes.get(attr)
+				if val is None:
+					continue
 				if tagname == 'animateMotion' and not fppairre.match(val):
 					if fppairre_bad.match(val):
 						self.syntax_error("missing parentheses in from value")
