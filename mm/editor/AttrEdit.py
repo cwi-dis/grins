@@ -257,6 +257,7 @@ class SlideWrapper(NodeWrapper):
 		elif tag in ('fadein', 'crossfade', 'wipe'):
 			namelist = ['file', 'imgcrop', 'aspect', 'subregion', 'start', 'duration', 'maxfps', 'href']
 			if tag == 'wipe':
+				namelist.append('direction')
 				namelist.append('wipetype')
 		elif tag == 'fadeout':
 			namelist = ['color', 'subregion', 'start', 'duration', 'maxfps']
@@ -538,6 +539,10 @@ class AttrEditor(AttrEditorDialog):
 				C = UsergroupAttrEditorField
 			elif displayername == 'transition':
 				C = TransitionAttrEditorField
+			elif displayername == 'direction':
+				C = WipeDirectionAttrEditorField
+			elif displayername == 'wipetype':
+				C = WipeTypeAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -923,6 +928,18 @@ class UnitsAttrEditorField(PopupAttrEditorField):
 
 class TransitionAttrEditorField(PopupAttrEditorField):
 	__values = ['fill', 'fadein', 'fadeout', 'crossfade', 'wipe', 'viewchange']
+
+	def getoptions(self):
+		return ['Default'] + self.__values
+
+class WipeDirectionAttrEditorField(PopupAttrEditorField):
+	__values = ['left', 'right', 'up', 'down']
+
+	def getoptions(self):
+		return ['Default'] + self.__values
+
+class WipeTypeAttrEditorField(PopupAttrEditorField):
+	__values = ['normal', 'push']
 
 	def getoptions(self):
 		return ['Default'] + self.__values

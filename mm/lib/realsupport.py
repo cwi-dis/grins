@@ -420,6 +420,15 @@ class RPParser(xmllib.XMLParser):
 			if type is None: # provide default
 				type = 'normal'
 			attrs['wipetype'] = type
+			direction = attributes.get('direction')
+			if direction is None:
+				self.syntax_error("required attributes `direction' missing")
+			elif direction not in ('left', 'right', 'down', 'up'):
+				self.syntax_error("unknown `direction' attribute")
+				direction = None
+			if direction is None: # provide default
+				direction = 'left'
+			attrs['direction'] = direction
 		self.tags.append(attrs)
 
 	def __rect(self, str, attributes):
@@ -581,6 +590,11 @@ def writeRP(file, rp):
 				if url:
 					f.write(' url=%s' % nameencode(url))
 			writecoords(f, 'src', attrs.get('imgcrop'))
+		if tag == 'wipe':
+			direction = attrs.get('direction', 'left')
+			f.write(' direction="%s"' % direction)
+			wipetype = attrs.get('wipetype', 'normal')
+			f.write(' type="%s"' % wipetype)
 		writecoords(f, 'dst', attrs.get('subregion'))
 		if tag != 'fill':
 			maxfps = attrs.get('maxfps')
