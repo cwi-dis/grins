@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "rma_EXPORTS" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "./include" /I "./win32" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PY_EXPORTS" /D "_WINDLL" /D "_AFXDLL" /FR /Yu"std.h" /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "./include" /I "./win32" /I "..\..\..\python\Include" /I "..\..\..\python\PC" /I "..\..\..\python\Extensions\win32\src" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PY_EXPORTS" /D "_WINDLL" /D "_AFXDLL" /FR /Yu"std.h" /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x408 /d "NDEBUG"
@@ -57,11 +57,12 @@ LINK32=link.exe
 # ADD LINK32 advapi32.lib version.lib kernel32.lib user32.lib gdi32.lib winmm.lib vfw32.lib /nologo /dll /machine:I386 /out:"Release/rma.pyd"
 # Begin Custom Build
 OutDir=.\Release
+TargetPath=.\Release\rma.pyd
 InputPath=.\Release\rma.pyd
 SOURCE="$(InputPath)"
 
 "$(OutDir)\log.txt" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy $(OutDir)\rma.pyd d:\ufs\mm\cmif\bin\win32
+	copy $(TargetPath) d:\ufs\mm\cmif\bin\win32
 
 # End Custom Build
 
