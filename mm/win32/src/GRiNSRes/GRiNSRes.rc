@@ -13,11 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// Neutral (Default) resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
 #ifdef _WIN32
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
 #pragma code_page(1252)
 #endif //_WIN32
 
@@ -26,7 +26,20 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Cursor
 //
 
+IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
 IDC_STOP                CURSOR  DISCARDABLE     "RES\\Stop.cur"
+#endif    // Neutral (Default) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -482,26 +495,26 @@ BEGIN
     PUSHBUTTON      "&Delete",IDCMD_DELETE_GROUP,74,109,34,13
 END
 
-IDD_LAYOUT2 DIALOG DISCARDABLE  0, 0, 115, 210
+IDD_LAYOUT2 DIALOG DISCARDABLE  0, 0, 364, 86
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    PUSHBUTTON      "New...",IDCMD_NEW_LAYOUT,7,48,25,13
-    PUSHBUTTON      "Rename...",IDCMD_RENAME,34,48,35,13
-    PUSHBUTTON      "Delete",IDCMD_DELETE,73,48,34,13
-    LISTBOX         IDC_LAYOUTS,6,13,102,35,LBS_NOINTEGRALHEIGHT | 
+    PUSHBUTTON      "New...",IDCMD_NEW_LAYOUT,6,69,31,13
+    PUSHBUTTON      "Rename...",IDCMD_RENAME,41,69,41,13
+    PUSHBUTTON      "Delete",IDCMD_DELETE,86,69,29,13
+    LISTBOX         IDC_LAYOUTS,6,14,108,52,LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Layouts",-1,6,3,102,10,SS_SUNKEN
-    PUSHBUTTON      "New...",IDCMD_NEW_CHANNEL,6,120,25,13
-    PUSHBUTTON      "Remove",IDCMD_REMOVE_CHANNEL,77,120,31,13
-    PUSHBUTTON      "Properties...",IDCMD_ATTRIBUTES,33,120,41,13
-    LISTBOX         IDC_LAYOUT_CHANNELS,6,78,102,41,LBS_NOINTEGRALHEIGHT | 
+    LTEXT           "Layouts",-1,6,4,108,10,SS_SUNKEN
+    PUSHBUTTON      "New...",IDCMD_NEW_CHANNEL,120,69,32,13
+    PUSHBUTTON      "»»»",IDCMD_REMOVE_CHANNEL,226,43,22,13
+    PUSHBUTTON      "Properties...",IDCMD_ATTRIBUTES,174,69,47,13
+    LISTBOX         IDC_LAYOUT_CHANNELS,119,14,102,52,LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Layout channels",-1,6,68,102,10,SS_SUNKEN
-    PUSHBUTTON      "Add to layout",IDCMD_ADD_CHANNEL,52,194,56,13
-    LISTBOX         IDC_OTHER_CHANNELS,6,152,102,41,LBS_NOINTEGRALHEIGHT | 
+    LTEXT           "Channels in selected layout:",-1,119,4,102,10,SS_SUNKEN
+    PUSHBUTTON      "«««",IDCMD_ADD_CHANNEL,226,24,22,13
+    LISTBOX         IDC_OTHER_CHANNELS,255,14,102,52,LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Other channels",-1,6,142,102,10,SS_SUNKEN
+    LTEXT           "Other channels:",-1,255,4,102,10,SS_SUNKEN
 END
 
 
@@ -716,8 +729,7 @@ BEGIN
     IDD_LAYOUT2, DIALOG
     BEGIN
         LEFTMARGIN, 6
-        RIGHTMARGIN, 114
-        BOTTOMMARGIN, 208
+        RIGHTMARGIN, 115
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -925,25 +937,6 @@ BEGIN
 END
 
 #endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// Neutral (Default) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
-#ifdef _WIN32
-LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
-#pragma code_page(1253)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
-#endif    // Neutral (Default) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
