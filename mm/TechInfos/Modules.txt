@@ -6,7 +6,7 @@
      3.BasicTimeContainers
 	Fully implemented
      4.EventTiming
-	Fully implemented
+	Fully implemented but not all events in the profile are recognized
      5.ExclTimeContainers
 	Fully implemented
      6.FillDefault
