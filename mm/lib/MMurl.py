@@ -8,19 +8,31 @@ class FancyURLopener(_OriginalFancyURLopener):
 		apply(_OriginalFancyURLopener.__init__, (self,) + args)
 		self.tempcache = {}
 
-	def retrieve(self, url, filename=None):
-		result = _OriginalFancyURLopener.retrieve(self, url, filename)
-		url = unwrap(url)
-		if self.tempcache.has_key(url):
-			self.openedurl = self.tempcache[url][2]
-		else:
-			self.openedurl = url
-		return result
-
 	def http_error_default(self, url, fp, errcode, errmsg, headers):
 		void = fp.read()
 		fp.close()
 		raise IOError, (errcode, 'http error: ' + errmsg, headers)
+
+	def http_error_302(self, url, fp, errcode, errmsg, headers):
+		# XXX The server can force infinite recursion here!
+		if headers.has_key('location'):
+			newurl = headers['location']
+		elif headers.has_key('uri'):
+			newurl = headers['uri']
+		else:
+			return
+		void = fp.read()
+		fp.close()
+		fp = self.open(newurl)
+		h = fp.info()
+		if not h.has_key('Content-Location') and \
+		   not h.has_key('Content-Base'):
+			h.dict['content-location'] = newurl
+			h.headers.append('Content-Location: %s\r\n' % newurl)
+		return fp
+
+	# Error 301 -- also relocated (permanently)
+	http_error_301 = http_error_302
 
 	def prompt_user_passwd(self, host, realm):
 		import windowinterface
@@ -96,9 +108,9 @@ def urlretrieve(url, filename=None):
 	if not _urlopener:
 		_urlopener = FancyURLopener()
 	if filename:
-	    return _urlopener.retrieve(url, filename)
+		return _urlopener.retrieve(url, filename)
 	else:
-	    return _urlopener.retrieve(url)
+		return _urlopener.retrieve(url)
 def urlcleanup():
 	if _urlopener:
 		_urlopener.cleanup()
