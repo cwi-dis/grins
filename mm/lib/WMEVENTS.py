@@ -26,3 +26,5 @@ TimerEvent = 20
 DropFile  = 30
 PasteFile = 31
 DropURL = 32
+DragFile = 33
+DragURL = 34
