@@ -6,7 +6,7 @@ ChannelMime = {
 		'image/gif',
 ##		'image/ief',
 		'image/jpeg',
-##		'image/png',
+		'image/png',
 		'image/tiff',
 		'image/bmp', ## ++
 		'image/x-cmu-raster',
