@@ -63,9 +63,7 @@ class UsergroupViewDialog(windowinterface.MACDialog):
 
 	def getgroup(self):
 		"""Return name of currently selected user group."""
-		pos = self.__list.getselect()
-		if pos is None: return pos
-		return self.__list.getitem(pos)
+		return self.__list.getselectvalue()
 
 	def setgroups(self, ugroups, pos):
 		"""Set the list of user groups.
@@ -75,8 +73,7 @@ class UsergroupViewDialog(windowinterface.MACDialog):
 		pos -- None or index in ugroups list--the initially
 			selected element in the list
 		"""
-		self.__list.set(ugroups)
-		self.__list.select(pos)
+		self.__list.setitems(ugroups, pos)
 		self.__list_callback()
 
 ## 	def show(self):
