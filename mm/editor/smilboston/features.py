@@ -32,6 +32,7 @@ feature_set = [
 	AUTO_EVALUATE,
 	]
 
+auto_evaluate_period = 7	# 7 days auto-evaluate
 version = 'pro'
 compatibility = Boston
 compatibility_short = 'SMIL2'
