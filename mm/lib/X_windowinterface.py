@@ -215,7 +215,7 @@ class _Toplevel:
 
 	def _setupcolormap(self, dpy):
 		visattr = {'class': X.TrueColor}
-##		visattr['depth'] = 8
+##		visattr['depth'] = 8	# DEBUG--force 8-bit visual
 		visuals = dpy.GetVisualInfo(visattr)
 		if visuals:
 			# found one, use the deepest
@@ -1501,7 +1501,7 @@ class _DisplayList:
 		toplevel._win_lock.release()
 
 	def _optimize(self, ignore = []):
-		if type(ignore) is type(0):
+		if type(ignore) is IntType:
 			ignore = [ignore]
 		entry = self._list[-1]
 		x = []
@@ -2653,7 +2653,7 @@ class _Widget(_MenuSupport):
 			except:
 				pass
 			else:
-				if type(widget) in (type(0.0), type(0)):
+				if type(widget) in (FloatType, IntType):
 					attrs[attachment] = \
 						Xmd.ATTACH_POSITION
 					attrs[pos + 'Position'] = \
@@ -3353,7 +3353,7 @@ class ButtonRow(_Widget):
 			 'traversalOn': FALSE}
 		if not vertical:
 			attrs['orientation'] = Xmd.HORIZONTAL
-			attrs['packing'] = Xmd.PACK_COLUMN
+##			attrs['packing'] = Xmd.PACK_COLUMN
 		self._cb = callback
 		if useGadget:
 			separator = Xm.SeparatorGadget
@@ -3371,11 +3371,11 @@ class ButtonRow(_Widget):
 		for entry in buttonlist:
 			if entry is None:
 				if vertical:
-					# sorry, no separators in horizontal
-					# ButtonRows.
-					dummy = rowcolumn.CreateManagedWidget(
-						'buttonSeparator',
-						separator, {})
+					attrs = {'orientation': Xmd.HORIZONTAL}
+				else:
+					attrs = {'orientation': Xmd.VERTICAL}
+				dummy = rowcolumn.CreateManagedWidget(
+					'buttonSeparator', separator, attrs)
 				continue
 			btype = buttontype
 			if type(entry) is TupleType:
