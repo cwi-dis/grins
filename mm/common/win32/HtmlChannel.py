@@ -55,9 +55,9 @@ error = 'HtmlChannel.error'
 	
 class HtmlChannel(Channel.ChannelWindow):
 	if Channel.CMIF_MODE:
-		node_attrs = Channel.ChannelWindow.node_attrs + ['fgcolor', 'font']
+		node_attrs = Channel.ChannelWindow.node_attrs + ['fgcolor']
 	else:
-		chan_attrs = Channel.ChannelWindow.chan_attrs + ['fgcolor', 'font']
+		chan_attrs = Channel.ChannelWindow.chan_attrs + ['fgcolor']
 	_window_type = windowinterface.HTM
 
 	def __init__(self, name, attrdict, scheduler, ui):

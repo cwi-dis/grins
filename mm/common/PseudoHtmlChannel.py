@@ -13,12 +13,10 @@ from StringStuff import calclines
 class HtmlChannel(ChannelWindow):
 	if CMIF_MODE:
 		node_attrs = ChannelWindow.node_attrs + [
-						 'fgcolor', 'font',
-						 'pointsize']
+						 'fgcolor']
 	else:
 		chan_attrs = ChannelWindow.chan_attrs + [
-						 'fgcolor', 'font',
-						 'pointsize']
+						 'fgcolor']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
@@ -48,9 +46,6 @@ class HtmlChannel(ChannelWindow):
 ##			if taglist: print `taglist`
 		fontspec = getfont(node)
 		fontname, pointsize = mapfont(fontspec)
-		ps = getpointsize(node)
-		if ps != 0:
-			pointsize = ps
 		baseline, fontheight, pointsize = \
 			  self.armed_display.setfont(\
 			  fontname, pointsize)
@@ -142,9 +137,4 @@ def map_parpos_to_linepos(parno, charno, last, curlines, partoline):
 			charno = char1
 
 def getfont(node):
-	import MMAttrdefs
-	return MMAttrdefs.getattr(node, 'font')
-
-def getpointsize(node):
-	import MMAttrdefs
-	return MMAttrdefs.getattr(node, 'pointsize')
+	return 'Times-Roman'

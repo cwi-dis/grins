@@ -39,7 +39,7 @@ import Xt, Xm
 Xt.AddActionHook(actionhook, None)
 
 class HtmlChannel(Channel.ChannelWindow):
-	_our_attrs = ['fgcolor', 'font']
+	_our_attrs = ['fgcolor']
 	if Channel.CMIF_MODE:
 		node_attrs = Channel.ChannelWindow.node_attrs + _our_attrs
 	else:
@@ -202,7 +202,6 @@ class HtmlChannel(Channel.ChannelWindow):
 		fontspec = getfont(node)
 		fontname, pointsize = mapfont(fontspec)
 		fontobj = windowinterface.findfont(fontname, 9)
-		attrs['font'] = fontobj._font
 		i = string.find(fontname, '-')
 		if i > 0: fontname = fontname[:i]
 		basefontname = fontname

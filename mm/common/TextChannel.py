@@ -11,12 +11,10 @@ import re
 class TextChannel(ChannelWindow):
 	if CMIF_MODE:
 		node_attrs = ChannelWindow.node_attrs + [
-						 'fgcolor', 'font',
-						 'pointsize', 'noanchors']
+						 'fgcolor']
 	else:
 		chan_attrs = ChannelWindow.chan_attrs + [
-						 'fgcolor', 'font',
-						 'pointsize', 'noanchors']
+						 'fgcolor']
 
 	def updatefixedanchors(self, node):
 		try:
@@ -39,17 +37,10 @@ class TextChannel(ChannelWindow):
 			self.errormsg(node, arg)
 			str = ''
 		parlist = extract_paragraphs(str)
-		if MMAttrdefs.getattr(node, 'noanchors'):
-			taglist = []
-		else:
-			taglist = extract_taglist(parlist)
+		taglist = extract_taglist(parlist)
 		fix_anchorlist(node, taglist)
-##			if taglist: print `taglist`
 		fontspec = getfont(node)
 		fontname, pointsize = mapfont(fontspec)
-		ps = getpointsize(node)
-		if ps != 0:
-			pointsize = ps
 		baseline, fontheight, pointsize = \
 			  self.armed_display.setfont(fontname, pointsize)
 		margin = self.armed_display.strsize('m')[0] / 2
@@ -159,12 +150,7 @@ def map_parpos_to_linepos(parno, charno, last, curlines, partoline):
 	return 0, 0
 
 def getfont(node):
-	import MMAttrdefs
-	return MMAttrdefs.getattr(node, 'font')
-
-def getpointsize(node):
-	import MMAttrdefs
-	return MMAttrdefs.getattr(node, 'pointsize')
+	return 'Times-Roman'
 
 # Turn a text string into a list of strings, each representing a paragraph.
 # Tabs are expanded to spaces (since the font mgr doesn't handle tabs),

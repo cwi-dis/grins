@@ -110,9 +110,6 @@
 (fillDefault (enum inherit auto remove freeze transition hold) inherit 'Fill default' fill
 	'Default value for the fill property on the children of this node (default depends on type of node)' inherited (smil2 cmif))
 
-(font (string) 'Times-Roman' 'Font' font
-	'Font used to display text' channel (cmif))
-
 (hview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
 	 'Window position for hierarchy view' raw (g2 qt smil10 smil2 cmif snap))
 
@@ -158,12 +155,6 @@
 (name (name) '' 'Node name' default
 	'Name for the node' raw (g2 qt smil10 smil2 cmif snap))
 
-(noanchors (bool) 0 'Ignore anchors' default
-	'Ignore anchors and other HTML tags' channel (cmif))
-
-(nonlocal (bool) 0 'Remote only' default
-	'Ignore incoming messages from local machine' raw (cmif))
-
 (close (enum onRequest whenNotActive) onRequest 'Close viewport' default
 	'When the viewport is to be closed' raw (cmif smil2 snap))
 
@@ -175,9 +166,6 @@
 
 (player_winsize (tuple (float) (float)) (83.544921875 46.09375) 'Player winsize' hidden
 	 'Window size for player control panel' raw (g2 qt smil10 smil2 cmif snap))
-
-(pointsize (float) 0 'Point size' default
-	'Point size of text displayed in window' channel (cmif))
 
 (popup (bool) 1 'Popup on play' default
 	'Determines whether channel pops up upon playing a node' raw (cmif))
