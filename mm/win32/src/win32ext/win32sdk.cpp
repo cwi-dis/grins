@@ -1214,7 +1214,7 @@ GetWMString(PyObject *self, PyObject *args)
 		return NULL;
 	char *buf = (char*)pval;
 	PyObject *obj = Py_BuildValue("s",buf);
-	delete[] buf;
+//	delete[] buf;
 	return obj;
 	}
 
