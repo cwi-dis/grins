@@ -32,37 +32,36 @@ from wndusercmd import *
 
 MENUBAR=(
 	('&File', (
-		(ENTRY, 'Open...', 'O', OPEN),
-		(ENTRY, 'Close Document', None, CLOSE),
+		(ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
+		(ENTRY, '&Close Document', None, CLOSE),
 		(SEP,),
-		(ENTRY, 'Preferences...', None, PREFERENCES),
-		(ENTRY, 'Charset...', 'C', SELECT_CHARSET),
+		(ENTRY, '&Preferences...', None, PREFERENCES),
 		(SEP,),
-		(CASCADE, 'Debug', (
-			(ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
-			(TOGGLE, 'Enable call tracing', None, TRACE),
-			(ENTRY, 'Enter debugger', None, DEBUG),
-			(ENTRY, 'Abort', None, CRASH),
-			(TOGGLE, 'Show log/debug window', None, CONSOLE),
+		(CASCADE, '&Debug', (
+			(ENTRY, 'Dump &scheduler data', None, SCHEDDUMP),
+			(TOGGLE, 'Enable call &tracing', None, TRACE),
+			(ENTRY, 'Enter &debugger', None, DEBUG),
+			(ENTRY, '&Abort', None, CRASH),
+			(TOGGLE, 'Show &log/debug window', None, CONSOLE),
 			)),
 		(SEP,),
-		(ENTRY, 'Exit', 'x', EXIT))),
+		(ENTRY, 'E&xit', None, EXIT))),
 
 
 	('&View', (
-		(TOGGLE, 'Source', '1', SOURCE),)),
+		(TOGGLE, '&Source', None, SOURCE),)),
 		
 	('&Play', (
-		(TOGGLE, 'Play', 'P', PLAY),
-		(TOGGLE, 'Pause', 'B', PAUSE),
-		(TOGGLE, 'Stop', 'H', STOP),
+		(ENTRY, '&Play\tCtrl+P', 'P', PLAY),
+		(ENTRY, 'Pa&use\tCtrl+U', 'U', PAUSE),
+		(ENTRY, '&Stop\tCtrl+H', 'H', STOP),
 		(SEP,),
-		(DYNAMICCASCADE, 'User groups', USERGROUPS),
-		(DYNAMICCASCADE, 'Visible channels', CHANNELS),
+		(DYNAMICCASCADE, 'User &groups', USERGROUPS),
+		(DYNAMICCASCADE, 'Visible &channels', CHANNELS),
 		)),
 
 	('&Window', (
-		(ENTRY, 'Close', 'o', CLOSE_ACTIVE_WINDOW),)),
+		(ENTRY, 'Cl&ose', None, CLOSE_ACTIVE_WINDOW),)),
 		
 	('&Help', (
 		(ENTRY, '&Contents', None, HELP_CONTENTS),
