@@ -80,7 +80,7 @@ CommandUI(ABOUT_GRINS)
 CommandUI(CLOSE_ACTIVE_WINDOW,IDUC_CLOSE_WINDOW)
 CommandUI(SELECT_CHARSET)
 
-
+CommandUI(TOOLBAR_GENERAL)
 #
 # MainDialog commands
 #
