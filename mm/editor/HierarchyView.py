@@ -34,6 +34,7 @@ TEXTCOLOR = settings.get('structure_textcolor')
 CTEXTCOLOR = settings.get('structure_ctextcolor')
 EXPCOLOR = settings.get('structure_expcolor')
 COLCOLOR = settings.get('structure_colcolor')
+ECBORDERCOLOR = settings.get('structure_ecbordercolor')
 
 
 # Focus color assignments (from light to dark gray)
@@ -1064,7 +1065,9 @@ class Object:
 					d.drawbox(box)
 		# draw a little triangle to indicate expanded/collapsed state
 		title_left = l+hmargin
-		if node.GetType() in MMNode.interiortypes or \
+		if (node.GetType() in MMNode.interiortypes and not \
+		    (root_expanded and node is self.mother.root)) \
+		    or \
 		   (node.GetType() == 'ext' and
 		    node.GetChannelType() == 'RealPix'):
 			awidth = LABSIZE/rw - 2*hmargin
@@ -1075,18 +1078,28 @@ class Object:
 			if hasattr(node, 'expanded'):
 				# expanded node, point down
 				expcolor = EXPCOLOR
-				if root_expanded and node is self.mother.root:
-					expcolor = BGCOLOR
+##				if :
+##					expcolor = BGCOLOR
 				d.drawfpolygon(expcolor,
 					[(l+hmargin, t+vmargin),
 					 (l+hmargin+awidth,t+vmargin),
 					 (l+hmargin+awidth/2,t+vmargin+aheight)])
+				d.drawline(ECBORDERCOLOR, [
+					(l+hmargin, t+vmargin),
+					(l+hmargin+awidth/2,t+vmargin+aheight),
+					(l+hmargin+awidth,t+vmargin),
+					])
 			else:
 				# collapsed node, point right
 				d.drawfpolygon(COLCOLOR,
 					[(l+hmargin,t+vmargin),
 					 (l+hmargin,t+vmargin+aheight),
 					 (l+hmargin+awidth,t+vmargin+aheight/2)])
+				d.drawline(ECBORDERCOLOR, [
+					(l+hmargin,t+vmargin),
+					(l+hmargin+awidth,t+vmargin+aheight/2),
+					(l+hmargin,t+vmargin+aheight),
+					])
 
 		# draw the name
 		d.fgcolor(TEXTCOLOR)
