@@ -2756,6 +2756,76 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		if self.getvalue() == NEW_REGION:
 			windowinterface.settimer(0.01, (self.askchannelname, (self.newchannelname(),)))
 
+class RegionDefaultAttrEditorField(PopupAttrEditorFieldWithUndefined):
+	def __init__(self, attreditor, name, label, wantnewchannels = 1):
+		self.__current = None
+		self.__name = name
+		self.__inheritedString = None
+		PopupAttrEditorFieldWithUndefined.__init__(self, attreditor, name, label)
+
+	def getoptions(self):
+		import settings
+
+		ctx = self.wrapper.context
+		node = self.wrapper.node
+
+		regionList = []
+		inheritedValue = self.getInheritedValue()
+		if inheritedValue != None:
+			self.__inheritedString = inheritedValue+' (inherited)'
+		else:
+			self.__inheritedString = UNDEFINED+' (inherited)'
+		regionList.append(self.__inheritedString)
+			
+		for ch in ctx.channels:
+			if ch.get('type') == 'layout':
+				if ch.get('base_window') != None:
+					regionList.append(ch.name)
+					
+		return regionList
+
+	def parsevalue(self, str):
+		if str == self.__inheritedString: 
+			return None
+		# XXXX: Hack: on windows plateform, this value correspond to the separator
+		# in this case, if the user select this value, we assume it's a undefined value
+		elif str == '---':
+			return None
+		return str
+
+	def valuerepr(self, value):
+		if value is None:
+			if self.nodefault:
+				return self.getdefault()
+			return self.__inheritedString
+		return value
+
+	def channelprops(self):
+		regionName = self.getShowedValue()
+		ch = self.wrapper.context.getchannel(regionName)
+		if ch is not None:
+			showchannelattreditor(self.wrapper.toplevel, ch)
+			
+	def channelexists(self, name):
+		return self.wrapper.context.getchannel(name) is not None
+
+	def getcurrent(self):
+		if self.__current:
+			return self.__current
+		return PopupAttrEditorFieldWithUndefined.getcurrent(self)
+
+	def getShowedValue(self):
+		regionName = self.parsevalue(self.getvalue())
+		if regionName == None:
+			regionName = self.getInheritedValue()
+		return regionName
+					
+	def getInheritedValue(self):
+		parentNode = self.wrapper.node.GetParent()
+		if parentNode == None:
+			return UNDEFINED
+		return parentNode.GetInherAttrDef(self.__name, None)
+		
 class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current RealText channel names
 	__nocaptions = 'No captions'
@@ -2926,6 +2996,7 @@ DISPLAYERS = {
 	'regpoint': RegpointAttrEditorField,
 	'layoutname': LayoutnameAttrEditorField,
 	'channelname': ChannelnameAttrEditorField,
+	'regiondefault': RegionDefaultAttrEditorField,
 	'captionchannelname': CaptionChannelnameAttrEditorField,
 	'basechannelname': BaseChannelnameAttrEditorField,
 	'childnodename': ChildnodenameAttrEditorField,
