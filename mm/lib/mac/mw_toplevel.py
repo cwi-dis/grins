@@ -551,8 +551,12 @@ class _Toplevel(_Event):
 		self._wtd_cursor = ''		# The wanted cursor
 		self._menubar = None
 		self._globalgroup = None
+		self._commands_initialized = 0
 		
 	def _initcommands(self):
+		if self._commands_initialized:
+			return
+		self._commands_initialized = 1
 		for cmd in MenuTemplate.UNUSED_COMMANDS:
 			mw_globals._all_commands[cmd] = 1
 		self._command_handler = \
@@ -619,6 +623,7 @@ class _Toplevel(_Event):
 	#
 	
 	def windowgroup(self, title=None, cmdlist=[], globalgroup=0):
+		self._initcommands()
 		rv = mw_windows._WindowGroup(title, cmdlist)
 		self._windowgroups.append(rv)
 		if globalgroup:
@@ -705,6 +710,7 @@ class _Toplevel(_Event):
 		      type_channel = None, pixmap = 0, units=UNIT_MM,
 		      adornments=None, canvassize=None, commandlist=[],
 		      resizable=1):
+		self._initcommands()
 		extras = mw_windows.calc_extra_size(adornments, canvassize)
 		wid, w, h = self._openwindow(x, y, w, h, title, units, resizable, extras)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 0, pixmap,
@@ -717,6 +723,7 @@ class _Toplevel(_Event):
 			type_channel = None, pixmap = 0, units=UNIT_MM,
 			adornments=None, canvassize=None, commandlist=[],
 			resizable=1):
+		self._initcommands()
 		extras = mw_windows.calc_extra_size(adornments, canvassize)
 		wid, w, h = self._openwindow(x, y, w, h, title, units, resizable, extras)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 1, pixmap,

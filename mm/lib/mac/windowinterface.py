@@ -26,7 +26,7 @@ mw_windows.showmessage = mw_dialogs.showmessage
 #
 toplevel = mw_toplevel._Toplevel()
 mw_globals.toplevel = toplevel
-toplevel._initcommands()
+# toplevel._initcommands()
 
 #
 # Import a few other constants and such from mw_globals
