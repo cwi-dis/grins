@@ -937,6 +937,31 @@ class HierarchyView(HierarchyViewDialog):
 		em.commit()
 		return 1
 
+	# Copy node at position src to position dst
+	def copynode(self, dst, src):
+		xd, yd = dst
+		xs, ys = src
+		dstobj = self.whichhit(xd, yd)
+		srcobj = self.whichhit(xs, ys)
+		tmp = self.focusnode
+		self.focusnode = srcobj.node
+		self.copyfocus()
+		self.focusnode = dstobj.node
+		self.paste(0)
+		self.focusnode = tmp
+
+	# Move node at position src to position dst
+	def movenode(self, dst, src):
+		xd, yd = dst
+		xs, ys = src
+		srcobj = self.whichhit(xs, ys)
+		dstobj = self.whichhit(xd, yd)
+		tmp = self.focusnode
+		self.focusnode = srcobj.node
+		self.deletefocus(1)
+		self.focusnode = dstobj.node
+		self.paste(0)
+		self.focusnode = tmp
 
 	#################################################
 	# Internal subroutines                          #
