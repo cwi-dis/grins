@@ -32,15 +32,16 @@ class Main(MainDialog):
 		import MMurl, TopLevel, windowinterface, features
 		if hasattr(features, 'expiry_date') and features.expiry_date:
 			import time
+			import version
 			tm = time.localtime(time.time())
 			yymmdd = tm[:3]
 			if yymmdd > features.expiry_date:
 				rv = windowinterface.GetOKCancel(
 				   "This beta copy of GRiNS has expired.\n\n"
-				   "Do you want to check the website for a newer version?")
+				   "Do you want to check www.oratrix.com for a newer version?")
 				if rv == 0:
-					import Help
-					Help.givehelp("../update")
+					url = 'http://www.oratrix.com/indir/%s/update.html'%version.shortversion
+					windowinterface.htmlwindow(url)
 				sys.exit(0)
 		self._tracing = 0
 		self.nocontrol = 0	# For player compatability
