@@ -272,6 +272,9 @@
 #define IDD_EDITATTR_PRIO               473
 #define IDD_EDITATTR_S4F                474
 #define IDD_EDITATTR_SYNC               475
+#define IDD_EDITATTR_ANIMATETARGETMOTION 476
+#define IDD_EDITATTR_ANIMATETARGETSET   477
+#define IDD_EDITATTR_ANIMATEVALUES      478
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -394,6 +397,7 @@
 #define IDC_EDIT3                       1138
 #define IDC_EDIT4                       1139
 #define IDC_DY                          1139
+#define IDC_VALUESV                     1139
 #define IDC_EDIT6                       1140
 #define IDC_HR                          1140
 #define IDC_EDIT8                       1141
@@ -765,6 +769,35 @@
 #define IDC_PAUSEV1                     1504
 #define IDC_PAUSEV2                     1505
 #define IDC_PAUSEV3                     1506
+#define IDC_ATAGV                       1508
+#define IDC_ATAGL                       1509
+#define IDC_ATYPEV1                     1510
+#define IDC_ATYPEV2                     1511
+#define IDC_ATYPEV3                     1512
+#define IDC_ATYPEL                      1513
+#define IDC_TELEML                      1514
+#define IDC_TATTRL                      1515
+#define IDC_TELEMV                      1516
+#define IDC_TELEMB                      1517
+#define IDC_TATTRV                      1518
+#define IDC_ORIGINL                     1519
+#define IDC_ORIGINV1                    1520
+#define IDC_ORIGINV2                    1521
+#define IDC_PATHL                       1522
+#define IDC_PATHV                       1523
+#define IDC_TOL                         1524
+#define IDC_TOV                         1525
+#define IDC_FROML                       1526
+#define IDC_FROMV                       1527
+#define IDC_BYL                         1528
+#define IDC_BYV                         1529
+#define IDC_VALUESL                     1530
+#define IDC_ADDITIVEL                   1531
+#define IDC_ACCUMULATEL                 1532
+#define IDC_ADDITIVEV1                  1533
+#define IDC_ADDITIVEV2                  1534
+#define IDC_ACCUMULATEV1                1535
+#define IDC_ACCUMULATEV2                1536
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -874,7 +907,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        464
 #define _APS_NEXT_COMMAND_VALUE         32902
-#define _APS_NEXT_CONTROL_VALUE         1508
+#define _APS_NEXT_CONTROL_VALUE         1537
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

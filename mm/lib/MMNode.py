@@ -4976,6 +4976,41 @@ class MMNode(MMTreeElement):
 ##					 'mediaTime',
 					 'file'])
 			return namelist
+		if ntype == 'animate':
+			atag = self.attrdict.get('atag','animate')
+			namelist.extend(self.__timing)
+			namelist.append('atag')
+			if atag not in ('transitionFilter', 'animateMotion'):
+				namelist.extend(['attributeName',
+						 'attributeType'])
+			if atag not in ('set', 'transitionFilter'):
+				namelist.extend(['accumulate',
+						 'additive',
+						 'by',
+						 'calcMode',
+						 'from',
+						 'keySplines',
+						 'keyTimes',
+						 'values'])
+			if atag == 'animateMotion':
+				namelist.extend(['path',
+						 'origin'])
+			if atag == 'transitionFilter':
+				namelist.extend(['trtype',
+						 'subtype',
+						 'mode',
+						 'fadeColor',
+						 'horzRepeat',
+						 'vertRepeat',
+						 'borderWidth',
+						 'borderColor'])
+			namelist.extend(['targetElement',
+					 'to',
+					 'speed',
+					 'accelerate',
+					 'decelerate',
+					 'autoReverse'])
+			return namelist
 		if ntype in ('par','seq','excl','prio','imm','ext','brush'):
 			namelist.extend(['copyright',
 					 'abstract',

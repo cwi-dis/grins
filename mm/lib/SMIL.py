@@ -164,8 +164,6 @@ ELEMENTS = {
 			'origin',
 		],
 		'animateMotion': [
-			'attributeName',
-			'attributeType',
 			'targetElement',
 			'values',
 			'calcMode',
@@ -975,6 +973,8 @@ class SMIL:
 	if profileExtensions.get('SplineAnimation'):
 		attributes['animateMotion']['path'] = None
 	attributes['animateMotion']['origin'] = None
+	del attributes['animateMotion']['attributeName']
+	del attributes['animateMotion']['attributeType']
 
 	attributes['animate'] = __animate_attrs_core.copy()
 	attributes['animate'].update(__animate_attrs_extra)

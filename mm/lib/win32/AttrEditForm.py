@@ -698,6 +698,9 @@ class ElementSelCtrl(AttrCtrl):
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Choose target element',None,0)
 
+class ElementSelNolabelCtrl(ElementSelCtrl):
+	want_label = 0
+
 ##################################
 class ColorCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -4723,46 +4726,73 @@ class ActiveDuration1Group(ActiveDuration4Group):
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_CLIPEL,grinsRC.IDC_CLIPEV))
 		return cd
 
-class AnimateGeneralGroup(AttrGroup):
-	data=attrgrsdict['animateGeneral']
+class AnimateTargetGroup(AttrGroup):
+	data=attrgrsdict['animateTarget']
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_ANIMATEGENERAL
+		return grinsRC.IDD_EDITATTR_ANIMATETARGET
 	def createctrls(self,wnd):
 		cd = {}
-		a = self.getattr('name')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
 		a = self.getattr('atag')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_ATAGL,grinsRC.IDC_ATAGV))
 		a = self.getattr('targetElement')
-		cd[a] = ElementSelCtrl(wnd,a,(grinsRC.IDC_31, grinsRC.IDC_32, grinsRC.IDC_33))
+		cd[a] = ElementSelNolabelCtrl(wnd,a,(grinsRC.IDC_TELEML, grinsRC.IDC_TELEMV, grinsRC.IDC_TELEMB))
 		a = self.getattr('attributeName')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42))
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_TATTRL,grinsRC.IDC_TATTRV))
 		a = self.getattr('attributeType')
-		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52,grinsRC.IDC_53,grinsRC.IDC_54))
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_ATYPEL,grinsRC.IDC_ATYPEV1,grinsRC.IDC_ATYPEV2,grinsRC.IDC_ATYPEV3))
 		return cd
 
-#
-class AnimateMotionGeneralGroup(AttrGroup):
-	data=attrgrsdict['animateMotionGeneral']
+class AnimateTargetSetGroup(AnimateTargetGroup):
+	data=attrgrsdict['animateTargetSet']
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_ANIMATETARGETSET
+	def createctrls(self,wnd):
+		cd = AnimateTargetGroup.createctrls(self,wnd)
+		a = self.getattr('to')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_TOL,grinsRC.IDC_TOV))
+		return cd
+
+class AnimateTargetMotionGroup(AttrGroup):
+	data=attrgrsdict['animateTargetMotion']
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_ANIMATEGENERALM
+		return grinsRC.IDD_EDITATTR_ANIMATETARGETMOTION
 	def createctrls(self,wnd):
 		cd = {}
-		a = self.getattr('name')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
 		a = self.getattr('atag')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_ATAGL,grinsRC.IDC_ATAGV))
 		a = self.getattr('targetElement')
-		cd[a] = ElementSelCtrl(wnd,a,(grinsRC.IDC_31, grinsRC.IDC_32, grinsRC.IDC_33))
+		cd[a] = ElementSelNolabelCtrl(wnd,a,(grinsRC.IDC_TELEML, grinsRC.IDC_TELEMV, grinsRC.IDC_TELEMB))
+		a = self.getattr('path')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_PATHL,grinsRC.IDC_PATHV))
+		a = self.getattr('origin')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_ORIGINL,grinsRC.IDC_ORIGINV1,grinsRC.IDC_ORIGINV2))
 		return cd
 
-#
-class AnimateValuesGroup(StringGroup):
+class AnimateValuesGroup(AttrGroup):
 	data=attrgrsdict['animateValues']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_ANIMATEVALUES
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('from')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_FROML,grinsRC.IDC_FROMV))
+		a = self.getattr('by')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_BYL,grinsRC.IDC_BYV))
+		a = self.getattr('to')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_TOL,grinsRC.IDC_TOV))
+		a = self.getattr('values')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_VALUESL,grinsRC.IDC_VALUESV))
+		a = self.getattr('additive')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_ADDITIVEL,grinsRC.IDC_ADDITIVEV1,grinsRC.IDC_ADDITIVEV2))
+		a = self.getattr('accumulate')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_ACCUMULATEL,grinsRC.IDC_ACCUMULATEV1,grinsRC.IDC_ACCUMULATEV2))
+		return cd
 
 #
 class InlineTransitionGroup(AttrGroup):
@@ -5098,8 +5128,9 @@ groupsui={
 	'qtpreferences':QTPlayerPreferencesGroup,
 	'qtmediapreferences':QTPlayerMediaPreferencesGroup,
 
-	'animateGeneral':AnimateGeneralGroup,
-	'animateMotionGeneral':AnimateMotionGeneralGroup,
+	'animateTarget':AnimateTargetGroup,
+	'animateTargetSet':AnimateTargetSetGroup,
+	'animateTargetMotion':AnimateTargetMotionGroup,
 	'animateValues':AnimateValuesGroup,
 	'timeManipulation':TimeManipulationGroup,
 	'calcMode':CalcModeGroup,

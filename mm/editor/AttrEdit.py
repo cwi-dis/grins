@@ -561,8 +561,8 @@ class NodeWrapper(Wrapper):
 	def getdef(self, name):
 		if name == '.type':
 			return (('enum', alltypes), '',
-				'Node type', 'nodetype',
-				'Node type', 'raw', flags.FLAG_ALL|flags.FLAG_ADVANCED)
+				'Object type', 'nodetype',
+				'Object type', 'raw', flags.FLAG_ALL|flags.FLAG_ADVANCED)
 		if name == '.values':
 			return (('string', None), '',
 				'Content', 'text',
@@ -640,57 +640,57 @@ class AnimationWrapper(NodeWrapper):
 	def __init__(self, toplevel, node):
 		NodeWrapper.__init__(self, toplevel, node)
 
-	def attrnames(self):
-		namelist = ['atag', 'name', 
-				'beginlist', 'endlist',
-				'duration', 'min', 'max', 'loop', 'repeatdur',
-			    'restart', 'restartDefault', 'fill', 'fillDefault',
-			    'speed', 'accelerate', 'decelerate', 'autoReverse',
-			    ]
-		ctype = 'animate'
-		if ChannelMap.internalchannelmap.has_key(ctype):
-			cclass = ChannelMap.internalchannelmap[ctype]
-			# Add the class's declaration of attributes
-			namelist = namelist + cclass.node_attrs
-		tag = self.node.GetAttr('atag')
-		rmlist = []
-		if tag == 'animateMotion':
-			rmlist.append('attributeName')
-			rmlist.append('attributeType')
-		elif tag == 'animate':
-			rmlist.append('path')
-			rmlist.append('origin')
-		elif tag == 'animateColor':
-			rmlist.append('path')
-			rmlist.append('origin')
-		elif tag == 'set':
-			rmlist.append('path')
-			rmlist.append('origin')
-			rmlist.append('calcMode')
-			rmlist.append('values')
-			rmlist.append('keyTimes')
-			rmlist.append('keySplines')
-			rmlist.append('from')
-			rmlist.append('by')
-			rmlist.append('additive')
-			rmlist.append('accumulate')
-		elif tag == 'transitionFilter':
-			rmlist.append('attributeName')
-			rmlist.append('attributeType')
-			rmlist.append('path')
-			rmlist.append('origin')
-		parent = self.node.GetParent()
-		if parent.GetType() in playabletypes:
-			rmlist.append('targetElement')
-		for attr in rmlist:
-			if attr in namelist:
-				namelist.remove(attr)
-		if tag == 'transitionFilter':
-			namelist.append('trtype')
-			namelist.append('subtype')
-			namelist.append('mode')
-			namelist.append('fadeColor')
-		return namelist
+##	def attrnames(self):
+##		namelist = ['atag', 'name', 
+##				'beginlist', 'endlist',
+##				'duration', 'min', 'max', 'loop', 'repeatdur',
+##			    'restart', 'restartDefault', 'fill', 'fillDefault',
+##			    'speed', 'accelerate', 'decelerate', 'autoReverse',
+##			    ]
+##		ctype = 'animate'
+##		if ChannelMap.internalchannelmap.has_key(ctype):
+##			cclass = ChannelMap.internalchannelmap[ctype]
+##			# Add the class's declaration of attributes
+##			namelist = namelist + cclass.node_attrs
+##		tag = self.node.GetAttr('atag')
+##		rmlist = []
+##		if tag == 'animateMotion':
+##			rmlist.append('attributeName')
+##			rmlist.append('attributeType')
+##		elif tag == 'animate':
+##			rmlist.append('path')
+##			rmlist.append('origin')
+##		elif tag == 'animateColor':
+##			rmlist.append('path')
+##			rmlist.append('origin')
+##		elif tag == 'set':
+##			rmlist.append('path')
+##			rmlist.append('origin')
+##			rmlist.append('calcMode')
+##			rmlist.append('values')
+##			rmlist.append('keyTimes')
+##			rmlist.append('keySplines')
+##			rmlist.append('from')
+##			rmlist.append('by')
+##			rmlist.append('additive')
+##			rmlist.append('accumulate')
+##		elif tag == 'transitionFilter':
+##			rmlist.append('attributeName')
+##			rmlist.append('attributeType')
+##			rmlist.append('path')
+##			rmlist.append('origin')
+##		parent = self.node.GetParent()
+##		if parent.GetType() in playabletypes:
+##			rmlist.append('targetElement')
+##		for attr in rmlist:
+##			if attr in namelist:
+##				namelist.remove(attr)
+##		if tag == 'transitionFilter':
+##			namelist.append('trtype')
+##			namelist.append('subtype')
+##			namelist.append('mode')
+##			namelist.append('fadeColor')
+##		return namelist
 
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
@@ -700,8 +700,8 @@ class AnimationWrapper(NodeWrapper):
 	def getdef(self, name):
 		if name == 'atag':
 			return (('enum', self.animateElements), '',
-				'Node type', 'atag',
-				'Animate node type', 'normal', flags.FLAG_ALL)
+				'Animate type', 'atag',
+				'Type of animate object', 'normal', flags.FLAG_ALL)
 		return NodeWrapper.getdef(self, name)
 
 		
@@ -1113,7 +1113,7 @@ class PreferenceWrapper(Wrapper):
 		'system_captions': 'Whether captions are to be shown',
 		'system_audiodesc': 'Whether to "show" audio descriptions',
 		'cmif': 'Enable CMIF-specific extensions',
-		'html_control': 'Choose between IE4 and WebsterPro HTML controls',
+		'html_control': 'Choose between Internet Explorer and WebsterPro HTML controls',
 		'showhidden': 'Show hidden custom tests',
 		'saveopenviews': 'Save view placement in prefs file',
 		'initial_dialog': 'Show initial dialog on application start',
