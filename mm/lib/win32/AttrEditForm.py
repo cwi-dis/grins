@@ -1863,40 +1863,37 @@ class FileGroup(AttrGroup):
 	data=attrgrsdict['file']
 	def __init__(self):
 		AttrGroup.__init__(self,FileGroup.data)
-
-	def createctrls(self,wnd):
-		cd={}
-		a=self.getattr('file')
-		cd[a]=FileCtrl(wnd,a,(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3))
-		return cd
+		self._preview=-1
 
 	def canpreview(self):
+		if self._preview>=0: 
+			return self._preview
+		self._preview=0 # init to no preview
 		a=self.getattr('file')
 		f=a.getcurrent()
 		import mimetypes
 		mtype = mimetypes.guess_type(f)[0]
-		if mtype is None: return 0
+		if mtype is None: 
+			return 0
 		mtype, subtype = string.split(mtype, '/')
 		# create media type sig for renderer
 		if mtype=='image':
 			if string.find(subtype,'realpix')>=0:
 				mtype='realwnd'
-			can=1
+			self._preview=1
 		elif mtype=='video':
 			if string.find(subtype,'realvideo')>=0:
 				mtype='realwnd'
-			can=1
+			self._preview=1
 		elif mtype=='audio':
 			if string.find(subtype,'realaudio')>=0:
 				mtype='realaudio'
-			can=1
+			self._preview=1
 		elif mtype=='text' and string.find(subtype,'realtext')>=0:
-			can=1
+			self._preview=1
 			mtype='realwnd'
-		else: 
-			can=0
 		self._mtypesig=mtype
-		return can
+		return self._preview
 
 	def getpageresid(self):
 		if self.canpreview():
