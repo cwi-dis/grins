@@ -298,7 +298,7 @@ class _DisplayList:
 			gc.foreground = window._convert_color(entry[1])
 			p = []
 			for point in entry[2]:
-				p.append(window._convert_coordinates(point))
+				p.append(window._convert_coordinates(point, units = entry[3]))
 			gc.FillPolygon(p, X.Convex, X.CoordModeOrigin)
 		elif cmd == '3dbox':
 			cl, ct, cr, cb = entry[1]
@@ -306,7 +306,7 @@ class _DisplayList:
 			ct = window._convert_color(ct)
 			cr = window._convert_color(cr)
 			cb = window._convert_color(cb)
-			l, t, w, h = window._convert_coordinates(entry[2])
+			l, t, w, h = window._convert_coordinates(entry[2], units=entry[3])
 			r, b = l + w, t + h
 			# l, r, t, b are the corners
 			l3 = l + 3
@@ -332,7 +332,7 @@ class _DisplayList:
 		elif cmd == 'diamond':
 			gc.foreground = window._convert_color(entry[1])
 			gc.line_width = entry[2]
-			x, y, w, h = window._convert_coordinates(entry[3])
+			x, y, w, h = window._convert_coordinates(entry[3], units = entry[4])
 			gc.DrawLines([(x, y + h/2),
 				      (x + w/2, y),
 				      (x + w, y + h/2),
@@ -341,7 +341,7 @@ class _DisplayList:
 				     X.CoordModeOrigin)
 		elif cmd == 'fdiamond':
 			gc.foreground = window._convert_color(entry[1])
-			x, y, w, h = window._convert_coordinates(entry[2])
+			x, y, w, h = window._convert_coordinates(entry[2], units = entry[3])
 			gc.FillPolygon([(x, y + h/2),
 					(x + w/2, y),
 					(x + w, y + h/2),
@@ -354,7 +354,7 @@ class _DisplayList:
 			ct = window._convert_color(ct)
 			cr = window._convert_color(cr)
 			cb = window._convert_color(cb)
-			l, t, w, h = window._convert_coordinates(entry[2])
+			l, t, w, h = window._convert_coordinates(entry[2], units = entry[3])
 			r = l + w
 			b = t + h
 			x = l + w/2
@@ -379,7 +379,7 @@ class _DisplayList:
 		elif cmd == 'arrow':
 			gc.foreground = window._convert_color(entry[1])
 			gc.line_width = entry[2]
-			nsx, nsy, ndx, ndy, points = self._convert_arrow(entry[3], entry[4])
+			nsx, nsy, ndx, ndy, points = self._convert_arrow(entry[3], entry[4], entry[5])
 			gc.DrawLine(nsx, nsy, ndx, ndy)
 			gc.FillPolygon(points, X.Convex, X.CoordModeOrigin)
 
@@ -431,12 +431,12 @@ class _DisplayList:
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
 				    center = 1, coordinates = None,
-				    clip = None):
+				    clip = None, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       w._prepare_image(file, crop, scale, center, coordinates)
+		       w._prepare_image(file, crop, scale, center, coordinates, units)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:
@@ -448,8 +448,11 @@ class _DisplayList:
 				   dest_x, dest_y, width, height))
 		self._optimize((2,))
 		x, y, w, h = w._rect
-		return float(dest_x) / w, float(dest_y) / h, \
-		       float(width) / w, float(height) / h
+		if units == UNIT_PXL:
+			return dest_x, dest_y, width, height
+		else:
+			return float(dest_x) / w, float(dest_y) / h, \
+			       float(width) / w, float(height) / h
 
 	def drawline(self, color, points, units = UNIT_SCREEN):
 		if self._rendered:
@@ -511,19 +514,25 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		return self.usefont(findfont(fontname, 10))
 
-	def baseline(self):
+	def baseline(self, units = UNIT_SCREEN):
 		baseline = self._font.baselinePXL()
+		if units == UNIT_PXL:
+			return baseline
 		return self._window._pxl2rel((0,0,0,baseline))[3]
 
-	def fontheight(self):
+	def fontheight(self, units = UNIT_SCREEN):
 		fontheight = self._font.fontheightPXL()
+		if units == UNIT_PXL:
+			return fontheight
 		return self._window._pxl2rel((0,0,0,fontheight))[3]
 
 	def pointsize(self):
 		return self._font.pointsize()
 
-	def strsize(self, str):
+	def strsize(self, str, units = UNIT_SCREEN):
 		width, height = self._font.strsizePXL(str)
+		if units == UNIT_PXL:
+			return width, height
 		return self._window._pxl2rel((0,0,width,height))[2:4]
 
 	def setpos(self, x, y):
@@ -588,38 +597,38 @@ class _DisplayList:
 			self.setpos(x, y)
 			self.writestr(str)
 
-	def drawfpolygon(self, color, points):
+	def drawfpolygon(self, color, points, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
-		self._list.append(('fpolygon', color, points))
+		self._list.append(('fpolygon', color, points, units))
 		x0, y0 = w._rect[:2]
 		p = []
 		for point in points:
-			x, y = w._convert_coordinates(point)
+			x, y = w._convert_coordinates(point, units = units)
 			p.append((x-x0, y-y0))
 		r = Xlib.PolygonRegion(p, w._gc.fill_rule)
 		self._coverarea.UnionRegion(r)
 		self._optimize((1,))
 
-	def draw3dbox(self, cl, ct, cr, cb, coordinates):
+	def draw3dbox(self, cl, ct, cr, cb, coordinates, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
-		self._list.append(('3dbox', (cl, ct, cr, cb), coordinates))
+		self._list.append(('3dbox', (cl, ct, cr, cb), coordinates, units))
 		self._optimize((1,))
 
-	def drawdiamond(self, coordinates):
+	def drawdiamond(self, coordinates, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		if self._fgcolor is None:
 			raise error, 'no fgcolor'
 		self._list.append(('diamond',
 				   self._fgcolor,
-				   self._linewidth, coordinates))
+				   self._linewidth, coordinates, units))
 		self._optimize((1,))
 
-	def drawfdiamond(self, color, coordinates):
+	def drawfdiamond(self, color, coordinates, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
@@ -628,8 +637,8 @@ class _DisplayList:
 			x, w = x + w, -w
 		if h < 0:
 			y, h = y + h, -h
-		coordinates = window._convert_coordinates((x, y, w, h))
-		self._list.append(('fdiamond', color, (x, y, w, h)))
+		coordinates = window._convert_coordinates((x, y, w, h), units = units)
+		self._list.append(('fdiamond', color, (x, y, w, h), units))
 		x, y, w, h = coordinates
 		x0, y0 = w._rect[:2]
 		r = Xlib.PolygonRegion([(x-x0, y + h/2 - y0),
@@ -641,13 +650,13 @@ class _DisplayList:
 		self._coverarea.UnionRegion(r)
 		self._optimize((1,))
 
-	def draw3ddiamond(self, cl, ct, cr, cb, coordinates):
+	def draw3ddiamond(self, cl, ct, cr, cb, coordinates, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		self._list.append(('3ddiamond', (cl, ct, cr, cb), coordinates))
+		self._list.append(('3ddiamond', (cl, ct, cr, cb), coordinates, units))
 		self._optimize((1,))
 
-	def drawicon(self, coordinates, icon):
+	def drawicon(self, coordinates, icon, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		# Icon names needed:
@@ -661,7 +670,7 @@ class _DisplayList:
 		module = _iconmap.get(icon) or _iconmap['']
 		reader = __import__(module)
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       w._prepare_image(reader, (0,0,0,0), -2, 1, coordinates)
+		       w._prepare_image(reader, (0,0,0,0), -2, 1, coordinates, units)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:
@@ -673,13 +682,13 @@ class _DisplayList:
 				   dest_x, dest_y, width, height))
 		self._optimize((2,))
 		
-	def _convert_arrow(self, src, dst):
+	def _convert_arrow(self, src, dst, units):
 		window = self._window
 		if not window._arrowcache.has_key((src,dst)):
 			sx, sy = src
 			dx, dy = dst
-			nsx, nsy = window._convert_coordinates((sx, sy))
-			ndx, ndy = window._convert_coordinates((dx, dy))
+			nsx, nsy = window._convert_coordinates((sx, sy), units = units)
+			ndx, ndy = window._convert_coordinates((dx, dy), units = units)
 			if nsx == ndx and sx != dx:
 				if sx < dx:
 					nsx = nsx - 1
@@ -707,11 +716,11 @@ class _DisplayList:
 			window._arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
 		return window._arrowcache[(src,dst)]
 
-	def drawarrow(self, color, src, dst):
+	def drawarrow(self, color, src, dst, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
-		self._list.append(('arrow', color, self._linewidth, src, dst))
+		self._list.append(('arrow', color, self._linewidth, src, dst, units))
 		self._optimize((1,))
 
 	def _optimize(self, ignore = ()):
