@@ -38,6 +38,35 @@ class MyMenu(MyMenuMixin, Menu):
 
 class MyPopupMenu(MyMenuMixin, PopupMenu):
 	pass
+	
+class FullPopupMenu:
+	def __init__(self, list, title = None, accelerators=None):
+		self._themenu = toplevel._addpopup()
+		self._fill_menu(self._themenu, list, accelerators)
+		
+	def _fill_menu(self, menu, list, accelerators):
+		for item in list:
+			if item is None:
+				menu.addseparator()
+			else:
+				if len(item) == 3:
+					char, itemstring, callback = item
+				else:
+					itemstring, callback = item
+					char = ''
+				if type(callback) == type([]):
+					# Submenu
+					m = menu.addsubmenu(itemstring)
+					self._fill_menu(m, callback, accelerators)
+				else:
+					m = MenuItem(menu, itemstring, '', callback)
+					if char and accelerators:
+						accelerators[char] = callback
+						# We abuse the mark position for the shortcut (sigh...)
+						m.setmark(ord(char))
+						
+	def popup(self, x, y, event, window=None):
+		self._themenu.popup(x, y, event, window=window)
 
 #
 # The cursors we need
@@ -691,25 +720,8 @@ class _CommonWindow:
 		pass
 
 	def create_menu(self, list, title = None):
-		self._popupmenu = toplevel._addpopup()
-		self._fill_menu(self._popupmenu, list)
-		
-	def _fill_menu(self, menu, list):
-		for item in list:
-			if item is None:
-				menu.addseparator()
-			else:
-				char, itemstring, callback = item
-				if type(callback) == type([]):
-					# Submenu
-					m = menu.addsubmenu(itemstring)
-					self._fill_menu(m, callback)
-				else:
-					m = MenuItem(menu, itemstring, '', callback)
-					if char:
-						self._accelerators[char] = callback
-						# We abuse the mark position for the shortcut (sigh...)
-						m.setmark(ord(char))
+		self._accelerators = []
+		self._popupmenu = FullPopupMenu(list, title, self._accelerators)
 
 	def _image_size(self, file):
 		"""Backward compatability: return wh of image given filename"""
