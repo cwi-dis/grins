@@ -131,6 +131,6 @@ class FadeBlitterClass(BlitterClass):
 	"""Parameter is float in range 0..1, use this as blend value"""
 	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
 		value = parameters
-					
+		dst.ApplyTransform(value, src2, src1)			
 
 
