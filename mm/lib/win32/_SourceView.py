@@ -490,7 +490,7 @@ class _SourceView(GenView, docview.RichEditView):
 		flags = win32con.TPM_LEFTALIGN | win32con.TPM_RIGHTBUTTON | win32con.TPM_LEFTBUTTON
 
 		if self._popup:
-			self._popup.TrackPopupMenu(point, flags, self.GetParent())
+			self._popup.TrackPopupMenu(point, flags, self)
 
 	def setpopupmenu(self, menutemplate):
 		if self._popup:
