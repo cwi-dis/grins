@@ -25,6 +25,8 @@ def usage(msg):
 
 from MainDialog import MainDialog
 
+from version import version
+
 class Main(MainDialog):
 	def __init__(self, opts, files):
 		import MMurl, TopLevel, windowinterface
@@ -140,7 +142,7 @@ def main():
 	except ImportError:
 		splash = None
 	else:
-		splash.splash(version = 'GRiNS V0.2')
+		splash.splash(version = 'GRiNS ' + version)
 
 	if ('-q', '') in opts:
 		sys.stdout = open('/dev/null', 'w')
