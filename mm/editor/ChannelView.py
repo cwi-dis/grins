@@ -725,7 +725,7 @@ class ChannelView(ChannelViewDialog):
 			for info in nodelist:
 				t0, t1, node, prearm, bandwidth = info
 				bwbox = self.bwstripobject.bwbox(
-					t0, t1, bandwidth)
+					t0, t1, bandwidth, node)
 				node.bandwidthboxes = node.bandwidthboxes + \
 						      bwbox
 		# Compute initial prearm time (prearms that have t0==0)
@@ -751,7 +751,7 @@ class ChannelView(ChannelViewDialog):
 				t_arm = t0
 		prearmlist.sort()
 		for t_arm, t0, prearm, node in prearmlist:
-			pabox = self.bwstripobject.pabox(t_arm, t0, prearm)
+			pabox = self.bwstripobject.pabox(t_arm, t0, prearm, node)
 ##			print 'PREARM', t_arm, t0, prearm, '->', pabox
 			node.bandwidthboxes = node.bandwidthboxes + pabox
 		
@@ -779,7 +779,11 @@ class ChannelView(ChannelViewDialog):
 			    else:
 				windowinterface.beep()
 				self.lockednode.unlock()
-			obj.select()
+			if obj.is_bandwidth_strip:
+			    # The bandwidth strip wants x,y
+			    obj.select(x, y)
+			else:
+			    obj.select()
 			self.drawarcs()
 		self.render()
 		if self.focus:
@@ -997,6 +1001,7 @@ class GO(GOCommand):
 		self.selected = 0
 		self.ok = 0
 		self.is_node_object = 0
+		self.is_bandwidth_strip = 0
 		self.bandwidthboxes = []
 
 		# Submenus listing related mini-documents
@@ -1306,6 +1311,7 @@ class BandwidthAccumulator:
 		size = float(size)
 		sizetmp = size
 		tcur = tnext = t0
+		overall_t0 = overall_t1 = None
 		while sizetmp > 0 and tnext < t1:
 			availbw, tnext = self._findavailbw(tcur)
 			if tnext > t1:
@@ -1319,7 +1325,7 @@ class BandwidthAccumulator:
 			# so the picture makes sense.
 			if t1 == t0:
 				t1 = t0 + 0.1
-			return self.reserve(t0, t1, size/(t1-t0), bwtype=2)
+			return t0, t1, self.reserve(t0, t1, size/(t1-t0), bwtype=2)
 		# It did fit. Do the reservations.
 		boxes = []
 		while size > 0:
@@ -1339,10 +1345,13 @@ class BandwidthAccumulator:
 				i, tnext = self._find(t0, tnext)
 				size_in_slot = size
 			boxes.append((t0, tnext, bw, self.max, 0))
+			if overall_t0 is None:
+				overall_t0 = t0
+			overall_t1 = tnext
 			self.used[i] = t0, self.max
 			size = int(size - size_in_slot)
 			t0 = tnext
-		return boxes
+		return overall_t0, overall_t1, boxes
 		
 class BandwidthStripBox(GO):
 	BWSCOLORS = [	# Without focus
@@ -1366,6 +1375,7 @@ class BandwidthStripBox(GO):
 
 	def __init__(self, mother):
 		GO.__init__(self, mother, 'bandwidthstrip')
+		self.is_bandwidth_strip = 1
 		self.boxes = []
 		self.focusboxes = []
 		import settings
@@ -1381,6 +1391,10 @@ class BandwidthStripBox(GO):
 
 		self.maxbw = 2*self.bandwidth
 		self.usedbandwidth = BandwidthAccumulator(self.bandwidth)
+		self.time_to_bwnodes = []
+		self.time_to_panodes = []
+		self.focussed_bwnodes = []
+		self.focussed_panodes = []
 
 	def getbandwidth(self):
 		return self.bandwidth
@@ -1416,7 +1430,44 @@ class BandwidthStripBox(GO):
 			self._drawbox(box, 0)
 		for box in self.focusboxes:
 			self._drawbox(box, 1)
-			
+
+	def ishit(self, x, y):
+		if not self.ok: return 0
+		return self.left <= x <= self.right and \
+		       self.top <= y <= self.bottom
+
+	def select(self, x=None, y=None):
+		self.nodehighlight(self.focussed_bwnodes, None)
+		self.nodehighlight(self.focussed_panodes, None)
+		self.focussed_bwnodes = []
+		self.focussed_panodes = []
+		t0, t1 = self.mother.timerange()
+		if not x is None and self.left <= x <= self.right:
+			factor = float(x-self.left)/(self.right-self.left)
+			t = t0+factor*(t1-t0)
+			for t0, t1, node in self.time_to_bwnodes:
+				if t0 <= t <= t1:
+##					print "TEST", t0, t1, t, node
+					self.focussed_bwnodes.append(node)
+			for t0, t1, node in self.time_to_panodes:
+				if t0 <= t <= t1:
+##					print "TEST2", t0, t1, t, node
+					self.focussed_panodes.append(node)
+		self.nodehighlight(self.focussed_bwnodes, PLAYACTIVECOLOR)
+		self.nodehighlight(self.focussed_panodes, ARMACTIVECOLOR)
+		return GO.select(self)
+
+	def nodehighlight(self, list, color):
+		for node in list:
+			node.set_bandwidthhighlight(color)
+
+	def deselect(self):
+##		print "DESELECT"
+		self.nodehighlight(self.focussed_bwnodes, None)
+		self.nodehighlight(self.focussed_panodes, None)
+		self.focussed_bwnodes = []
+		self.focussed_panodes = []
+		return GO.deselect(self)
 			       
 	def setstripfocus(self, focusboxes):
 		if self.ok:
@@ -1444,19 +1495,22 @@ class BandwidthStripBox(GO):
 
 		d.drawfbox(color, (l, t, r-l, b-t))
 
-	def bwbox(self, t0, t1, bandwidth):
+	def bwbox(self, t0, t1, bandwidth, node):
 		"""Reserve bandwidth from t0 until t1. Return list of boxes
 		depicting the bandwidth"""
 ##		box = (t0, t1, 0, bandwidth, 1)
 		boxes = self.usedbandwidth.reserve(t0, t1, bandwidth)
 		self.boxes = self.boxes + boxes
+		self.time_to_bwnodes.append(t0, t1, node)
 		return boxes
 
-	def pabox(self, t_arm, t0, prearmsize):
+	def pabox(self, t_arm, t0, prearmsize, node):
 		"""Reserve bandwidth for prearming prearmsize, starting after
 		t_arm and ending before t0. Return a list of boxes"""
-		boxes = self.usedbandwidth.prearmreserve(t_arm, t0, prearmsize)
+		xt0, xt1, boxes = self.usedbandwidth.prearmreserve(t_arm, t0, prearmsize)
 		self.boxes = self.boxes + boxes
+		if not (xt0 is None or xt1 is None):
+			self.time_to_panodes.append(xt0, xt1, node)
 		return boxes
 
 # Class for Channel Objects
@@ -1647,6 +1701,7 @@ class NodeBox(GO, NodeBoxCommand):
 					self.haspause = 1
 					break
 		node.cv_obj = self
+		self.bandwidthhighlight = None
 		node.set_armedmode = self.set_armedmode
 		if not hasattr(node, 'armedmode') or node.armedmode is None:
 			node.armedmode = ARM_NONE
@@ -1723,6 +1778,16 @@ class NodeBox(GO, NodeBoxCommand):
 			self.drawfocus()
 ## 			self.mother.drawarcs((self.left, self.top, self.right, self.bottom))
 			self.mother.render()
+			self.mother.delay_drawarcs()
+
+	def set_bandwidthhighlight(self, mode):
+		# print 'node', self.name, 'setarmedmode', mode
+		if mode <> self.bandwidthhighlight:
+##			self.mother.init_display()
+			self.bandwidthhighlight = mode
+			self.drawfocus()
+## 			self.mother.drawarcs((self.left, self.top, self.right, self.bottom))
+##			self.mother.render()
 			self.mother.delay_drawarcs()
 
 	def lock(self):
@@ -1872,6 +1937,11 @@ class NodeBox(GO, NodeBoxCommand):
 		else:
 			d.fgcolor(BORDERCOLOR)
 			d.drawbox((l, t, r - l, b - t))
+		# And overdraw if we have a bandwidth highlight
+		if self.bandwidthhighlight:
+			d.fgcolor(self.bandwidthhighlight)
+			d.drawbox((l, t, r - l, b - t))
+
 
 		# Maybe draw a thumbnail image
 		if self.mother.thumbnails and \
