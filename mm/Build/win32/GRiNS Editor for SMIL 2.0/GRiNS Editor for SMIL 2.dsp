@@ -1057,6 +1057,14 @@ SOURCE=.\M_SoundDuration.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_SourceView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_SourceViewDialog.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_splash.c
 # End Source File
 # Begin Source File

@@ -1,6 +1,6 @@
 # Experimental layout view for light region view
 
-treeVersion = 0
+treeVersion = 1
 
 # editor features
 import features

@@ -244,13 +244,14 @@ class _Toplevel:
 	# Std interface
 	#
 	# Displays a text viewer
-	def textwindow(self,text):
-		print 'you must request textwindow from a frame'
-		sv=self.newviewobj('sview_')
-		sv.settext(text)
-		self.showview(sv,'sview_')
-		if IsEditor: sv.set_close_commandlist()
-		return sv
+	# Not used.
+	# def textwindow(self,text):
+	#	print 'you must request textwindow from a frame'
+	#	sv=self.newviewobj('sview_')
+	#	sv.settext(text)
+	#	self.showview(sv,'sview_')
+	#	if IsEditor: sv.set_close_commandlist()
+	#	return sv
 
 	# Returns screen size in mm	
 	def getsize(self):
