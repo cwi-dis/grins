@@ -2399,6 +2399,9 @@ class SMILWriter(SMIL):
 		self.__generate_number = self.__generate_number + 1
 		return self.__generate_basename + `i` + '.rt'
 
+	def getsubchans(self):
+		return self.__subchans
+
 namechars = string.letters + string.digits + '_-.'
 
 def identify(name):
