@@ -1,54 +1,19 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
   <head>
-    <title>GRiNS Player beta for SMIL 2.0, Release Notes
-      for Windows</title>
+    <title>GRiNS Editor Pro for SMIL 2.0, Release Notes for Windows</title>
   </head>
 
   <body>
-    <h1>GRiNS Player beta for SMIL 2.0, Release Notes
-      for Windows</h1>
+    <h1>GRiNS Editor Pro for SMIL 2.0, Release Notes for Windows</h1>
 
     <p>
-      These are the release notes for GRiNS Player beta for SMIL 2.0,
-      Release Notes for Windows, build 27, October 6, 2000. A more
-      recent version of these release notes, as well as more recent
-      builds of the player, may be available through <a
-      href="http://www.oratrix.com/GRiNS/SMIL-2.0/">
-	http://www.oratrix.com/GRiNS/SMIL-2.0/</a>.
+      These are the release notes for GRiNS Editor Pro for SMIL 2.0,
+      Release Notes for Windows, version 2.0.1, build 106, October 31,
+      2001. A more recent version of these release notes, as well as
+      more recent builds of the player, may be available through
+      <a href="http://www.oratrix.com/GRiNS/SMIL-2.0/">http://www.oratrix.com/GRiNS/SMIL-2.0/</a>.
     </p>
-
-    <p>
-      Note that this is an early beta, and the playback engine has not 
-      been tested very thoroughly with large documents. You may
-      experience instabilities.
-    </p>
-
-    <h2>Changes Since Build 24</h2>
-
-    <ul>
-      <li>The actuate="onLoad" attribute value for anchors is now
-	implemented.</li>
-      <li>When linking to a document that GRiNS cannot handle itself
-	(<i>i.e.</i> all documents except SMIL documents), the document
-	is handed off to the appropriate application.</li>
-      <li>RealVideo, RealText, and RealPix media elements can now be
-	used as the source of hyperlinks.</li>
-      <li>Various improvements in the scheduler.
-	In particular, an excl node with no resolved children and no
-	explicit duration will now not play.  Also, a node with 0
-	duration but with a min attribute greater than 0 will play and
-	end after the min time is up.</li>
-    </ul>
-
-    <h2>Changes Since Build 23</h2>
-
-    <ul>
-      <li>Improvements to the hyperlinking code.</li>
-      <li>Support for embedded HTML documents (<i>i.e.</i>, you can
-	use HTML documents as media objects).</li>
-      <li>The readIndex attribute is now recognized.</li>
-    </ul>
 
     <h2>
       SMIL 2.0 Compatibility
@@ -174,8 +139,6 @@
 	    BasicAnimation Module
 	    <UL>
 	      <LI>
-		 The target attribute soundLevel is recognized but not implemented.
-	      <LI>
 		The attribute attributeType is recognized but ignored
 		(attributeType is always XML).
 	    </UL>
@@ -199,13 +162,13 @@
 	    PrefetchControl Module
 	    <UL>
 	      <LI>
-		<EM>To be Supplied </EM>
+		Recognized
 	    </UL>
 	  <LI>
 	    SkipContentControl Module
 	    <UL>
 	      <LI>
-		<EM>To be Supplied </EM>
+		Fully supported
 	    </UL>
 	</UL>
       <LI>Layout functionality
@@ -214,13 +177,13 @@
 	    BasicLayout Module
 	    <UL>
 	      <LI>
-		 The scroll value for fit attribute is recognized but not implemented.
+		 Fully supported
 	    </UL>
 	  <LI>
 	    AudioLayout Module
 	    <UL>
 	      <LI>
-		 The soundLevel attribute is recognized but ignored.
+		 Fully supported
 	    </UL>
 	  <LI>
 	    MultiWindowLayout Module
@@ -233,8 +196,6 @@
 	    <UL>
 	      <LI>
 		 For media with no intrinsic sizes (html, text, ...), the registration point attributes are recognized but ignored
-	      <LI>
-		 For Real medias (RealVideo, RealText, RealPix), the registration point attributes work only if the fit value is equal to hidden (default value)
 	    </UL>
 	</UL>
       <LI>
@@ -267,9 +228,9 @@
 	    BasicTransitions Module
 	    <UL>
 	      <LI>
-		Subtypes are recognized but not implemented, the
-		default subtype for the transition type is always
-		used.
+		Subtypes are recognized but only some are implemented,
+		the default subtype for the transition type is used in
+		all other cases.
 	      <LI>
 		Type miscShapeWipe is recognized but not implemented.
 	      <LI>
@@ -283,12 +244,6 @@
 	      <LI>
 		When both the from and the to source of a transition
 		are videos the from source will usually be frozen.
-	    </UL>
-	  <LI>
-	    CoordinatedTransitions Module
-	    <UL>
-	      <LI>
-		Fully supported
 	    </UL>
 	  <LI>
 	    TransitionModifiers Module
@@ -317,7 +272,7 @@
 	    MediaParam Module
 	    <UL>
 	      <LI>
-		Not yet supported
+		Fully supported
 	    </UL>
 	  <LI>
 	    BrushMedia Module
