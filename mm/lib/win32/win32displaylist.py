@@ -121,7 +121,7 @@ class _DisplayList:
 		for b in self._buttons:
 			b._highlighted = 0 
 		wnd._active_displist = self
-		wnd.Invalidate()
+		wnd.update()
 
 	# Render the display list on dc within the region	
 	def _render(self, dc, region):
@@ -150,7 +150,12 @@ class _DisplayList:
 				d._cloneof = None
 		if wnd._active_displist is self:
 			wnd._active_displist = None
-			wnd.Invalidate()
+			wnd.update()
+		if self._win32rgn:
+			self._win32rgn.DeleteObject()
+			del self._win32rgn
+			self._win32rgn=None
+		del self._cloneof
 		del self._optimdict
 		del self._list
 		del self._buttons
@@ -311,10 +316,9 @@ class _DisplayList:
 			DrawLine(dc,entry[2],fg)
 			FillPolygon(dc,entry[3], fg)
 		elif cmd == 'text':
-			color = (0,0,255) # entry[1]
 			dc.SetBkMode(win32con.TRANSPARENT)
 			dc.SetTextAlign(win32con.TA_BOTTOM)
-			clr_org=dc.SetTextColor(RGB(color))
+			clr_org=dc.SetTextColor(RGB(entry[1]))
 			horg=dc.SelectObjectFromHandle(entry[2].handle())
 			x,y,str=entry[3:]
 			dc.TextOut(x,y,str)
@@ -727,13 +731,15 @@ class _DisplayList:
 
 	# convert relative coordinates to (owner wnd) pixel coordinates
 	def _convert_coordinates(self, coordinates, units = UNIT_SCREEN):
-		return self._window._convert_coordinates(coordinates,units=units)
+		return self._window._convert_coordinates(coordinates,
+					ref_rect = self._canvas, units = units)
 
 	# convert (owner wnd) pixel coordinates to relative coordinates
 	def _pxl2rel(self,coordinates):
-		return self._window._pxl2rel(coordinates)
+		return self._window._pxl2rel(coordinates,
+					ref_rect = self._canvas)
 
-		# Conver color (does nothing for win32)
+	# Conver color (does nothing for win32)
 	def _convert_color(self, color):
 		return color 
 

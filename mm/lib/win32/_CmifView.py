@@ -465,6 +465,11 @@ class _CmifPlayerView(_CmifView):
 		else:
 			self.paintOn(dc)
 
+	def OnEraseBkgnd(self,dc):
+		if not USE_NEWSUBWINDOWSIMPL or not self._active_displist:
+			return _CmifView.OnEraseBkgnd(self,dc)
+		return 1
+
 	def getwindowpos(self):
 		return self._rect
 
@@ -1075,7 +1080,7 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 
 
 #################################################
-USE_NEWSUBWINDOWSIMPL = 0
+USE_NEWSUBWINDOWSIMPL = 1
 
 def _NewSubWindow(parent, rel_coordinates, transparent, type_channel, 
 	defcmap, pixmap, z=0, units=None):

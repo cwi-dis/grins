@@ -43,7 +43,7 @@ import __main__
 
 import  rbtk
 import DrawTk
-from DisplayList import _DisplayList
+from win32displaylist import _DisplayList
 from DropTarget import DropTarget
 
 import win32transitions
