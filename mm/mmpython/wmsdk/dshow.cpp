@@ -55,7 +55,8 @@ seterror(const char *funcname, HRESULT hr)
 		 0,
 		 NULL 
 		);
-	PyErr_Format(ErrorObject, "%s failed, hresult = %d %s", funcname, (int)hr, pszmsg);
+	PyErr_Format(ErrorObject, "%s failed (code = %X).\n%s", 
+		funcname, hr, pszmsg);
 	LocalFree(pszmsg);
 }
 
@@ -612,6 +613,7 @@ GraphBuilder_WaitForCompletion(GraphBuilderObject *self, PyObject *args)
 // 1. file:///D|/<filepath>
 // 2. file:/D|/<filepath>
 // 3. file:////<filepath>
+// 4. file:////<drive>:\<filepat> 
 static void ConvToWindowsMediaUrl(char *pszUrl)
 	{
 	int l = strlen(pszUrl);
@@ -633,6 +635,16 @@ static void ConvToWindowsMediaUrl(char *pszUrl)
 		pszUrl[1]=':';
 		char *ps = pszUrl+8;
 		char *pd = pszUrl+2;
+		while(*ps){
+			if(*ps=='/'){*pd++='\\';ps++;}
+			else {*pd++ = *ps++;}
+			}
+		*pd='\0';
+		}
+	else if(strstr(pszUrl,"file:////")==pszUrl && l>11 && pszUrl[10]==':')
+		{
+		char *ps = pszUrl+9;
+		char *pd = pszUrl;
 		while(*ps){
 			if(*ps=='/'){*pd++='\\';ps++;}
 			else {*pd++ = *ps++;}
@@ -674,7 +686,9 @@ GraphBuilder_RenderFile(GraphBuilderObject *self, PyObject *args)
 	res = self->pGraphBuilder->RenderFile(wsz,NULL);
 	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
-		seterror("GraphBuilder_RenderFile", res);
+		char sz[MAX_PATH+80]="GraphBuilder_RenderFile ";
+		strcat(sz,psz);
+		seterror(sz, res);
 		return NULL;
 	}
 	Py_INCREF(Py_None);
