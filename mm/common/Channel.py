@@ -491,7 +491,7 @@ class Channel:
 		self._played_anchors = self._armed_anchors[:]
 		durationattr = MMAttrdefs.getattr(node, 'duration')
 		self._has_pause = (durationattr < 0)
-		for (name, type, button) in self._played_anchors:
+		for (name, type, button, times) in self._played_anchors:
 			if type == ATYPE_PAUSE:
 ##				print 'found pause anchor'
 				f = self.pause_triggered
@@ -553,12 +553,11 @@ class Channel:
 
 	def _try_auto_anchors(self):
 		node = self._played_node
-		anchorlist = MMAttrdefs.getattr(node, 'anchorlist')
 		list = []
-		for (name, type, args) in anchorlist:
-			if type == ATYPE_AUTO:
+		for a in MMAttrdefs.getattr(node, 'anchorlist'):
+			if a[A_TYPE] == ATYPE_AUTO:
 ##				print 'found auto anchor'
-				list.append((name, type))
+				list.append((a[A_ID], a[A_TYPE]))
 		if not list:
 			return 0
 		didfire = self._playcontext.anchorfired(node, list, None)
@@ -773,13 +772,13 @@ class Channel:
 	#
 	# Methods used by derived classes.
 	#
-	def setanchor(self, name, type, button):
+	def setanchor(self, name, type, button, times):
 		# Define an anchor.  This method should be called by
 		# superclasses to define an anchor while arming.  Name
 		# is the name of the anchor, type is its type, button
 		# is a button object which, when pressed, triggers the
 		# anchor.
-		self._armed_anchors.append((name, type, button))
+		self._armed_anchors.append((name, type, button, times))
 
 	def getfileurl(self, node):
 		name = node.GetAttrDef('name', None)
@@ -1413,7 +1412,8 @@ class ChannelWindow(Channel):
 			b.hicolor(self.gethicolor(node))
 			self.armed_display.fgcolor(fgcolor)
 			self.setanchor(armed_anchor[A_ID],
-				       armed_anchor[A_TYPE], b)
+				       armed_anchor[A_TYPE], b,
+				       armed_anchor[A_TIMES])
 		return 0
 
 	def play(self, node):
