@@ -1,0 +1,88 @@
+
+import "unknwn.idl";
+
+
+// {C3E71113-E006-45ff-B0E2-A1C98613A5AE}
+//DEFINE_GUID(<<name>>, 
+//0xc3e71113, 0xe006, 0x45ff, 0xb0, 0xe2, 0xa1, 0xc9, 0x86, 0x13, 0xa5, 0xae);
+
+[
+	object,
+	uuid(C3E71113-E006-45ff-B0E2-A1C98613A5AE),
+	helpstring("IGRiNSPlayerAuto Interface"),
+	pointer_default(unique)
+]
+interface IGRiNSPlayerAuto : IUnknown
+	{
+	HRESULT open([in, string] wchar_t *szFileOrUrl);
+	HRESULT close();
+	HRESULT play();
+	HRESULT stop();
+	HRESULT pause();
+	HRESULT update();
+	HRESULT getState([out] int *pstate);
+
+	HRESULT getTopLayoutCount([out] int *count);
+	HRESULT setTopLayoutWindow([in]int index,[in] HWND hwnd);
+	HRESULT getTopLayoutDimensions([in]int index, [out] int *pw, [out] int *ph);
+	HRESULT getTopLayoutTitle([in]int index, [out, string] wchar_t **pszTitle);
+	HRESULT getTopLayoutState([in]int index, [out] int *pstate);
+	HRESULT mouseClicked([in]int index, [in] int x, [in] int y);
+	HRESULT mouseMoved([in]int index, [in] int x, [in] int y, [out] BOOL *phot);
+
+	HRESULT getDuration([out] double *pdur);
+	HRESULT getTime([out] double *pt);
+	HRESULT setTime([in] double t);
+	HRESULT getSpeed([out] double *ps);
+	HRESULT setSpeed([in] double s);
+	HRESULT getCookie([out] long *cookie);
+	};
+
+
+// {66CAB3A9-4680-49fe-83E9-7388F5B7636C}
+//DEFINE_GUID(IGRiNSPlayerMoniker, 
+//0x66cab3a9, 0x4680, 0x49fe, 0x83, 0xe9, 0x73, 0x88, 0xf5, 0xb7, 0x63, 0x6c);
+
+// {0336BEB6-5E21-4f9d-B9ED-D86636A7E5CC}
+//DEFINE_GUID(GRiNSPlayerMoniker, 
+//0x336beb6, 0x5e21, 0x4f9d, 0xb9, 0xed, 0xd8, 0x66, 0x36, 0xa7, 0xe5, 0xcc);
+
+[
+	object,
+	uuid(66CAB3A9-4680-49fe-83E9-7388F5B7636C),
+	helpstring("IGRiNSPlayerMoniker Interface"),
+	pointer_default(unique)
+]
+interface IGRiNSPlayerMoniker : IUnknown
+	{
+	HRESULT getGRiNSPlayerAuto([in] long cookie, [out] IGRiNSPlayerAuto **pI);
+	};
+
+// {8443A49C-5957-4019-AEC5-D13CEBF3FCF3}
+//DEFINE_GUID(<Library>, 
+//0x8443a49c, 0x5957, 0x4019, 0xae, 0xc5, 0xd1, 0x3c, 0xeb, 0xf3, 0xfc, 0xf3);
+
+[
+	uuid(8443A49C-5957-4019-AEC5-D13CEBF3FCF3),
+	version(1.0),
+	helpstring("GRiNSPlayerAuto COM Library")
+]
+library GRiNSPlayerAutoLib
+{
+	[
+		uuid(56EF6B3D-E9D9-4e2f-8C62-D5DDC7AAF20C),
+		helpstring("GRiNSPlayerAuto Class")
+	]
+	coclass GRiNSPlayerAuto {
+		[default] interface IGRiNSPlayerAuto;
+	};
+
+	[
+		uuid(0336BEB6-5E21-4f9d-B9ED-D86636A7E5CC),
+		helpstring("GRiNSPlayerMoniker Class")
+	]
+	coclass GRiNSPlayerMoniker {
+		[default] interface IGRiNSPlayerMoniker;
+	};
+
+};
