@@ -716,7 +716,7 @@ class MMChannel:
 		return value
 
 	def isCssAttr(self, name):
-		if name in ['top', 'left', 'right', 'top', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']:
+		if name in ['top', 'left', 'right', 'width', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']:
 			return 1
 
 		return 0
@@ -1511,7 +1511,7 @@ class MMNode:
 		return value
 
 	def isCssAttr(self, name):
-		if name in ['top', 'left', 'right', 'top', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']:
+		if name in ['top', 'left', 'right', 'width', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']:
 			return 1
 
 		return 0
