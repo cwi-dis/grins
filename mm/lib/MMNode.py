@@ -103,7 +103,7 @@ class MMNode():
 	# Create a new node.
 	#
 	def Init(self, (type, context, uid)):
-		# ASSERT type in ('seq', 'par', 'ext', 'imm', 'grp')
+		# ASSERT type in ('seq', 'par', 'ext', 'imm')
 		self.type = type
 		self.context = context
 		self.uid = uid
@@ -118,7 +118,7 @@ class MMNode():
 	# Private methods to build a tree
 	#
 	def _addchild(self, child):
-		# ASSERT self.type in ('seq', 'par', 'grp')
+		# ASSERT self.type in ('seq', 'par')
 		child.parent = self
 		self.children.append(child)
 	#
@@ -328,7 +328,7 @@ class MMNode():
 	# Public methods for modifying a tree
 	#
 	def SetType(self, type):
-		if type not in ('seq', 'par', 'grp', 'imm', 'ext'):
+		if type not in ('seq', 'par', 'imm', 'ext'):
 			raise CheckError, 'SetType() bad type'
 		if type = self.type:
 			return
