@@ -93,7 +93,7 @@ class _Event:
 			return
 		self._grabbed_wids = widlist[:]
 		if not Win.FrontWindow() in self._grabbed_wids:
-			self._grabbed_wids[0].XXXX
+			self._grabbed_wids[0].SelectWindow()
 			
 	def setmousetracker(self, tracker):
 		if tracker and self._mouse_tracker:
@@ -144,10 +144,8 @@ class _Event:
 			import splash
 			splash.splash()
 			self.removed_splash = 1
-		# XXXX Is there a better way to get the option key state?
-		keys = Evt.GetKeys()
-		option_pressed = (ord(keys[7]) & 4)
-		region = self._fixcursor(option_pressed, Evt.GetMouse())
+		self.setready()
+		region = self._fixcursor()
 		gotone, event = Evt.WaitNextEvent(EVENTMASK, timeout, region)
 		
 		if gotone:
@@ -257,7 +255,7 @@ class _Event:
 		what, message, when, where, modifiers = event
 		# XXXX Shouldn't be here, only on process switches
 		self._cur_cursor = None	# We don't know the active cursor
-		
+		self._mouseregionschanged()
 		wid = Win.WhichWindow(message)
 		if not wid:
 			self._install_window_commands(None)
@@ -282,6 +280,7 @@ class _Event:
 		which = (message >> 24) & 0xff
 		if which == 1:
 			# Suspend or resume event
+			# XXXX We also get an activate event, don't we?
 			is_resume = (message & 1)
 			convert_clip = (message & 2)
 			# Convert the TextEdit clipboard
@@ -290,6 +289,9 @@ class _Event:
 					self._scrap_to_TE()
 				else:
 					self._TE_to_scrap()
+			if is_resume:
+				self._cur_cursor = None
+				self._mouseregionschanged()
 			# Nothing else to do for suspend/resume
 		# Nothing to do for mouse moved events
 	
@@ -320,6 +322,7 @@ class _Event:
 			return
 		if not wid:
 			# It is not ours.
+			self._mouseregionschanged()
 			MacOS.HandleEvent(event)
 			return
 		if partcode == Windows.inGrow:
@@ -334,7 +337,9 @@ class _Event:
 				rv = wid.GrowWindow(where, (32, 32, 0x3fff, 0x3fff))
 				if rv:
 					newh, neww = (rv>>16) & 0xffff, rv & 0xffff
+					window._zapregions()
 					window._resize_callback(neww, newh)
+					self._mouseregionschanged()
 			else:
 				partcode = Windows.inContent
 		if partcode == Windows.inContent:
@@ -344,6 +349,7 @@ class _Event:
 				if self._grabbed_wids and not frontwin in self._grabbed_wids:
 					beep()
 					self._grabbed_wids[0].SelectWindow()
+					self._mouseregionschanged()
 					return
 				# Frontmost. Handle click.
 				self._handle_contentclick(wid, 1, where, event, (modifiers & Events.shiftKey))
@@ -353,10 +359,13 @@ class _Event:
 					wid = self._grabbed_wids[0]
 				# Not frontmost. Activate.
 				wid.SelectWindow()
+				self._mouseregionschanged()
 		elif partcode == Windows.inDrag:
 			wid.DragWindow(where, self._draglimit)
-		elif partcode == Windows.inGrow:
-			pass # XXXX
+			window = self._find_wid(wid)
+			if window:
+				window._zapregions()
+			self._mouseregionschanged()
 		elif partcode == Windows.inGoAway:
 			if not wid.TrackGoAway(where):
 				return
@@ -367,6 +376,7 @@ class _Event:
 			pass # XXXX
 		else:
 			# In desk or syswindow. Pass on.
+			self._mouseregionschanged()
 			MacOS.HandleEvent(event)
 
 	def _handle_mouseup(self, event):
@@ -482,8 +492,7 @@ class _Event:
 # accessed directly by any user code.
 class _Toplevel(_Event):
 	def __init__(self):
-		self._button_region = None
-		self._no_button_region = None
+		self._cached_regions = {}
 		_Event.__init__(self)
 		self._init_cursors()
 		self._clearall()
@@ -498,7 +507,7 @@ class _Toplevel(_Event):
 	def _clearall(self):
 		"""Code common to init and close"""
 		self._TE_to_scrap()
-		self._buttonschanged()
+		self._mouseregionschanged()
 		self._closecallbacks = []
 		self._subwindows = []
 		self._windowgroups = []
@@ -510,7 +519,8 @@ class _Toplevel(_Event):
 		self.defaultwinpos = 10	# 1 cm from topleft we open the first window
 		self._command_handler = None
 		self._cursor_is_default = 1
-		self._cur_cursor = None
+		self._cur_cursor = None		# The currently active cursor
+		self._wtd_cursor = ''		# The wanted cursor
 		self._menubar = None
 		
 	def _initcommands(self):
@@ -766,7 +776,7 @@ class _Toplevel(_Event):
 		current = None
 		front_wid = Win.FrontWindow()
 		for win in self._wid_to_window.values():
-			if win._title == None:
+			if not win._title:
 				# These are dialogs which aren't open yet
 				continue
 			if win._wid == front_wid:
@@ -793,6 +803,7 @@ class _Toplevel(_Event):
 		window.window_group = None
 		self.needmenubarrecalc = 1
 		self._command_handler.must_update_window_menu = 1
+		self._mouseregionschanged()
 		del self._wid_to_window[wid]
 		
 	def _find_wid(self, wid):
@@ -835,11 +846,11 @@ class _Toplevel(_Event):
 		# The default cursor is either arrow or hand, and the resize cursor
 		# is used when hovering over the resize area.
 		#
-		self._arrow_cursor = Qd.qd.arrow
-		self._hand_cursor = Qd.GetCursor(512).data
-		self._resize_cursor = Qd.GetCursor(515).data
-		
-		watch = Qd.GetCursor(4).data
+		arrow_cursor = Qd.qd.arrow
+		hand_cursor = Qd.GetCursor(512).data
+		resize_cursor = Qd.GetCursor(515).data
+		watch_cursor = Qd.GetCursor(4).data
+
 		channel = Qd.GetCursor(513).data
 		link = Qd.GetCursor(514).data
 		
@@ -848,86 +859,156 @@ class _Toplevel(_Event):
 		# rest of the code
 		#
 		self._cursor_dict={
-			'watch': watch,
 			'stop': channel,
 			'channel': channel,
-			'link': link
+			'link': link,
+		# These are internal names, not user settable
+			'_arrow': arrow_cursor,
+			'_hand': hand_cursor,
+			'_resize': resize_cursor,
+			'_watch': watch_cursor
 		}
+		
+		self._waiting = 0
+		
+	def setwaiting(self):
+		"""About to embark on a long computation. Set the watch cursor"""
+		if self._waiting:
+			return
+		self._waiting = 1
+		self._installcursor('_watch')
+		
+	def setready(self):
+		"""Ready for user input again. Make sure we use the correct cursor"""
+		if not self._waiting:
+			return
+		self._waiting = 0
+		# No need to update cursor, happens in next event loop passage
 
 	def setcursor(self, cursor):
-		if self._cursor_dict.has_key(cursor):
-			data = self._cursor_dict[cursor]
-			Qd.SetCursor(data)
-			self._cursor_is_default = 0
-			self._cur_cursor = data
-		else:
-			self._cursor_is_default = 1
-			self._cur_cursor = None
+		"""Globally set the cursor for all windows"""
+		if cursor == 'watch':
+			cursor = ''
+		if not self._cursor_dict.has_key(cursor):
+			print 'Unknown cursor', cursor
+			cursor = ''
+		for win in self._subwindows:
+			win.setcursor(cursor)
+		# No need to update cursor, happens in next event loop passage
+
+	def _installcursor(self, cursor):
+		"""Low-level cursor change: set the cursor if different from what it is"""
+		if cursor == self._cur_cursor:
+##			print 'already installed', cursor
+			return
+##		print 'install', cursor
+		self._cur_cursor = cursor
+		Qd.SetCursor(self._cursor_dict[cursor])
 			
-	def _fixcursor(self, option_pressed, lwhere):
-		"""Select watch or hand cursor"""
+	def _fixcursor(self):
+		"""Select the correct cursor and display it"""
+		if self._waiting:
+			self._installcursor('_watch')
+			return None
+
+		keys = Evt.GetKeys()
+		option_pressed = (ord(keys[7]) & 4)
+		lwhere = Evt.GetMouse()
 		where = Qd.LocalToGlobal(lwhere)
+		frontwid = Win.FrontWindow()
+		try:
+			frontwindow = self._wid_to_window[frontwid]
+		except KeyError:
+			# The front window isn't ours. Use the arrow
+			self._installcursor('_arrow')
+			return None
+		partcode, cursorwid = Win.FindWindow(where)
 		#
 		# First check whether we need the resize cursor
 		#
-		if not option_pressed:
-			wid = Win.FrontWindow()
-			if self._wid_to_window.has_key(wid):
-				win = self._wid_to_window[wid]
-				Qd.SetPort(wid)
-				partcode, mwid = Win.FindWindow(where)
-				if wid == mwid and partcode == Windows.inGrow:
-					Qd.SetCursor(self._resize_cursor)
-					return None
+		if cursorwid == frontwid and not option_pressed:
+			rgn = self._mkmouseregion('grow', frontwindow)
+			if Qd.PtInRgn(where, rgn):
+				self._installcursor('_resize')
+				return rgn
 		#
-		# Then check for non-default cursors
+		# Then check for point outside content area of front window
 		#
-		if not self._cursor_is_default:
-			return None
+		if not frontwid or frontwid != cursorwid or \
+				(frontwid == cursorwid and partcode != Windows.inContent):
+			self._installcursor('_arrow')
+			return self._mkmouseregion('outside', frontwindow)
+		wtd_cursor = frontwindow._wtd_cursor
+		if wtd_cursor:
+			self._installcursor(wtd_cursor)
+			return self._mkmouseregion('inside', frontwindow)
 		#
 		# Next check whether we're inside a button or not
 		#
-		self._mk_button_region()
-		if Qd.PtInRgn(where, self._button_region):
-			wtd_cursor = self._hand_cursor
-			rv = self._button_region
-		else:
-			wtd_cursor = self._arrow_cursor
-			rv = self._no_button_region
-		if wtd_cursor != self._cur_cursor:
-			print 'DBG cursor change'
-			Qd.SetCursor(wtd_cursor)
-			self._cur_cursor = wtd_cursor
-		return rv
+		rgn = self._mkmouseregion('buttons', frontwindow)
+		if Qd.PtInRgn(where, rgn):
+			self._installcursor('_hand')
+			return rgn
+		self._installcursor('_arrow')
+		return self._mkmouseregion('nobuttons', frontwindow)
 
 	def _buttonschanged(self):
 		"""Buttons have changed. Remove our cached regions and recompute next time"""
-		print "DBG buttons changed"
-		if self._button_region:
-			Qd.DisposeRgn(self._button_region)
-			self._button_region = None
-		if self._no_button_region:
-			Qd.DisposeRgn(self._no_button_region)
-			self._no_button_region = None
+		self._mouseregionschanged('buttons', 'nobuttons')
+		
+	def _mouseregionschanged(self, *which):
+		"""Clear mouse region cache, because windows have moved or buttons changed"""
+##		print 'regions changed', which
+		if not which:
+			which = self._cached_regions.keys()
+		for key in which:
+			if not self._cached_regions.has_key(key):
+				continue
+			rgn = self._cached_regions[key]
+			Qd.DisposeRgn(rgn)
+			del self._cached_regions[key]
 			
-	def _mk_button_region(self):
-		"""Create the button and no-button regions if they don't exist yet"""
-		if self._button_region:
-			return
-		wid = Win.FrontWindow()
-		if self._wid_to_window.has_key(wid):
-			win = self._wid_to_window[wid]
-			Qd.SetPort(wid)
-			self._button_region = win._get_button_region()
+	def _mkmouseregion(self, which, frontwin):
+		"""Make a mousetrap region and cache it"""
+		try:
+			return self._cached_regions[which]
+		except KeyError:
+			pass
+##		print 'region not cached', which
+		if which == 'inside':
+			x0, y0, x1, y1 = frontwin.qdrect()
+			Qd.SetPort(frontwin._wid)
+			x0, y0 = Qd.LocalToGlobal((x0, y0))
+			x1, y1 = Qd.LocalToGlobal((x1, y1))
+			rgn = Qd.NewRgn()
+			Qd.RectRgn(rgn, (x0, y0, x1, y1))
+		elif which == 'outside':
+			otherrgn = self._mkmouseregion('inside', frontwin)
+			rgn = Qd.NewRgn()
+			Qd.RectRgn(rgn, (-32767, -32767, 32767, 32767))
+			Qd.DiffRgn(rgn, otherrgn, rgn)
+		elif which == 'grow':
+			rgn = Qd.NewRgn()
+			if frontwin._needs_grow_cursor():
+				x0, y0, x1, y1 = frontwin.qdrect()
+				Qd.SetPort(frontwin._wid)
+				x1, y1 = Qd.LocalToGlobal((x1, y1))
+				Qd.RectRgn(rgn, (x1-15, y1-15, x1, y1))
+		elif which == 'buttons':
+			otherrgn = frontwin._get_button_region()
+			rgn = Qd.NewRgn()
+			Qd.CopyRgn(otherrgn, rgn)
+		elif which == 'nobuttons':
+			otherrgn1 = self._mkmouseregion('inside', frontwin)
+			otherrgn2 = self._mkmouseregion('buttons', frontwin)
+			rgn = Qd.NewRgn()
+			Qd.DiffRgn(otherrgn1, otherrgn2, rgn)
 		else:
-			# Foreign window, no buttons
-			self._button_region = Qd.NewRgn()
-			
-		self._no_button_region = Qd.NewRgn()
-		Qd.RectRgn(self._no_button_region, (-32766, -32766, 32766, 32766))
-		Qd.DiffRgn(self._no_button_region, self._button_region, 
-				self._no_button_region)
-
+			print 'Unknown region', which
+			return None
+		self._cached_regions[which] = rgn
+		return rgn
+		
 	#
 	# Miscellaneous methods.
 	#
