@@ -108,6 +108,7 @@ class ChannelView(ChannelViewDialog):
 	# (Actually, most things are initialized by show().)
 
 	def __init__(self, toplevel):
+		self.__in_globalfocuschanged = 0
 		self.window = None
 		self.displist = self.new_displist = None
 		self.last_geometry = None
@@ -223,6 +224,7 @@ class ChannelView(ChannelViewDialog):
 		self.destroy()
 
 	def globalfocuschanged(self, focustype, focusobject):
+		self.__in_globalfocuschanged = 1
 		if focustype in ('MMNode', 'MMChannel'):
 			if not self.is_showing():
 				self.focus = ({'MMNode':'n','MMChannel':'c'}[focustype], focusobject)
@@ -238,6 +240,13 @@ class ChannelView(ChannelViewDialog):
 						   obj.right-obj.left,
 						   obj.bottom-obj.top))
 			self.render()
+		self.__in_globalfocuschanged = 0
+
+	def setglobalfocus(self, focustype, focusarg):
+		if self.__in_globalfocuschanged:
+			# avoid recursion
+			return
+		self.editmgr.setglobalfocus(focustype, focusarg)
 
 	# Event interface
 
@@ -601,12 +610,6 @@ class ChannelView(ChannelViewDialog):
 			if focus[0] == 'c' and focus[1] is c:
 				obj.select()
 
-	def focuscall(self):
-		top = self.toplevel
-		top.setwaiting()
-		if top.hierarchyview is not None:
-			top.hierarchyview.globalsetfocus(self.root)
-
 	def fixtitle(self):
 		import MMurl
 		basename = MMurl.unquote(self.toplevel.basename)
@@ -811,21 +814,6 @@ class ChannelView(ChannelViewDialog):
 			return self.focus.getnode()
 		else:
 			return None
-
-	def globalsetfocus(self, node):
-		if not self.is_showing():
-			self.focus = ('n', node)
-			return
-		self.init_display()
-		if hasattr(node, 'cv_obj'):
-			obj = node.cv_obj
-			self.deselect()
-			obj.select()
-			self.drawarcs()
-			self.window.scrollvisible((obj.left, obj.top,
-						   obj.right-obj.left,
-						   obj.bottom-obj.top))
-		self.render()
 
 	# Create a new channel
 	# XXXX Index is obsolete!
@@ -1146,9 +1134,6 @@ class BaseBox(GO):
 		if self.commandlist:
 			return
 		GO.mkcommandlist(self)
-		self.commandlist = self.commandlist + [
-			PUSHFOCUS(callback = (self.mother.focuscall, ())),
-			]
 
 # Class for the time scale object
 
@@ -1488,7 +1473,7 @@ class ChannelBox(GO, ChannelBoxCommand):
 
 	def select(self):
 		GO.select(self)
-		self.mother.editmgr.setglobalfocus('MMChannel', self.channel)
+		self.mother.setglobalfocus('MMChannel', self.channel)
 
 	def mkcommandlist(self):
 		if self.commandlist:
@@ -1720,7 +1705,6 @@ class NodeBox(GO, NodeBoxCommand):
 		self.commandlist = self.commandlist + [
 			PLAYNODE(callback = (self.playcall, ())),
 			PLAYFROM(callback = (self.playfromcall, ())),
-			PUSHFOCUS(callback = (self.focuscall, ())),
 			FINISH_ARC(callback = (self.newsyncarccall, ())),
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
@@ -1820,7 +1804,7 @@ class NodeBox(GO, NodeBoxCommand):
 	def select(self):
 		self.unlock()
 		GO.select(self)
-		self.mother.editmgr.setglobalfocus('MMNode', self.node)
+		self.mother.setglobalfocus('MMNode', self.node)
 
 	def reshape(self):
 		# Compute ideal box coordinates
@@ -2033,12 +2017,6 @@ class NodeBox(GO, NodeBoxCommand):
 		self.lock()
 		self.mother.render()
 
-	def focuscall(self):
-		top = self.mother.toplevel
-		top.setwaiting()
-		if top.hierarchyview is not None:
-			top.hierarchyview.globalsetfocus(self.node)
-
 	def createanchorcall(self):
 		self.mother.toplevel.links.wholenodeanchor(self.node)
 
@@ -2149,8 +2127,3 @@ class ArcBox(GO, ArcBoxCommand):
 			self.delay, self.dnode, self.dside)
 		mother.cleanup()
 		editmgr.commit()
-
-	def selnode(self, node):
-		top = self.mother.toplevel
-		top.setwaiting()
-		self.mother.globalsetfocus(node)

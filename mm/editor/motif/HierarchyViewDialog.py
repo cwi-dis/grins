@@ -23,7 +23,6 @@ class HierarchyViewDialog(ViewDialog):
 			      't': ANCHORS,
 			      'T': CREATEANCHOR,
 			      'L': FINISH_LINK,
-			      'f': PUSHFOCUS,
 			      },
 		'menubar': [
 			(FLAG_ALL, 'Close', [
@@ -68,8 +67,6 @@ class HierarchyViewDialog(ViewDialog):
 				(FLAG_ALL, 'Expand/Collapse', EXPAND),
 				(FLAG_ALL, 'Expand All', EXPANDALL),
 				(FLAG_ALL, 'Collapse All', COLLAPSEALL),
-				(FLAG_PRO, None),
-				(FLAG_PRO, 'Synchronize Selection', PUSHFOCUS),
 				(FLAG_ALL, None),
 				(FLAG_ALL, 'Image Thumbnails', THUMBNAIL, 't'),
 				(FLAG_ALL, 'Show Playable', PLAYABLE, 't'),

@@ -174,8 +174,6 @@ MENUBAR=(
 		(FLAG_PRO, ENTRY, 'Zoom In', None, CANVAS_WIDTH),
 		(FLAG_PRO, ENTRY, 'Fit in Window', None, CANVAS_RESET),
 		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, 'Synchronize Selection', 'F', PUSHFOCUS),
-		(FLAG_PRO, SEP,),
 		(FLAG_PRO, TOGGLE, 'Unused Channels', None, TOGGLE_UNUSED),
 		(FLAG_PRO, TOGGLE, 'Sync Arcs', None, TOGGLE_ARCS),
 		(FLAG_PRO, TOGGLE, 'Image Thumbnails', None, THUMBNAIL),
