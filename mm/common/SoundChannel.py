@@ -213,7 +213,10 @@ def getduration(filename):
 
 def getinfo(filename):
 	f = csfile().open(filename, 'r')
-	a = aiff.Aiff().init(f, 'rf')
+	try:
+		a = aiff.Aiff().init(f, 'rf')
+	except EOFError:
+		return f, 1, 0, 8, 8000, 'null'
 	return f, a.nchannels, a.nsampframes, a.sampwidth, a.samprate, 'AIFF'
 
 def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
