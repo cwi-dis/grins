@@ -2460,7 +2460,11 @@ class EnumAttrEditorFieldWithDefault(EnumAttrEditorField):
 	nodefault = 1
 
 	def getoptions(self):
-		return [self.default]+EnumAttrEditorField.getoptions(self)
+		current = self.getcurrent()
+		options = [self.default]+EnumAttrEditorField.getoptions(self)
+		if current not in options:
+			options.append(current)
+		return options
 
 	def getcurrent(self):
 		val = self.wrapper.getvalue(self.getname())
