@@ -18,6 +18,23 @@ class TreeStepper:
 		self.__endNode = None
 		self.__depth = -1
 
+
+	def getTreeRepr(self):
+		tab = '  '
+		s = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
+		while self.__nextIt():
+			if self.__depth>0: sp = tab*self.__depth
+			else: sp =''
+			if self.__iter == self.__itForward:
+				if self.__endNode and self.__endNode.hasChildNodes():
+					s = s + '%s</%s>\n' % (sp, self.__endNode._get_nodeName())
+				s = s + '%s%s\n' % (sp, self.__elrepr(self.__node))
+			else:
+				if self.__node.hasChildNodes():
+					s = s + '%s</%s>\n' % (sp, self.__node._get_nodeName())
+		return s
+
+
 	def __nextIt(self):
 		return self.__iter()
 
@@ -65,21 +82,6 @@ class TreeStepper:
 		else:
 			L.append('/>')
 		return string.join(L,'')
-
-	def getTreeRepr(self):
-		tab = '  '
-		s = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
-		while self.__nextIt():
-			if self.__depth>0: sp = tab*self.__depth
-			else: sp =''
-			if self.__iter == self.__itForward:
-				if self.__endNode and self.__endNode.hasChildNodes():
-					s = s + '%s</%s>\n' % (sp, self.__endNode._get_nodeName())
-				s = s + '%s%s\n' % (sp, self.__elrepr(self.__node))
-			else:
-				if self.__node.hasChildNodes():
-					s = s + '%s</%s>\n' % (sp, self.__node._get_nodeName())
-		return s
 
 
 #############################################
@@ -156,8 +158,6 @@ class TreeBuilder(xmllib.XMLParser):
 		return  self.__stack.pop()
 	def __isempty(self):
 		return len(self.__stack) == 0
-
-
 
 
 #############################################
@@ -334,19 +334,54 @@ class ElementLayout:
 #############################################
 # SMIL-DOM
 #############################################
-
 class SMILElement(Element):
-	def getId(self):
-		return 0
-	def setId(self, id):
-		pass
+	rwattrs = ('ID',)
+	def __init__(self, ownerDocument, tagName, nodeName):
+		Element.__init__(self, ownerDocument, nodeName, '', '',nodeName)
+		self.__dict__['tagName'] = tagName
+
+	def __getattr__(self, name):
+		if name in self.rwattrs:
+			func = getattr(self, '_get_' + name)
+			return apply(func, ())
+		else:
+			if self.__dict__.has_key(name):
+				return self.__dict__[name]
+			raise AttributeError(name)
+
+	def __setattr__(self, name, value):
+		if name in self.rwattrs:
+			self.setAttribute(name, value)
+		else:
+			return Element.__setattr__(self, name, value)
+
+	def _get_ID(self):
+		return self.getAttribute('ID')
+	
+	def _set_ID(self,ID):
+		self.setAttribute('ID',ID)
 
 #############################################
 class SMILLayoutElement(SMILElement):
-	def getType(self):
-		return ''
+	rwattrs = ('TYPE',)
+    def __init__(self, ownerDocument, nodeName='LAYOUT'):
+        SMILElement.__init__(self, ownerDocument, 'LAYOUT', nodeName)
+
+    def __setattr__(self, name, value):
+        if name in rwattrs:
+            self.setAttribute(name, value)
+        else:
+            return SMILElement.__setattr__(self, name, value)
+
+    def _get_Type(self):
+        return self.getAttribute('TYPE')
+
+    def _set_Type(self,type):
+        self.setAttribute('TYPE',type)
+
 	def getResolved(self):
 		return 1
+
 
 #############################################
 class SMILMediaElement(SMILElement, ElementTime):
