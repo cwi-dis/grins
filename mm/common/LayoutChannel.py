@@ -88,6 +88,9 @@ class LayoutChannel(ChannelWindow):
 ##			self.window.create_menu(menu, title = self._name)
 
 	def do_show(self, pchan):
+		if debug:
+			print 'ChannelLayout.do_show('+`self`+')'
+	
 		# create a window for this channel
 		pgeom = None
 		units = self._attrdict.get('units',
