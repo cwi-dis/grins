@@ -6,7 +6,7 @@ __version__ = "$Id$"
 
 # First, immedeately disable the console window
 import sys
-DEBUG=1
+DEBUG=0
 if DEBUG:
 	print '** Verbose **'
 	quietconsole=None
