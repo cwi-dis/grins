@@ -91,12 +91,12 @@ class MainDialog:
 		self.openURL_callback(url)
 		
 	def dropeffect(self, dummy, window, event, params):
-		x,y,filename=value
+		x,y,filename=params
 		url=self.__path2url(filename)
 		import mimetypes, windowinterface
 		mimetype = mimetypes.guess_type(url)[0]
 		if mimetype in ('application/smil', 'application/x-grins-cmif'):
-			return windowinterface.DROPEFFECT_MOVE
+			return windowinterface.DROPEFFECT_COPY
 		else:
 			return windowinterface.DROPEFFECT_NONE
 
