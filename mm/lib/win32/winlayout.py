@@ -1240,7 +1240,11 @@ class LayoutWnd:
 		x, y = self.LPtoNP(rc[:2])
 		w, h = self.LPtoNP(rc[2:])
 		if round:
-			return int(x+0.5), int(y+0.5), int(w+0.5), int(h+0.5)
+			if x < 0: x = x-0.5
+			else: x = x+0.5
+			if y < 0: y = y-0.5
+			else: y = y+0.5
+			return int(x), int(y), int(w+0.5), int(h+0.5)
 		return x, y, w, h
 
 	def NPtoLP(self, pt):
@@ -1252,7 +1256,11 @@ class LayoutWnd:
 		x, y = self.NPtoLP(rc[:2])
 		w, h = self.NPtoLP(rc[2:])
 		if round:
-			return int(x+0.5), int(y+0.5), int(w+0.5), int(h+0.5)
+			if x < 0: x = x-0.5
+			else: x = x+0.5
+			if y < 0: y = y-0.5
+			else: y = y+0.5
+			return int(x), int(y), int(w+0.5), int(h+0.5)
 		return x, y, w, h
 
 	def DPtoNP(self, pt):
