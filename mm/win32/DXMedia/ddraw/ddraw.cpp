@@ -54,6 +54,7 @@ seterror(const char *funcname, HRESULT hr)
 }
 
 
+
 ///////////////////////////////////////////
 ///////////////////////////////////////////
 // Objects declarations
@@ -87,6 +88,8 @@ typedef struct {
 	/* XXXX Add your own stuff here */
 	IDirectDrawSurface* pI;
 	bool releaseI;
+	RECT rc;
+	bool hasrc;
 } DirectDrawSurfaceObject;
 
 staticforward PyTypeObject DirectDrawSurfaceType;
@@ -101,6 +104,8 @@ newDirectDrawSurfaceObject()
 		return NULL;
 	self->pI = NULL;
 	self->releaseI = true;
+	memset(&self->rc,'\0',sizeof(RECT));
+	self->hasrc=false;
 	/* XXXX Add your own initializers here */
 	return self;
 }
@@ -273,7 +278,10 @@ DirectDraw_CreateSurface(DirectDrawObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "O!",&DDSURFACEDESCType,&ddsdObj))
 		return NULL;
 	
-	DirectDrawSurfaceObject *obj = newDirectDrawSurfaceObject();	
+	DirectDrawSurfaceObject *obj = newDirectDrawSurfaceObject();
+	obj->rc.right = ddsdObj->sd.dwWidth;
+	obj->rc.bottom = ddsdObj->sd.dwHeight;
+	obj->hasrc = true;
 	HRESULT hr = self->pI->CreateSurface(&ddsdObj->sd, &obj->pI, NULL);
 	if (FAILED(hr)){
 		Py_DECREF(obj);
@@ -394,6 +402,21 @@ static PyTypeObject DirectDrawType = {
 
 ////////////////////////////////////////////
 // DirectDrawSurface object 
+
+static HRESULT GetSurfaceRect(IDirectDrawSurface* pI, RECT *prc)
+	{
+	if(!pI) return false;
+	DDSURFACEDESC desc;
+	ZeroMemory( &desc, sizeof(desc) );
+	desc.dwSize=sizeof(desc);
+	desc.dwFlags=DDSD_WIDTH | DDSD_HEIGHT;
+	HRESULT hr = pI->GetSurfaceDesc(&desc);
+	if(FAILED(hr)) return hr;
+	prc->left = prc->top = 0;
+	prc->right = desc.dwWidth;
+	prc->bottom = desc.dwHeight;
+	return hr;
+	}
 
 static char DirectDrawSurface_GetSurfaceDesc__doc__[] =
 ""
@@ -538,7 +561,7 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 		Py_INCREF(Py_None);
 		return Py_None;
 	}
-				
+
 	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->Blt(&rcTo,ddsFrom->pI,&rcFrom,dwFlags,NULL);
 	Py_END_ALLOW_THREADS
@@ -1122,13 +1145,30 @@ DirectDrawSurface_BltFill(DirectDrawSurfaceObject *self, PyObject *args)
 		Py_INCREF(Py_None);
 		return Py_None;
 	}
+
+	// cache surface dimensions
+	if(!self->hasrc){
+		hr = GetSurfaceRect(self->pI, &self->rc);
+		if (FAILED(hr)){
+			seterror("DirectDrawSurface_BltFill:GetSurfaceRect", hr);
+			return NULL;
+			}
+		self->hasrc=true;
+		}
+	
+	// find part of rect inside surface
+	RECT rcInSurf;
+	if(!IntersectRect(&rcInSurf, &rect, &self->rc)){
+		Py_INCREF(Py_None);
+		return Py_None;
+		}
 	
 	DDBLTFX bltfx;
 	ZeroMemory(&bltfx,sizeof(bltfx));
 	bltfx.dwSize = sizeof(bltfx);
 	bltfx.dwFillColor = ddcolor;
 	Py_BEGIN_ALLOW_THREADS
-	hr=self->pI->Blt(&rect,0,0,DDBLT_COLORFILL | DDBLT_WAIT,&bltfx);
+	hr=self->pI->Blt(&rcInSurf,0,0,DDBLT_COLORFILL | DDBLT_WAIT,&bltfx);
 	Py_END_ALLOW_THREADS
 		
 	if (FAILED(hr)){
