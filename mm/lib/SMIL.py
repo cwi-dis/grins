@@ -967,6 +967,8 @@ class SMIL:
 extensions = {
 	# SMIL 1.0
 	'http://www.w3.org/TR/REC-smil/': 1,
+	# 3GPP PSS4
+	PSS4ns: 1,
 }
 
 from settings import MODULES
