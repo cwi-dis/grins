@@ -300,6 +300,8 @@ class SMILParser(xmllib.XMLParser):
 				mtype = 'html'
 		elif mediatype == 'cmif_cmif':
 			mtype = 'cmif'
+		elif mediatype == 'cmif_socket':
+			mtype = 'socket'
 		elif mediatype == 'cmif_shell':
 			mtype = 'shell'
 		else:
@@ -640,6 +642,13 @@ class SMILParser(xmllib.XMLParser):
 		self.NewNode('cmif_cmif', attributes)
 
 	def end_cmif_cmif(self):
+		self.EndNode()
+
+	cmif_socket_attributes = ref_attributes
+	def start_cmif_socket(self, attributes):
+		self.NewNode('cmif_socket', attributes)
+
+	def end_cmif_socket(self):
 		self.EndNode()
 
 	cmif_shell_attributes = ref_attributes
