@@ -43,3 +43,6 @@ redraw.
 Most likely it is a problem of the O2 and not of cmifed (that's what
 sjoerd claims!).
 The same problem does NOT happen in the tutorials.             -mariat 28/1/97
+
+If two channels have each other as base windows, nothing is shown, not
+even a warning.						-sjoerd 20/2/97
