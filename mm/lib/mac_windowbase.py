@@ -24,13 +24,19 @@ UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
 ENABLE_TRANSPARENT_IMAGES=1
 
 # XXXX Or is it better to copy these?
-from FrameWork import Menu, MenuBar, AppleMenu, MenuItem, SubMenu
-class MyMenu(Menu):
+from FrameWork import Menu, PopupMenu, MenuBar, AppleMenu, MenuItem, SubMenu
+class MyMenuMixin:
 	# We call our callbacks in a simpler way...
 	def dispatch(self, id, item, window, event):
 		title, shortcut, callback, type = self.items[item-1]
 		if callback:
 			apply(callback[0], callback[1])
+
+class MyMenu(MyMenuMixin, Menu):
+	pass
+
+class MyPopupMenu(MyMenuMixin, PopupMenu):
+	pass
 
 #
 # The cursors we need
@@ -372,6 +378,10 @@ class _Toplevel(_Event):
 		self._menus.append(m)
 		return m
 		
+	def _addpopup(self):
+		m = MyPopupMenu(self._menubar)
+		return m
+		
 	def _mselect_quit(self):
 		sys.exit(0)
 		
@@ -676,16 +686,29 @@ class _CommonWindow:
 
 	def destroy_menu(self):
 		self._accelerators = {}
+		self._popupmenu = None
 		pass
 
 	def create_menu(self, list, title = None):
-		# We only implement the accellerators, not the popup menu (yet)
+		self._popupmenu = toplevel._addpopup()
+		self._fill_menu(self._popupmenu, list)
+		
+	def _fill_menu(self, menu, list):
 		for item in list:
 			if item is None:
-				continue
-			char, itemstring, callback = item
-			if char:
-				self._accelerators[char] = callback
+				menu.addseparator()
+			else:
+				char, itemstring, callback = item
+				if type(callback) == type([]):
+					# Submenu
+					m = menu.addsubmenu(itemstring)
+					self._fill_menu(m, callback)
+				else:
+					m = MenuItem(menu, itemstring, '', callback)
+					if char:
+						self._accelerators[char] = callback
+						# We abuse the mark position for the shortcut (sigh...)
+						m.setmark(ord(char))
 
 	def _image_size(self, file):
 		"""Backward compatability: return wh of image given filename"""
@@ -836,6 +859,15 @@ class _CommonWindow:
 					pass
 				else:
 					return
+		#
+		# Next, check for popup menu, if we have one
+		#
+		if shifted and self._popupmenu:
+			# Convert coordinates back to global
+			Qd.SetPort(self._wid)
+			y, x = Qd.LocalToGlobal(where)
+			self._popupmenu.popup(x, y, event, window=self)
+			return
 		#
 		# It is really in our canvas. Do we have a low-level click handler?
 		#
