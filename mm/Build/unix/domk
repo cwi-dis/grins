@@ -551,6 +551,7 @@ no)	;;
 # 			esac
 # 		done &&
 		install -m 0444 -idb $dist.relnotes.relnotes -src mm/Build/unix/relnotes.html -F /usr/local/grins -O relnotes.html &&
+		install -m 0444 -idb $dist.relnotes.relnotes -src mm/Build/unix/readme.txt -F /usr/local/grins -O readme.txt &&
 		for f in www-GRiNS/examples/*
 		do
 			case "${f##*/}" in
