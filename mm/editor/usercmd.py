@@ -309,6 +309,10 @@ class FINISH_LINK(_CommandBase):
 	help = 'Create hyperlink from recent anchor to selection'
 class FINISH_ARC(_CommandBase):
 	help = 'Lock selection, create sync arc to next selected node'
+class CREATE_BEGIN_EVENT_SOURCE(_CommandBase):
+	help = 'Set the source of any created events to this node.'
+class CREATE_BEGIN_EVENT_DESTINATION(_CommandBase):
+	help = 'Create a begin event for this node.'
 class THUMBNAIL(_CommandBase):
 	help = 'Toggle between showing and not showing thumbnails'
 class PLAYABLE(_CommandBase):

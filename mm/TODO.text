@@ -1,7 +1,11 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
-Currently: trying to work out how to put two buttons on to the source view. I may have to re-check out the _SourceView.py.
+* Arrows, arrows, arrows. Multiple arrows to and from source and destination event nodes.
+* Finish off the "simple" click-click event creation that Sjoerd doesn't like.
+* Fix the bugs in the HeirarchyView Icon selection.
+* Optimise the display lists. Again. Use one base display list for as long as possible.
+
 
 * Add two buttons "revert" and "close" to the source view.
 * Error management (go to the source view if there is an error)

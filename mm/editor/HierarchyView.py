@@ -62,10 +62,10 @@ class HierarchyView(HierarchyViewDialog):
 		self.old_display_list = None # A display list that may be cloned and appended to.
 
 		# Selections
-		# Note that these should probably be done in a common class, e.g. the EditManager
-		self.selected_widget = None
+		self.selected_widget = None # Is a MMWidget, which could resemble a node or a widget.
 		self.old_selected_widget = None	# This is the node that used to have the focus but needs redrawing.
 		self.selected_icon = None
+		self.begin_event_source = None
 
 		# These two variables should be removed at some stage.
 		self.focusobj = None	# Old Object() code - remove this when no longer used. TODO
@@ -113,6 +113,8 @@ class HierarchyView(HierarchyViewDialog):
 			COLLAPSEALL(callback = (self.expandallcall, (0,))),
 			
 			COMPUTE_BANDWIDTH(callback = (self.bandwidthcall, ())),
+			CREATE_BEGIN_EVENT_SOURCE(callback = (self.create_begin_event_source, ())),
+			CREATE_BEGIN_EVENT_DESTINATION(callback = (self.create_begin_event_dest, ())),
 			]
 		if not lightweight:
 			self.commands.append(TIMESCALE(callback = (self.timescalecall, ('global',))))
@@ -356,12 +358,15 @@ class HierarchyView(HierarchyViewDialog):
 
 		# Forcidably change the pop-up menu if we have selected an Icon.
 		if self.selected_icon is not None:
+			print "DEBUG: Selected icon!"
 			a = self.selected_icon.get_contextmenu()
 			if a is not None:
 				self.setpopup(a)
 			else:
+				print "DEBUG: icon has no popup menu."
 				self.setpopup(popupmenu)
 		else:
+			print "DEBUG: No selected icon."
 			self.setpopup(popupmenu)
 
 		self.setstate()
@@ -1278,6 +1283,7 @@ class HierarchyView(HierarchyViewDialog):
 			select_me = clicked_widget.get_mmwidget()
 			self.select_widget(select_me, scroll=0)
 			if isinstance(clicked_widget, StructureWidgets.Icon):
+				print "DEBUG: Clicked on an icon!"
 				if self.selected_icon == clicked_widget:
 					return
 				if self.selected_icon:
@@ -1479,6 +1485,14 @@ class HierarchyView(HierarchyViewDialog):
 	def pasteundercall(self):
 		if self.focusobj: self.focusobj.pasteundercall()
 
-def expandnode(node):
-	# Bad hack. I shouldn't refer to private attrs of a node.
-	node.collapsed = 0
+	def create_begin_event_source(self):
+		if self.selected_widget:
+			self.begin_event_source = self.selected_widget.get_node() # which works even if it's an icon.
+	def create_begin_event_dest(self):
+		if self.selected_widget:
+			n = self.selected_widget.get_node()
+			print "TODO: create event from here to ", n
+			
+#def expandnode(node):
+#	# Bad hack. I shouldn't refer to private attrs of a node.
+#	node.collapsed = 0
