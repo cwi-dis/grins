@@ -191,6 +191,16 @@ class _DisplayList:
  					dds.Blt((xdc,ydc,xdc+wdc,ydc+hdc), image, (xsc, ysc, xsc+wsc, ysc+hsc), flags)
  				except:
  					pass
+			elif cmd == 'fbox':
+				dest_x, dest_y, width, height = entry[2]
+				width = width - dest_x
+				height = height - dest_y
+				if mediacoords:
+					dest_x, dest_y, width, height = mediacoords
+				xdc, ydc, wdc, hdc = wnd.rectAnd((x+dest_x, y+dest_y, width, height), (xc, yc, wc, hc))
+				r, g, b = entry[1]
+				convcolor = dds.GetColorMatch((r,g,b))
+				dds.BltFill((xdc,ydc,xdc+wdc,ydc+hdc), convcolor)
  
 
 	def close(self):
@@ -517,13 +527,12 @@ class _DisplayList:
 			flags = ddraw.DDBLT_WAIT | ddraw.DDBLT_KEYSRC
 			dds.SetColorKey(ddraw.DDCKEY_SRCBLT, (convbgcolor, convbgcolor))
 		return dds, flags
-						
+
 	def isSimple(self):
-		count = 0
 		for i in range(0, len(self._list)):
-			if self._list[i][0] in ('image', 'clear', 'fg'):
-				count = count + 1
-		return count == len(self._list)
+			if self._list[i][0] not in ('image', 'clear', 'fg', 'fbox'):
+				return 0
+		return 1
 
 	#############################################
 	# draw primitives
