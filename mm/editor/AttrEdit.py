@@ -591,17 +591,18 @@ class NodeWrapper(Wrapper):
 				namelist.append('.hyperlink')
 			if boston:
 				if not snap:
-					namelist.append('left')
-					namelist.append('width')
-					namelist.append('right')
-					namelist.append('top')
-					namelist.append('height')
-					namelist.append('bottom')
-					namelist.append('fit')
+					if ChannelMap.isvisiblechannel(ctype):
+						namelist.append('left')
+						namelist.append('width')
+						namelist.append('right')
+						namelist.append('top')
+						namelist.append('height')
+						namelist.append('bottom')
+						namelist.append('fit')
+						namelist.append('regPoint')
+						namelist.append('regAlign')
+						namelist.append('z')
 					namelist.append('sensitivity')
-					namelist.append('regPoint')
-					namelist.append('regAlign')
-					namelist.append('z')
 					
 			# specific time preference
 			namelist.append('immediateinstantiationmedia')
