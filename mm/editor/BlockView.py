@@ -139,7 +139,7 @@ class BlockView(ViewDialog, BasicDialog):
 		clipboard_menu.set_call_back(self._menu_callback,cmdmap);
 		operation_menu = f.add_menu(PUSH_MENU,x+2*w/3,y,w/3,h,'Operation')
 		operation_menu.set_menu('h Help...|p Play node|Z Zoom in|z Zoom out%l|i Node info...|a Node attr...|e Edit contents...')
-		cmdmap = 'hpZznae'
+		cmdmap = 'hpZziae'
 		operation_menu.set_call_back(self._menu_callback,cmdmap);
 	#
 	# submit a number to default commands.
