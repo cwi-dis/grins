@@ -21,7 +21,7 @@ import appcon
 
 class _rbtk:
 	def __init__(self):
-		pass
+		self.drawTk=DrawTk.DrawTk()
 
 	# Called by the core system to create or resize a box
 	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0, coolmode=0):
@@ -58,7 +58,7 @@ class _rbtk:
 	
 
 		# set rel coord reference
-		DrawTk.drawTk.SetRelCoordRef(self)
+		self.drawTk.SetRelCoordRef(self)
 		
 		# hold current display list and create new 
 		# to be used during drawing
@@ -90,17 +90,17 @@ class _rbtk:
 			self.Add(rectObj)
 			
 			# select tool 'select' and select obj
-			DrawTk.drawTk.SelectTool('select')
+			self.drawTk.SelectTool('select')
 
 			# simulate a user selection of the obj 
-			drawTool = DrawTk.drawTk.GetCurrentTool()
+			drawTool = self.drawTk.GetCurrentTool()
 			point=Point((l+w/2,t+h/2))
 			if not self._coolmode:
 				drawTool.onLButtonDown(self,0,point)
 				drawTool.onLButtonUp(self,0,point)
 		else:
-			DrawTk.drawTk.SelectTool('rect', units = units)
-			DrawTk.drawTk.LimitRects(1)
+			self.drawTk.SelectTool('rect', units = units)
+			self.drawTk.LimitRects(1)
 
 		d.render()
 		self._rb_curdisp = d
