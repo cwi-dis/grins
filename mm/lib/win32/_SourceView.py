@@ -261,6 +261,12 @@ class _SourceView(GenView, docview.RichEditView):
 		self.__map1 = []
 		self.__listener = None
 		self.__lineToSelect = None
+
+		# keep the current caret pos.
+		# note: the GetCaretPos have to be called only when this view has the focus
+		# otherwise, it returns the caret pos of another view (see win32 api doc).
+		# it's why we don't call this method just before to use it (the view may not have the focus)
+		self.__caretPos = (0, 0)
 		
 	def OnCreate(self, cs):
 		# create dialog bar and attach controls (though attachement effects are not used for buttons)
@@ -471,6 +477,9 @@ class _SourceView(GenView, docview.RichEditView):
 
 	# handler called by the system when the selection change
 	def onSelChanged(self, std, extra):
+		# save the caret pos while the view has still the focus
+		self.__caretPos = Sdk.GetCaretPos()
+		
 		if self.__listener != None:
 			self.__listener.onSelChanged()
 
@@ -485,6 +494,12 @@ class _SourceView(GenView, docview.RichEditView):
 		else:
 			print "ERROR: You need to call _SourceView.setmother(self)"
 
+	# return the current char position pointed by the caret
+	def getCurrentCharPos(self):
+		if self.__caretPos == None:
+			return (0,0)
+		return Sdk.CharFromPos(self.GetSafeHwnd(),self.__caretPos)
+		
 	#
 	# module interface
 	#
@@ -564,11 +579,11 @@ class _SourceView(GenView, docview.RichEditView):
 	def canUndo(self):
 		return Sdk.SendMessage(self.GetSafeHwnd(),win32con.EM_CANUNDO,0,0)
 
-	# should return the line pointed by the carret
-	# XXX for now, return the first caractere of the line pointed by the carret
+	# return the current char index pointed by the caret
+	# the char index is related to the GRiNS format'
 	def getCurrentCharIndex(self):
 		# get the current char index (pointed by the carret)
-		charIndex  = self.LineIndex(-1)
+		charIndex  = self.getCurrentCharPos()
 		# get the current line
 		lineNumber = self.LineFromChar(charIndex)
 		
@@ -583,4 +598,30 @@ class _SourceView(GenView, docview.RichEditView):
 	# return the line number	
 	def getLineNumber(self):
 		return self.GetLineCount()
-	
+
+	# find a text. return None if not found, or (min, max) position of the text found
+	def findNext(self, begin, text, options):
+		# convert the position according windows convension
+		for p0, p1 in self.__map0:
+			if p0 <= begin:
+				begin = p1 + (begin - p0)
+				break
+		for p0, p1 in self.__map1:
+			if p0 <= begin:
+				begin = p1 + (begin - p0)
+				break
+		
+		matchWord, matchCase = options
+		flags = 0
+		if matchCase: flags = flags | win32con.FR_MATCHCASE
+		if matchWord: flags = flags | win32con.FR_WHOLEWORD
+		res, (min, max) = self.FindText(flags, (begin, -1), text)
+		if res != -1:
+			self.SetSel(min, max)
+			# update the caret pos. Not done automaticly
+			self.__caretPos = self.GetCharPos(max)
+			return (min, max)
+		# not found
+		return None
+
+		
