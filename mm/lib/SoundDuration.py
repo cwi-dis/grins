@@ -1,12 +1,7 @@
 # Cache info about sound files
 
 import FileCache
-
-try:
-	from urlopen import urlretrieve
-except ImportError:
-	def urlretrieve(file):
-		return file, None
+from urllib import urlretrieve
 
 # Used to get full info
 def getfullinfo(filename):
