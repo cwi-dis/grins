@@ -447,6 +447,12 @@ newDirectDrawStreamSampleObject()
 	return self;
 }
 
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	DDSURFACEDESC sd;
+} DDSURFACEDESCObject;
+
 
 typedef struct {
 	PyObject_HEAD
@@ -2315,15 +2321,19 @@ static char MultiMediaStream_OpenFile__doc__[] =
 static PyObject *
 MultiMediaStream_OpenFile(MultiMediaStreamObject *self, PyObject *args)
 {
-	HRESULT hr;
-	char *pszFile;
-	if (!PyArg_ParseTuple(args, "s", &pszFile))
+	char *psz;
+	if (!PyArg_ParseTuple(args, "s", &psz))
 		return NULL;
-	WCHAR wPath[MAX_PATH];
-	MultiByteToWideChar(CP_ACP,0,pszFile,-1,wPath,MAX_PATH);
-	hr = self->pI->OpenFile(wPath,0);
+	char buf[MAX_PATH];
+	strcpy(buf,psz);
+	ConvToWindowsMediaUrl(buf);
+	WCHAR wsz[MAX_PATH];
+	MultiByteToWideChar(CP_ACP,0,buf,-1,wsz,MAX_PATH);
+	HRESULT hr = self->pI->OpenFile(wsz,0);
 	if (FAILED(hr)) {
-		seterror("MultiMediaStream_OpenFile", hr);
+		char sz[MAX_PATH+80]="MultiMediaStream_OpenFile ";
+		strcat(sz,psz);
+		seterror(sz, hr);
 		return NULL;
 	}
 	Py_INCREF(Py_None);
@@ -2390,8 +2400,7 @@ static char MultiMediaStream_GetState__doc__[] =
 static PyObject *
 MultiMediaStream_GetState(MultiMediaStreamObject *self, PyObject *args)
 {
-	int state;
-	if (!PyArg_ParseTuple(args, "i", &state))
+	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	STREAM_STATE currentState;
 	HRESULT hr = self->pI->GetState(&currentState);
@@ -2419,6 +2428,24 @@ MultiMediaStream_GetDuration(MultiMediaStreamObject *self, PyObject *args)
 	return (PyObject*)newLargeIntObject(duration);	
 }
 
+
+static char MultiMediaStream_GetTime__doc__[] =
+""
+;
+static PyObject *
+MultiMediaStream_GetTime(MultiMediaStreamObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	STREAM_TIME currentTime;
+	HRESULT hr = self->pI->GetTime(&currentTime);
+	if (FAILED(hr)) {
+		seterror("MultiMediaStream_GetTime", hr);
+		return NULL;
+	}
+	return (PyObject*)newLargeIntObject(currentTime);	
+}
+
 static char MultiMediaStream_Seek__doc__[] =
 ""
 ;
@@ -2428,7 +2455,8 @@ MultiMediaStream_Seek(MultiMediaStreamObject *self, PyObject *args)
 	LargeIntObject *liobj;
 	if (!PyArg_ParseTuple(args,"O",&liobj))
 		return NULL;
-	HRESULT hr = self->pI->Seek(liobj->ob_ival);
+	STREAM_TIME seekTime = liobj->ob_ival;
+	HRESULT hr = self->pI->Seek(seekTime);
 	if (FAILED(hr)) {
 		seterror("MultiMediaStream_Seek", hr);
 		return NULL;
@@ -2447,6 +2475,7 @@ static struct PyMethodDef MultiMediaStream_methods[] = {
 	{"SetState", (PyCFunction)MultiMediaStream_SetState, METH_VARARGS, MultiMediaStream_SetState__doc__},
 	{"GetState", (PyCFunction)MultiMediaStream_GetState, METH_VARARGS, MultiMediaStream_GetState__doc__},
 	{"GetDuration", (PyCFunction)MultiMediaStream_GetDuration, METH_VARARGS, MultiMediaStream_GetDuration__doc__},
+	{"GetTime", (PyCFunction)MultiMediaStream_GetTime, METH_VARARGS, MultiMediaStream_GetTime__doc__},
 	{"Seek", (PyCFunction)MultiMediaStream_Seek, METH_VARARGS, MultiMediaStream_Seek__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}
 };
@@ -2584,10 +2613,12 @@ static char DirectDrawMediaStream_CreateSample__doc__[] =
 static PyObject *
 DirectDrawMediaStream_CreateSample(DirectDrawMediaStreamObject *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args, ""))
+	UnknownObject *directDrawSurface=NULL;
+	if (!PyArg_ParseTuple(args, "|O",&directDrawSurface))
 		return NULL;
+	IDirectDrawSurface *pI = (IDirectDrawSurface*)(directDrawSurface?directDrawSurface->pI:NULL);
 	DirectDrawStreamSampleObject *obj = newDirectDrawStreamSampleObject();
-	HRESULT hr = self->pI->CreateSample(NULL,NULL,0,&obj->pI);
+	HRESULT hr = self->pI->CreateSample(pI,NULL,0,&obj->pI);
 	if (FAILED(hr)) {
 		Py_DECREF(obj);
 		seterror("DirectDrawMediaStream_CreateSample", hr);
@@ -2596,6 +2627,24 @@ DirectDrawMediaStream_CreateSample(DirectDrawMediaStreamObject *self, PyObject *
 	return (PyObject*)obj;
 }
 
+
+static char DirectDrawMediaStream_GetFormat__doc__[] =
+""
+;
+static PyObject *
+DirectDrawMediaStream_GetFormat(DirectDrawMediaStreamObject *self, PyObject *args)
+{
+	DDSURFACEDESCObject *obj;
+	if (!PyArg_ParseTuple(args, "O",&obj))
+		return NULL;
+	HRESULT hr = self->pI->GetFormat(&obj->sd, NULL, NULL, NULL);
+	if (FAILED(hr)) {
+		seterror("DirectDrawMediaStream_GetFormat", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
 
 static struct PyMethodDef DirectDrawMediaStream_methods[] = {
 	{"CreateSample", (PyCFunction)DirectDrawMediaStream_CreateSample, METH_VARARGS, DirectDrawMediaStream_CreateSample__doc__},
@@ -2664,8 +2713,8 @@ DirectDrawStreamSample_GetSurface(DirectDrawStreamSampleObject *self, PyObject *
 	if (!PyArg_ParseTuple(args, "O",&directDrawSurface))
 		return NULL;
 	RECT rc; // sample's clipping rectangle
-	IDirectDrawSurface *pI = (IDirectDrawSurface *)(directDrawSurface->pI);
-	HRESULT hr = self->pI->GetSurface(&pI,&rc);
+	IDirectDrawSurface** ppDirectDrawSurface = (IDirectDrawSurface**)&directDrawSurface->pI;
+	HRESULT hr = self->pI->GetSurface(ppDirectDrawSurface,&rc);
 	if (FAILED(hr)) {
 		seterror("DirectDrawStreamSample_GetSurface", hr);
 		return NULL;
@@ -2673,9 +2722,26 @@ DirectDrawStreamSample_GetSurface(DirectDrawStreamSampleObject *self, PyObject *
 	return Py_BuildValue("iiii",rc.left,rc.top,rc.right,rc.bottom);
 }
 
+static char DirectDrawStreamSample_Update__doc__[] =
+""
+;
+static PyObject *
+DirectDrawStreamSample_Update(DirectDrawStreamSampleObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	HRESULT hr = self->pI->Update(0,NULL,NULL,0);
+	if (FAILED(hr)) {
+		seterror("DirectDrawStreamSample_Update", hr);
+		return NULL;
+	}
+	int stillrunning = (hr!=S_OK)?0:1;
+	return Py_BuildValue("i",stillrunning);
+}
 
 static struct PyMethodDef DirectDrawStreamSample_methods[] = {
 	{"GetSurface", (PyCFunction)DirectDrawStreamSample_GetSurface, METH_VARARGS, DirectDrawStreamSample_GetSurface__doc__},
+	{"Update", (PyCFunction)DirectDrawStreamSample_Update, METH_VARARGS, DirectDrawStreamSample_Update__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}
 };
 
