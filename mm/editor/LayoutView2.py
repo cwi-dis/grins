@@ -27,12 +27,18 @@ class Node:
 	
 	def getDocDict(self):
 		return self._defattrdict
-	
+
+	def getSubNodeList(self):
+		return self._children
+		
 	def getShowName(self):
 		return self._ctx.showName		
 
 	def getName(self):
 		return self._name
+
+	def getParent(self):
+		return self._parent
 	
 	def _do_init(self, parent):
 		self._parent = parent
@@ -318,6 +324,13 @@ class LayoutView2(LayoutViewDialog2):
 			viewport.updateAllAttrdict()
 		if self.currentNodeSelected != None:
 			self.currentNodeSelected.select()
+
+			# update dialog box as well
+			if self.currentNodeSelected._isviewport:
+				self.updateViewportOnDialogBox(self.currentNodeSelected)
+			else:
+				self.updateRegionOnDialogBox(self.currentNodeSelected)
+			
 			
 	# extra pass to initialize map the region name list to the node object
 	def __initRegionList(self, node, isRoot=1):
@@ -367,7 +380,81 @@ class LayoutView2(LayoutViewDialog2):
 		newbg = self.chooseBgColor(bgcolor)
 		if newbg != None:
 			self.applyBgColor(node, newbg, transparent)
-	
+
+	def sendBack(self, region):
+		dict = region.getDocDict()
+		currentZ = dict.get('z')
+		
+		# get the list of sibling regions 
+		regionList = region.getParent().getSubNodeList()
+
+		# get the lower z-index
+		# if the z index of selected region is already min:
+		#   - don't change anything if it's the only region
+		#	- change its value to a lower value to insure that it'll be all the time in back
+		
+		min = -1
+		cntMin = 0
+		for sibRegion in regionList:
+			dict = sibRegion.getDocDict()
+			z = dict.get('z')
+			if z<min or min == -1:
+				min = z
+				cntMin = 0
+			elif z == min:
+				cntMin = cntMin+1
+				
+		# make a list of region where the z index have to change
+		chList = []
+		if currentZ == min and cntMin == 1:
+			# don't change anything
+			return
+
+		if min == 0:
+			# we have to increment all z-index values
+			for sibRegion in regionList:
+				dict = sibRegion.getDocDict()
+				z = dict.get('z')
+				if sibRegion == region:
+					chList.append((region, min))
+				else:
+					chList.append((sibRegion, z+1))
+				
+		else:
+			# we have just to fix the current z-index value to min-1
+			chList.append((region, min-1))
+
+		self.applyZOrderOnRegionList(chList)
+		
+	def bringFront(self, region):
+		dict = region.getDocDict()
+		currentZ = dict.get('z')
+		
+		# get the list of sibling regions 
+		regionList = region.getParent().getSubNodeList()
+
+		# get the max z-index
+		# if the z index of selected region is already max:
+		#   - don't change anything if it's the only region
+		#	- change its value to a higher value to insure that it'll be all the time in front
+		
+		max = -1
+		cntMax = 0
+		for sibRegion in regionList:
+			dict = sibRegion.getDocDict()
+			z = dict.get('z')
+			if z>max:
+				max = z
+				cntMax = 0
+			elif z == max:
+				cntMax = cntMax+1
+
+		if currentZ == max and cntMax == 1:
+			# don't change anything
+			return
+
+		self.applyZOrderOnRegion(region, max+1)
+		
 	#
 	# dialog box update methods
 	#
@@ -402,7 +489,21 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setchannelattr(node.getName(), 'bgcolor', bgcolor)
 			self.editmgr.setchannelattr(node.getName(), 'transparent', transparent)
 			self.editmgr.commit()
-	
+
+	def applyZOrderOnRegion(self, region, value):
+		# test if possible 
+		if self.editmgr.transaction():
+			self.editmgr.setchannelattr(region.getName(), 'z', value)
+			self.editmgr.commit()
+
+	def applyZOrderOnRegionList(self, list):
+		# list is a list of tuple( region, z-index value)
+		# test if possible 
+		if self.editmgr.transaction():
+			for region, z in list:
+				self.editmgr.setchannelattr(region.getName(), 'z', z)
+			self.editmgr.commit()
+							
 	def updateViewportOnDialogBox(self, viewport):
 
 		# update region list
@@ -425,6 +526,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.enable('RegionY',0)
 		self.dialogCtrl.setFieldCtrl('RegionX',"")		
 		self.dialogCtrl.setFieldCtrl('RegionY',"")		
+		self.dialogCtrl.setFieldCtrl('RegionZ',"")
 		self.updateViewportGeomOnDialogBox(geom)
 		
 		# update the viewport selecter
@@ -455,6 +557,9 @@ class LayoutView2(LayoutViewDialog2):
 
 		dict = region.getDocDict()
 		geom = dict.get('base_winoff')
+
+		z = dict.get('z')
+		self.dialogCtrl.setFieldCtrl('RegionZ',"%d"%z)		
 								  
 		self.updateRegionGeomOnDialogBox(geom)
 
@@ -469,7 +574,7 @@ class LayoutView2(LayoutViewDialog2):
 	#
 	
 	def __updateZOrder(self, value):
-		pass
+		self.applyZOrderOnRegion(self.currentNodeSelected, value)
 
 	def __updateGeomOnViewport(self, ctrlName, value):
 		dict = self.currentNodeSelected.getDocDict()
@@ -504,6 +609,15 @@ class LayoutView2(LayoutViewDialog2):
 	def __selectBgColor(self):
 		if self.currentNodeSelected != None:
 			self.selectBgColor(self.currentNodeSelected)
+
+	def __sendBack(self):
+		if self.currentNodeSelected != None:
+			self.sendBack(self.currentNodeSelected)
+
+	def __bringFront(self):
+		if self.currentNodeSelected != None:
+			self.bringFront(self.currentNodeSelected)
+		
 	#
 	# interface implementation of 'previous tree node' 
 	#
@@ -552,9 +666,9 @@ class LayoutView2(LayoutViewDialog2):
 		if ctrlName == 'BgColor':
 			self.__selectBgColor()
 		elif ctrlName == 'SendBack':
-			print 'send back pressed'
+			self.__sendBack()
 		elif ctrlName == 'BringFront':
-			print 'bring front pressed'
+			self.__bringFront()
 		elif ctrlName == 'ShowRbg':
 			print 'ShowRbg pressed'
 					 
