@@ -788,6 +788,7 @@ class DDWndLayer:
 		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
 		ddsd.SetSize(w,h)
 		self._backBuffer = self._ddraw.CreateSurface(ddsd)
+		self._backBuffer.BltFill((0, 0, w, h), 0)
 
 		self._clipper = self._ddraw.CreateClipper(self.GetSafeHwnd())
 		self._frontBuffer.SetClipper(self._clipper)
@@ -940,8 +941,9 @@ class Region(Window):
 		if self._transparent in (-1,1):
 			exstyle=win32con.WS_EX_TRANSPARENT
 		strclass=Afx.RegisterWndClass(clstyle,cursor,brush,icon)
+		rc = self._topwindow.offsetospos((x,y,w,h))
 		wnd.CreateWindowEx(exstyle,strclass,title,style,
-			(x,y,x+w,y+h),self._ctxoswnd,0)
+			self.ltrb(rc),self._ctxoswnd,0)
 		
 		# put ddwnd below childwnd
 		flags=win32con.SWP_NOMOVE|win32con.SWP_NOSIZE|win32con.SWP_NOACTIVATE|win32con.SWP_ASYNCWINDOWPOS		
@@ -1022,7 +1024,6 @@ class Region(Window):
 	#
 	# Inage management
 	#
-
 	# Returns the size of the image
 	def _image_size(self, file):
 		toplevel=__main__.toplevel
@@ -1606,7 +1607,12 @@ class Viewport(Region):
 		
 		self._ctx = context
 		self.__drawBuffer = dds = context.CreateSurface(self._width, self._height)
-
+		if bgcolor:
+			if self._convbgcolor == None:
+				r, g, b = bgcolor
+				self._convbgcolor = dds.GetColorMatch((r,g,b))
+			dds.BltFill((0, 0, width, height), self._convbgcolor)
+			
 	def __repr__(self):
 		return '<Viewport instance at %x>' % id(self)
 
@@ -1615,6 +1621,11 @@ class Viewport(Region):
 
 	def getwindowpos(self, rel=None):
 		return self._rect
+
+	def offsetospos(self, rc):
+		x, y, w, h = rc
+		X, Y, W, H = self._ctx.getwindowpos()
+		return X+x, Y+y, w, h
 
 	def CreateSurface(self, w, h):
 		return self._ctx.CreateSurface(w, h)
