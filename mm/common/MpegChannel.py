@@ -54,8 +54,9 @@ class MpegChannel(ChannelWindowThread):
 	# the note in mpegchannelmodule.c
 	#
 	def play(self, node):
+		self.need_armdone = 0
 		self.play_0(node)
-		if not self.is_showing() or self.syncplay:
+		if not self._is_shown or self.syncplay:
 			self.play_1()
 			return
 		if not self.nopop:
@@ -64,20 +65,24 @@ class MpegChannel(ChannelWindowThread):
 			# assume that we are going to get a
 			# resize event
 			pass
-		else:
-			self.armed_display.render()
-		if self.played_display:
-			self.played.display.close()
+#		else:
+#			self.armed_display.render()
+#		if self.played_display:
+#			self.played.display.close()
 		self.played_display = self.armed_display
 		self.armed_display = None
 		thread_play_called = 0
 		if self.threads.armed:
+			self.window.setredrawfunc(self.threads.resized)
 			self.threads.play()
 			thread_play_called = 1
 		self.do_play(node)
+		self.need_armdone = 1
 		if not thread_play_called:
 			self.playdone(0)
 
 	def playdone(self, dummy):
-		self.armdone()
+		if self.need_armdone:
+			self.armdone()
+			self.need_armdone = 0
 		ChannelWindowThread.playdone(self, dummy)
