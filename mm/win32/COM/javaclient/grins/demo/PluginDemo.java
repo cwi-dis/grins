@@ -142,7 +142,8 @@ implements SMILListener
     private void open(String filename){
         // create SMIL doc
         String license = "";
-	    smil = GRiNSToolkit.createDocument(filename, license);
+        try {smil = GRiNSToolkit.createDocument(filename, license);}   
+	    catch(GRiNSException e){smil = null;System.out.println(""+e);}
 	    
 	    // update create UI
 	    double dur = smil.getDuration();
