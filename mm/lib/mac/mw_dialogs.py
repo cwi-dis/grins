@@ -389,7 +389,9 @@ class SingleSelectionDialog(SelectionDialog):
 class InputDialog(DialogWindow):
 	DIALOG_ID= ID_INPUT_DIALOG
 	
-	def __init__(self, prompt, default, cb, cancelCallback = None):
+	def __init__(self, prompt, default, cb, cancelCallback = None,
+			passwd=0):
+		# XXXX passwd parameter to be implemted
 		# First create dialogwindow and set static items
 		DialogWindow.__init__(self, self.DIALOG_ID, title=prompt,
 				default=ITEM_INPUT_OK, cancel=ITEM_INPUT_CANCEL)
