@@ -14,6 +14,8 @@ from HDTL import HD, TL
 import string
 import MMStates
 
+debuggensr = 0
+
 class MMNodeContext:
 	def __init__(self, nodeclass):
 		self.nodeclass = nodeclass
@@ -1369,10 +1371,13 @@ class MMNode:
 			self.caption_body = MMNode_caption_body(self)
 			return self.gensr_interior(looping)
 		elif self.children:
+			# instead of gensr_leaf we must generate
+			# sr for par with contents this media item
+			# plus animations of this nedia item
 			print 'ignoring animations for node', self
 			for n in self.children:
 				print '\t',n.attrdict
-
+			
 		# Clean up realpix stuff: the node may have been a realpix node in the past
 		self.realpix_body = None
 		self.caption_body = None
@@ -1410,6 +1415,7 @@ class MMNode:
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
+		if debuggensr: self.__dump_srdict('gensr_leaf', srdict)
 		return srdict
 
 	def gensr_empty(self):
@@ -1449,6 +1455,7 @@ class MMNode:
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
+		if debuggensr: self.__dump_srdict('gensr_empty', srdict)
 		return srdict
 
 	# XXXX temporary hack to do at least something on ALT nodes
@@ -1545,6 +1552,7 @@ class MMNode:
 			for event in events:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
+		if debuggensr: self.__dump_srdict('gensr_bag', srdict)
 		return srdict
 
 	#
@@ -1559,7 +1567,7 @@ class MMNode:
 	# - actions to be taken upon SCHED_STOP
 	# - actions to be taken upon TERMINATE or incoming tail-syncarcs
 	# - a list of all (event, action) tuples to be generated
-	#
+	# 
 	def gensr_interior(self, looping=0):
 		#
 		# If the node is empty there is very little to do.
@@ -1693,6 +1701,7 @@ class MMNode:
 ##			for i in srlist: print i #DBG
 ##			print 'NODE END' #DBG
 
+		if debuggensr: self.__dump_srdict('gensr_interior', srdict)
 		return srdict
 
 	def gensr_envelope_nonloop(self, gensr_body, loopcount, sched_actions,
@@ -2121,6 +2130,33 @@ class MMNode:
 		srdict[event] = self.srdict # or just self?
 
 		return srdict
+
+	def __dump_srdict(self, msg, srd):
+		actions = {}
+		for ev, srdict in srd.items():
+			ac = srdict[ev]
+			if ac is None:
+				continue
+			if not actions.has_key(id(ac)):
+				actions[id(ac)] = [ac]
+			actions[id(ac)].append(ev)
+		print '------------------------------',msg
+		for l in actions.values():
+			num, ac = l[0]
+			events = l[1:]
+			if num != len(events):
+				print 'discrepancy:',
+			print evlist2string(events),
+			print '-->',
+			print evlist2string(ac)
+		print '----------------------------------'
+
+	def __dump_srlist(self, msg, srlist):
+		print '----------------------------------',msg
+		for events, actions in srlist:
+			print '\t',evlist2string(events), '-->', evlist2string(actions)
+		print '----------------------------------'
+
 
 	#
 	# Re-generate SR actions/events for a loop. Called for the
