@@ -914,10 +914,10 @@ class LayoutView2(LayoutViewDialog2):
 
 	def onNewRegion(self):
 		if self.currentNodeRefSelected != None:
-			self._context.newRegion(self.currentNodeRefSelected)
+			self.newRegion(self.currentNodeRefSelected)
 
 	def onNewViewport(self):
-		self._context.newViewport()
+		self.newViewport()
 
 	def newRegion(self, parentRef):
 		# choice a default name which doesn't exist		
