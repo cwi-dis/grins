@@ -106,16 +106,16 @@ class UPLOAD_QT(_CommandBase):
 	help = 'Upload pure SMIL document and media items to FTP server'
 class EXPORT_SMIL(_CommandBase):
 	help = 'Save document in new file as pure SMIL'
-class EXPORT_XMT(_CommandBase):
-	help = 'Save document in new file for Wireless'
+class EXPORT_3GPP(_CommandBase):
+	help = 'Save document in new file for 3GPP'
 class EXPORT_PRUNE(_CommandBase):
 	help = 'Save document in new file as pure SMIL, pruning unused parts'
 class EXPORT_SMIL1(_CommandBase):
 	help = 'Save document in new file as pure SMIL 1.0'
 class UPLOAD_SMIL(_CommandBase):
 	help = 'Upload pure SMIL document and media items to FTP server'
-class UPLOAD_XMT(_CommandBase):
-	help = 'Upload XMT document and media items to FTP server'
+class UPLOAD_3GPP(_CommandBase):
+	help = 'Upload 3GPP document and media items to FTP server'
 class EXPORT_WMP(_CommandBase):		# mjvdg 11-oct-2000
 	help = 'Save document in a new file as a Windows Media document.'
 class UPLOAD_WMP(_CommandBase):		# mjvdg 11-oct-2000

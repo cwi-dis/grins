@@ -19,7 +19,7 @@ __version__ = "$Id$";
 	EXPORT_REAL,
 	EXPORT_QT,			# export to Quicktime-capable SMIL
 	EXPORT_WMP,			# export to windows media player
-	EXPORT_XMT,			# export to XMT-0
+	EXPORT_3GPP,			# export to 3GPP PSS4
 	EXPORT_HTML_TIME,		# export to Internet Explorer HTML+TIME
 	EXPORT_WINCE,			# export to Handheld Device
 
