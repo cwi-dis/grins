@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=774876982
+  File Checksum=1430409077
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1134,6 +1134,11 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
+  Source=c:\Winnt\system32\Msvcp60.dll
+  Destination=%SYS32%\Msvcp60.dll
+  Flags=0000001010000011
+end
+item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\rma.pyd
   Destination=%MAINDIR%\rma.pyd
   Flags=0000000010000010
@@ -1179,188 +1184,188 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\common\QuickStart.pdf
-  Destination=%MAINDIR%\QuickStart.pdf
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\examples\stroll6sw.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll6sw.smil
   Destination=%MAINDIR%\Examples\stroll6sw.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll6c.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll6c.smil
   Destination=%MAINDIR%\Examples\stroll6c.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll6.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll6.smil
   Destination=%MAINDIR%\Examples\stroll6.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll5sw.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll5sw.smil
   Destination=%MAINDIR%\Examples\stroll5sw.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll5c.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll5c.smil
   Destination=%MAINDIR%\Examples\stroll5c.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll5.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll5.smil
   Destination=%MAINDIR%\Examples\stroll5.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll4sw.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll4sw.smil
   Destination=%MAINDIR%\Examples\stroll4sw.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll4c.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll4c.smil
   Destination=%MAINDIR%\Examples\stroll4c.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll4.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll4.smil
   Destination=%MAINDIR%\Examples\stroll4.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll3sw.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll3sw.smil
   Destination=%MAINDIR%\Examples\stroll3sw.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll3c.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll3c.smil
   Destination=%MAINDIR%\Examples\stroll3c.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll3.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll3.smil
   Destination=%MAINDIR%\Examples\stroll3.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll2sw.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll2sw.smil
   Destination=%MAINDIR%\Examples\stroll2sw.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll2c.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll2c.smil
   Destination=%MAINDIR%\Examples\stroll2c.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll2.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll2.smil
   Destination=%MAINDIR%\Examples\stroll2.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll1sw.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll1sw.smil
   Destination=%MAINDIR%\Examples\stroll1sw.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll1c.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll1c.smil
   Destination=%MAINDIR%\Examples\stroll1c.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll1.smil
+  Source=d:\ufs\mm\cmif\Examples\stroll1.smil
   Destination=%MAINDIR%\Examples\stroll1.smil
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\stroll.jpg
+  Source=d:\ufs\mm\cmif\Examples\stroll.jpg
   Destination=%MAINDIR%\Examples\stroll.jpg
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\map1.jpg
+  Source=d:\ufs\mm\cmif\Examples\map1.jpg
   Destination=%MAINDIR%\Examples\map1.jpg
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\map.jpg
+  Source=d:\ufs\mm\cmif\Examples\map.jpg
   Destination=%MAINDIR%\Examples\map.jpg
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\index.html
+  Source=d:\ufs\mm\cmif\Examples\index.html
   Destination=%MAINDIR%\Examples\index.html
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\168.au
-  Destination=%MAINDIR%\Examples\168.au
+  Source=d:\ufs\mm\cmif\Examples\h284bw.jpg
+  Destination=%MAINDIR%\Examples\h284bw.jpg
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\1h168.jpg
-  Destination=%MAINDIR%\Examples\1h168.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\examples\1h218.jpg
-  Destination=%MAINDIR%\Examples\1h218.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\examples\1h284.jpg
-  Destination=%MAINDIR%\Examples\1h284.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\examples\1map.jpg
-  Destination=%MAINDIR%\Examples\1map.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\examples\1map1.jpg
-  Destination=%MAINDIR%\Examples\1map1.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\examples\218.au
-  Destination=%MAINDIR%\Examples\218.au
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\examples\284.au
-  Destination=%MAINDIR%\Examples\284.au
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\examples\h168.jpg
-  Destination=%MAINDIR%\Examples\h168.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\examples\h168bw.jpg
-  Destination=%MAINDIR%\Examples\h168bw.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\examples\h218.jpg
-  Destination=%MAINDIR%\Examples\h218.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\examples\h218bw.jpg
-  Destination=%MAINDIR%\Examples\h218bw.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\examples\h284.jpg
+  Source=d:\ufs\mm\cmif\Examples\h284.jpg
   Destination=%MAINDIR%\Examples\h284.jpg
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\examples\h284bw.jpg
-  Destination=%MAINDIR%\Examples\h284bw.jpg
+  Source=d:\ufs\mm\cmif\Examples\h218bw.jpg
+  Destination=%MAINDIR%\Examples\h218bw.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Examples\h218.jpg
+  Destination=%MAINDIR%\Examples\h218.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Examples\h168bw.jpg
+  Destination=%MAINDIR%\Examples\h168bw.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Examples\h168.jpg
+  Destination=%MAINDIR%\Examples\h168.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Examples\284.au
+  Destination=%MAINDIR%\Examples\284.au
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Examples\218.au
+  Destination=%MAINDIR%\Examples\218.au
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Examples\1map1.jpg
+  Destination=%MAINDIR%\Examples\1map1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Examples\1map.jpg
+  Destination=%MAINDIR%\Examples\1map.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Examples\1h284.jpg
+  Destination=%MAINDIR%\Examples\1h284.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Examples\1h218.jpg
+  Destination=%MAINDIR%\Examples\1h218.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Examples\1h168.jpg
+  Destination=%MAINDIR%\Examples\1h168.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Examples\168.au
+  Destination=%MAINDIR%\Examples\168.au
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Build\common\QuickStart.pdf
+  Destination=%MAINDIR%\QuickStart.pdf
   Flags=0000000010000010
 end
 item: End Block
@@ -1374,6 +1379,26 @@ item: If/While Statement
   Variable=COMPONENTS
   Value=A
   Flags=00001010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealVideo.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\RealVideo.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealText.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\RealText.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealPix.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\RealPix.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealAudio.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\RealAudio.tiff
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\slideshow.smil
