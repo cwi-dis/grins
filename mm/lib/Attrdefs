@@ -35,6 +35,9 @@
 (arm_duration (float) -1.0 'Arm duration' default
 	'Time needed to arm this event before displaying' raw)
 
+(bag_index (name) '' 'Bag index' default
+	'Name of child used as index' normal)
+
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' default
 	'Color used for text/images in window' channel)
 
