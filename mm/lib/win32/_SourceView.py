@@ -258,6 +258,7 @@ class _SourceView(GenView, docview.RichEditView):
 		self.__text=''
 		self.__mother = None
 		self.__readonly = 0
+		self.__hasdlgbar = 0
 		self.__closecallback = None
 		self.__map0 = []
 		self.__map1 = []
@@ -280,6 +281,7 @@ class _SourceView(GenView, docview.RichEditView):
 			return
 		AFX_IDW_DIALOGBAR = 0xE805
 		self._dlgBar.CreateWindow(self.GetParent(), grinsRC.IDD_SOURCEEDIT1, afxres.CBRS_ALIGN_BOTTOM, AFX_IDW_DIALOGBAR)
+		self.__hasdlgbar = 1
 		self.__ok.attach_to_parent()
 		self.__apply.attach_to_parent()
 		self.__revert.attach_to_parent()
@@ -304,11 +306,12 @@ class _SourceView(GenView, docview.RichEditView):
 		self.SetReadOnly(self.__readonly)
 		
 		# enable/disable dialog bar components according to MFC convention 
-		self.enableDlgBarComponent(self.__ok, 1)
-		self.enableDlgBarComponent(self.__apply, 0)
-		self.enableDlgBarComponent(self.__revert, 0)
-		# init the autowrap ctrl
-		self.__autoWrapCtrl.setcheck(0)
+		if self.__hasdlgbar:
+			self.enableDlgBarComponent(self.__ok, 1)
+			self.enableDlgBarComponent(self.__apply, 0)
+			self.enableDlgBarComponent(self.__revert, 0)
+			# init the autowrap ctrl
+			self.__autoWrapCtrl.setcheck(0)
 		
 		# disable the default wrap behavior
 		self.SetWordWrap(win32ui.CRichEditView_WrapNone)
