@@ -3,6 +3,7 @@ __version__ = "$Id$"
 import Xlib, Xt, Xm, X, Xmd
 import sys, os
 import math
+import string
 from types import TupleType
 import img, imgconvert, imgformat
 import imageop
@@ -23,12 +24,16 @@ import re
 dtre = re.compile(r'LPATH=(?P<lpathstart>\d+)-(?P<lpathend>\d+):(?P<value>.*)')
 
 class _Reader:
-	def __init__(self, width, height, data, format):
+	def __init__(self, width, height, data, reader):
 		self.width = width
 		self.height = height
 		self.data = data
-		self.format = format
-		self.format_choices = (format,)
+		self.format = reader.format
+		self.format_choices = (reader.format,)
+		if hasattr(reader, 'colormap'):
+			self.colormap = reader.colormap
+		if hasattr(reader, 'transparent'):
+			self.transparent = reader.transparent
 
 	def read(self):
 		return self.data
@@ -759,7 +764,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 			func, arg = self._callbacks[DropFile]
 			res = dtre.search(value)
 			if res is not None:
-				import string
 				start, end, value = res.group('lpathstart','lpathend','value')
 				start = string.atoi(start)
 				end = string.atoi(end)
@@ -1012,9 +1016,31 @@ class _Window(_AdornmentSupport, _RubberBand):
 					raise error, sys.exc_value
 				w = int(xsize * scale + .5)
 				h = int(ysize * scale + .5)
+				descr = reader.format.descr
+				align = descr['align'] / 8
+				size = descr['size'] / 8
+				rowlen = xsize*size
+				rowlenpad = ((rowlen+align-1)/align)*align
+				if rowlen != rowlenpad:
+					# imageop.scale doesn't like padding
+					nimage = []
+					for i in range(0,len(image),rowlenpad):
+						nimage.append(image[i:i+rowlen])
+					image = string.join(nimage, '')
+					del nimage
 				image = imageop.scale(image, reader.format.descr['size'] / 8,
 						      xsize, ysize, w, h)
-				reader = _Reader(w, h, image, reader.format)
+				rowlen = w*size
+				rowlenpad = ((rowlen+align-1)/align)*align
+				if rowlen != rowlenpad:
+					# put padding back but using new size
+					nimage = []
+					pad = '\0' * (rowlenpad - rowlen)
+					for i in range(0,len(image), rowlen):
+						nimage.append(image[i:i+rowlen] + pad)
+					image = string.join(nimage, '')
+					del nimage
+				reader = _Reader(w, h, image, reader)
 			try:
 				reader = imgconvert.stackreader(format, reader)
 				image = reader.read()
