@@ -546,7 +546,7 @@ class Tooltip(Control):
 
 	def destroy(self):
 		Control.destroy(self)
-		for cp in self._cptext.values:
+		for cp in self._cptext.values():
 			Sdk.GetWMString(cp)
 		del self._cptext
 
