@@ -152,28 +152,10 @@ class Player(PlayerCore, PlayerDialog):
 			self.source_callback()
 
 	def source_callback(self):
-		if self.source is not None and self.source.is_closed():
+		if self.source is not None and not self.source.is_closed():
 			self.source.show()
 			return
-		elif self.source is not None:
-			return
-		w = windowinterface.Window('Source', resizable = 1, deleteCallback = 'hide', havpar = 0)
-
-		import string
-		tm = string.splitfields(self.root.source, '\n')
-		tm2 = []
-		for s in tm:
-			s = s+'\015'
-			tm2.append(s)
-		
-		t = w.TextEdit(tm2, None, editable = 0, top = 35, left = 0, right = 80*7, bottom = 300, rows = 30, columns = 80)
-
-		b = w.ButtonRow([('Close', (w.hide, ()))], top = 5, left = 5, right = 150, bottom = 30, vertical = 0)
-
-		import cmifex2
-		cmifex2.ResizeWindow(w._hWnd, 80*7+20, 380)
-		w.show()
-		self.source = w
+		self.source = windowinterface.textwindow(self.root.source)
 
 	def cc_stop(self):
 		self.stop()
@@ -207,7 +189,7 @@ class Player(PlayerCore, PlayerDialog):
 		else:
 			state = PLAYING
 		self.setstate(state)
-		
+
 	def updateuibaglist(self):
 		pass
 

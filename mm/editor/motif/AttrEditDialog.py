@@ -22,7 +22,7 @@ methods also.
 
 __version__ = "$Id$"
 
-import windowinterface, cmifex2, win32api, win32con
+import windowinterface
 
 class AttrEditorDialog:
 	def __init__(self, title, attriblist):
@@ -41,121 +41,35 @@ class AttrEditorDialog:
 		w = windowinterface.Window(title, resizable = 1,
 				deleteCallback = (self.cancel_callback, ()))
 		self.__window = w
-		#buttons = w.ButtonRow(
-		#	[('Cancel', (self.cancel_callback, ())),
-		#	 ('Restore', (self.restore_callback, ())),
-		#	 ('Apply', (self.apply_callback, ())),
-		#	 ('OK', (self.ok_callback, ())),
-		#	 ],
-		#	left = None, right = None, bottom = None, vertical = 0)
-		#sep = w.Separator(left = None, right = None, bottom = buttons)
-		#form = w.SubWindow(left = None, right = None, top = None,
-		#		   bottom = sep)
-		#height = 1.0 / len(attriblist)
-		#helpb = rstb = wdg = None # "upstairs neighbors"
-		#self.__buttons = []
-		#for i in range(len(attriblist)):
-		#	a = attriblist[i]
-		#	bottom = (i + 1) *  height
-		#	helpb = form.Button(a.getlabel(),
-		#			    (a.help_callback, ()),
-		#			    left = None, top = helpb,
-		#			    right = 0.5, bottom = bottom)
-		#	rstb = form.Button('Reset',
-		#			   (a.reset_callback, ()),
-		#			   right = None, top = rstb,
-		#			   bottom = bottom)
-		#	wdg = a._createwidget(self, form,
-		#			      left = helpb, right = rstb,
-		#			      top = wdg, bottom = bottom)
-
-		
-		constant = 3*win32api.GetSystemMetrics(win32con.SM_CXBORDER)+win32api.GetSystemMetrics(win32con.SM_CYCAPTION)+5
-		constant2 = 2*win32api.GetSystemMetrics(win32con.SM_CYBORDER)+5
-		self._w = constant2
-		self._h = constant
-		hbw = 0
-		butw = 0
-		rsbw = 0 
-		max = 0
-		
-
-		rsbw = cmifex2.GetStringLength(self.__window._hWnd,'Reset') + 10
-		
-		ls = [('Cancel', (self.cancel_callback, ())),
-			 ('Restore', (self.restore_callback, ())),
-			 ('Apply', (self.apply_callback, ())),
-			 ('OK', (self.ok_callback, ())),
-			 ('Help', (self.helpcall, ()))]
-
-		length = 0
-		for item in ls:
-			label = item[0]
-			if label:
-				length = cmifex2.GetStringLength(self.__window._hWnd,label)
-			hbw = hbw + length + 15		
-		
-		if hbw>550:
-			max = hbw
-		else:
-			max = 550
-		
-		
-		for i in range(len(attriblist)):
-			a = attriblist[i]
-			label = a.getlabel()
-			if (label==None or label==''):
-				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
-			if length>butw:
-				butw = length
-		butw = butw + 10
-
-		if max<2*butw:
-			max = 2*butw
-		
-		butw = max/2
-
-		self._w = self._w + max
-		self._h = self._h + len(attriblist)*25 + 60 
-
-
 		buttons = w.ButtonRow(
 			[('Cancel', (self.cancel_callback, ())),
 			 ('Restore', (self.restore_callback, ())),
 			 ('Apply', (self.apply_callback, ())),
 			 ('OK', (self.ok_callback, ())),
-			 ('Help', (self.helpcall, ()))],
-			left = 0, top = self._h-constant-35, right = hbw, bottom = 30, vertical = 0)
-		sep = w.Separator(left = 5, top = self._h-constant-45, right = max-10, bottom = 5)
-		form = w.SubWindow(left = 0, top = 0, right = max, bottom = self._h-constant)
-		#height = 1.0 / len(attriblist)
-		#helpb = rstb = wdg = None # "upstairs neighbors"
+			 ],
+			left = None, right = None, bottom = None, vertical = 0)
+		sep = w.Separator(left = None, right = None, bottom = buttons)
+		form = w.SubWindow(left = None, right = None, top = None,
+				   bottom = sep)
+		height = 1.0 / len(attriblist)
+		helpb = rstb = wdg = None # "upstairs neighbors"
 		self.__buttons = []
-		tp = 5
 		for i in range(len(attriblist)):
 			a = attriblist[i]
-			#bottom = (i + 1) *  height
+			bottom = (i + 1) *  height
 			helpb = form.Button(a.getlabel(),
 					    (a.help_callback, ()),
-					    left = 5, top = tp, right = max/2-10, bottom = 20)
+					    left = None, top = helpb,
+					    right = 0.5, bottom = bottom)
 			rstb = form.Button('Reset',
 					   (a.reset_callback, ()),
-					   left = max-rsbw-10, top = tp, right = rsbw, bottom = 20)
+					   right = None, top = rstb,
+					   bottom = bottom)
 			wdg = a._createwidget(self, form,
-					      left = butw, top = tp, right = max/2-rsbw-10, bottom = 20)
-			tp = tp + 25
-
-		cmifex2.ResizeWindow(w._hWnd, self._w, self._h)
-		self.__window._hWnd.HookKeyStroke(self.helpcall,104)
+					      left = helpb, right = rstb,
+					      top = wdg, bottom = bottom)
 		w.show()
 
-	
-	def helpcall(self, params=None):
-		import Help
-		Help.givehelp(self.__window._hWnd, 'Channel/Node Attributes Dialog')
-	
-	
 	def close(self):
 		"""Close the dialog and free resources."""
 		self.__window.close()
@@ -210,48 +124,35 @@ class AttrEditorDialogField:
 			if val not in list:
 				val = list[0]
 			self.__list = list
-
-			# in Win32 there is no difference between more or less
-			# than 30 items
-			self.__type = 'option-menu'
-
-			#if len(list) > 30:
-			#	# list too long for option menu
-			#	self.__type = 'option-button'
-			#	w = form.Button(val,
-			#			(self.__option_callback, ()),
-			#			left = left, right = right,
-			#			bottom = bottom, top = top)
-			#	self.__label = val
-			#else:
-			#	self.__type = 'option-menu'
-			#	w = form.OptionMenu(None, list,
-			#			    list.index(val), None,
-			#			    top = top, bottom = bottom,
-			#			    left = left, right = right)
-
-			w = form.OptionMenu(None, list,
+			if len(list) > 30:
+				# list too long for option menu
+				self.__type = 'option-button'
+				w = form.Button(val,
+						(self.__option_callback, ()),
+						left = left, right = right,
+						bottom = bottom, top = top)
+				self.__label = val
+			else:
+				self.__type = 'option-menu'
+				w = form.OptionMenu(None, list,
 						    list.index(val), None,
-						    top = top, bottom = 200,
-						    left = left+5, right = right-10)
+						    top = top, bottom = bottom,
+						    left = left, right = right)
 		elif t == 'file':
 			w = form.SubWindow(top = top, bottom = bottom,
 					   left = left, right = right)
-			
-			wt = cmifex2.GetStringLength(w._hWnd,'Browser...')+10
-
 			brwsr = w.Button('Browser...',
 					 (self.browser_callback, ()),
-					 top = 0, bottom = bottom,
-					 left = right-wt, right = wt-5)
+					 top = None, bottom = None,
+					 right = None)
 			txt = w.TextInput(None, self.getcurrent(), None, None,
-					  top = 0, bottom = bottom,
-					  left = 5, right = right-wt-10)
+					  top = None, bottom = None,
+					  left = None, right = brwsr)
 			self.__text = txt
 		else:
 			w = form.TextInput(None, self.getcurrent(), None, None,
 					   top = top, bottom = bottom,
-					   left = left+5, right = right-10)
+					   left = left, right = right)
 		self.__widget = w
 		return w
 
@@ -314,7 +215,6 @@ class AttrEditorDialogField:
 		else:
 			self.__widget.settext(value)
 
-	
 	def recalcoptions(self):
 		"""Recalculate the list of options and set the value."""
 		if self.__type[:6] == 'option':
@@ -330,8 +230,7 @@ class AttrEditorDialogField:
 				else:
 					self.__widget.setvalue(val)
 			self.__list = list
-	
-	
+
 	# Methods to be overridden by the sub class.
 	def gettype(self):
 		"""Return the type of the attribute as a string.

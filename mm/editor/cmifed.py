@@ -35,8 +35,6 @@ def usage(msg):
 	print 'file ...   : one or more CMIF files'
 	sys.exit(2)
 
-from version import version
-
 from MainDialog import MainDialog
 
 class Main(MainDialog):
@@ -79,7 +77,7 @@ class Main(MainDialog):
 			windowinterface.showmessage('parsing URL %s failed' % url)
 		else:
 			self.new_top(top)
-		
+
 	def close_callback(self):
 		self.do_exit()
 
@@ -89,19 +87,13 @@ class Main(MainDialog):
 
 	def trace_callback(self):
 		import trace
-		for item in self._window._buttons._buttons:
-			if item.GetWindowText()=='Trace':
-				a = self._window._buttons._buttons.index(item)
-				break
 		if self._tracing:
 			trace.unset_trace()
 			self._tracing = 0
-			self._window._buttons.setbutton(a, self._tracing)
 		else:
 			self._tracing = 1
-			self._window._buttons.setbutton(a, self._tracing)
 			trace.set_trace()
-
+		self.setbutton('Trace', self.tracing)
 
 	def new_top(self, top):
 		top.setwaiting()
@@ -114,10 +106,7 @@ class Main(MainDialog):
 		for top in self.tops[:]:
 			top.close()
 		if not self.tops:
-			#raise SystemExit, 0
-			import win32ui
-			h1 = win32ui.GetMainFrame()
-			h1.DestroyWindow()
+			raise SystemExit, 0
 
 	def run(self):
 		import windowinterface
@@ -172,7 +161,7 @@ def main():
 	except ImportError:
 		splash = None
 	else:
-		splash.splash(version = 'GRiNS ' + version)
+		splash.splash(version = 'cmifed V0.9')
 	try:
 		import signal, pdb
 	except ImportError:
@@ -248,6 +237,10 @@ def main():
 				print 'Exit', sts
 			sys.last_traceback = None
 			sys.exc_traceback = None
+## 			if os.name in ('nt', 'win'):
+## 				import win32ui
+## 				h1 = win32ui.GetMainFrame()
+## 				h1.DestroyWindow()
 			sys.exit(sts)
 		except:
 			sys.stdout = sys.stderr
@@ -266,7 +259,7 @@ def main():
 			pdb.post_mortem(exc_traceback)
 	finally:
 		import windowinterface
-		#windowinterface.close()
+		windowinterface.close()
 		if stats:
 			import MMNode
 			MMNode._prstats()

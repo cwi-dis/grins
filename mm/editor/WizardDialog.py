@@ -20,15 +20,15 @@ class WizardDialog:
 		self.__window = w = Win32_window.Window(
 			title, resizable = 1,
 			deleteCallback = (self.cancel_callback, ()))
-		
+
 		constant = 3*win32api.GetSystemMetrics(win32con.SM_CXBORDER)+win32api.GetSystemMetrics(win32con.SM_CYCAPTION)+5
 		constant2 = 2*win32api.GetSystemMetrics(win32con.SM_CYBORDER)+5
 		self._w = 400 #constant2
 		self._h = 400 #constant
-		
+
 		self.buttons = w.ButtonRow(
 			[('<<Back', (self.back_callback, ())),
-			('Next>>', (self.next_callback, ())), 
+			('Next>>', (self.next_callback, ())),
 			('Finish', (self.finish_callback, ())),
 			('Cancel', (self.cancel_callback, ())),
 			('Help', (self.helpcall, ()))],
@@ -40,7 +40,7 @@ class WizardDialog:
 		start_group = alter.SubWindow(left = 0, right = self._w-10, top = 0, bottom = self._w-constant-40)
 		current_group = alter.SubWindow(left = 0, right = self._w-10, top = 0, bottom = self._w-constant-40)
 		finish_group = alter.SubWindow(left = 0, right = self._w-10, top = 0, bottom = self._w-constant-40)
-		
+
 		welcome_group_im = welcome_group.SubWindow(left = 0, right = 130, top = 0, bottom = 260)
 		img1 = imageex.PrepareImage(welcome_group_im._hWnd, "c:\\chameleon\\images\\welcome.bmp", 0)[0]
 		welcome_group_im._hWnd.HookMessage(self.show_image, win32con.WM_PAINT)
@@ -56,20 +56,20 @@ class WizardDialog:
 		finish_group_im = finish_group.SubWindow(left = 0, right = 130, top = 0, bottom = 260)
 		img4 = imageex.PrepareImage(finish_group_im._hWnd, "c:\\chameleon\\images\\finish.bmp", 0)[0]
 		finish_group_im._hWnd.HookMessage(self.show_image, win32con.WM_PAINT)
-		
+
 		self.dialogs_list.append(((0,1,0,1,1),welcome_group,(welcome_group_im,img1)))
 		self.dialogs_list.append(((0,1,0,1,1),start_group,(start_group_im,img2)))
 		self.dialogs_list.append(((1,1,1,1,1),current_group,(current_group_im,img3)))
 		self.dialogs_list.append(((1,0,1,1,1),finish_group,(finish_group_im,img4)))
-		
+
 		start_group.hide()
 		current_group.hide()
 		finish_group.hide()
-		
+
 		text = 'This tool will help you to create a simple document.\nFor more complicate documents you must use the standard tools.'
 		label = welcome_group.Label(text, justify = 'left',
 				left = 130, right = self._w-10-130, top = 0, bottom = self._w-constant-40)
-		
+
 		self.__file_input = start_group.TextInput('Destination:',
 				self.filename,
 				(self.file_callback, ()), None,
@@ -80,7 +80,7 @@ class WizardDialog:
 			[('Browse...', (self.browser_callback, ()))],
 			left = self._w-10-100, right = 100, top = self._w-constant-65, bottom = 30,
 			vertical = 0)
-		
+
 		self.__window_select = current_group.OptionMenu('Windows: ',
 					['None'], 0,
 					(self.channel_callback, ()),
@@ -103,7 +103,7 @@ class WizardDialog:
 			('ext', (self.type_callback, ('ext',)), 'r')],
 			left = 130, right = 100, top = 135, bottom = 65,
 			vertical = 1)
-	
+
 		self.__level_select = current_group.OptionMenu('Level: ',
 				['0'], 0, None,
 				left = 130, right = self._w-10-130, top = 205, bottom = 125)
@@ -114,7 +114,7 @@ class WizardDialog:
 		self.__name_input = current_group.TextInput('Name:', '',
 				(self.name_callback, ()), None,
 				left = 130, right = self._w-10-130, top = 270, bottom = 25)
-		
+
 		text = 'This tool will help you to create a simple document.\nFor more complicate documents you must use the standard tools.'
 		label = finish_group.Label(text, justify = 'left',
 				left = 130, right = self._w-10-130, top = 0, bottom = 100)
@@ -128,7 +128,7 @@ class WizardDialog:
 			[('Define Anchors...', (self.def_anch_callback, ()))],
 			left = 130, right = self._w-130, top = 175, bottom = 30,
 			vertical = 0)
-		
+
 		w._not_shown.append(start_group)
 		w._not_shown.append(current_group)
 		w._not_shown.append(finish_group)
@@ -137,12 +137,12 @@ class WizardDialog:
 		self.__window._hWnd.HookKeyStroke(self.helpcall,104)
 		w.show()
 
-	
+
 	def helpcall(self, params=None):
 		import Help
 		Help.givehelp(self.__window._hWnd, 'Wizard')
 
-	
+
 	def close(self):
 		for item in self.dialogs_list:
 			sub, im = item[2]
@@ -241,7 +241,7 @@ class WizardDialog:
 				self.settype('ext')
 			self.__window_select.setvalue(name[0])
 
-	
+
 	def gettype(self):
 		return self.type
 
@@ -252,20 +252,20 @@ class WizardDialog:
 			self.cur_br_but.setsensitive(0,0)
 			self.cur_type_but.setbutton(0,1)
 			self.cur_type_but.setbutton(1,0)
-			self.setfilename2('')		
+			self.setfilename2('')
 		else:
 			self.__file_input2.seteditable(1)
 			self.cur_br_but.setsensitive(0,1)
 			self.cur_type_but.setbutton(1,1)
-			self.cur_type_but.setbutton(0,0)		
+			self.cur_type_but.setbutton(0,0)
 
 	def getsave(self):
 		return self.save
 
 	def setsave(self, yesno):
 		self.save = yesno
-	
-	
+
+
 	def show_image(self, params):
 		tup, dialog, tup2 = self.dialogs_list[self.cur_dialog]
 		sub, im = tup2
@@ -273,7 +273,7 @@ class WizardDialog:
 		r, g, b = cmifex.GetSysColor(win32con.COLOR_BTNFACE)
 		imageex.PutImage(sub._hWnd,im,r,g,b,0)
 		cmifex.EndPaint(sub._hWnd, 0)
-	
+
 	def show_group(self):
 		if self.dialogs_list:
 			tup, dialog, tup2 = self.dialogs_list[self.cur_dialog]
@@ -288,7 +288,7 @@ class WizardDialog:
 			r, g, b = cmifex.GetSysColor(win32con.COLOR_BTNFACE)
 			imageex.PutImage(sub._hWnd,im,r,g,b,0)
 
-	
+
 	def setfilename(self, filename):
 		self.__file_input.settext(filename)
 
@@ -303,10 +303,10 @@ class WizardDialog:
 
 	def getname(self):
 		return self.__name_input.gettext()
-	
+
 	def setname(self, name):
 		self.__name_input.settext(name)
-	
+
 	def cancel_callback(self):
 		pass
 

@@ -15,27 +15,27 @@ class WizardAnchorDialog:
 			self.def_callback = options['DefCallback']
 		except KeyError:
 			self.def_callback = None
-		
+
 		constant = 3*win32api.GetSystemMetrics(win32con.SM_CXBORDER)+win32api.GetSystemMetrics(win32con.SM_CYCAPTION)+5
 		constant2 = 2*win32api.GetSystemMetrics(win32con.SM_CYBORDER)+5
 		self._w = 400 #constant2
 		self._h = 300 #constant
-		
+
 		text = 'Define the anchors you want and then press Ok'
 		label = w.Label(text, justify = 'left',
 				left = 5, right = self._w-10, top = 0, bottom = 60)
-		
+
 		self.__from_select = w.OptionMenu('From: ',
 				nodelist, 0, (self.from_selected_callback, ()),
 				left = 5, right = self._w-10, top = 65, bottom = 125)
-		
+
 		self.__to_select = w.OptionMenu('To: ',
 					nodelist, 0, (self.to_selected_callback, ()),
 					left = 5, right = self._w-10, top = 95, bottom = 125)
 		self.__anchors_select = w.OptionMenu('Anchors: ',
 					['None'], 0, (self.anchor_selected_callback, ()),
 					left = 5, right = self._w-10, top = 125, bottom = 125)
-		
+
 		self.buttons = w.ButtonRow(
 			[('Add Anchor', (self.add_callback, ())),
 			('Delete Anchor', (self.delete_callback, ())),
@@ -48,12 +48,12 @@ class WizardAnchorDialog:
 		cmifex2.ResizeWindow(w._hWnd, self._w, 220)
 		self.__window._hWnd.HookKeyStroke(self.helpcall,104)
 		w.show()
-		
+
 	def helpcall(self, params=None):
 		import Help
 		Help.givehelp(self.__window._hWnd, 'Wizard')
 
-	
+
 	def close(self):
 		self.__window.close()
 		del self.__window
@@ -87,24 +87,24 @@ class WizardAnchorDialog:
 		self.__anchors_select.setvalue(name)
 
 	def show(self):
-		for i in self.anc_ls: 
+		for i in self.anc_ls:
 			self.prev_anc_ls.append(i)
-		print self.prev_anc_ls 
+		print self.prev_anc_ls
 		self.__window.show()
-	
+
 	def from_selected_callback(self):
 		self.from_flag = 1
 		if self.to_flag:
-			self.buttons.setsensitive(0,1) 
+			self.buttons.setsensitive(0,1)
 
 	def to_selected_callback(self):
 		self.to_flag = 1
 		if self.from_flag:
-			self.buttons.setsensitive(0,1) 
+			self.buttons.setsensitive(0,1)
 
 	def anchor_selected_callback(self):
-		self.buttons.setsensitive(1,1) 
-	
+		self.buttons.setsensitive(1,1)
+
 	def add_callback(self):
 		if self.getfromvalue() == self.gettovalue():
 			import windowinterface
@@ -124,9 +124,9 @@ class WizardAnchorDialog:
 			return
 		tmp = []
 		for i in self.anc_ls:
-			tmp.append(i[0]+'->'+i[1]) 
+			tmp.append(i[0]+'->'+i[1])
 		self.__anchors_select.setoptions(tmp,0)
-	
+
 	def delete_callback(self):
 		import string
 		a = self.getanchor()
@@ -141,7 +141,7 @@ class WizardAnchorDialog:
 			if tmp == []:
 				tmp = ['None']
 			self.__anchors_select.setoptions(tmp,0)
-	
+
 	def cancel_callback(self):
 		self.anc_ls = []
 		for i in self.prev_anc_ls:

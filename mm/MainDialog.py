@@ -41,7 +41,7 @@ class MainDialog:
 			 ('Debug', (self.debug_callback, ())),
 			 ('About', (self.about_callback, ())),
 			 ('Exit', (self.close_callback, ()))]
-			 
+
 		self._window = w = windowinterface.MainDialog(
 			buttons, title, grab = 0, del_Callback = (self.close_callback, ()))
 		#print ""
