@@ -46,6 +46,7 @@
 #define IDD_EDIT_ANCHORS                232
 #define IDC_STOP                        233
 #define IDD_ARC_INFO_FORM               233
+#define IDD_NODE_INFO                   234
 #define IDC_DRAGMOVE                    237
 #define IDC_DRAGLINK                    238
 #define IDC_PLAY                        1001
