@@ -213,7 +213,8 @@ class Edit(Control):
 	def setsel(self, start, end):
 		return self.sendmessage(win32con.EM_SETSEL, start, end)
 	def linescroll(self, nlines, nchars = 0):
-		return self.sendmessage(win32con.EM_LINESCROLL, nlines, nchars)
+		# note reversal of arguments
+		return self.sendmessage(win32con.EM_LINESCROLL, nchars, nlines)
 	def getfirstvisibleline(self):
 		return self.sendmessage(win32con.EM_GETFIRSTVISIBLELINE)
 	def getinspos(self):
