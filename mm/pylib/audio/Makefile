@@ -4,7 +4,7 @@
 DOCDIR=		../../../python/Doc
 
 # Where are the various programs?
-LATEX=		latex2e
+LATEX=		latex
 BIBTEX=		bibtex
 EMACS=		emacs
 DVIPS=		dvips -f
