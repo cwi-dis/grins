@@ -168,7 +168,7 @@ class _DisplayList:
 		self._rendered = 1
 		self.starttime = time.time()
 		# XXXX buttons?
-		window._mac_setwin() # XXXX
+		oldenv = window._mac_setwin()
 		if window._transparent == -1:
 			window._parent._clipchanged()
 		#
@@ -184,7 +184,6 @@ class _DisplayList:
 		   render_now = 1
 		else:
 			render_now = self._can_render_now()
-		window._mac_setwin() # XXXX
 		if render_now:
 			if not window._clip:
 				window._mkclip()
@@ -196,6 +195,7 @@ class _DisplayList:
 			Qd.DisposeRgn(saveclip)
 		else:
 			window._mac_invalwin()
+		window._mac_unsetwin(oldenv)
 		
 		window._active_displist = self
 		if self._buttons:

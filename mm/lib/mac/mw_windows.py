@@ -197,8 +197,10 @@ class _CommonWindow:
 		self._onscreen_wid = wid
 		self._drawing_wid = wid
 		self._drawing_gworld = None
+		self._drawing_bitmap = None
 		self._extra_wid = None
 		self._extra_gworld = None
+		self._extra_bitmap = None
 		self._transition = None
 		self._subwindows = []
 		self._displists = []
@@ -255,8 +257,10 @@ class _CommonWindow:
 		del self._onscreen_wid
 		del self._drawing_wid
 		del self._drawing_gworld
+		del self._drawing_bitmap
 		del self._extra_wid
 		del self._extra_gworld
+		del self._extra_bitmap
 		del self._accelerators
 		del self._menu
 		del self._popupmenu
@@ -839,6 +843,8 @@ class _CommonWindow:
 		if not self._clip:
 			self._mkclip()
 			
+		olddrawenviron = self._mac_setwin()
+		
 		# First do opaque subwindows, topmost first
 		still_to_do = []
 		for child in self._subwindows:
@@ -873,6 +879,8 @@ class _CommonWindow:
 		for child in still_to_do:
 					child._redraw(rgn)
 					
+		self._mac_unsetwin(olddrawenviron)
+		
 		# Last, do the rubber box, if rubberboxing
 		if self is _in_create_box:
 			self._rb_redraw()
@@ -884,10 +892,28 @@ class _CommonWindow:
 		elif self._transparent == 0 or self._istoplevel:
 			Qd.EraseRect(self.qdrect())
 			
-	def _mac_setwin(self):
+	def _mac_setwin(self, which=None):
 		"""Start drawing (by upper layer) in this window"""
-		# XXX This is a hack.
-		Qd.SetPort(self._drawing_wid)
+		if which == None:
+			if self._transition:
+				which = 1
+			else:
+				which = 0
+		if which == 0:
+			rv = Qd.GetPort()
+			Qd.SetPort(self._onscreen_wid)
+		elif which == 1:
+			rv = Qdoffs.GetGWorld()
+			Qdoffs.SetGWorld(self._drawing_wid, None)
+		else:
+			raise 'unexpected setwin indicator'
+		return rv
+			
+	def _mac_unsetwin(self, arg):
+		if type(arg) == type(()):
+			apply(Qdoffs.SetGWorld, arg)
+		else:
+			Qd.SetPort(arg)
 		
 	def _mac_invalwin(self):
 		"""Schedule a full redraw for this window"""
@@ -904,12 +930,21 @@ class _CommonWindow:
 		else:
 			return self._drawing_gworld.as_GrafPtr()
 			
-	def _mac_getoswindowpixmap(self):
-		if self._drawing_wid == self._onscreen_wid:
-			return self._drawing_wid.GetWindowPort().portBits
+	def _mac_getoswindowpixmap(self, which=None):
+		if which == None:
+			if self._transition:
+				which = 1
+			else:
+				which = 0
+		if which == 0:
+			return self._onscreen_wid.GetWindowPort().portBits
+		elif which == 1:
+			return self._drawing_bitmap
+		elif which == 2:
+			return self._extra_bitmap
 		else:
-			return self._drawing_wid
-		
+			raise 'unexpected pixmap indicator'
+					
 	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
 		global _in_create_box
 		if _in_create_box:
@@ -1221,8 +1256,10 @@ class _CommonWindow:
 		if self._transition:
 			print 'Multiple Transitions!'
 			return
-		self._drawing_gworld, self._drawing_wid = self._create_offscreen_wid()
-		self._extra_gworld, self._extra_wid = self._create_offscreen_wid(inout == 0)
+		self._drawing_gworld, self._drawing_wid, self._drawing_bitmap = self._create_offscreen_wid(1)
+		# XXXX should probably skip this if the window is transparent and empty
+		if 0:
+			self._extra_gworld, self._extra_wid, self._extra_bitmap = self._create_offscreen_wid(1)
 		self._transition = mw_transitions.TransitionEngine(self, inout, runit, dict)
 		
 	def endtransition(self):
@@ -1248,27 +1285,33 @@ class _CommonWindow:
 			self._transition.settransitionvalue(value)
 		
 	def _create_offscreen_wid(self, copybits=1):
-		cur_depth = 16 # XXXX
+		cur_depth = 16 # 0
 		cur_rect = self.qdrect()
-##		cur_font = None
-##		cur_fgcolor = xxxx
-##		cur_bgcolor = xxxx
 		cur_port, cur_dev = Qdoffs.GetGWorld()
 		gworld = Qdoffs.NewGWorld(cur_depth,  cur_rect, None, None, QDOffscreen.keepLocal)
-		# XXXX Set font
-		# XXXX Set fgcolor
-		# XXXX Set bgcolor
-		pixmap = gworld.GetGWorldPixMap()
 		grafptr = gworld.as_GrafPtr()
+		Qdoffs.SetGWorld(grafptr, None)
+		pixmap = gworld.GetGWorldPixMap()
 		Qdoffs.LockPixels(pixmap)
-		Qdoffs.SetGWorld(gworld.as_GrafPtr(), None)
-		Qd.EraseRect(cur_rect)
+		bitmap = Qd.RawBitMap(pixmap.data)
+		# XXXX Set font
+		Qd.RGBBackColor(self._bgcolor)
+		Qd.RGBForeColor(self._fgcolor)
 		if copybits:
 			portBits = self._onscreen_wid.GetWindowPort().portBits
-			Qd.CopyBits(portBits, pixmap.data, cur_rect, cur_rect, QuickDraw.srcCopy, None)
+			Qd.CopyBits(portBits, bitmap, cur_rect, cur_rect, QuickDraw.srcCopy, None)
+		else:
+			Qd.EraseRect(cur_rect)
 		Qdoffs.SetGWorld(cur_port, cur_dev)
-		return gworld, grafptr
+		return gworld, grafptr, bitmap
 		
+	def _dump_bits(self, which):
+		srcbits = self._mac_getoswindowpixmap(which)
+		currect = srcbits
+		old = Qd.GetPort()
+		Qd.SetPort(self._onscreen_wid)
+		Qd.CopyBits(srcbits, self._onscreen_wid.GetWindowPort().portBits, currect, currect, QuickDraw.srcCopy, None)
+		Qd.SetPort(old)
 
 def calc_extra_size(adornments, canvassize):
 	"""Return the number of pixels needed for toolbar and scrollbars"""
