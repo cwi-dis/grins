@@ -19,8 +19,6 @@ import __main__
 from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 import appcon
 
-# temp
-USE_NEWSUBWINDOWSIMPL = 1
 
 class _rbtk:
 	def __init__(self):
@@ -77,7 +75,7 @@ class _rbtk:
 				if win._showing:
 					d.fgcolor(win._showing)
 				d.drawbox(b)
-		if not USE_NEWSUBWINDOWSIMPL:
+		if not self._topwindow._usesOSSubWindows:
 			self._topwindow.ShowWindows(win32con.SW_HIDE)
 
 		if box:
@@ -126,7 +124,7 @@ class _rbtk:
 			self.getgrinsframe().showChilds(1)
 
 		# 2. restore wnds state
-		if not USE_NEWSUBWINDOWSIMPL:
+		if not self._topwindow._usesOSSubWindows:
 			self._topwindow.ShowWindows(win32con.SW_SHOW)
 
 		# 3. restore display list
