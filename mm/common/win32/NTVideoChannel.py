@@ -164,6 +164,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			atype = a[A_TYPE]
 			if atype not in Channel.SourceAnchors or atype == ATYPE_AUTO:
 				continue
+			anchor = node.GetUID(), a[A_ID]
+			if not self._player.context.hyperlinks.findsrclinks(anchor):
+				continue
 			b = self.armed_display.newbutton((0,0,1,1), times = a[A_TIMES])
 			b.hiwidth(3)
 			if drawbox:
