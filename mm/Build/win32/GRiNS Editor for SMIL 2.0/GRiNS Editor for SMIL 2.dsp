@@ -153,10 +153,6 @@ SOURCE=.\M__PlayerView.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M__PreferencesDialog.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M__SourceView.c
 # End Source File
 # Begin Source File
@@ -477,10 +473,6 @@ SOURCE=.\M_gifparser.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_GLLock.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_glob.c
 # End Source File
 # Begin Source File
@@ -694,6 +686,10 @@ SOURCE=.\M_MMurl.c
 # Begin Source File
 
 SOURCE=.\M_MMWrite.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_nameencode.c
 # End Source File
 # Begin Source File
 
@@ -1078,6 +1074,10 @@ SOURCE=.\M_Sizes.c
 # Begin Source File
 
 SOURCE=.\M_SMIL.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_smil_mediatype.c
 # End Source File
 # Begin Source File
 
