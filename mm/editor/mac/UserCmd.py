@@ -166,7 +166,7 @@ MENUBAR=(
 		(ENTRY, 'Edit content', 'E', CONTENT),
 		(SEP,),
 		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
-		(ENTRY, 'Finish syncarc to focus...', 'L', FINISH_ARC))))
+		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC))))
 		
 			
 		
