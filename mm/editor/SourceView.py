@@ -7,9 +7,8 @@ import SMILTreeRead, SMILTreeWrite
 class SourceView(SourceViewDialog.SourceViewDialog):
 	def __init__(self, toplevel):
 		self.toplevel = toplevel
-		self.root = toplevel.root
-		self.context = self.root.context
-		self.editmgr = self.context.editmgr
+		self.editmgr = self.toplevel.editmgr
+		self.setRoot(self.toplevel.root)
 		self.myCommit = 0
 		SourceViewDialog.SourceViewDialog.__init__(self)
 		
@@ -53,6 +52,10 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 	def globalfocuschanged(self, focustype, focusobject):
 		self.__setFocus(focustype, focusobject)
 
+	def setRoot(self, root):
+		self.root = root
+		self.context = root.context
+		
 	#
 	# edit manager interface
 	#
@@ -104,6 +107,9 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 			if hide:
 				self.hide()
 			self.toplevel.change_source(text)
+			# update root
+			self.setRoot(self.toplevel.root)
+			
 			parseErrors = self.context.getParseErrors()
 			if parseErrors != None:
 				# XXX note: the choices may be different for 'fatal error'
