@@ -1366,7 +1366,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				except parseutil.error, msg:
 					self.syntax_error(msg)
 			elif attr == 'emptyShow':
-				attrdict['empty_nonempty'] = val == 'true'
+##				attrdict['empty_nonempty'] = val == 'true'
+				pass
 			elif attr == 'nonEmptyIcon':
 				attrdict['non_empty_icon'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'nonEmptyText':

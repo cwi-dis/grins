@@ -464,9 +464,9 @@ class NodeWrapper(Wrapper):
 			namelist.append('empty_text')
 			namelist.append('empty_color')
 			namelist.append('empty_duration')
-			namelist.append('nonempty_icon')
-			namelist.append('nonempty_text')
-			namelist.append('nonempty_color')
+			namelist.append('non_empty_icon')
+			namelist.append('non_empty_text')
+			namelist.append('non_empty_color')
 			namelist.append('thumbnail_scale')
 		if ntype in ('par', 'seq', 'excl'):
 			namelist.append('duration')
