@@ -2785,15 +2785,18 @@ class FontAttrEditorField(PopupAttrEditorField):
 		fonts.sort()
 		return [DEFAULT] + fonts
 
-Alltypes = interiortypes+mediatypes
+Alltypes = interiortypes+leaftypes
 class NodeTypeAttrEditorField(PopupAttrEditorField):
 	def getoptions(self):
+		# XXX this needs work: we need to take animate
+		# children into account and prio can only be a child
+		# of an excl
 		options = Alltypes[:]
 		ntype = self.wrapper.node.GetType()
 		if ntype in interiortypes:
 			if self.wrapper.node.GetChildren():
-				options.remove('imm')
-				options.remove('ext')
+				for tp in leaftypes:
+					options.remove(tp)
 		elif ntype == 'imm' and self.wrapper.node.GetValues():
 			options = ['imm']
 		return options
