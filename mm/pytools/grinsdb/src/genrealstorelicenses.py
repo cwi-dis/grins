@@ -9,6 +9,8 @@ def main():
 		print "Usage %s count outputfile [ product [ platform ] ]"%sys.argv[0]
 		print "  Generates count licenses and stores them in the"
 		print "  (dos-linefeeds) outputfile"
+		print "  Default product",`grlicense.PRODUCT_TO_FEATURE[None]`
+		print "  Default platform",`grlicense.PLATFORM_TO_PLATFORM[None]`
 		sys.exit(1)
 	count = string.atoi(sys.argv[1])
 	fp = open(sys.argv[2], "w")
