@@ -2647,6 +2647,16 @@ class MSDrawContext(DrawContext):
 		for shape in self._selections:
 			shape.invalidateDragHandles()
 
+	# force a move by
+	def moveSelectionBy(self, dx, dy):
+		for shape in self._selections:
+			shape.invalidateDragHandles()
+			shape.moveBy((dx, dy))
+			shape.invalidateDragHandles()
+		if self._selections:
+			for obj in self._listeners:
+				obj.onDSelMove(self._selections)
+		
 	def select(self, shape, mode=SO_REPLACE):
 		# if we don't support multisel then set
 		if not self._muliselect:
