@@ -140,6 +140,7 @@ class Window:
 		if self._parent is None:
 			return
 		self._parent._subwindows.remove(self)
+		self.updateMouseCursor()
 		self._parent = None
 		for win in self._subwindows[:]:
 			win.close()
@@ -173,6 +174,9 @@ class Window:
 
 	def setcursor(self, cursor):
 		self._cursor = cursor
+
+	def updateMouseCursor(self):
+		self._topwindow.updateMouseCursor()
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		return Window(self, coordinates, units, z, transparent)
@@ -902,10 +906,10 @@ class SubWindow(Window):
 			x, y, w, h = self.getwindowpos()
 			xp, yp = point
 			point= xp-x, yp-y
-			# point = self._DPtoLP(point)
-			x,y = self._pxl2rel(point,self._canvas)
+			x, y = self._pxl2rel(point,self._canvas)
 			for button in self._active_displist._buttons:
 				if button._inside(x,y):
+					print 'yes, inside '
 					if self._cursor != 'hand':
 						self.setcurcursor('hand')
 					return
@@ -915,7 +919,6 @@ class SubWindow(Window):
 	def setcurcursor(self, strid):
 		self._curcursor = strid
 		self._topwindow.setcursor(strid)
-
 
 	#
 	# Rendering section

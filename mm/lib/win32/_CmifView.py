@@ -417,6 +417,7 @@ class _CmifPlayerView(_CmifView):
 		self._frontBuffer = None
 		self._backBuffer = None
 		self._clipper = None
+		self.__lastMouseMoveParams = None
 
 	def OnCreate(self,params):
 		if self._usesLightSubWindows: 
@@ -507,11 +508,21 @@ class _CmifPlayerView(_CmifView):
 					buttons.append(button)
 		return self.onEvent(ev,(x, y, buttons))
 
-	def onMouseMove(self, params):
+	def updateMouseCursor(self):
+		self.onMouseMove()
+
+	def onMouseMove(self, params=None):
+		if not params and not self.__lastMouseMoveParams:
+			return
+		if not params: params = self.__lastMouseMoveParams
+		else: self.__lastMouseMoveParams = params
+		
 		if not self._usesLightSubWindows or self.in_create_box_mode():
 			_CmifView.onMouseMove(self, params)
+		
 		msg=win32mu.Win32Msg(params)
 		point=msg.pos()
+		point = self._DPtoLP(point)
 		for w in self._subwindows:
 			if w.inside(point):
 				w.setcursor_from_point(point)
