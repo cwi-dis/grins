@@ -556,9 +556,13 @@ class Channel:
 			if not self.armed_duration:
 				self.playdone(0)
 			elif self.armed_duration > 0:
-				self._qid = self._scheduler.enterabs(
+				try:
+					self._qid = self._scheduler.enterabs(
 					  self._played_node.start_time+self.armed_duration, 0,
 					  self.playdone, (0, self._played_node.start_time+self.armed_duration))
+				except:
+					print 'see self._scheduler.enterabs argument'
+					pass
 		else:
 			self.playdone(0)
 
@@ -848,14 +852,14 @@ class Channel:
 		# anchor.
 		self._armed_anchors.append((name, type, button, times))
 
-	def getfileurl(self, node):
+	def getfileurl(self, node, animated=0):
 		name = node.GetAttrDef('name', None)
 		if name and self.seekargs and self.seekargs[0] is node and self.seekargs[2]:
 			name = name + '_file'
 			for arg, val in self.seekargs[2]:
 				if arg == name:
 					return node.context.findurl(val)
-		url = MMAttrdefs.getattr(node, 'file')
+		url = MMAttrdefs.getattr(node, 'file', animated)
 		if not url:
 			return ''
 		return node.context.findurl(url)
