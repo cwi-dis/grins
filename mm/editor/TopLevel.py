@@ -183,7 +183,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.sourceview.show()
 
 	def destroy(self):
-		self.set_timer(0)
+		self.set_timer(-1)
 		self.hideviews()
 		self.editmgr.unregister(self)
 		self.editmgr.destroy()
@@ -210,7 +210,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self._last_timer_id is not None:
 			windowinterface.canceltimer(self._last_timer_id)
 			self._last_timer_id = None
-		if delay:
+		if delay >= 0:
 			self._last_timer_id = windowinterface.settimer(delay,
 				  (self.timer_callback, ()))
 

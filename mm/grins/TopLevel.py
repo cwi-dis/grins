@@ -86,7 +86,7 @@ class TopLevel(TopLevelDialog):
 			windowinterface.canceltimer(self._last_timer_id)
 			self._last_timer_id = None
 		self.__immediate = 0
-		if delay:
+		if delay >= 0:
 			if delay <= 0.01 and self.__intimer:
 				self.__immediate = 1
 			else:

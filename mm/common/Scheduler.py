@@ -19,7 +19,8 @@ debugtimer = 0
 debugevents = 0
 debugdump = 0
 
-SCHEDULE_DEPTH = 1			# how deep we should go scheduling sync arcs
+SCHEDULE_DEPTH = 3			# how deep we should go scheduling sync arcs
+					# a value < 3 gave various continuation problems
 
 # Priorities for the various events:
 N_PRIO = 5
@@ -139,7 +140,7 @@ class SchedulerContext:
 		playroot.set_start_time(timestamp)
 
 		self.parent.event(self, (SR.SCHED, self.playroot), timestamp)
-##		self.parent.updatetimer()
+		self.parent.updatetimer()
 		return 1
 	#
 	# Seekanchor indicates that we are playing here because of the
@@ -159,7 +160,7 @@ class SchedulerContext:
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist, timestamp)
 
-	def sched_arc(self, node, arc, event = None, marker = None, timestamp = None, depth = 0):
+	def sched_arc(self, node, arc, event = None, marker = None, timestamp = None, depth = 0, external = 0):
 		# Schedules a single SyncArc for a node.
 		
 		# node is the node for the start of the arc.
@@ -183,6 +184,8 @@ class SchedulerContext:
 			if event is not None and event not in ('begin', 'end'):
 				# a real event, only does something when node is active
 				if arc.dstnode.playing in (MMStates.IDLE, MMStates.PLAYED):
+					if external:
+						self.parent.updatetimer()
 					return
 				# delay sync arc to min time if not dur
 				if not arc.isdur and arc.dstnode.has_min:
@@ -259,8 +262,10 @@ class SchedulerContext:
 				mintime = arc.dstnode.has_min
 				ts = max(ts, arc.dstnode.start_time + mintime)
 			self.sched_arcs(arc.dstnode, dev, timestamp=ts, depth = depth+1)
+		if external:
+			self.parent.updatetimer()
 
-	def sched_arcs(self, node, event = None, marker = None, timestamp = None, depth = 0):
+	def sched_arcs(self, node, event = None, marker = None, timestamp = None, depth = 0, external = 0):
 		# Schedule all sync and event arcs that depend on
 		# event or marker happening on node.  Only one of
 		# event and marker is supplied (i.e. not None).
@@ -324,6 +329,8 @@ class SchedulerContext:
 			self.sched_arc(node, arc, event, marker, timestamp+atime, depth)
 			arc.__in_sched_arcs = 0
 		if debugevents: print 'sched_arcs return',`node`,event,marker,timestamp,self.parent.timefunc()
+		if external:
+			self.parent.updatetimer()
 
 	def trigger(self, arc, node = None, path = None, timestamp = None):
 		# Triggers a single syncarc.
@@ -331,6 +338,7 @@ class SchedulerContext:
 		# if arc == None, arc is not used, but node and timestamp are
 		# if arc != None, arc is used, and node and timestamp are not
 		parent = self.parent
+		parent.setpaused(1, 0)
 		if debugevents: print 'trigger',`arc`,`node`,`path`,timestamp,parent.timefunc()
 		paused = parent.paused
 		parent.paused = 0
@@ -1042,6 +1050,7 @@ class SchedulerContext:
 		   not node.attrdict.has_key('duration') and \
 		   not node.FilterArcList(node.GetEndList()):
 			self.parent.event(self, (SR.SCHED_STOPPING, node.looping_body_self or node), timestamp)
+			self.parent.updatetimer() # ???
 
 	#
 	def anchorfired(self, node, anchorlist, arg):
@@ -1159,7 +1168,7 @@ class Scheduler(scheduler):
 			self.starting_to_play = 0
 		self.playing = 0
 		self.ui.play_done()
-		self.toplevel.set_timer(0)
+		self.toplevel.set_timer(-1)
 
 	#
 	# The timer callback routine, called via a forms timer object.
@@ -1211,21 +1220,20 @@ class Scheduler(scheduler):
 	# we set the timeout very short, otherwise we simply stop the clock.
 	def updatetimer(self):
 		# Helper variable:
-		self.delay = 0
 		work = 0
 		for q in self.runqueues:
 			if q:
 				work = 1
 				break
 		if not self.playing:
-			delay = 0
+			delay = -1
 			if debugtimer: print 'updatetimer: not playing' #DBG
 		elif not self.paused and work:
 			#
 			# We have SR actions to execute. Make the callback
 			# happen as soon as possible.
 			#
-			delay = 0.001
+			delay = 0
 			if debugtimer: print 'updatetimer: runnable events' #DBG
 		elif self.queue and not self.paused:
 			#
@@ -1239,7 +1247,7 @@ class Scheduler(scheduler):
 				#
 				# It is overdue. Make the callback happen
 				# fast.
-				delay = 0.001
+				delay = 0
 			if debugtimer: print 'updatetimer: timed events' #DBG
 		elif not self.FutureWork():
 			#
@@ -1248,7 +1256,7 @@ class Scheduler(scheduler):
 			#
 			if debugtimer: print 'updatetimer: no more work' #DBG
 			self.stop_all()
-			self.ui.set_timer(0.001)
+			self.ui.set_timer(0)
 			return
 		else:
 			#
@@ -1256,9 +1264,13 @@ class Scheduler(scheduler):
 			# Tick every second, so we see the timer run.
 			#
 			if debugtimer:  'updatetimer: idle' #DBG
+			self.setpaused(0, 0)
 			return
 		if debugtimer: print 'updatetimer: delay=', delay
-		self.delay = delay
+		if delay == 0:
+			self.setpaused(1, 0)
+		else:
+			self.setpaused(0, 0)
 		self.ui.set_timer(delay)
 	#
 	# Incoming events from channels, or the start event.
@@ -1268,7 +1280,7 @@ class Scheduler(scheduler):
 ##			if ev[0] == SR.ARM_DONE:
 ##				ev[1].set_armedmode(ARM_ARMED)
 			sctx.event(ev, timestamp)
-		self.updatetimer()
+##		self.updatetimer()
 	#
 	# Add the given SR to one of the runqueues.
 	#
@@ -1490,17 +1502,18 @@ class Scheduler(scheduler):
 	def enterabs(self, time, priority, action, argument):
 		if debugevents: print 'enterabs',time,priority,action,argument,self.timefunc()
 		id = scheduler.enterabs(self, time, priority, action, argument)
-		self.updatetimer()
+##		self.updatetimer()
 		return id
 
 	def timefunc(self):
-		if self.paused:
+		if self.__paused:
 			return self.time_pause - self.time_origin
 		return time.time() - self.time_origin
 
 	def resettimer(self, starttime = 0):
 		self.time_origin = time.time() - starttime
 		self.time_pause = self.time_origin + starttime
+		self.__paused = 1
 
 	def getpaused(self):
 		return self.paused
@@ -1509,21 +1522,26 @@ class Scheduler(scheduler):
 		if debugevents: print 'settime',timestamp
 		self.time_origin = self.time_pause - timestamp
 
-	def setpaused(self, paused):
-		if self.paused == paused:
+	def setpaused(self, paused, propagate = 1):
+		if self.__paused != paused and (paused or propagate or not self.paused):
+			if not paused:
+				# continue playing
+				if debugevents: print 'continuing', propagate, self.time_pause - self.time_origin
+				# subtract time paused
+				self.time_origin = self.time_origin + \
+						   (time.time()-self.time_pause)
+			else:
+				# remember time paused
+				self.time_pause = time.time()
+				if debugevents: print 'pausing', propagate, self.time_pause - self.time_origin
+			self.__paused = paused
+		if not propagate:
 			return
-
-		if not paused:
-			# subtract time paused
-			self.time_origin = self.time_origin + \
-					   (time.time()-self.time_pause)
-		else:
-			# remember time paused
-			self.time_pause = time.time()
-		self.paused = paused
-		for sctx in self.sctx_list:
-			sctx.setpaused(paused)
-		self.updatetimer()
+		if self.paused != paused:
+			self.paused = paused
+			for sctx in self.sctx_list:
+				sctx.setpaused(paused)
+			self.updatetimer()
 
 class ArmStorageTree:
 	def __init__(self, node):
