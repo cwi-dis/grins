@@ -66,6 +66,12 @@ class EditableMMNode(MMNode.MMNode):
 			return None
 		return self.context.getAssetByUID(uid)
 
+	def clean_forceChild(self, assetuid):
+		if self.GetAttrDef('project_forcechild', None) == assetuid:
+			self.context.editmgr.setnodeattr(self, 'project_forcechild', None)
+		for c in self.children:
+			c.clean_forceChild(assetuid)
+
 	def findMimetypeAcceptor(self, mimetype):
 		# Called on forcedchild nodes only. Returns the node
 		# that accepts this mimetype.

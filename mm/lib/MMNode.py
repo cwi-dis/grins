@@ -856,8 +856,14 @@ class MMNodeContext:
 	def addasset(self, item):
 		self.assetlist.append(item)
 
-	def delasset(self, item):
+	def delasset(self, item, root):
 		self.assetlist.remove(item)
+		# if the asset is an MMNode, it can't be used as a
+		# project_forcechild attribute anymore
+		# note, we're only ever called from the EditMgr, so
+		# there is a transaction active
+		if item.getClassName() == 'MMNode':
+			root.clean_forceChild(item.GetUID()) # editor only!
 
 	def getassets(self):
 		return self.assetlist
@@ -3521,7 +3527,6 @@ class MMNode(MMTreeElement):
 			# only called from edit manager, so definitely inside transaction
 			self.context.editmgr.setnodeattr(self, 'terminator', None)
 ##		parent._fixsummaries(self.summaries)
-
 
 	def ExpandParents(self):
 		# Recurse through my parents, expanding all of them.
