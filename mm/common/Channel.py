@@ -47,7 +47,8 @@ class Channel:
 	# The following methods can be called by higher levels.
 	#
 	chan_attrs = ['visible', 'base_window']
-	node_attrs = ['file', 'mimetype', 'project_convert']
+	node_attrs = ['file', 'mimetype', 'project_convert', 'duration',
+		      'repeatdur', 'loop']
 	_visible = FALSE
 
 	def __init__(self, name, attrdict, scheduler, ui):
@@ -404,7 +405,11 @@ class Channel:
 			return 1
 		self._armed_node = node
 		self._armed_anchors = []
-		self.armed_duration = self.getduration(node)
+		duration = node.GetAttrDef('duration', None)
+		repeatdur = node.GetAttrDef('repeatdur', None)
+		if repeatdur is not None:
+			duration = repeatdur
+		self.armed_duration = duration
 		return 0
 
 	def arm_1(self):
@@ -495,8 +500,18 @@ class Channel:
 		self._played_node = node
 		self._anchors = {}
 		self._played_anchors = self._armed_anchors[:]
-		durationattr = MMAttrdefs.getattr(node, 'duration')
-		self._has_pause = durationattr < 0 or (durationattr == 0 and MMAttrdefs.getattr(node, 'endlist'))
+		durationattr = node.GetAttrDef('duration', None)
+		repeatdur = node.GetAttrDef('repeatdur', None)
+		if repeatdur is not None and repeatdur < 0:
+			self._has_pause = 1
+		elif repeatdur is not None:
+			self._has_pause = 0
+		elif durationattr is not None and durationattr < 0:
+			self._has_pause = 1
+		elif MMAttrdefs.getattr(node, 'endlist'):
+			self._has_pause = 1
+		else:
+			self._has_pause = 0
 		for (name, type, button, times) in self._played_anchors:
 			if name is None and type is None:
 				f = self.onclick
@@ -526,12 +541,12 @@ class Channel:
 		# this node
 		self.armdone()
 		if not self.syncplay:
-			if self.armed_duration > 0:
+			if not self.armed_duration:
+				self.playdone(0)
+			elif self.armed_duration > 0:
 				self._qid = self._scheduler.enter(
 					  self.armed_duration, 0,
 					  self.playdone, (0,))
-			else:
-				self.playdone(0)
 		else:
 			self.playdone(0)
 
@@ -1012,7 +1027,7 @@ _button = None				# the currently highlighted button
 
 class ChannelWindow(Channel):
 	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z', 'bgimg']
-	node_attrs = Channel.node_attrs + ['duration', 'drawbox']
+	node_attrs = Channel.node_attrs + ['drawbox']
 	if CMIF_MODE:
 		node_attrs.append('bgcolor')
 	else:

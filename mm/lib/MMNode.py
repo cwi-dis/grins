@@ -1782,20 +1782,23 @@ class MMNode:
 		if self_body is None:
 			self_body = self
 
-		termtype = MMAttrdefs.getattr(self, 'terminator')
 		srcnode = self_body
 		event = 'begin'
 		if self.type == 'par' or self.type == 'seq':
+			termtype = MMAttrdefs.getattr(self, 'terminator')
 			defbegin = 0.0
 		else:
+			termtype = 'ALL'
 			defbegin = None
 
 		duration = MMAttrdefs.getattr(self, 'duration')
-		if duration < 0:
-			# indefinite duration
-			duration = None
-		if duration is None or duration > 0:
-			arc = MMSyncArc(self_body, 'end', event='begin', delay=duration)
+		duration = self.GetAttrDef('duration', None)
+		if duration is not None:
+			if duration < 0:
+				delay = None
+			else:
+				delay = duration
+			arc = MMSyncArc(self_body, 'end', event='begin', delay=delay)
 			self_body.arcs.append((self_body, arc))
 			self_body.sched_children.append(arc)
 
@@ -1829,10 +1832,14 @@ class MMNode:
 			if self.type == 'seq':
 				srcnode = child
 				event = 'end'
+			terminate_actions.append((TERMINATE, child))
 
 		#
 		# Trickery to handle dur and end correctly:
 		#
+		if duration is not None:
+			scheddone_events.append((SYNC_DONE, self_body))
+			terminate_actions.append((SYNC_DONE, self_body))
 		if scheddone_events and \
 		   (terminate_events or terminating_children):
 			# Terminate_events means we have a specified
