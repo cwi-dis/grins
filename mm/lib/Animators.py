@@ -18,17 +18,14 @@ import settings
 debug = 0
 debugParser = 0
 
-basicAnimationModule	= 'http://www.w3.org/2000/SMIL20/CR/BasicAnimation'
-splineAnimationModule = 'http://www.w3.org/2000/SMIL20/CR/SplineAnimation'
-timeManipulationsModule = 'http://www.w3.org/2000/SMIL20/CR/TimeManipulations'
-
-basicAnimation	= basicAnimationModule
-splineAnimation = splineAnimationModule
-timeManipulations = timeManipulationsModule
+# modules flags
+basicAnimation	= 1
+splineAnimation = settings.profileExtensions.get('SplineAnimation')
+timeManipulations = settings.profileExtensions.get('TimeManipulations')
 
 if hasattr(settings, 'activeFullSmilCss') and not settings.activeFullSmilCss:
 	windowinterface.showmessage('BasicAnimation module is dissabled.\nPlease enable settings.activeFullSmilCss flag')
-	basicAnimation = ''
+	basicAnimation = 0
 
 # An Animator represents an animate element at run time.
 # An Animator entity implements interpolation taking into 
@@ -1019,7 +1016,7 @@ class AnimateElementParser:
 		# end 'linear' for all the other cases
 		self.__calcMode = MMAttrdefs.getattr(anim, 'calcMode')
 		if not splineAnimation and self.__calcMode == 'spline':
-			print 'Warning: Module ', splineAnimationModule, 'is dissabled'
+			print 'Warning: Module SplineAnimation is dissabled'
 			print '\t',self
 			self.__calcMode = None
 		if not self.__calcMode:
@@ -1046,9 +1043,9 @@ class AnimateElementParser:
 			self.__decelerate = self.__decelerate/dt
 		self.__autoReverse = MMAttrdefs.getattr(anim, 'autoReverse')
 		
-		if not timeManipulationsModule and \
+		if not timeManipulations and \
 			(self.__speed!=1.0 or self.__accelerate or self.__decelerate or self.__autoReverse):
-			print 'Warning: Module ', timeManipulationsModule, 'is dissabled'
+			print 'Warning: Module TimeManipulations is dissabled'
 			print '\t',self
 			self.__speed = 1.0
 			self.__accelerate = self.__decelerate = 0
