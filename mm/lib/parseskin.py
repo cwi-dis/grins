@@ -74,6 +74,9 @@ def parsegskin(file):
 			raise error, 'syntax error in skin on line %d' % lineno
 		cmd, rest = line
 		if cmd =='image':
+			if dict.has_key(cmd):
+				# only one image allowed
+				raise error, 'syntax error in skin on line %d' % lineno
 			dict[cmd] = rest.strip()
 			continue
 		if cmd == 'component':
@@ -174,10 +177,21 @@ def parsegskin(file):
 			   (shape != 'circle' or len(coords) != 3) and \
 			   (shape != 'poly' or len(coords) < 6 or len(coords) % 2 != 0):
 				raise error, 'syntax error in skin on line %d' % lineno
-		if cmd == 'key':
-			dict[cmd] = shape, coords, key
-		else:
+		if cmd == 'display':
+			if dict.has_key(cmd):
+				# only one display allowed
+				raise error, 'syntax error in skin on line %d' % lineno
 			dict[cmd] = shape, coords
+		elif cmd == 'key':
+			if dict.has_key(cmd):
+				dict[cmd].append((shape, coords, key))
+			else:
+				dict[cmd] = [(shape, coords, key)]
+		else:
+			if dict.has_key(cmd):
+				dict[cmd].append((shape, coords))
+			else:
+				dict[cmd] = [(shape, coords)]
 	if not dict.has_key('image'):
 		raise error, 'image missing from skin description file'
 	if not dict.has_key('display'):
