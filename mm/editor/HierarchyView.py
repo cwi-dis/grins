@@ -894,7 +894,9 @@ def sizeboxes(node):
 	return width, height
 
 def do_expand(node, expand):
-	if node.GetType() not in MMNode.interiortypes:
+	ntype = node.GetType()
+	if ntype not in MMNode.interiortypes and \
+	   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
 		return 0
 	changed = 0
 	if expand:
@@ -919,7 +921,10 @@ class Object:
 		self.mother = mother
 		node, self.boxtype, self.box = item
 		self.node = node
-		self.name = MMAttrdefs.getattr(node, 'name')
+		if self.node.__class__ is SlideMMNode:
+			self.name = MMAttrdefs.getattr(node, 'tag')
+		else:
+			self.name = MMAttrdefs.getattr(node, 'name')
 		self.selected = 0
 		self.ok = 1
 		if node.GetType() == 'ext' and \
@@ -1427,6 +1432,8 @@ def expandnode(node):
 	node.expanded = 1
 	if node.GetType() != 'ext' or node.GetChannelType() != 'RealPix':
 		return
+	if not hasattr(node, 'slideshow'):
+		node.slideshow = SlideShow(node)
 	ctx = node.GetContext()
 	for attrs in node.slideshow.rp.tags:
 		child = SlideMMNode('slide', ctx, ctx.newuid())
