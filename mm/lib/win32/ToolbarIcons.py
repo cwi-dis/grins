@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # This file should be updated whenever you update any of
 # the toolbars in the GRiNSRes file.

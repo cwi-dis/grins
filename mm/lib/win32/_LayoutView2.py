@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Experimental layout view for light region view
 
 # editor features

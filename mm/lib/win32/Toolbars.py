@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import math
 
 import afxexttb
