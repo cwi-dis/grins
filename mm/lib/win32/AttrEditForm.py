@@ -500,11 +500,13 @@ class FileCtrl(AttrCtrl):
 		AttrCtrl.__init__(self,wnd,attr,resid)
 		self._attrname=components.Edit(wnd,resid[0])
 		self._attrval=components.Edit(wnd,resid[1])
+		self._browser=components.Button(wnd,resid[2])
 
 	def OnInitCtrl(self):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
 		self._attrval.attach_to_parent()
+		self._browser.attach_to_parent()
 		if self.want_label:
 			label = self._attr.getlabel()
 			if self.want_colon_after_label:
@@ -516,17 +518,31 @@ class FileCtrl(AttrCtrl):
 		if not self._attr.mustshow():
 			self._attrname.hide()
 			self._attrval.hide()
+			self._browser.hide()
 
 	def enable(self, enable):
 		self._attrval.enable(enable)
 
 	def setvalue(self, val):
 		if self._initctrl:
+			if val:
+				url = self._attr.wrapper.context.findurl(val)
+				import urlparse
+				scheme, netloc, url, params, query, fragment = urlparse.urlparse(url)
+				if not scheme or scheme == 'file':
+					import MMurl
+					val = MMurl.url2pathname(url)
 			self._attrval.settext(val)
+
 	def getvalue(self):
-		if self._initctrl:
-			return self._attrval.gettext()
-		return self._attr.getcurrent()
+		if not self._initctrl:
+			return self._attr.getcurrent()
+		val = self._attrval.gettext()
+		if '\\' in val:
+			import MMurl
+			url = MMurl.pathname2url(val)
+			val = self._attr.wrapper.context.relativeurl(url)
+		return val
 
 	def OnBrowse(self,id,code):
 		self._attr.browser_callback()
@@ -1079,49 +1095,6 @@ class StringCtrl(AttrCtrl):
 
 	def settooltips(self,tooltipctrl):
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[1]),self.gethelp(),None,0)
-
-class SimpleFileCtrl(StringCtrl):
-	def OnInitCtrl(self):
-		StringCtrl.OnInitCtrl(self)
-		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
-		self._browse = components.Button(self._wnd,self._resid[2])
-		self._browse.attach_to_parent()
-		if not self._attr.mustshow():
-			self._browse.hide()
-
-	def OnBrowse(self,id,code):
-		# XXX
-		if self._attr:
-			self._attr.browser_callback()
-	
-	def settooltips(self,tooltipctrl):
-		StringCtrl.settooltips(self,tooltipctrl)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Browse for file',None,0)
-
-	def enable(self, enable):
-		StringCtrl.enable(self, enable)
-		self._browse.enable(enable)
-
-	def setvalue(self, val):
-		if self._initctrl:
-			if val:
-				url = self._attr.wrapper.context.findurl(val)
-				import urlparse
-				scheme, netloc, url, params, query, fragment = urlparse.urlparse(url)
-				if not scheme or scheme == 'file':
-					import MMurl
-					val = MMurl.url2pathname(url)
-			self._attrval.settext(val)
-
-	def getvalue(self):
-		if not self._initctrl:
-			return self._attr.getcurrent()
-		val = self._attrval.gettext()
-		if '\\' in val:
-			import MMurl
-			url = MMurl.pathname2url(val)
-			val = self._attr.wrapper.context.relativeurl(url)
-		return val
 
 class TupleCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -3719,7 +3692,7 @@ class InfoFileGroup(StringGroup):
 			a=self._al[ix]
 			cd[a]=StringCtrl(wnd,a,self.getctrlids(ix+1))
 		a = self.getattr('file')
-		cd[a] = SimpleFileCtrl(wnd, a, (grinsRC.IDC_81, grinsRC.IDC_82, grinsRC.IDC_83,))
+		cd[a] = FileCtrl(wnd, a, (grinsRC.IDC_81, grinsRC.IDC_82, grinsRC.IDC_83,))
 		return cd
 
 class InfoFile1Group(InfoFileGroup):
