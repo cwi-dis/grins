@@ -17,17 +17,18 @@ programmers of new media-specific channels.
 In this document, method calls are specified by using dummy instance
 variables.  The variables used are "chan" for a channel instance,
 "sched" for the scheduler instance that was passed to the channel's
-init() method, and "sctx" for a scheduler context.  Scheduler context
-are the contexts passed to chan.startcontext() and chan.stopcontext().
+constructor method, and "sctx" for a scheduler context.  Scheduler
+context are the contexts passed to chan.startcontext() and
+chan.stopcontext().
 
 Creation and Destruction
 ------------------------
-A channel object is created by its init() method.  This method has
-four arguments: the channel's name (CMIFed demands that the name be
-unique, the channels don't care), an instance of an MMChannel object,
-an instance of the Scheduler, and an instance of the Player.  The
-author of a new channel should not need to use these instances.  They
-are used internally.
+A channel object is created by its constructor method.  This method
+has four arguments: the channel's name (CMIFed demands that the name
+be unique, the channels don't care), an instance of an MMChannel
+object, an instance of the Scheduler, and an instance of the Player.
+The author of a new channel should not need to use these instances.
+They are used internally.
 
 A channel object is destroyed by calling chan.destroy().  This method
 frees all resources that the channel instance uses.  After having
@@ -37,11 +38,14 @@ the channel.
 
 States of a Channel
 -------------------
-A channel maintains internal state.  These states are more fully
-described in the "states.doc" document.  The SHOWN/HIDDEN state can be
-manipulated by the channel methods chan.show() and chan.hide().  The
-PAUSING/BUSY state can be manipulated by the channel method
-setpaused().
+A channel maintains internal state.  There are several independent
+sets of states.  One set is whether the channel is being shown or
+hidden.  Another set is whether a channel is playing, paused, or
+stopped.  A third set has to do with the play state of nodes.
+
+A channel is shown by calling the chan.show() method, it is hidden by
+calling the chan.hide() method.  These methods can be called at any
+time during the live time of the channel.
 
 Interface Between Channel and Scheduler
 ---------------------------------------
