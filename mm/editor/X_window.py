@@ -2367,3 +2367,5 @@ select_setcallback = toplevel.select_setcallback
 mainloop = toplevel.mainloop
 
 canceltimer = toplevel.canceltimer
+
+lopristarting = X_windowbase.lopristarting

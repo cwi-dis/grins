@@ -3,10 +3,16 @@ __version__ = "$Id$"
 # Main program for the CMIF editor.
 
 import sys
-import getopt
+
+try:
+	sys.path.remove('')
+except:
+	pass
 
 import fastimp
 fastimp.install()
+
+import getopt
 
 def usage(msg):
 	sys.stdout = sys.stderr
