@@ -21,6 +21,7 @@ enum { false, true, };
 
 #include "rmacore.h"
 
+#define INITGUID
 #include "pnwintyp.h"
 #include "rmawin.h"
 #include "rmaerror.h"
@@ -370,6 +371,29 @@ newRMAPlayerObject()
 		return NULL;
 	self->pI = NULL;
 	self->pEngine = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IRMAErrorSinkControl* pI;
+
+} RMAErrorSinkControlObject;
+
+staticforward PyTypeObject RMAErrorSinkControlType;
+
+static RMAErrorSinkControlObject *
+newRMAErrorSinkControlObject()
+{
+	RMAErrorSinkControlObject *self;
+
+	self = PyObject_NEW(RMAErrorSinkControlObject, &RMAErrorSinkControlType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
 	/* XXXX Add your own initializers here */
 	return self;
 }
@@ -772,6 +796,29 @@ RMAPlayer_SetClientContext(RMAPlayerObject *self, PyObject *args)
 	return Py_None;	
 }
 
+static char RMAPlayer_QueryIRMAErrorSinkControl__doc__[] =
+""
+;
+static PyObject *
+RMAPlayer_QueryIRMAErrorSinkControl(RMAPlayerObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	RMAErrorSinkControlObject *obj;	
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	obj = newRMAErrorSinkControlObject();
+	if(obj==NULL) return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->QueryInterface(IID_IRMAErrorSinkControl,(void**)&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)){
+		Py_DECREF(obj);
+		seterror("RMAPlayer_QueryIRMAErrorSinkControl", res);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
 static struct PyMethodDef RMAPlayer_methods[] = {
 	{"OpenURL", (PyCFunction)RMAPlayer_OpenURL, METH_VARARGS, RMAPlayer_OpenURL__doc__},
 	{"Begin", (PyCFunction)RMAPlayer_Begin, METH_VARARGS, RMAPlayer_Begin__doc__},
@@ -782,6 +829,7 @@ static struct PyMethodDef RMAPlayer_methods[] = {
 	{"GetCurrentPlayTime", (PyCFunction)RMAPlayer_GetCurrentPlayTime, METH_VARARGS, RMAPlayer_GetCurrentPlayTime__doc__},
 	{"Seek", (PyCFunction)RMAPlayer_Seek, METH_VARARGS, RMAPlayer_Seek__doc__},
 	{"SetClientContext", (PyCFunction)RMAPlayer_SetClientContext, METH_VARARGS, RMAPlayer_SetClientContext__doc__},
+	{"QueryIRMAErrorSinkControl", (PyCFunction)RMAPlayer_QueryIRMAErrorSinkControl, METH_VARARGS, RMAPlayer_QueryIRMAErrorSinkControl__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -835,6 +883,84 @@ static PyTypeObject RMAPlayerType = {
 };
 
 // End of code for RMAPlayer object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// RMAErrorSinkControl object 
+
+static char RMAErrorSinkControl_AddErrorSink__doc__[] =
+""
+;
+static PyObject *
+RMAErrorSinkControl_AddErrorSink(RMAErrorSinkControlObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	ErrorSinkObject *obj;
+	int low_severity=PNLOG_EMERG,hi_severity=PNLOG_INFO;
+	if (!PyArg_ParseTuple(args, "O!|ii", &ErrorSinkType,&obj,
+		&low_severity,&hi_severity))
+		return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->AddErrorSink((IRMAErrorSink*)obj->pI,UINT8(low_severity),UINT8(hi_severity));
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)){
+		seterror("RMAErrorSinkControl_AddErrorSink", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static struct PyMethodDef RMAErrorSinkControl_methods[] = {
+	{"AddErrorSink", (PyCFunction)RMAErrorSinkControl_AddErrorSink, METH_VARARGS, RMAErrorSinkControl_AddErrorSink__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+RMAErrorSinkControl_dealloc(RMAErrorSinkControlObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI)
+	PyMem_DEL(self);
+}
+
+static PyObject *
+RMAErrorSinkControl_getattr(RMAErrorSinkControlObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(RMAErrorSinkControl_methods, (PyObject *)self, name);
+}
+
+static char RMAErrorSinkControlType__doc__[] =
+""
+;
+
+static PyTypeObject RMAErrorSinkControlType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"RMAErrorSinkControl",			/*tp_name*/
+	sizeof(RMAErrorSinkControlObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)RMAErrorSinkControl_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)RMAErrorSinkControl_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	RMAErrorSinkControlType__doc__ /* Documentation string */
+};
+
+// End of code for RMAErrorSinkControl object 
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
