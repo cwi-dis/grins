@@ -116,6 +116,10 @@ class HierarchyView(ViewDialog, GLDialog):
 			raise RuntimeError, 'bad node passed to globalsetfocus'
 		self.setfocusnode(node)
 
+	def fixtitle(self):
+		title = 'Hierarchy View (' + self.toplevel.basename + ')'
+		self.settitle(title)
+
 	#################################################
 	# Event handlers (called by GLDialog)           #
 	#################################################
