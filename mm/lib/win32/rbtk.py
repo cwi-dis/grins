@@ -30,25 +30,17 @@ class _rbtk:
 		# for modal boxes cancel is async, so:
 		if __main__.toplevel._in_create_box and not __main__.toplevel._in_create_box.is_closed():
 			__main__.toplevel._in_create_box.cancel_create_box()
-##		if self.in_create_box_mode():
-##			apply(callback, ())
-##			return
 					
 		# if we are closed call cancel
 		if self.is_closed():
 			apply(callback, ())
 			return
 
-
 		self._rb_modeless=modeless
 		self._rb_callback=callback
 		self._rb_units=units
 		self._rb_box=box
 		self._coolmode=coolmode
-
-		if box:
-			# convert box to relative sizes if necessary
-			box = self._inverse_coordinates(self._convert_coordinates(box, units = units))
 
 		# set application in create box mode
 		if not modeless:
@@ -84,7 +76,8 @@ class _rbtk:
 
 		if box:
 			# add the rect obj
-			box_pxl=self.get_pixel_coords(box)
+			# convert coordinates to pixel
+			box_pxl=self._convert_coordinates(box,units=units)
 			l,t,w,h=box_pxl
 			rectObj=DrawTk.DrawRect(Rect((l,t,l+w,t+h)),units=units)
 			self.Add(rectObj)
@@ -137,7 +130,7 @@ class _rbtk:
 		# 5. get user object
 		if self._objects:
 			drawObj=self._objects[0]
-			rb=self.get_relative_coords100(drawObj._position.tuple_ps(), units = self._rb_units)
+			rb=self.inverse_coordinates(drawObj._position.tuple_ps(), units = self._rb_units, precision=2)
 		else:
 			rb=()
 		self.DeleteContents()
@@ -209,7 +202,7 @@ class _rbtk:
 				# If this is a modeless resize check whether something changed.
 				if self._objects:
 					drawObj=self._objects[0]
-					rb=self.get_relative_coords100(drawObj._position.tuple_ps(), units = self._rb_units)
+					rb=self.inverse_coordinates(drawObj._position.tuple_ps(), units = self._rb_units, precision=2)
 					if self._rb_dirty(rb):
 						if not self._coolmode:
 							self._rb_finish(win32con.IDOK)
