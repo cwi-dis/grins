@@ -463,20 +463,33 @@ class _LayoutView2(GenFormView):
 			self._slider.play()
 			self._bplay.enable(0)
 			self._bstop.enable(1)
+		else:
+			self.EnablePreview(0)
 
 	def OnStop(self, id, params):
 		if self._slider and self._slider.isEnabled():
 			self._slider.stop()
 			self._bplay.enable(1)
 			self._bstop.enable(0)
-
+		else:
+			self.EnablePreview(0)
+					
 	def EnablePreview(self, flag):
 		if flag:
 			self._bplay.enable(flag)
 		else:
 			self._bplay.enable(0)
 			self._bstop.enable(0)
-			
+
+	# on selection change call
+	def StopPreview(self):
+		if self._slider and self._slider.isEnabled():
+			self._slider.stop()
+			self._bplay.enable(1)
+			self._bstop.enable(0)
+		else:
+			self.EnablePreview(0)
+				
 	#
 	# Focus adjustements
 	#
@@ -687,6 +700,7 @@ class TreeManager(IconMixin.ViewMixin):
 #			self._handler.onSelectTreeNodeCtrl(item)
 	
 	def OnMultiSelChanged(self):
+		self.treeCtrl.GetParent().GetPane(0,1).StopPreview()
 		if self._listener != None:
 			self._listener.onSelectChanged(self.treeCtrl.getSelectedItems())
 
@@ -821,6 +835,7 @@ class LayoutManager(LayoutManagerBase):
 	#
 	#
 	def onDSelChanged(self, selections):
+		self.GetParent().StopPreview()
 		if len(selections) == 1 and isinstance(selections[0], winlayout.Polyline):
 			return
 		self._selectedList = selections
