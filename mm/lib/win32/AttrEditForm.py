@@ -902,7 +902,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		rc=(x,y,x+w,y+h)
 		rc = v._convert_coordinates(rc, units = bunits)
 		rc=self._scale.layoutbox(rc,UNIT_PXL)
-		v.drawTk.SetBRect(rc)
+		v.drawTk.SetBRect(self.assertBounded(rc,v))
 
 		(x,y,w,h),bunits=self._form.GetCBox()
 		rc=(x,y,x+w,y+h)
@@ -916,7 +916,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		if x<l:x=l
 		if y<t:y=t
 		if w>(r-l):w=r-l
-		if h<(b-t):h=b-t
+		if h>(b-t):h=b-t
 		rc=(x,y,w,h)
 		return rc
 
