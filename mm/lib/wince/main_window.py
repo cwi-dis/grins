@@ -410,7 +410,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 				if dict.has_key('image'):
 					filename = MMurl.urlretrieve(MMurl.basejoin(skin, dict['image']))[0]
 			except parseskin.error, msg:
-				settings.set('skin', '')
+				settings.nonsaved_user_settings['skin'] = ''
 				from windowinterface import showmessage
 				showmessage(msg)
 			except:
