@@ -22,7 +22,7 @@ real_interiortypes = ('par', 'seq', 'alt', 'excl')
 def changedtimes(node):
 	if hasattr(node, 'initial_arms'):
 		del node.initial_arms
-	for child in node.GetSchedChildren():
+	for child in node.GetSchedChildren(0):
 		changedtimes(child)
 
 def hastimes(node):
@@ -138,7 +138,7 @@ def cleanup(node):
 	del node.deps
 	type = node.GetType()
 	if type in interiortypes:
-		for c in node.GetSchedChildren():
+		for c in node.GetSchedChildren(0):
 			cleanup(c)
 
 
@@ -183,13 +183,13 @@ def prep1(node):
 	type = node.GetType()
 	if type == 'seq': # XXX not right!
 		xnode, xside = node, HD
-		for c in node.GetSchedChildren():
+		for c in node.GetSchedChildren(0):
 			prep1(c)
 			adddep(xnode, xside, 0, c, HD)
 			xnode, xside = c, TL
 		adddep(xnode, xside, 0, node, TL)
 	elif type in ('par', 'alt', 'excl'):
-		for c in node.GetSchedChildren():
+		for c in node.GetSchedChildren(0):
 			prep1(c)
 			adddep(node, HD, 0, c, HD)
 			adddep(c, TL, 0, node, TL)
@@ -216,7 +216,7 @@ def prep2(node, root):
 		if parent.GetType() == 'seq':
 			xnode = None
 			xside = TL
-			for n in parent.GetSchedChildren():
+			for n in parent.GetSchedChildren(0):
 				if n is node:
 					break
 				xnode = n
@@ -243,7 +243,7 @@ def prep2(node, root):
 			adddep(xnode, xside, delay, node, yside)
 	#
 	if node.GetType() in real_interiortypes:
-		for c in node.GetSchedChildren(): prep2(c, root)
+		for c in node.GetSchedChildren(0): prep2(c, root)
 
 
 # propdown - propagate timing down the tree again
@@ -259,10 +259,10 @@ def propdown(node, stoptime, dftstarttime=0):
 	if not node.t0t1_inherited:
 		stoptime = node.t1
 	if tp in ('par', 'alt', 'excl'):
-		for c in node.GetSchedChildren():
+		for c in node.GetSchedChildren(0):
 			propdown(c, stoptime, node.t0)
 	elif tp == 'seq': # XXX not right!
-		children = node.GetSchedChildren()
+		children = node.GetSchedChildren(0)
 		if not children:
 			return
 		lastchild = children[-1]
