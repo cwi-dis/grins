@@ -1,5 +1,7 @@
 import fl
 from FL import *
+import MMAttrdefs
+import glwindow
 
 # the block view class.
 # *** Hacked by --Guido ***
@@ -39,10 +41,15 @@ class BlockView () :
 	# init() method compatible with the other views.
 	#
 	def init(self, root):
-		self = self.new(400, 800, root)
+		width, height = \
+			MMAttrdefs.getattr(root, 'blockview_winsize')
+		self.width, self.height = width, height
+		self = self.new(width, height, root)
 		return self
 	#
 	def show(self):
+		h, v = MMAttrdefs.getattr(self.root, 'blockview_winpos')
+		glwindow.setgeometry(h, v, self.width, self.height)
 		self.form.show_form(PLACE_SIZE, TRUE, 'Block View')
 	#
 	def hide(self):
@@ -193,9 +200,12 @@ class BlockView () :
 		import gl
 		gl.winset(self.form.window)
 		mx, my = fl.get_mouse ()
+		print 'mx =', mx, '; my =', my
 
 		node = self._find_node (self.rootview, (mx, my))
-		if node = None : raise 'block view'
+		if node = None :
+			print 'no node'
+			raise 'block view'
 
 		self.setfocus (node)
 		self.form.unfreeze_form ()
