@@ -2916,6 +2916,8 @@ IDI_ICON_ASSET_BLANK    ICON    DISCARDABLE     "res\\Blank.ico"
 IDI_ICON_ASSET_IMAGE    ICON    DISCARDABLE     "res\\Image.ico"
 IDI_ICON_ASSET_TEXT     ICON    DISCARDABLE     "res\\Text.ico"
 IDI_ICON_NODE           ICON    DISCARDABLE     "res\\Node.ico"
+IDI_DANGLINGEVENT       ICON    DISCARDABLE     "res\\danglingev.ico"
+IDI_DANGLINGANCHOR      ICON    DISCARDABLE     "res\\danglinganchor.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
