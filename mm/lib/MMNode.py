@@ -1545,7 +1545,8 @@ class MMNode:
 	# second and subsequent times through the loop.
 	#
 	def GenLoopSR(self, offset):
-		# XXXX Should we prunetree() here?
+		# XXXX Try by Jack:
+		self.PruneTree(None)
 		srlist = self.gensr(looping=1)
 		sractions, srevents = self.splitsrlist(srlist, offset)
 		return sractions, srevents
