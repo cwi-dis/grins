@@ -7,7 +7,6 @@ from licparser import *
 from LicenseDialog import LicenseDialog, EnterkeyDialog
 import settings
 import features
-from AutoLicense import AutoEvaluateLicense
 
 class WaitLicense(LicenseDialog):
 	def __init__(self, callback, feat):
@@ -47,10 +46,12 @@ class WaitLicense(LicenseDialog):
 		self.msg = arg
 		self.can_try = 0
 		if arg == "" and \
-				features.AUTO_EVALUATE in features.feature_set:
+		   hasattr(features, 'AUTO_EVALUATE') and hasattr(features, 'feature_set') and \
+		   features.AUTO_EVALUATE in features.feature_set:
 			# No license. If auto-evaluate is available
 			# in this product we attempt to create an
 			# auto-evaluate license
+			from AutoLicense import AutoEvaluateLicense
 			self.can_eval = 0
 			try:
 				self.license = AutoEvaluateLicense()
