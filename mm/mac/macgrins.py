@@ -101,7 +101,8 @@ else:
 # macfreeze: exclude msvcrt
 # macfreeze: exclude termios
 # macfreeze: exclude TERMIOS
-
+# macfreeze: exclude cmifex
+# macfreeze: exclude readline
 #
 # And here's the code for non-standalone version of the editor:
 

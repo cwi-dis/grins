@@ -107,6 +107,11 @@ else:
 # macfreeze: exclude audiosndr
 # macfreeze: exclude audiovoc
 # macfreeze: exclude imgpng
+# macfreeze: exclude msvcrt
+# macfreeze: exclude termios
+# macfreeze: exclude TERMIOS
+# macfreeze: exclude cmifex
+# macfreeze: exclude readline
 
 
 #
