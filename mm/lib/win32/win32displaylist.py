@@ -163,8 +163,7 @@ class _DisplayList:
 				d._cloneof = None
 		if wnd._active_displist is self:
 			wnd._active_displist = None
-			if not wnd._frozen:
-				wnd.update()
+			wnd.update()
 		if self._win32rgn:
 			self._win32rgn.DeleteObject()
 			del self._win32rgn
