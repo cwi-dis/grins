@@ -28,7 +28,7 @@ def ReadFile(filename):
 	context = MMNode.MMNodeContext(MMNode.MMNode)
 	context.setdirname(os.path.dirname(filename))
 	base = os.path.basename(filename)
-	cache = cachename(filename)
+	cache = cachename(filename, cmpok=1)
 	try:
 		f = open(cache, 'rb')
 	except IOError:
@@ -116,12 +116,18 @@ def WriteFile(root, filename):
 		fss.SetCreatorType('CMIF', 'CMP ')
 		macostools.touched(fss)
 
-def cachename(filename):
+def cachename(filename, cmpok=0):
 	# return the name of the cache file for the given filename.
 	import string
 	cache = filename
 	if string.lower(cache[-5:]) == '.cmif':
 		cache = cache[:-5]
+		return cache + '.cmp'
+	# Otherwise assume the user has passed the cmp file to the player if
+	# this is for input
+	if cmpok:
+		return cache
+	# Else, for output, append .cmp anyway
 	return cache + '.cmp'
 
 def attrnames(node):
