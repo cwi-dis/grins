@@ -712,6 +712,10 @@ class SMILWriter(SMIL):
 			self.writetag('meta', [('name', 'base'),
 					       ('content', ctx.baseurl)])
 		for key, val in ctx.attributes.items():
+			# for export don't write attributes starting with project_, they are meant
+			# for internal information-keeping only
+			if self.__cleanSMIL and key[:8] == 'project_':
+				continue
 			self.writetag('meta', [('name', key),
 					       ('content', val)])
 		self.writelayout()
