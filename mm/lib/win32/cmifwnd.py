@@ -416,40 +416,6 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 	def bgcolor(self, color):
 		self._bgcolor = self._convert_color(color)
 
-	# Returns the relative coordinates of a wnd with respect to its parent
-	def getsizes(self,rc_child=None):
-		if not rc_child:rc=win32mu.Rect(self.GetWindowRect())
-		else: rc=rc_child
-		rcParent=win32mu.Rect(self._parent.GetWindowRect())
-		return self._inverse_coordinates(rc.tuple_ps(),rcParent.tuple_ps())
-	# Returns the relative coordinates of a wnd with respect to its parent with 2 decimal digits
-	def getsizes100(self):
-		ps=self.getsizes()
-		return float(int(100.0*ps[0]+0.5)/100.0),float(int(100.0*ps[1]+0.5)/100.0),float(int(100.0*ps[2]+0.5)/100.0),float(int(100.0*ps[3]+0.5)/100.0)
-
-	# Returns the pixel coordinates from argument the relative coordinates
-	def get_pixel_coords(self,box):
-		return  self._convert_coordinates(box,self._canvas)
-
-	# Returns the pixel coordinates of this window
-	def get_relative_coords(self,box):
-		return self._inverse_coordinates(box,self._canvas)
-	# Returns the relative coordinates of the box with 2 decimal digits
-	def get_relative_coords100(self,box, units = UNIT_SCREEN):
-		if units == UNIT_PXL:
-			return box
-		elif units == UNIT_SCREEN:
-			ps=self._inverse_coordinates(box,self._canvas)
-			return float(int(100.0*ps[0]+0.5)/100.0),float(int(100.0*ps[1]+0.5)/100.0),float(int(100.0*ps[2]+0.5)/100.0),float(int(100.0*ps[3]+0.5)/100.0)
-		elif units == UNIT_MM:
-			toplevel=__main__.toplevel
-			x, y, w, h = self._canvas
-			return float(x) / toplevel._pixel_per_mm_x, \
-			       float(y) / toplevel._pixel_per_mm_y, \
-			       float(w) / toplevel._pixel_per_mm_x, \
-			       float(h) / toplevel._pixel_per_mm_y
-		else:
-			raise error, 'bad units specified'
 
 	# Returns true if the point is inside the window
 	def inside(self,pt):
@@ -467,27 +433,14 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		frame=(w.GetParent()).GetMDIFrame()		
 		return frame
 
-	# Returns the coordinates of this window in pix
-	def getpixgeometry(self):
-		(flags,showCmd,ptMinPosition,ptMaxPosition,rcNormalPosition)=\
-			self.GetWindowPlacement()
-		rc=rcNormalPosition
-		return rc[0],rc[1],rc[2]-rc[0],rc[3]-rc[1]
-		
-	# Returns the coordinates of this window
-	def getgeometry(self, units = UNIT_MM):
-		x,y,w,h=self.getpixgeometry()
-		toplevel=__main__.toplevel
-		if units == UNIT_MM:
-			return float(x) / toplevel._pixel_per_mm_x, float(y) / toplevel._pixel_per_mm_y, \
-				   float(w) / toplevel._pixel_per_mm_x, float(h) / toplevel._pixel_per_mm_y
-		elif units == UNIT_SCREEN:
-			return float(x) / toplevel._scr_width_pxl, \
-			       float(y) / toplevel._scr_height_pxl, \
-			       float(w) / toplevel._scr_width_pxl, \
-			       float(h) / toplevel._scr_height_pxl
-		elif units == UNIT_PXL:
-			return x, y, w, h
+	# convert from client (device) coordinates to canvas (logical)
+	def _DPtoLP(self,pt):
+		if self._canscroll:
+			print 'You must override _DPtoLP function for',self
+		return pt
+
+	def _convert_color(self, color):
+		return color 
 
 #====================================== Register callbacks
 	# Register user input callbacks
@@ -867,12 +820,33 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 	
 
 #=========================================================
-#======= Conversions between relative and pixel coordinates
+#	geometry and coordinates convert section
 	
-	# convert relative coordinates to pixel coordinates
-	# using as rect of reference for relative coord
-	# this wnd client rect (default) and as pixel origin
-	# the left top corner of the client rect
+	# Returns the coordinates of this window in pix
+	def getpixgeometry(self):
+		(flags,showCmd,ptMinPosition,ptMaxPosition,rcNormalPosition)=\
+			self.GetWindowPlacement()
+		rc=rcNormalPosition
+		return rc[0],rc[1],rc[2]-rc[0],rc[3]-rc[1]
+		
+	# Returns the coordinates of this window in units
+	def getgeometry(self, units = UNIT_MM):
+		x,y,w,h=self.getpixgeometry()
+		toplevel=__main__.toplevel
+		if units == UNIT_MM:
+			return float(x) / toplevel._pixel_per_mm_x, float(y) / toplevel._pixel_per_mm_y, \
+				   float(w) / toplevel._pixel_per_mm_x, float(h) / toplevel._pixel_per_mm_y
+		elif units == UNIT_SCREEN:
+			return float(x) / toplevel._scr_width_pxl, \
+			       float(y) / toplevel._scr_height_pxl, \
+			       float(w) / toplevel._scr_width_pxl, \
+			       float(h) / toplevel._scr_height_pxl
+		elif units == UNIT_PXL:
+			return x, y, w, h
+
+
+	# convert any coordinates to pixel coordinates
+	# ref_rect is the reference rect for relative coord
 	def _convert_coordinates(self, coordinates, ref_rect = None, crop = 0,
 				 units = UNIT_SCREEN):
 		x, y = coordinates[:2]
@@ -880,13 +854,14 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 			w, h = coordinates[2:]
 		else:
 			w, h = 0, 0
-		
+		if units==UNIT_MM:
+			x,y,w,h = self._mmtopxl((x,y,w,h))
+			units=UNIT_PXL
+
 		if ref_rect:
 			rx, ry, rw, rh = ref_rect
 		else: 
 			rx, ry, rw, rh = self._rect
-##		if not (0 <= x <= 1 and 0 <= y <= 1):
-##			raise error, 'coordinates out of bounds'
 		if units == UNIT_PXL or (units is None and type(x) is type(0)):
 			px = int(x)
 			dx = 0
@@ -931,9 +906,6 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		return px+rx, py+ry, pw, ph
 
 	# convert pixel coordinates to relative coordinates
-	# using as rect of reference for relative coord
-	# this wnd client rect (default) and as pixel origin
-	# the left top corner of the client rect
 	def _inverse_coordinates(self,coordinates,ref_rect=None):
 		px, py = coordinates[:2]
 
@@ -952,16 +924,94 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		h = float(ph) / rh
 		return x, y, w, h
 
-	# convert from client (device) coordinates to canvas (logical)
-	def _DPtoLP(self,pt):
-		if self._canscroll:
-			print 'You must override _DPtoLP function for',self
-		return pt
+	# convert pixel coordinates to coordinates in units with precision
+	# for relative cordinates is the same as _inverse_coordinates
+	def inverse_coordinates(self, coordinates, ref_rect=None, units = UNIT_SCREEN, precision = -1):
+		if units == UNIT_PXL:
+			return coordinates
+		elif units == UNIT_SCREEN:
+			if not ref_rect: ref_rect=self._canvas
+			coord=self._inverse_coordinates(coordinates, self._canvas)
+			if precision<0: 
+				return coord
+			else:
+				return self._coord_in_prec(coord, precision)
+		elif units == UNIT_MM:
+			toplevel=__main__.toplevel
+			coord=self._pxltomm(coordinates)
+			if precision<0: 
+				return coord
+			else:
+				return self._coord_in_prec(coord, precision)
+		else:
+			raise error, 'bad units specified in inverse_coordinates'
 
-	def _convert_color(self, color):
-		return color 
+	# convert coordinates in mm to pixel
+	def _mmtopxl(self, coordinates):
+		x, y = coordinates[:2]
+		toplevel=__main__.toplevel
+		if len(coordinates) == 2:
+			return int(x * toplevel._pixel_per_mm_x + 0.5), \
+				int(y * toplevel._pixel_per_mm_y + 0.5)
+		w, h = coordinates[2:]
+		return int(x * toplevel._pixel_per_mm_x + 0.5), \
+			   int(y * toplevel._pixel_per_mm_y + 0.5),\
+			   int(w * toplevel._pixel_per_mm_x + 0.5), \
+			   int(h * toplevel._pixel_per_mm_y + 0.5)
 
-#====================================== Image
+	# convert coordinates in mm to pixel coordinates
+	def _pxltomm(self, coordinates):
+		x, y = coordinates[:2]
+		toplevel=__main__.toplevel
+		if len(coordinates) == 2:
+			return	float(x) / toplevel._pixel_per_mm_x, \
+					float(y) / toplevel._pixel_per_mm_y
+		w, h = coordinates[2:]
+		return float(x) / toplevel._pixel_per_mm_x, \
+			       float(y) / toplevel._pixel_per_mm_y, \
+			       float(w) / toplevel._pixel_per_mm_x, \
+			       float(h) / toplevel._pixel_per_mm_y
+	
+	# return coordinates with precision 
+	def _coord_in_prec(self, coordinates, precision=-1):
+		x, y = coordinates[:2]
+		if len(coordinates) == 2:
+			if precision<0: 
+				return x,y
+			else:
+				factor=float(pow(10,precision))
+				return float(int(factor*x+0.5)/factor),float(int(factor*y+0.5)/factor)
+		w, h = coordinates[2:]
+		if precision<0: 
+			return x,y,w,h
+		else:
+			factor=float(pow(10,precision))
+			return float(int(factor*x+0.5)/factor), float(int(factor*y+0.5)/factor),\
+				float(int(factor*w+0.5)/factor), float(int(factor*h+0.5)/factor)
+		
+
+	# Returns the relative coordinates of a wnd with respect to its parent
+	def getsizes(self,rc_child=None):
+		if not rc_child:rc=win32mu.Rect(self.GetWindowRect())
+		else: rc=rc_child
+		rcParent=win32mu.Rect(self._parent.GetWindowRect())
+		return self._inverse_coordinates(rc.tuple_ps(),rcParent.tuple_ps())
+
+	# Returns the relative coordinates of a wnd with respect to its parent with 2 decimal digits
+	def getsizes100(self):
+		ps=self.getsizes()
+		return float(int(100.0*ps[0]+0.5)/100.0),float(int(100.0*ps[1]+0.5)/100.0),float(int(100.0*ps[2]+0.5)/100.0),float(int(100.0*ps[3]+0.5)/100.0)
+
+
+#	End of convert coordinates section
+#=========================================================
+
+
+
+
+#====================================== 
+#	Image section
+
 	# Returns the size of the image
 	def _image_size(self, file):
 		toplevel=__main__.toplevel
