@@ -3451,6 +3451,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				continue
 			if name == 'type':
 				name = 'trtype'
+			elif name == 'subtype':
+				pass	# any value is ok
 			elif name == 'dur':
 				value = self.__parsecounter(value)
 			elif name in ('borderColor', 'fadeColor'):
@@ -3458,6 +3460,34 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				value = self.__convert_color(value)
 			elif name == 'skip-content':
 				continue
+			elif name == 'coordinated':
+				if value == 'true':
+					value = 1
+				elif value == 'false':
+					value = 0
+				else:
+					self.syntax_error("error parsing value of `%s' attribute" % name)
+					continue
+			elif name == 'clipBoundary':
+				if value not in ('parent', 'children'):
+					self.syntax_error("error parsing value of `%s' attribute" % name)
+					continue
+			elif name in ('startProgress', 'endProgress'):
+				try:
+					value = float(value)
+				except:
+					self.syntax_error("error parsing value of `%s' attribute" % name)
+					continue
+			elif name == 'direction':
+				if value not in ('forward', 'reverse'):
+					self.syntax_error("error parsing value of `%s' attribute" % name)
+					continue
+			elif name in ('horzRepeat', 'vertRepeat', 'borderWidth'):
+				try:
+					value = int(value)
+				except:
+					self.syntax_error("error parsing value of `%s' attribute" % name)
+					continue
 			else:
 				try:
 					value = parseattrval(name, value, self.__context)

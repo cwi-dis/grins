@@ -17,8 +17,8 @@ class TransitionEngine:
 		self.__outtrans = outtrans
 		
 		self.__duration = dict.get('dur', 1)
-		self.__multiElement = dict.get('multiElement')
-		self.__childrenClip = dict.get('childrenClip')
+		self.__multiElement = dict.get('coordinated')
+		self.__childrenClip = dict.get('clipBoundary', 'children') == 'children'
 
 		self.__callback = cb
 
@@ -86,7 +86,7 @@ class TransitionEngine:
 		# 2. multiElement==true, childrenClip==false
 		# 3. multiElement==false
 		if self.__multiElement:
-			if childrenClip:
+			if self.__childrenClip:
 				# since children clipping will be done in wnd's paint method
 				# do a normal painting on active surface
 				# (currently we don't support overall clipping in blitter classes

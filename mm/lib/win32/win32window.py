@@ -1845,8 +1845,8 @@ class Region(Window):
 			if cb:
 				apply(apply, cb)
 			return
-		self._multiElement = dict.get('multiElement')
-		self._childrenClip = dict.get('childrenClip')
+		self._multiElement = dict.get('coordinated')
+		self._childrenClip = dict.get('clipBoundary', 'children') == 'children'
 		self._outtrans = outtrans
 		self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict, cb)
 		if runit:

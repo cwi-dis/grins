@@ -1932,11 +1932,13 @@ class SMILWriter(SMIL):
 			attrlist = []
 			attrlist.append(('id', self.transition2name[key]))
 			for akey, aval in val.items():
-				if akey == 'color':
+				if akey in ('fadeColor', 'borderColor'):
 					if colors.rcolors.has_key(aval):
 						aval = colors.rcolors[aval]
 					else:
 						aval = '#%02x%02x%02x' % aval
+				elif akey == 'coordinated':
+					aval = ['false', 'true'][aval]
 				elif akey != 'subtype':
 					aval = MMAttrdefs.valuerepr(akey, aval)
 					if akey == 'trtype':
