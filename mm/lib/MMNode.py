@@ -3604,7 +3604,10 @@ class MMNode(MMTreeElement):
 		for child in self.wtd_children:
 			for arc in child.durarcs:
 				refnode = arc.refnode()
-				refnode.sched_children.remove(arc)
+				try:
+					refnode.sched_children.remove(arc)
+				except ValueError:
+					pass
 				if arc.qid is not None:
 					try:
 						sched.cancel(arc.qid)
