@@ -964,7 +964,7 @@ class _MenuSupport:
 
 class _Widget(_MenuSupport):
 	'''Support methods for all window objects.'''
-	def __init__(self, parent, widget):
+	def __init__(self, parent, widget, tooltip = None):
 		self._parent = parent
 		parent._children.append(self)
 		self._showing = TRUE
@@ -972,9 +972,47 @@ class _Widget(_MenuSupport):
 		widget.ManageChild()
 		_MenuSupport.__init__(self)
 		self._form.AddCallback('destroyCallback', self._destroy, None)
+		if tooltip is not None:
+			self.__tid = None
+			self.__popup = None
+			widget.AddEventHandler(
+				X.EnterWindowMask|X.LeaveWindowMask, 0,
+				self.__tooltipeh, tooltip)
 
 	def __repr__(self):
 		return '<_Widget instance at %x>' % id(self)
+
+	def __tooltipeh(self, widget, tooltip, event):
+		if self.__tid:
+			Xt.RemoveTimeOut(self.__tid)
+		self.__tid = None
+		if event.type == X.EnterNotify:
+			self.__tid = Xt.AddTimeOut(500, self.__tooltipto,
+						   tooltip)
+		elif event.type == X.LeaveNotify:
+			if self.__popup:
+				self.__popup.DestroyWidget()
+				self.__popup.Popdown()
+				self.__popup = None
+
+	def __tooltipto(self, tooltip, id):
+		form = self._form
+		x, y = form.TranslateCoords(0, 0)
+		val = form.GetValues(['width', 'height'])
+		w = val['width']
+		h = val['height']
+		# place below center of widget
+		popup = form.CreatePopupShell('help_popup', Xt.OverrideShell,
+					      {'x': x+w/2, 'y': y+h+5})
+		self.__popup = popup
+		if callable(tooltip):
+			tooltip = tooltip()
+		elif type(tooltip) is type(()):
+			tooltip = apply(apply, tooltip)
+		# else assume string
+		popup.CreateManagedWidget('help_label', Xm.Label,
+					  {'labelString': tooltip})
+		popup.Popup(0)
 
 	def close(self):
 		'''Close the window object.'''
@@ -1051,7 +1089,7 @@ class _Widget(_MenuSupport):
 class Label(_Widget):
 	'''Label window object.'''
 	def __init__(self, parent, text, useGadget = _def_useGadget,
-		     name = 'windowLabel', **options):
+		     name = 'windowLabel', tooltip = None, **options):
 		'''Create a Label subwindow.
 
 		PARENT is the parent window, TEXT is the text for the
@@ -1060,14 +1098,14 @@ class Label(_Widget):
 		attachment options.'''
 		attrs = {}
 		self._attachments(attrs, options)
-		if useGadget:
+		if useGadget and tooltip is None:
 			label = Xm.LabelGadget
 		else:
 			label = Xm.Label
 		label = parent._form.CreateManagedWidget(name, label, attrs)
 		label.labelString = text
 		self._text = text
-		_Widget.__init__(self, parent, label)
+		_Widget.__init__(self, parent, label, tooltip)
 
 	def __repr__(self):
 		return '<Label instance at %x, text=%s>' % (id(self), self._text)
@@ -1080,7 +1118,7 @@ class Label(_Widget):
 class Button(_Widget):
 	'''Button window object.'''
 	def __init__(self, parent, label, callback, useGadget = _def_useGadget,
-		     name = 'windowButton', **options):
+		     name = 'windowButton', tooltip = None, **options):
 		'''Create a Button subwindow.
 
 		PARENT is the parent window, LABEL is the label on the
@@ -1091,7 +1129,7 @@ class Button(_Widget):
 		self.__text = label
 		attrs = {'labelString': label}
 		self._attachments(attrs, options)
-		if useGadget:
+		if useGadget and tooltip is None:
 			button = Xm.PushButtonGadget
 		else:
 			button = Xm.PushButton
@@ -1099,7 +1137,7 @@ class Button(_Widget):
 		if callback:
 			button.AddCallback('activateCallback',
 					   self.__callback, callback)
-		_Widget.__init__(self, parent, button)
+		_Widget.__init__(self, parent, button, tooltip)
 
 	def __repr__(self):
 		return '<Button instance at %x, text=%s>' % (id(self), self.__text)
@@ -1614,12 +1652,12 @@ class List(_Widget, _List):
 class TextInput(_Widget):
 	def __init__(self, parent, prompt, inittext, chcb, accb,
 		     useGadget = _def_useGadget, name = 'windowTextfield',
-		     modifyCB = None,
+		     modifyCB = None, tooltip = None,
 		     **options):
 		attrs = {}
 		self._attachments(attrs, options)
 		if prompt is not None:
-			if useGadget:
+			if useGadget and tooltip is None:
 				labelwidget = Xm.LabelGadget
 			else:
 				labelwidget = Xm.Label
@@ -1659,7 +1697,7 @@ class TextInput(_Widget):
 		if modifyCB:
 			text.AddCallback('modifyVerifyCallback',
 					 self._modifyCB, modifyCB)
-		_Widget.__init__(self, parent, widget)
+		_Widget.__init__(self, parent, widget, tooltip)
 
 	def __repr__(self):
 		return '<TextInput instance at %x>' % id(self)
@@ -1704,7 +1742,7 @@ class TextInput(_Widget):
 
 class TextEdit(_Widget):
 	def __init__(self, parent, inittext, cb, name = 'windowText',
-		     **options):
+		     tooltip = None, **options):
 		attrs = {'editMode': Xmd.MULTI_LINE_EDIT,
 			 'editable': TRUE,
 			 'rows': 10}
@@ -1718,7 +1756,7 @@ class TextEdit(_Widget):
 		if cb:
 			text.AddCallback('activateCallback', self._callback,
 					 cb)
-		_Widget.__init__(self, parent, text)
+		_Widget.__init__(self, parent, text, tooltip)
 		self.settext(inittext)
 
 	def __repr__(self):
@@ -1792,16 +1830,16 @@ class TextEdit(_Widget):
 
 class Separator(_Widget):
 	def __init__(self, parent, useGadget = _def_useGadget,
-		     name = 'windowSeparator', **options):
+		     name = 'windowSeparator', tooltip = None, **options):
 		attrs = {}
 		self._attachments(attrs, options)
-		if useGadget:
+		if useGadget and tooltip is None:
 			separator = Xm.SeparatorGadget
 		else:
 			separator = Xm.Separator
 		separator = parent._form.CreateManagedWidget(name, separator,
 							     attrs)
-		_Widget.__init__(self, parent, separator)
+		_Widget.__init__(self, parent, separator, tooltip)
 
 	def __repr__(self):
 		return '<Separator instance at %x>' % id(self)
@@ -1952,7 +1990,7 @@ class ButtonRow(_Widget):
 class Slider(_Widget):
 	def __init__(self, parent, prompt, minimum, initial, maximum, cb,
 		     vertical = 0, showvalue = 1, name = 'windowScale',
-		     **options):
+		     tooltip = None, **options):
 		if vertical:
 			orientation = Xmd.VERTICAL
 		else:
@@ -1979,7 +2017,7 @@ class Slider(_Widget):
 					break
 		else:
 			scale.titleString = prompt
-		_Widget.__init__(self, parent, scale)
+		_Widget.__init__(self, parent, scale, tooltip)
 
 	def __repr__(self):
 		return '<Slider instance at %x>' % id(self)
