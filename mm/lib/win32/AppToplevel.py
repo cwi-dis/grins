@@ -148,10 +148,13 @@ class _Toplevel:
 		frame = adornments.get('frame')
 		if frame is None:
 			raise 'error', 'newwindow without frame specification'
-		return frame.newwindow(x, y, w, h, title, visible_channel,
+		wnd = frame.newwindow(x, y, w, h, title, visible_channel,
 		      type_channel, pixmap, units,
 		      adornments, canvassize,
 		      commandlist, resizable)
+		if hasattr(wnd, '_viewport'):
+			return wnd._viewport
+		return wnd
 
 
 	############ SDI/MDI Model Support
