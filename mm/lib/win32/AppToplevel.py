@@ -74,7 +74,7 @@ class _Toplevel:
 
 		self._image_size_cache = {}
 		self._image_cache = {}
-		self._image_docmap = {None:[],}
+		self._image_docmap = {}
 				
 		# timer handling
 		self._timers = []
@@ -394,10 +394,15 @@ class _Toplevel:
 	
 	#utility functions
 	def cleardocmap(self,doc):
-		if doc not in self._image_docmap.keys(): return
+		if not self._image_docmap.has_key(doc): return
 		imglist=self._image_docmap[doc]
+		otherimglist=[]
+		for otherdoc in self._image_docmap.keys():
+			if otherdoc!=doc:
+				otherimglist.extend(self._image_docmap[otherdoc])					
 		for file in imglist:
-			if file not in self._image_cache.keys():continue
+			if not self._image_cache.has_key(file):continue
+			if file in otherimglist:continue
 			img=self._image_cache[file]
 			del self._image_cache[file]
 			del self._image_size_cache[file]
@@ -407,18 +412,8 @@ class _Toplevel:
 			
 	# Returns the size of an image	
 	def GetImageSize(self,file):
-		try:
-			xsize, ysize = self._image_size_cache[file]
-		except KeyError:
-			try:
-				img = win32ig.load(file)
-				self._image_docmap[None]=file
-			except img.error, arg:
-				raise error, arg
-			xsize,ysize,depth=win32ig.size(img)
-			self._image_size_cache[file] = xsize, ysize
-			self._image_cache[file] = img
-		return xsize, ysize
+		f=self.getActiveDocFrame()
+		return f._image_size(file)
 
 	# Returns the size of a video	
 	def GetVideoSize(self,file):
