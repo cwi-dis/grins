@@ -201,7 +201,6 @@ class Widget:
 
         if r < l:
             print "Widget: Error: box is right-to-left", self
-            assert 0
         if t > b:
             print "Widget: Error: box is upside down.", self
 
