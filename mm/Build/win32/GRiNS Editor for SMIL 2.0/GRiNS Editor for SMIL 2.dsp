@@ -441,6 +441,10 @@ SOURCE=.\M_Font.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_FrameRate.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_ftplib.c
 # End Source File
 # Begin Source File
@@ -722,6 +726,10 @@ SOURCE=.\M_os.c
 # Begin Source File
 
 SOURCE=.\M_parsehtml.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_parseutil.c
 # End Source File
 # Begin Source File
 
@@ -1381,6 +1389,10 @@ SOURCE=.\M_winlayout.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_winversion.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_WMEVENTS.c
 # End Source File
 # Begin Source File
@@ -1398,6 +1410,10 @@ SOURCE=.\M_wndusercmd.c
 # Begin Source File
 
 SOURCE=.\M_xmllib.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_xmmflib.c
 # End Source File
 # End Group
 # Begin Group "Resource Files"

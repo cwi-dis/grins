@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
-  Version=7.041
-  Title=Oratrix GRiNS Editor for SMIL 2.0 Installation
+  Version=8.14
+  Title=atrix GRiNS Editor for SMIL 2.0 Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
   Japanese Font Name=MS Gothic
@@ -14,12 +14,12 @@ item: Global
   Message Font=MS Sans Serif
   Font Size=8
   Pages Modified=00110000111101100000011100000111
-  Extra Pages=00000000000000000000000000100010
+  Extra Pages=00000000000000000000000010100010
   Disk Filename=SETUP
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-58.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-61.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -30,14 +30,14 @@ item: Global
   Version Description=GRiNS/SMIL 2.0
   Version Copyright=Copyright 2000 Oratrix Holding B.V.
   Version Company=Oratrix Holding B.V.
+  Crystal Format=10111100101100000010001001001001
   Distribute Type=2
   Step View=All
-  File Checksum=594493895
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=C:\PROGRA~1\WISEIN~1
+  Variable Default2=E:\PROGRA~1\WISEIN~1.1
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -1143,11 +1143,6 @@ item: Install File
   Destination=%MAINDIR%\readme.txt
   Flags=0000000010000010
 end
-item: Install File
-  Source=c:\Program Files\Wise InstallMaker\Unwise.exe
-  Destination=%MAINDIR%\Unwise.exe
-  Flags=0000000010000010
-end
 item: If/While Statement
   Variable=COMPONENTS
   Value=A
@@ -1446,12 +1441,12 @@ end
 item: Install File
   Source=c:\Winnt\system32\Oleaut32.dll
   Destination=%SYS32%\Oleaut32.dll
-  Flags=0000011010010011
+  Flags=0000001010001010
 end
 item: Install File
   Source=c:\Winnt\system32\mfc42.dll
   Destination=%SYS32%\mfc42.dll
-  Flags=0001011010010011
+  Flags=0001001010001010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\qsg1.bmp
@@ -1646,12 +1641,12 @@ end
 item: Install File
   Source=c:\Winnt\system32\Msvcp60.dll
   Destination=%SYS32%\Msvcp60.dll
-  Flags=0000011010010011
+  Flags=0000001010001010
 end
 item: Install File
   Source=c:\Winnt\system32\Msvcirt.dll
   Destination=%SYS32%\Msvcirt.dll
-  Flags=0000011010010011
+  Flags=0000001010001010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\dshow.pyd
@@ -1661,17 +1656,17 @@ end
 item: Install File
   Source=c:\Winnt\system32\Olepro32.dll
   Destination=%SYS32%\Olepro32.dll
-  Flags=0001011010010011
+  Flags=0001001010001010
 end
 item: Install File
   Source=c:\Winnt\system32\Msvcrt.dll
   Destination=%SYS32%\Msvcrt.dll
-  Flags=0000011010010011
+  Flags=0000001010001010
 end
 item: Install File
   Source=c:\Winnt\system32\Msvcrt40.dll
   Destination=%SYS32%\Msvcrt40.dll
-  Flags=0000011010010011
+  Flags=0000001010001010
 end
 item: End Block
 end
@@ -2127,6 +2122,39 @@ item: Custom Dialog Set
   end
 end
 item: End Block
+end
+item: Edit Registry
+  Total Keys=5
+  item: Key
+    Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
+    New Value=2.0
+    Value Name=DisplayVersion
+    Root=2
+  end
+  item: Key
+    Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
+    New Value=http://www.oratrix.com/
+    Value Name=HelpLink
+    Root=2
+  end
+  item: Key
+    Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
+    New Value=Oratrix Development BV
+    Value Name=Publisher
+    Root=2
+  end
+  item: Key
+    Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
+    New Value=http://www.oratrix.com/
+    Value Name=URLInfoAbout
+    Root=2
+  end
+  item: Key
+    Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
+    New Value=info@oratrix.com
+    Value Name=Contact
+    Root=2
+  end
 end
 item: New Event
   Name=Cancel
