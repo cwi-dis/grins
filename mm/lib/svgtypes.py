@@ -197,32 +197,13 @@ class Animateable:
 		return math.fabs(v2-v1)
 
 class SVGAttr(Animateable):
-	def __init__(self, node, str, default):
+	def __init__(self, node, attr, str, default):
 		self._node = node
+		self._attr = attr
 		self._value = None
 		self._default = default
 		Animateable.__init__(self)
 
-class SVGSynchronizeable:
-	def __init__(self):
-		self.arcs = []
-		self.syncbaseval = None
-		self.syncbaseparams = None
-
-	def addSyncArc(self, a):
-		self.arcs.append(a)
-
-	def removeSyncArc(self, a):
-		self.arcs.remove(a)
-
-	# propagate changes
-	def synchronize(self):
-		pass
-
-	# set base value
-	def setSyncBaseValue(self, val, params=None):
-		self.syncbaseval = val
-		self.syncbaseparams = params
 
 ################
 # svg types
@@ -231,8 +212,8 @@ class SVGSynchronizeable:
 from svgpath import PathSeg, SVGPath
 
 class SVGEnum(SVGAttr):
-	def __init__(self, node, val, default=None):
-		SVGAttr.__init__(self, node, val, default)
+	def __init__(self, node, attr, val, default=None):
+		SVGAttr.__init__(self, node, attr, val, default)
 		self._value = val
 
 	def getValue(self):
@@ -255,8 +236,8 @@ class SVGEnum(SVGAttr):
 
 class SVGInteger(SVGAttr):
 	classre = re.compile(_opS + signedIntPat + _opS)
-	def __init__(self, node, str, default=None):
-		SVGAttr.__init__(self, node, str, default)
+	def __init__(self, node, attr, str, default=None):
+		SVGAttr.__init__(self, node, attr, str, default)
 		if str:
 			str = string.strip(str)
 			mo = SVGInteger.classre.match(str)
@@ -273,8 +254,8 @@ class SVGInteger(SVGAttr):
 
 class SVGNumber(SVGAttr):
 	classre = re.compile(signedNumberPat + '$')
-	def __init__(self, node, str, default=None):
-		SVGAttr.__init__(self, node, str, default)
+	def __init__(self, node, attr, str, default=None):
+		SVGAttr.__init__(self, node, attr, str, default)
 		if str:
 			str = string.strip(str)
 			mo = SVGNumber.classre.match(str)
@@ -290,23 +271,23 @@ class SVGNumber(SVGAttr):
 		return self._value is None or self._value == self._default
 
 class SVGGEZeroNumber(SVGNumber):
-	def __init__(self, node, str, default=None):
-		SVGNumber.__init__(self, node, str, default)
+	def __init__(self, node, attr, str, default=None):
+		SVGNumber.__init__(self, node, attr, str, default)
 		assert self._value is None or self._value>=0, 'number should be GE to zero'
 
 class SVGCount(SVGNumber):
-	def __init__(self, node, str, default=None):
-		SVGAttr.__init__(self, node, str, default)
+	def __init__(self, node, attr, str, default=None):
+		SVGAttr.__init__(self, node, attr, str, default)
 		if str == 'indefinite':
-			SVGAttr.__init__(self, node, None, default)
+			SVGAttr.__init__(self, node, attr, None, default)
 			self._value = 'indefinite'
 		else:
-			SVGAttr.__init__(self, node, str, default)
+			SVGAttr.__init__(self, node, attr, str, default)
 			assert self._value is None or self._value>=0, 'SVGCount should be GE to zero'
 
 class SVGNumberList(SVGAttr):
-	def __init__(self, node, str, default=None):
-		SVGAttr.__init__(self, node, str, default)
+	def __init__(self, node, attr, str, default=None):
+		SVGAttr.__init__(self, node, attr, str, default)
 		if str:
 			sl = splitlist(str)
 			self._value = []
@@ -329,8 +310,8 @@ class SVGNumberList(SVGAttr):
 
 class SVGPercent(SVGAttr):
 	classre = re.compile(percentPat)
-	def __init__(self, node, str, default=None):
-		SVGAttr.__init__(self, node, str, default)
+	def __init__(self, node, attr, str, default=None):
+		SVGAttr.__init__(self, node, attr, str, default)
 		if str:
 			str = string.strip(str)
 			mo = SVGPercent.classre.match(str)
@@ -354,8 +335,8 @@ class SVGLength(SVGAttr):
 	#unitstopx = {'px':1.0, 'pt':1.25, 'pc':15.0, 'mm': 3.543307, 'cm':35.43307, 'in':90.0}
 	unitstopx = {'px': 1.0, 'pt': 1.0, 'pc': 12.0, 'mm': 2.8346456, 'cm': 28.346456, 'in': 72.0}
 	defaultunit = 'px'
-	def __init__(self, node, str, default=None):
-		SVGAttr.__init__(self, node, str, default)
+	def __init__(self, node, attr, str, default=None):
+		SVGAttr.__init__(self, node, attr, str, default)
 		self._units = None
 		if str is None:
 			return
@@ -414,7 +395,11 @@ class SVGLength(SVGAttr):
 	
 	def getElement(self):
 		return self._node
-
+	
+	def setValue(self, val, units='px'):
+		self._value = val
+		self._units = units
+			
 class SVGWidth(SVGLength):
 	pass
 
@@ -426,8 +411,8 @@ class SVGCoordinate(SVGLength):
 	pass
 
 class SVGPoint(SVGAttr):
-	def __init__(self, node, str, default=None):
-		SVGAttr.__init__(self, node, str, default)
+	def __init__(self, node, attr, str, default=None):
+		SVGAttr.__init__(self, node, attr, str, default)
 		if str:
 			L = splitlist(str, ' ,')
 			assert len(L) == 2, 'invalid point'
@@ -444,14 +429,16 @@ class SVGPoint(SVGAttr):
 
 class XMLName:
 	classre = re.compile('[a-zA-Z_:][-a-zA-Z0-9._:]*')
-	def __init__(self, node, str, default=None):
+	def __init__(self, node, attr, str, default=None):
 		self._node = node
+		self._attr = attr
 		self._value = None
 		self._default = default
 		if str:
 			str = string.strip(str)
 			mo = self.classre.match(str)
-			assert mo is not None, 'invalid XML name'
+			if mo is None:
+				print 'invalid XML name', str
 			self._value = str
 
 	def getValue(self):
@@ -462,8 +449,8 @@ class SVGAngle(SVGAttr):
 	svgunits = ('deg', 'grad', 'rad',)
 	unitstorad = {'deg':math.pi/180.0, 'grad':math.pi/200.0, 'rad':1.0}
 	defaultunit = 'deg'
-	def __init__(self, node, str, default=None):
-		SVGAttr.__init__(self, node, str, default)
+	def __init__(self, node, attr, str, default=None):
+		SVGAttr.__init__(self, node, attr, str, default)
 		self._units = None
 		if str:
 			str = string.strip(str)
@@ -494,12 +481,12 @@ class SVGAngle(SVGAttr):
 		return self._value == self._default
 
 class SVGAnimRotate(SVGAngle):
-	def __init__(self, node, str, default=None):
+	def __init__(self, node, attr, str, default=None):
 		if str in ('auto', 'auto-reverse'):
-			SVGAngle.__init__(self, node, None, default)
+			SVGAngle.__init__(self, node, attr, None, default)
 			self._value = str
 		else:
-			SVGAngle.__init__(self, node, str, default)
+			SVGAngle.__init__(self, node, attr, str, default)
 
 	def __repr__(self):
 		if self._value in ('auto', 'auto-reverse'):
@@ -513,8 +500,8 @@ class SVGAnimRotate(SVGAngle):
 
 class SVGColor(SVGAttr):
 	classre = color
-	def __init__(self, node, val, default=None):
-		SVGAttr.__init__(self, node, val, default)
+	def __init__(self, node, attr, val, default=None):
+		SVGAttr.__init__(self, node, attr, val, default)
 		if val is None:
 			return
 		if val == 'none':
@@ -607,8 +594,8 @@ class SVGFrequency(SVGAttr):
 	classre = re.compile(_opS + numberPat + freqUnitsPat + _opS)
 	svgunits = ('Hz', 'kHz')
 	defaultunit = 'Hz'
-	def __init__(self, node, str, default=None):
-		SVGAttr.__init__(self, node, str, default)
+	def __init__(self, node, attr, str, default=None):
+		SVGAttr.__init__(self, node, attr, str, default)
 		self._units = None
 		if str:
 			str = string.strip(str)
@@ -643,8 +630,9 @@ class SVGTime:
 	classre = re.compile(signedNumberPat + timeUnitsPat + '$')
 	svgunits = ('s', 'ms')
 	defaultunit = 's'
-	def __init__(self, node, str, default=None):
+	def __init__(self, node, attr, str, default=None):
 		self._node = node
+		self._attr = attr
 		self._units = None
 		self._value = None
 		self._default = default
@@ -682,42 +670,150 @@ class SVGTime:
 	def isDefault(self):
 		return self._value == self._default
 
-class SVGSyncTime(SVGSynchronizeable):
+
+class SyncArc:
+	def __init__(self, node, attrobj):
+		self.node = node
+		self.target = attrobj # SyncVariant target
+
+	def __repr__(self):
+		return '%s.%s -> %s.%s' % (self.node.getTimeType(), self.target._syncevent, self.target._node.getTimeType(), self.target._attr)
+
+	def getScrNode(self):
+		return self.node
+
+	# return type in ('begin', 'end', 'repeat', 'event')
+	def getSrcEvent(self):
+		return self.target._syncevent
+
+	# params is repeat index or dom2event name
+	def getSrcEventParams(self):
+		return self.target._synceventparams
+
+	def getTargetNode(self):
+		return self.target._node
+
+	# return in ('begin', 'end')
+	def getTargetAttr(self):
+		return self.target._attr
+
+	# time t reference timer is self.node's parent timer
+	# the time has to be translated to self.target parent timer
+	def addInstanceTime(self, t, params=None):
+		p1 = self.node.getTimeParent()
+		if p1 is None: p1 = self.node
+		p2 = self.getTargetNode().getTimeParent()
+		if p2 is None: p2 = self.getTargetNode()
+		if p1 != p2:
+			# xxx: for oprimization use common ancestor
+			t = p2.document2simple(p1.simple2document(t))
+		if t != 'unresolved':
+			self.target.addInstanceTime(t, params)
+
+class SyncVariant:
 	classre = re.compile(syncvalPat + '$')
 	svgunits = ('s', 'ms')
 	defaultunit = 's'
-	def __init__(self, node, str, default=None):
-		SVGSynchronizeable.__init__(self)
+	def __init__(self, node, attr, str, default=None):
+		# target node
 		self._node = node
-		self._offset = None
+
+		# target attr
+		self._attr = attr
+
+		# source node specifiers
+		self._syncbase = None # 'id', 'prev', 'implicit'
+		self._syncbaseparams = None # id when syncbase == 'id' otherwise ignore
+
+		# source node event specifiers
+		self._syncevent = None # 'begin', 'end', 'repeat', 'event', 'implicit'
+
+		# when syncevent=='repeat' synceventparams is the repeat index
+		# when syncevent=='event' synceventparams is the dom2event name
+		self._synceventparams = None 
+
+		# target node offset specifiers
+		self._offset = None # (+|-)? clock-value | implicit-0 | indefinite
 		self._units = None
-		self._syncbase = None
-		self._syncevent = None
-		self._syncparams = None
-		self._default = default
+
+		# source event instance list
+		self._insttimes = []
+
+		# parse str
 		if str:
 			str = string.strip(str)
-			if str == 'indefinite':
-				self._offset = 'indefinite'
-				return
-			mo = self.classre.match(str)
-			if mo is not None:
-				self._syncbase, self._syncevent = mo.group('name'), mo.group('event')
-				i, d = mo.group('int1') or mo.group('int2'), mo.group('dec1') or mo.group('dec3')
-				self._offset = actof(mo.group('sign'), i, d)
-				if self._offset is not None:
-					units = mo.group('units')
-					if units is None:
-						units = self.defaultunit
-					self._units = units
+		if not str:
+			return
+		if str == 'indefinite':
+			self._offset = 'indefinite'
+			return
+		mo = self.classre.match(str)
+		if mo is not None:
+			self._syncbase, self._syncevent = mo.group('name'), mo.group('event')
+			i, d = mo.group('int1') or mo.group('int2'), mo.group('dec1') or mo.group('dec3')
+			self._offset = actof(mo.group('sign'), i, d) or 0
+			if self._offset is not None:
+				units = mo.group('units')
+				if units is None:
+					units = self.defaultunit
+				self._units = units
+			else:
+				self._offset = 0
+				self._units = self.defaultunit
+			if self._syncbase is None:
+				self._syncbase = 'implicit'
+			elif self._syncbase != 'prev':
+				self._syncbaseparams = self._syncbase
+				self._syncbase = 'id'
 
-	def duradd(self, v1, v2):
-		if v1 is 'unresolved' or v2 is 'unresolved':
-			return 'unresolved'
-		elif v1=='indefinite' or v2=='indefinite':
-			return 'indefinite'
+			if self._syncevent is None:
+				self._syncevent = 'implicit'
+			elif self._syncevent not in ('begin', 'end', 'repeat'):
+				self._syncbaseparams = self._syncevent
+				self._syncevent = 'event'
+	
+	def __repr__(self):
+		if self._syncbaseparams is None:
+			base = self._syncbase
 		else:
-			return v1 + v2
+			base = '%s(%s)' % (self._syncbase, `self._syncbaseparams`) 
+		if self._synceventparams is None:
+			event = self._syncevent
+		else:
+			base = '%s(%s)' % (self._syncevent, `self._synceventparams`) 
+		return '%s.%s + %s' % (base, event, `self._offset`)
+
+	def setEvent(self, event, params=None):
+		self._syncbase = 'parent'
+
+		# source node event specifiers
+		self._syncevent = event # 'begin', 'end', 'repeat', 'event'
+
+		# when syncevent=='repeat' synceventparams is the repeat index
+		# when syncevent=='event' synceventparams is the dom2event name
+		self._synceventparams = params 
+
+	def setOffset(self, offset, units='s'):
+		self._offset = offset 
+		self._units = units
+		
+	def isEventBased(self):
+		return self._syncevent == 'event'
+			
+	def hasPendingEvents(self):
+		return self._syncevent == 'event' and len(self._insttimes)==0
+
+	def reset(self):
+		self._insttimes = []
+	
+	def addInstanceTime(self, t, params=None):
+		if self._syncevent == 'repeat':
+			if self._synceventparams is None: # repeat
+				self._insttimes.append(t)	
+			elif self._synceventparams == params: # repeat(index)
+				self._insttimes.append(t)	
+		else:
+			self._insttimes.append(t)
 
 	def getOffset(self, units='s'):
 		if self._offset is not None:
@@ -732,28 +828,183 @@ class SVGSyncTime(SVGSynchronizeable):
 			return 1000.0*val
 		return self._default
 
+	def createSyncArc(self):
+		if self._syncbase == 'id':
+			src = self._node.getDocument().getElementWithId(self._syncbaseparams)
+			if src:
+				arc = SyncArc(src, self)
+				src.addSyncArc(arc)
+		elif self._syncbase == 'prev':
+			src = self._node.getPrevTimeSibling()
+			if not src:
+				src = self._node.getParent()
+			if src:
+				arc = SyncArc(src, self)
+				src.addSyncArc(arc)
+		elif self._syncbase == 'implicit':
+			if self._syncevent == 'event':
+				arc = SyncArc(self._node, self)
+				self._node.addSyncArc(arc)
+			elif self._attr == 'begin':
+				parent = self._node.getTimeParent()
+				if not parent: return
+				ptype = parent.getTimeType()
+				if ptype == 'par':
+					self._syncbase = 'parent'
+					self._syncevent = 'begin'
+					arc = SyncArc(parent, self)
+					parent.addSyncArc(arc)
+				elif ptype == 'seq':
+					self._syncbase = 'prev'
+					self._syncevent = 'begin'
+					src = self._node.getPrevTimeSibling()
+					if not src:
+						src = self._node.getTimeParent()
+					if src:
+						arc = SyncArc(src, self)
+						src.addSyncArc(arc)
+				elif ptype == 'excl':
+					pass
+
+	def isIndefinite(self):
+		return self._offset == 'indefinite'
+
+	def getValueList(self):
+		offset = self.getOffset()
+		if offset == 'indefinite':
+			return []
+		L = []
+		for val in self._insttimes:
+			L.append(val+offset)
+		return L
+				
+class SyncVariantList:
+	def __init__(self, node, attr, str, default=None):
+		self._node = node
+		self._attr = attr
+		self._syncvarslist = []
+		self._default = default
+		self._explicit = 0
+		if str:
+			str = string.strip(str)
+		if not str:
+			return
+		synclist = string.split(str, ';')
+		for syncstr in synclist:
+			if syncstr:
+				self._syncvarslist.append(SyncVariant(node, attr, syncstr))
+		self._explicit = len(self._syncvarslist) != 0	
+
+	def __repr__(self):
+		s = '%s =\"' % self._attr
+		for syncvar in self._syncvarslist:
+			s = s + repr(syncvar) + '; '
+		s = s[:-2] + '\"'
+		return s
+					
+	def reset(self):
+		for syncvar in self._syncvarslist:
+			syncvar.reset()
+
+	def isEmpty(self):
+		return len(self._syncvarslist) == 0
+
+	def isExplicit(self):
+		return self._explicit
+
+	def createSyncArcs(self):
+		for syncvar in self._syncvarslist:
+			syncvar.createSyncArc()
+
+	def getValueList(self):
+		L = []
+		for syncvar in self._syncvarslist:
+			L = L + syncvar.getValueList()
+		L.sort()
+		for syncvar in self._syncvarslist:
+			if syncvar.isIndefinite():
+				L.append('indefinite')
+		return L
+
+	def beginIteration(self):
+		L = []
+		for syncvar in self._syncvarslist:
+			L = L + syncvar.getValueList()
+		L.sort()
+		for syncvar in self._syncvarslist:
+			if syncvar.isIndefinite():
+				L.append('indefinite')
+		self._ilist = L[:]
+		self._iindex = 0
+
+	def hasPendingEvents(self):
+		for syncvar in self._syncvarslist:
+			if syncvar.hasPendingEvents():
+				return 1
+		return 0
+
+	def getNextGT(self, after):
+		if not self._ilist:
+			return None
+		n = len(self._ilist)
+		for i in range(self._iindex, n):
+			v = self._ilist[i]
+			self._iindex = i + 1
+			if v == 'indefinite':
+				if after != 'indefinite':
+					return 'indefinite'
+				else:
+					return None
+			elif after == 'indefinite':
+				return None
+			elif after == '-infinity':
+				return v
+			elif v > after:
+				return v
+		return None
+
+	def getFirstGE(self, after):
+		self.beginIteration()
+		return self.getNextGE(after)
+
+	def getNextGE(self, after):
+		if not self._ilist:
+			return None
+		n = len(self._ilist)
+		for i in range(self._iindex, n):
+			v = self._ilist[i]
+			self._iindex = i + 1
+			if v == 'indefinite':
+				return 'indefinite'
+			elif after == 'indefinite':
+				return None
+			elif after == '-infinity':
+				return v
+			elif v >= after:
+				return v
+		return None
+	
+	# XXX: temp test
 	def getValue(self):
-		if self._syncbase is None:
-			return self.getOffset()
-		elif self.syncbaseval is None:
-			return 'unresolved'
-		elif self._offset is None:
-			return self.syncbaseval
-		return self.duradd(self.syncbaseval, self._offset)
-	
-	def hasSyncBaseTiming(self):
-		return 	self.syncbaseval is None
-	
-	def setSyncBaseValue(self, val, params=None):
-		if self._syncevent in ('begin', 'end'):
-			self.syncbaseval = val
-		elif self._syncevent == 'repeat' and params == self._syncparams:
-			self.syncbaseval = val
+		self.beginIteration()
+		return self.getNextGT('-infinity')
+
+	def addSync(self, src, event, evparams=None, offset=0):
+		varlist = self._syncvarslist
+		var = SyncVariant(self._node, self._attr, None)
+		var.setEvent(event, evparams)
+		var.setOffset(offset)
+		varlist.append(var)
+		arc = SyncArc(src, var)
+		src.addSyncArc(arc)
+		return arc
+
 			
 # fill:none; stroke:blue; stroke-width: 20
 class SVGStyle:
-	def __init__(self, node, str, default=None):
+	def __init__(self, node, attr, str, default=None):
 		self._node = node
+		self._attr = attr
 		self._styleprops = {}
 		self._default = default
 		if not str:
@@ -802,16 +1053,17 @@ class SVGStyle:
 
 class SVGTextCss:
 	classre = re.compile(textcssPat)
-	def __init__(self, node, str, default=None):
+	def __init__(self, node, attr, str, default=None):
 		self._node = node
+		self._attr = attr
 		self._textcssdefs = {}
 		self._default = default
-		mo = SVGTextCss.classre.match(str)
+		mo = self.classre.match(str)
 		while mo is not None:
 			str = str[mo.end(0):]
 			classname = mo.group(1)
 			stylestr = mo.group(2)[1:-1] # remove brackets
-			self._textcssdefs[classname] = SVGStyle(self._node, stylestr)
+			self._textcssdefs[classname] = SVGStyle(self._node, 'classstyle', stylestr)
 			mo = SVGTextCss.classre.match(str)
 	
 	def __repr__(self):
@@ -825,8 +1077,9 @@ class SVGTextCss:
 
 class SVGEntityDefs:
 	classre = re.compile(entityPat)
-	def __init__(self, node, str, default=None):
+	def __init__(self, node, attr, str, default=None):
 		self._node = node
+		self._attr = attr
 		self._units = None
 		self._entitydefs = {}
 		self._default = default
@@ -852,8 +1105,9 @@ class SVGEntityDefs:
 		return self._entitydefs is None or len(self._entitydefs)==0
 
 class SVGPoints:
-	def __init__(self, node, str, default=None):
+	def __init__(self, node, attr, str, default=None):
 		self._node = node
+		self._attr = attr
 		self._points = []
 		self._default = default
 		st = StringSplitter(str, delim=' ,\t\n\r\f')
@@ -890,8 +1144,9 @@ class SVGAspectRatio:
 	meetOrSliceEnum = ('meet', 'slice')
 	alignDefault = 'xMidYMid'
 	meetOrSliceDefault = 'meet'
-	def __init__(self, node, str, default=None):
+	def __init__(self, node, attr, str, default=None):
 		self._node = node
+		self._attr = attr
 		self._align = None
 		self._meetOrSlice = None
 		self._default = default
@@ -930,8 +1185,8 @@ class SVGAspectRatio:
 class SVGTransformList(SVGAttr):
 	classre = re.compile(transformPat)
 	classtransforms = ('matrix', 'translate', 'scale', 'rotate', 'skewX' , 'skewY',) 
-	def __init__(self, node, str, default=None):
-		SVGAttr.__init__(self, node, str, default)
+	def __init__(self, node, attr, str, default=None):
+		SVGAttr.__init__(self, node, attr, str, default)
 		self._tflist = []
 		self._default = default
 		if not str:
@@ -1344,12 +1599,12 @@ SVGAttrdefs = {'accent-height': (SVGHeight, None),
 	'additive': (('sum', 'replace'), 'replace'),
 	'attributeName': (stringtype, None),
 	'attributeType': (('CSS', 'XML', 'auto'), 'auto'),
-	'begin': (SVGSyncTime, None),
+	'begin': (SyncVariantList, None),
 	'by': (stringtype, None),
 	'calcMode': (('linear', 'paced', 'discrete', 'spline'), 'linear'),
 	'animateMotion.calcMode': (('linear', 'paced', 'discrete', 'spline'), 'paced'),
 	'dur': (SVGTime, None),
-	'end': (SVGSyncTime, None),
+	'end': (SyncVariantList, None),
 	'from': (stringtype, None),
 	'keyPoints': (stringtype, None),
 	'keySplines': (stringtype, None),
@@ -1388,8 +1643,12 @@ def CreateSVGAttr(node, name, strval):
 	elif type(typeOrClassInfo) == type(('',)):
 		if strval is not None and strval not in typeOrClassInfo:
 			strval = None
-		return SVGEnum(node, strval, defval)
-	return typeOrClassInfo(node, strval, defval)
+		return SVGEnum(node, name, strval, defval)
+	try:
+		return typeOrClassInfo(node, name, strval, defval)
+	except:
+		print 'CreateSVGAttr failed', name, strval, defval
+		return strval
 
 from svgdtd import SVG
 def IsCSSAttr(name):
