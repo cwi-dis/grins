@@ -1251,6 +1251,11 @@ class MMChannel(MMTreeElement):
 
 			raise KeyError, key
 
+	def Extract(self):
+		MMTreeElement.Extract(self)
+		if self.attrdict.get('type') == 'layout' and self._cssId != None:
+			self.context.cssResolver.unlink(self._cssId)
+		
 	def __setitem__(self, key, value):
 		if key == 'type':
 			import ChannelMap
@@ -1320,8 +1325,6 @@ class MMChannel(MMTreeElement):
 			self.setCssAttr(key, None)
 		elif key == 'base_window':
 			self.Extract()
-			if self.attrdict.get('type') == 'layout':
-					self.context.cssResolver.unlink(self._cssId)
 			return
 		del self.attrdict[key]
 		
