@@ -162,6 +162,9 @@ def getnames():
 	names.sort()
 	return names
 
+def exists(attrname):
+        return attrdefs.has_key(attrname)
+
 
 # Hooks to gather statistics about attribute use via getattr()
 #
