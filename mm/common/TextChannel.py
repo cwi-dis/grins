@@ -116,6 +116,9 @@ class TextWindow(ChannelWindow):
 		al2 = []
 		for a in self.anchors:
 			args = a[A_ARGS]
+			if not args:
+				al2.append(a)
+				continue
 			x0, y0, x1, y1 = args[0], args[1], args[2], args[3]
 			if between(mx, x0, x1) and between(my, y0, y1):
 				al2.append(a)
@@ -349,9 +352,13 @@ class TextChannel(Channel):
 		self.window.setdefanchor(anchor)
 
 		import AdefDialog
-		if AdefDialog.run('Select reactive area with mouse'):
-			return self.window.getdefanchor()
-		else:
+		try:
+			rv = AdefDialog.run('Select reactive area with mouse')
+			a = self.window.getdefanchor()
+			if rv == 0:
+				a = (a[0], a[1], [])
+			return a
+		except AdefDialog.cancel:
 			self.window.enddefanchor(anchor)
 			return None
 		
@@ -371,7 +378,7 @@ class TextChannel(Channel):
 				self.haspauseanchor = 1
 			if not a[A_TYPE] in (ATYPE_NORMAL, ATYPE_PAUSE):
 				continue
-			if len(a[A_ARGS]) <> 4:
+			if len(a[A_ARGS]) not in (0,4):
 				print 'TextChannel: funny-sized anchor'
 			else:
 				al2.append(a)
