@@ -31,11 +31,21 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 // Bitmap
 //
 
-IDB_SPLASHPLAY          BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\player\\splash8bit.bmp"
+IDB_SPLASHPLAY          BITMAP  DISCARDABLE     "RES\\player8bit.bmp"
 IDB_SPLASHLITE          BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\g2-15\\lite\\splash8bit.bmp"
 IDB_SPLASHPRO           BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\g2-15\\pro\\splash8bit.bmp"
 IDB_SPLASHSMIL          BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil-10\\splash8bit.bmp"
 IDB_SPLASHQTPRO         BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\qt\\pro\\splash8bit.bmp"
+IDB_SPLASHSMIL2         BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil-20\\player\\splash8bit.bmp"
+IDB_SPLASHSNAP          BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\snap\\win32\\splash8bit.bmp"
+IDB_VIEWPORT            BITMAP  DISCARDABLE     "RES\\viewport.bmp"
+IDB_REGION              BITMAP  DISCARDABLE     "RES\\region.bmp"
+IDB_IMAGE               BITMAP  DISCARDABLE     "RES\\image.bmp"
+IDB_VIDEO               BITMAP  DISCARDABLE     "RES\\video.bmp"
+IDB_TEXT                BITMAP  DISCARDABLE     "RES\\text.bmp"
+IDB_HTML                BITMAP  DISCARDABLE     "RES\\html.bmp"
+IDB_SOUND               BITMAP  DISCARDABLE     "RES\\sound.bmp"
+IDB_SPLASHSMILBOSTON    BITMAP  DISCARDABLE     "..\\..\\..\\Build\\products\\smil-20\\editor\\splash8bit.bmp"
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -121,6 +131,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 IDR_GRINSED             BITMAP  MOVEABLE PURE   "res\\grinsbar.bmp"
+IDR_TB_PLAYER           BITMAP  DISCARDABLE     "res\\tb_player.bmp"
+IDR_TB_ALIGNMENT        BITMAP  DISCARDABLE     "res\\tb_alignment.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -191,28 +203,6 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,129,7,50,14
 END
 
-IDD_PREFERENCES DIALOG DISCARDABLE  0, 0, 222, 109
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "GRiNS Preferences"
-FONT 8, "MS Sans Serif"
-BEGIN
-    COMBOBOX        IDC_COMBO1,85,8,128,73,CBS_DROPDOWNLIST | CBS_SORT | 
-                    WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBO2,85,25,128,135,CBS_DROPDOWNLIST | CBS_SORT | 
-                    WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Closed-captions preferred over overdub",IDC_CHECK1,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,43,140,10
-    CONTROL         "Show closed-captions when available",IDC_CHECK2,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,11,57,135,10
-    CONTROL         "Use Internet Explorer HTML control",IDC_CHECK4,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,11,71,165,10
-    DEFPUSHBUTTON   "OK",IDOK,163,88,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,7,88,50,14
-    PUSHBUTTON      "Factory settings",IDC_RESET,64,88,95,14
-    LTEXT           "System bitrate:",IDC_STATIC,11,10,47,8
-    LTEXT           "System language:",IDC_STATIC,11,27,57,8
-END
-
 IDD_CREATE_BOX DIALOG DISCARDABLE  0, 0, 336, 33
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
@@ -265,25 +255,27 @@ BEGIN
     LTEXT           "GRiNS",IDC_VERSION_MSG,2,182,258,8
 END
 
-IDD_EDIT_USERGROUP DIALOG DISCARDABLE  0, 0, 188, 108
+IDD_EDIT_USERGROUP DIALOG DISCARDABLE  0, 0, 188, 121
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Edit User Group"
+CAPTION "Edit Custom Test"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "User group name:",IDC_STATIC,7,9,57,8
+    LTEXT           "Custom test name:",IDC_STATIC,7,9,59,8
     EDITTEXT        IDC_EDIT1,68,7,112,14,ES_AUTOHSCROLL
-    LTEXT           "User group title:",IDC_STATIC,7,28,50,8
-    EDITTEXT        IDC_EDIT2,68,25,112,14,ES_AUTOHSCROLL
-    LTEXT           "Initial state:",IDC_STATIC,7,50,36,8
-    COMBOBOX        IDC_COMBO1,68,47,81,37,CBS_DROPDOWN | CBS_SORT | 
+    LTEXT           "Custom test title:",IDC_STATIC,7,27,52,8
+    EDITTEXT        IDC_EDIT2,68,26,112,14,ES_AUTOHSCROLL
+    LTEXT           "Initial state:",IDC_STATIC,7,45,36,8
+    COMBOBOX        IDC_COMBO1,68,45,81,46,CBS_DROPDOWN | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "User override:",IDC_STATIC,7,67,45,8
-    COMBOBOX        IDC_COMBO2,68,64,81,37,CBS_DROPDOWN | CBS_SORT | 
+    LTEXT           "User override:",IDC_STATIC,7,63,45,8
+    COMBOBOX        IDC_COMBO2,68,62,81,77,CBS_DROPDOWN | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,141,86,40,14
-    PUSHBUTTON      "Cancel",IDCANCEL,7,86,40,14
-    PUSHBUTTON      "&Restore",IDC_RESTORE,52,86,40,14
-    PUSHBUTTON      "&Apply",IDC_APPLY,96,86,40,14
+    DEFPUSHBUTTON   "OK",IDOK,141,99,40,14
+    PUSHBUTTON      "Cancel",IDCANCEL,7,99,40,14
+    PUSHBUTTON      "&Restore",IDC_RESTORE,52,99,40,14
+    PUSHBUTTON      "&Apply",IDC_APPLY,96,99,40,14
+    EDITTEXT        IDC_EDIT3,68,79,112,14,ES_AUTOHSCROLL
+    LTEXT           "UID:",IDC_STATIC,7,81,16,8
 END
 
 IDD_LINKS DIALOG DISCARDABLE  0, 0, 308, 171
@@ -457,9 +449,10 @@ BEGIN
     PUSHBUTTON      "Quit",IDCANCEL,7,212,50,14
     LTEXT           "Static",IDC_MESSAGE,7,174,199,8
     LTEXT           "Or see http://www.oratrix.com/GRiNS for details",
-                    IDC_STATIC,107,215,154,8,0,0,HIDC_STATIC
+                    IDC_STATIC,164,215,154,8,0,0,HIDC_STATIC
     CONTROL         "",IDC_SPLASH,"Button",BS_OWNERDRAW | BS_FLAT | 
                     WS_DISABLED,7,7,317,160
+    PUSHBUTTON      "Open license file...",IDUC_OPENFILE,59,212,97,14
 END
 
 IDD_CHANNEL_UNDEF DIALOG DISCARDABLE  0, 0, 227, 85
@@ -533,28 +526,6 @@ IDD_EDITATTR_SHEET DIALOG DISCARDABLE  0, 0, 192, 100
 STYLE WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
-END
-
-IDD_EDITATTR_LS1 DIALOG DISCARDABLE  0, 0, 300, 164
-STYLE WS_CHILD
-FONT 8, "MS Sans Serif"
-BEGIN
-    LTEXT           "scale 1:1",IDC_SCALE1,11,4,62,8
-    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
-                    WS_VISIBLE | NOT WS_TABSTOP
-    GROUPBOX        "",IDC_GROUP1,174,11,121,83
-    LTEXT           "Position and Size:",IDC_11,181,21,109,8
-    LTEXT           "x",IDC_GROUP1,180,32,8,8
-    EDITTEXT        IDC_12,179,41,27,14,ES_AUTOHSCROLL
-    LTEXT           "y",IDC_GROUP1,209,32,8,8
-    EDITTEXT        IDC_13,208,41,27,14,ES_AUTOHSCROLL
-    LTEXT           "w",IDC_GROUP1,236,32,8,8
-    EDITTEXT        IDC_14,236,41,27,14,ES_AUTOHSCROLL
-    LTEXT           "h",IDC_GROUP1,264,32,8,8
-    EDITTEXT        IDC_15,264,41,27,14,ES_AUTOHSCROLL
-    LTEXT           "",IDC_ATTR_INFO,6,132,290,18,SS_SUNKEN
-    LTEXT           "Z Index:",IDC_21,179,73,27,8
-    EDITTEXT        IDC_22,208,71,83,12,ES_AUTOHSCROLL
 END
 
 IDD_EDITATTR_S7 DIALOG DISCARDABLE  0, 0, 300, 164
@@ -633,15 +604,15 @@ BEGIN
                     WS_VISIBLE | NOT WS_TABSTOP
     GROUPBOX        "",IDC_GROUP1,174,11,121,96
     LTEXT           "Position and Size:",IDC_11,179,18,111,8
-    LTEXT           "x",IDC_GROUP1,180,28,8,8
+    LTEXT           "x",-1,180,28,8,8
     EDITTEXT        IDC_12,179,37,27,14,ES_AUTOHSCROLL
-    LTEXT           "y",IDC_GROUP1,209,28,8,8
+    LTEXT           "y",-1,209,28,8,8
     EDITTEXT        IDC_13,208,37,27,14,ES_AUTOHSCROLL
-    LTEXT           "w",IDC_GROUP1,236,28,8,8
+    LTEXT           "w",-1,236,28,8,8
     EDITTEXT        IDC_14,236,37,27,14,ES_AUTOHSCROLL
-    LTEXT           "h",IDC_GROUP1,264,28,8,8
+    LTEXT           "h",-1,264,28,8,8
     EDITTEXT        IDC_15,264,37,27,14,ES_AUTOHSCROLL
-    LTEXT           "Units:",IDC_21,179,64,21,8
+    LTEXT           "Units:",-1,179,64,21,8
     COMBOBOX        IDC_22,208,62,83,59,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     LTEXT           "",IDC_ATTR_INFO,6,132,289,18,SS_SUNKEN
@@ -725,13 +696,13 @@ BEGIN
     PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
     GROUPBOX        "Source area",IDC_11,173,41,121,44
-    LTEXT           "x",IDC_GROUP1,179,49,8,8
+    LTEXT           "x",-1,179,49,8,8
     EDITTEXT        IDC_12,178,58,27,14,ES_AUTOHSCROLL
-    LTEXT           "y",IDC_GROUP1,207,49,8,8
+    LTEXT           "y",-1,207,49,8,8
     EDITTEXT        IDC_13,206,58,27,14,ES_AUTOHSCROLL
-    LTEXT           "w",IDC_GROUP1,235,49,8,8
+    LTEXT           "w",-1,235,49,8,8
     EDITTEXT        IDC_14,234,58,27,14,ES_AUTOHSCROLL
-    LTEXT           "h",IDC_GROUP1,263,49,8,8
+    LTEXT           "h",-1,263,49,8,8
     EDITTEXT        IDC_15,262,58,27,14,ES_AUTOHSCROLL
     LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
     CONTROL         "Use whole image",IDC_21,"Button",BS_AUTOCHECKBOX | 
@@ -882,25 +853,25 @@ BEGIN
     LTEXT           "Bitrate:",IDC_11,12,19,96,8
     COMBOBOX        IDC_12,109,17,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "Captions:",IDC_21,12,35,96,8
-    CONTROL         "Default",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+    LTEXT           "Captions:",IDC_31,12,35,96,8
+    CONTROL         "Default",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
                     WS_TABSTOP,116,35,40,10
-    CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,172,
+    CONTROL         "on",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,172,
                     35,40,10
-    CONTROL         "off",IDC_24,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,228,
-                    35,40,10
-    GROUPBOX        "",IDC_GROUP1,109,29,174,17
-    COMBOBOX        IDC_32,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    CONTROL         "off",IDC_34x,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    228,35,40,10
+    GROUPBOX        "",IDC_GROUP2,109,29,174,17
+    COMBOBOX        IDC_22,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "Language:",IDC_31,12,51,96,8
-    LTEXT           "Overdub or Caption:",IDC_41,12,67,96,8
+    LTEXT           "Language:",IDC_21,12,51,96,8
+    LTEXT           "Overdub or Subtitle:",IDC_41,12,67,96,8
     CONTROL         "Default",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
                     WS_TABSTOP,116,67,40,10
-    CONTROL         "caption",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    172,67,39,10
+    CONTROL         "subtitle",IDC_43,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY,172,67,38,10
     CONTROL         "overdub",IDC_44,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     228,67,42,10
-    GROUPBOX        "",IDC_GROUP1,109,61,174,17
+    GROUPBOX        "",IDC_GROUP3,109,61,174,17
     LTEXT           "Required:",IDC_51,12,83,96,8
     EDITTEXT        IDC_52,109,81,174,12,ES_AUTOHSCROLL
     LTEXT           "Screen depth:",IDC_61,12,99,96,8
@@ -914,26 +885,26 @@ IDD_EDITATTR_S1R3S4 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "",IDC_GROUP1,6,5,287,81
-    LTEXT           "System bitrate:",IDC_11,12,19,96,8
+    GROUPBOX        "System",IDC_GROUP1,6,5,287,81
+    LTEXT           "Bitrate:",IDC_11,12,19,96,8
     COMBOBOX        IDC_12,109,17,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "System captions:",IDC_21,12,35,96,8
-    CONTROL         "off",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+    LTEXT           "Captions:",IDC_31,12,35,96,8
+    CONTROL         "on",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
                     WS_TABSTOP,116,35,24,10
-    CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,196,
+    CONTROL         "off",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,196,
                     35,24,10
-    GROUPBOX        "",IDC_GROUP1,109,29,174,17
-    LTEXT           "System language:",IDC_31,12,51,96,8
-    COMBOBOX        IDC_32,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    GROUPBOX        "",IDC_GROUP2,109,29,174,17
+    LTEXT           "Language:",IDC_21,12,51,96,8
+    COMBOBOX        IDC_22,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "System overdub or caption:",IDC_41,12,67,96,8
-    CONTROL         "caption",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,116,67,39,10
+    LTEXT           "Overdub or Subtitle:",IDC_41,12,67,96,8
+    CONTROL         "subtitle",IDC_42,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY | WS_TABSTOP,116,67,38,10
     CONTROL         "overdub",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     196,67,42,10
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
-    GROUPBOX        "",IDC_GROUP1,109,61,174,17
+    GROUPBOX        "",IDC_GROUP3,109,61,174,17
 END
 
 IDD_EDITATTR_S1O2 DIALOG DISCARDABLE  0, 0, 300, 164
@@ -1044,10 +1015,10 @@ BEGIN
     PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
     GROUPBOX        "Destination rendering",IDC_11,173,37,121,35
-    LTEXT           "x",IDC_GROUP1,179,45,8,8
-    LTEXT           "y",IDC_GROUP1,207,44,8,8
-    LTEXT           "w",IDC_GROUP1,235,45,8,8
-    LTEXT           "h",IDC_GROUP1,263,45,8,8
+    LTEXT           "x",-1,179,45,8,8
+    LTEXT           "y",-1,207,44,8,8
+    LTEXT           "w",-1,235,45,8,8
+    LTEXT           "h",-1,263,45,8,8
     EDITTEXT        IDC_12,178,53,27,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_13,206,53,27,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_14,234,53,27,14,ES_AUTOHSCROLL
@@ -1128,11 +1099,11 @@ BEGIN
     GROUPBOX        "Destination rendering",IDC_11,173,54,121,35
     LTEXT           "x",IDC_GROUP1,179,62,8,8
     EDITTEXT        IDC_12,178,70,27,14,ES_AUTOHSCROLL
-    LTEXT           "y",IDC_GROUP1,207,61,8,8
+    LTEXT           "y",-1,207,61,8,8
     EDITTEXT        IDC_13,206,70,27,14,ES_AUTOHSCROLL
-    LTEXT           "w",IDC_GROUP1,235,62,8,8
+    LTEXT           "w",-1,235,62,8,8
     EDITTEXT        IDC_14,234,70,27,14,ES_AUTOHSCROLL
-    LTEXT           "h",IDC_GROUP1,263,62,8,8
+    LTEXT           "h",-1,263,62,8,8
     EDITTEXT        IDC_15,262,70,27,14,ES_AUTOHSCROLL
     LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
     CONTROL         "Fill whole region",IDC_21,"Button",BS_AUTOCHECKBOX | 
@@ -1141,7 +1112,7 @@ BEGIN
                     WS_TABSTOP,174,34,71,10
     COMBOBOX        IDC_52,221,108,68,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "Image quality:",IDC_GROUP1,174,110,44,8
+    LTEXT           "Image quality:",-1,174,110,44,8
 END
 
 IDD_EDITATTR_LS1O2a DIALOG DISCARDABLE  0, 0, 300, 164
@@ -1151,18 +1122,16 @@ BEGIN
     LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
     PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
-    GROUPBOX        "Source area",IDC_11,173,41,121,44
-    LTEXT           "x",IDC_GROUP1,179,49,8,8
-    EDITTEXT        IDC_12,178,58,27,14,ES_AUTOHSCROLL
-    LTEXT           "y",IDC_GROUP1,207,49,8,8
-    EDITTEXT        IDC_13,206,58,27,14,ES_AUTOHSCROLL
-    LTEXT           "w",IDC_GROUP1,235,49,8,8
-    EDITTEXT        IDC_14,234,58,27,14,ES_AUTOHSCROLL
-    LTEXT           "h",IDC_GROUP1,263,49,8,8
-    EDITTEXT        IDC_15,262,58,27,14,ES_AUTOHSCROLL
+    GROUPBOX        "Source area",IDC_11,173,11,121,44
+    LTEXT           "x",-1,179,19,8,8
+    EDITTEXT        IDC_12,178,28,27,14,ES_AUTOHSCROLL
+    LTEXT           "y",-1,207,19,8,8
+    EDITTEXT        IDC_13,206,28,27,14,ES_AUTOHSCROLL
+    LTEXT           "w",-1,235,19,8,8
+    EDITTEXT        IDC_14,234,28,27,14,ES_AUTOHSCROLL
+    LTEXT           "h",-1,263,19,8,8
+    EDITTEXT        IDC_15,262,28,27,14,ES_AUTOHSCROLL
     LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
-    CONTROL         "Use whole image",IDC_21,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,173,20,70,10
 END
 
 IDD_EDITATTR_LS1O3b DIALOG DISCARDABLE  0, 0, 300, 164
@@ -1177,10 +1146,10 @@ BEGIN
     PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
     GROUPBOX        "Destination rendering",IDC_11,173,42,121,35
-    LTEXT           "x",IDC_GROUP1,179,50,8,8
-    LTEXT           "y",IDC_GROUP1,207,49,8,8
-    LTEXT           "w",IDC_GROUP1,235,50,8,8
-    LTEXT           "h",IDC_GROUP1,263,50,8,8
+    LTEXT           "x",-1,179,50,8,8
+    LTEXT           "y",-1,207,49,8,8
+    LTEXT           "w",-1,235,50,8,8
+    LTEXT           "h",-1,263,50,8,8
     LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
     CONTROL         "Fill whole region",IDC_21,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,173,18,66,10
@@ -1296,13 +1265,13 @@ BEGIN
     CONTROL         "Partial anchor",IDC_ATYPE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,171,54,59,10
     GROUPBOX        "",IDC_11,171,61,121,53
-    LTEXT           "x",IDC_GROUP1,178,66,8,8
+    LTEXT           "x",-1,178,66,8,8
     EDITTEXT        IDC_12,177,75,22,14,ES_AUTOHSCROLL
-    LTEXT           "y",IDC_GROUP1,207,66,8,8
+    LTEXT           "y",-1,207,66,8,8
     EDITTEXT        IDC_13,206,75,22,14,ES_AUTOHSCROLL
-    LTEXT           "w",IDC_GROUP1,236,66,8,8
+    LTEXT           "w",-1,236,66,8,8
     EDITTEXT        IDC_14,235,75,22,14,ES_AUTOHSCROLL
-    LTEXT           "h",IDC_GROUP1,265,66,8,8
+    LTEXT           "h",-1,265,66,8,8
     EDITTEXT        IDC_15,264,75,22,14,ES_AUTOHSCROLL
     LTEXT           "Start:",IDC_21,178,97,18,8
     EDITTEXT        IDC_22,196,96,28,14,ES_AUTOHSCROLL
@@ -1315,7 +1284,8 @@ BEGIN
     LTEXT           "scale 1:1",IDC_SCALE1,12,4,51,8
     PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,99,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
-    LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
+    CONTROL         "",IDC_ATTR_INFO,"Static",SS_LEFTNOWORDWRAP | SS_SUNKEN | 
+                    WS_GROUP,6,132,288,18
 END
 
 IDD_ANCHOR_NAME DIALOG DISCARDABLE  0, 0, 186, 55
@@ -1486,17 +1456,17 @@ BEGIN
     PUSHBUTTON      "Browse...",IDC_BUTTON_QTNEXT,215,91,38,12
     CONTROL         "Time slider",IDC_QTTIMESLIDER,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,12,53,53,10
-    LTEXT           "Chapter mode:",IDC_GROUP1,143,35,48,10,NOT WS_GROUP | 
+    LTEXT           "Chapter mode:",-1,143,35,48,10,NOT WS_GROUP | 
                     WS_TABSTOP
     CONTROL         "all",IDC_QTCHAPTERMODE1,"Button",BS_AUTORADIOBUTTON | 
                     WS_TABSTOP,204,35,29,10
     CONTROL         "clip",IDC_QTCHAPTERMODE2,"Button",BS_AUTORADIOBUTTON | 
                     WS_TABSTOP,232,35,26,10
-    GROUPBOX        "",IDC_GROUP1,7,75,262,38
+    GROUPBOX        "",-1,7,75,262,38
     CONTROL         "Immediate instantiation",IDC_IMMINST,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,12,36,87,10
-    GROUPBOX        "",IDC_GROUP1,7,9,261,61
-    GROUPBOX        "",IDC_GROUP1,196,29,65,18
+    GROUPBOX        "",-1,7,9,261,61
+    GROUPBOX        "",-1,196,29,65,18
 END
 
 IDD_EDITATTR_QTMEDIAPREF DIALOG DISCARDABLE  0, 0, 276, 180
@@ -1528,32 +1498,484 @@ BEGIN
     LTEXT           "Composite mode:",ID_STATIC4,15,93,74,9
 END
 
-IDD_EDITATTR_S1R3S6 DIALOG DISCARDABLE  0, 0, 300, 164
+IDD_EDITATTR_O1S2 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "",IDC_GROUP1,6,5,287,96
-    LTEXT           "System bitrate:",IDC_11,12,19,96,8
-    COMBOBOX        IDC_12,109,17,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    COMBOBOX        IDC_12,88,24,199,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "System captions:",IDC_21,12,35,96,8
-    CONTROL         "off",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,116,35,24,10
-    CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,196,
-                    35,24,10
-    GROUPBOX        "",IDC_GROUP1,109,29,174,17
-    LTEXT           "System language:",IDC_31,12,51,96,8
-    COMBOBOX        IDC_32,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
-    LTEXT           "System overdub or caption:",IDC_41,12,67,96,8
-    CONTROL         "caption",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,116,67,39,10
-    CONTROL         "overdub",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    196,67,42,10
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
-    GROUPBOX        "",IDC_GROUP1,109,61,174,17
-    CONTROL         "Use Internet Explorer HTML control",IDC_51,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,12,83,127,10
+    GROUPBOX        "",IDC_GROUP1,5,10,287,76
+    LTEXT           "Calculation mode:",IDC_11,12,26,73,8
+    LTEXT           "Untitled",IDC_21,12,45,73,8
+    EDITTEXT        IDC_22,88,43,199,12,ES_AUTOHSCROLL
+    LTEXT           "Untitled",IDC_31,12,64,73,8
+    EDITTEXT        IDC_32,88,62,199,12,ES_AUTOHSCROLL
+END
+
+IDD_EDITATTR_S3R2 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_GROUP1,6,10,287,84
+    LTEXT           "Speed:",IDC_11,12,24,73,8
+    EDITTEXT        IDC_12,86,22,199,12,ES_AUTOHSCROLL
+    LTEXT           "Accelerate:",IDC_21,12,40,73,8
+    EDITTEXT        IDC_22,86,38,199,12,ES_AUTOHSCROLL
+    LTEXT           "Decelerate:",IDC_31,12,56,73,8
+    EDITTEXT        IDC_32,86,54,199,12,ES_AUTOHSCROLL
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    CONTROL         "true",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    107,74,28,10
+    CONTROL         "false",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    238,74,31,10
+    GROUPBOX        "",-1,86,68,199,17
+    LTEXT           "Auto reverse:",IDC_41,12,74,73,8
+END
+
+IDD_PREFERENCES DIALOG DISCARDABLE  0, 0, 222, 109
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "GRiNS Preferences"
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        IDC_COMBO1,85,8,128,73,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO2,85,25,128,135,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Closed-captions preferred over overdub",IDC_CHECK1,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,43,140,10
+    CONTROL         "Show closed-captions when available",IDC_CHECK2,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,57,135,10
+    CONTROL         "Use Internet Explorer HTML control",IDC_CHECK4,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,71,165,10
+    DEFPUSHBUTTON   "OK",IDOK,163,88,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,7,88,50,14
+    PUSHBUTTON      "Factory settings",IDC_RESET,64,88,95,14
+    LTEXT           "System bitrate:",IDC_STATIC,11,10,47,8
+    LTEXT           "System language:",IDC_STATIC,11,27,57,8
+END
+
+IDD_PREFERENCES2 DIALOG DISCARDABLE  0, 0, 222, 122
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "GRiNS Preferences"
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        IDC_COMBO1,85,8,128,73,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO2,85,25,128,135,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Subtitles preferred over overdub",IDC_CHECK1,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,43,117,10
+    CONTROL         "Show closed-captions when available",IDC_CHECK2,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,57,135,10
+    CONTROL         "Use Internet Explorer HTML control",IDC_CHECK4,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,85,165,10
+    DEFPUSHBUTTON   "OK",IDOK,163,101,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,7,101,50,14
+    PUSHBUTTON      "Factory settings",IDC_RESET,64,101,95,14
+    LTEXT           "System bitrate:",IDC_STATIC,11,10,47,8
+    LTEXT           "System language:",IDC_STATIC,11,27,57,8
+    CONTROL         "Use audio descriptions when available",IDC_CHECK3,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,71,137,10
+END
+
+IDD_LAYOUT2 DIALOG DISCARDABLE  0, 0, 425, 249
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "scale 1:1",IDC_LAYOUT_SCALE,11,4,46,8
+    GROUPBOX        "Viewport",IDC_GROUP1,282,12,130,31
+    COMBOBOX        IDC_LAYOUT_VIEWPORT_SEL,301,24,106,59,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_LAYOUT_REGION_SEL,301,56,75,65,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "x",-1,299,129,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_X,291,137,27,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "y",-1,329,129,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_Y,319,137,27,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "w",-1,355,129,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_W,347,137,27,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "h",-1,383,129,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_H,375,137,27,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    PUSHBUTTON      "&Properties...",IDCMD_ATTRIBUTES,11,222,57,13
+    PUSHBUTTON      "Preview Area",IDC_LAYOUT_PREVIEW,11,16,261,199,BS_FLAT | 
+                    NOT WS_VISIBLE | NOT WS_TABSTOP
+    CONTROL         "Show region names",IDC_LAYOUT_SHOW_NAMES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,95,4,78,10
+    CONTROL         "Show as outline",IDC_LAYOUT_AS_OUTLINE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,183,5,66,10
+    GROUPBOX        "Region",-1,282,45,130,30
+    PUSHBUTTON      "&Send back",IDC_LAYOUT_SENDBACK,290,182,50,13
+    PUSHBUTTON      "&Bring front",IDC_LAYOUT_BRINGFRONT,356,182,49,13
+    EDITTEXT        IDC_LAYOUT_REGION_Z,329,197,47,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "z-index:",-1,297,199,29,10
+    GROUPBOX        "Position and size",-1,281,119,131,38
+    CONTROL         "Show real background",IDC_LAYOUT_SHOW_RBG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,282,225,87,10
+    COMBOBOX        IDC_LAYOUT_MEDIA_SEL,301,87,75,65,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Media",-1,282,77,130,30
+    GROUPBOX        "z-order",-1,281,170,131,44
+    CONTROL         "Radio1",IDC_LAYOUT_VIEWPORT_RADIO,"Button",
+                    BS_AUTORADIOBUTTON,287,26,10,10
+    CONTROL         "Radio1",IDC_LAYOUT_REGION_RADIO,"Button",
+                    BS_AUTORADIOBUTTON,287,57,10,10
+    CONTROL         "Radio1",IDC_LAYOUT_MEDIA_RADIO,"Button",
+                    BS_AUTORADIOBUTTON,288,89,10,10
+    PUSHBUTTON      "Hide",IDC_LAYOUT_HIDEREGION,381,55,25,13
+    PUSHBUTTON      "Hide",IDC_LAYOUT_HIDEMEDIA,381,87,25,13
+END
+
+IDD_EDITATTR_LS1O4 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
+    PUSHBUTTON      "Previous area",IDC_PREVIOUS_AREA,11,15,156,110,BS_FLAT | 
+                    NOT WS_VISIBLE | NOT WS_TABSTOP
+    GROUPBOX        "Destination rendering",IDC_11,172,84,121,35
+    LTEXT           "x",IDC_GROUP1,178,92,8,8
+    LTEXT           "y",-1,206,91,8,8
+    LTEXT           "w",-1,234,92,8,8
+    LTEXT           "h",-1,262,92,8,8
+    EDITTEXT        IDC_SUBREG_X,177,100,27,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SUBREG_Y,205,100,27,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SUBREG_W,233,100,27,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SUBREG_H,261,100,27,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_SUBREG_FIT,216,51,68,52,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "",IDC_ATTR_INFO,11,132,283,18,SS_SUNKEN
+    LTEXT           "fit:",-1,175,52,8,8
+    CONTROL         "show only region",IDC_SUBREG_SHONLYREG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,175,18,71,13
+END
+
+IDD_EDITATTR_GENERAL DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_12,51,21,236,12,ES_AUTOHSCROLL
+    COMBOBOX        IDC_22,194,21,93,100,CBS_DROPDOWNLIST | CBS_SORT | NOT 
+                    WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_32,51,51,93,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_42,194,51,93,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_52,51,70,93,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_62,194,70,93,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_72,51,103,93,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_82,194,101,93,14,ES_AUTOHSCROLL
+    GROUPBOX        "Node",IDC_GROUP1,6,10,287,31
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    LTEXT           "Name:",IDC_11,13,23,22,8
+    LTEXT           "Type:",IDC_21,156,23,19,8,NOT WS_VISIBLE
+    LTEXT           "Title:",IDC_31,13,54,16,8
+    LTEXT           "Copyright:",IDC_61,156,73,32,8
+    LTEXT           "Alt:",IDC_41,156,54,11,8
+    LTEXT           "Author:",IDC_51,13,73,24,8
+    GROUPBOX        "General",-1,6,42,287,48
+    LTEXT           "Begin:",IDC_71,13,106,21,8
+    LTEXT           "Duration:",IDC_81,156,104,30,8
+    GROUPBOX        "Timing",-1,6,91,287,31
+END
+
+IDD_EDITATTR_O2 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        IDC_12,91,24,192,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_22,92,47,192,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "System",IDC_GROUP1,5,10,287,60
+    LTEXT           "Bitrate:",IDC_11,11,26,73,8
+    LTEXT           "Language:",IDC_21,12,48,73,8
+END
+
+IDD_EDITATTR_TRANSITION DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        IDC_12,91,24,192,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_22,92,47,192,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "Transition",IDC_GROUP1,5,10,287,60
+    LTEXT           "In transition:",IDC_11,11,26,73,8
+    LTEXT           "Out transition:",IDC_21,12,48,73,8
+END
+
+IDD_EDITATTR_SUBREGION DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_12,178,25,27,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_13,206,25,27,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_14,234,25,27,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_15,262,25,27,14,ES_AUTOHSCROLL
+    LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
+    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
+                    WS_VISIBLE | NOT WS_TABSTOP
+    GROUPBOX        "Sub region",IDC_11,173,9,121,37
+    LTEXT           "x",IDC_GROUP1,179,17,8,8
+    LTEXT           "y",-1,207,16,8,8
+    LTEXT           "w",-1,235,17,8,8
+    LTEXT           "h",-1,263,17,8,8
+    LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
+    COMBOBOX        IDC_22,226,68,63,67,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Scale factor:",IDC_21,179,70,41,8
+END
+
+IDD_LAYOUT3 DIALOG DISCARDABLE  0, 0, 425, 249
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "scale 1:1",IDC_LAYOUT_SCALE,11,4,38,8
+    GROUPBOX        "Viewport",IDC_GROUP1,282,12,130,31
+    COMBOBOX        IDC_LAYOUT_VIEWPORT_SEL,301,24,105,59,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_LAYOUT_REGION_SEL,301,55,75,65,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "x",-1,299,119,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_X,291,127,27,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "y",-1,329,119,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_Y,319,127,27,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "w",-1,355,119,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_W,347,127,27,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "h",-1,383,119,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_H,375,127,27,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    PUSHBUTTON      "&Properties...",IDCMD_ATTRIBUTES,12,222,57,13
+    PUSHBUTTON      "Preview Area",IDC_LAYOUT_PREVIEW,11,16,261,199,BS_FLAT | 
+                    NOT WS_VISIBLE | NOT WS_TABSTOP
+    CONTROL         "Show region names",IDC_LAYOUT_SHOW_NAMES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,54,4,78,10
+    CONTROL         "Show as outline",IDC_LAYOUT_AS_OUTLINE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,137,4,66,10
+    GROUPBOX        "Region",-1,282,44,130,30
+    PUSHBUTTON      "&Send back",IDC_LAYOUT_SENDBACK,290,162,50,13
+    PUSHBUTTON      "&Bring front",IDC_LAYOUT_BRINGFRONT,356,162,49,13
+    EDITTEXT        IDC_LAYOUT_REGION_Z,329,177,47,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "z-index:",-1,297,179,29,10
+    GROUPBOX        "Position and size",-1,281,109,131,38
+    CONTROL         "Show real background",IDC_LAYOUT_SHOW_RBG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,185,224,87,10
+    COMBOBOX        IDC_LAYOUT_MEDIA_SEL,301,85,75,65,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Media",-1,282,75,130,30
+    GROUPBOX        "z-order",-1,281,150,131,44
+    GROUPBOX        "Custom regions",-1,281,199,132,36
+    CONTROL         "Radio1",IDC_LAYOUT_VIEWPORT_RADIO,"Button",
+                    BS_AUTORADIOBUTTON,287,26,10,10
+    CONTROL         "Radio1",IDC_LAYOUT_REGION_RADIO,"Button",
+                    BS_AUTORADIOBUTTON,287,56,10,10
+    CONTROL         "Radio1",IDC_LAYOUT_MEDIA_RADIO,"Button",
+                    BS_AUTORADIOBUTTON,288,87,10,10
+    PUSHBUTTON      "New &Region",IDC_LAYOUT_NEWREGION,286,212,43,13
+    PUSHBUTTON      "&Del",IDC_LAYOUT_DELREGION,384,212,25,13
+    PUSHBUTTON      "New &Viewport",IDC_LAYOUT_NEWVIEW,333,212,48,13
+    PUSHBUTTON      "Hide",IDC_LAYOUT_HIDEMEDIA,381,85,25,13
+    PUSHBUTTON      "Hide",IDC_LAYOUT_HIDEREGION,381,54,25,13
+    CONTROL         "Show all regions",IDC_LAYOUT_SHOW_ALLREGIONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,207,4,67,10
+END
+
+IDD_EDITATTR_COLORSEL DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "",IDC_LABEL,7,11,288,44
+    EDITTEXT        IDC_COLORS,158,27,72,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Pick color...",IDC_COLOR_PICK,234,27,46,12
+    CONTROL         "Radio1",IDC_CTYPES,"Button",BS_AUTORADIOBUTTON,145,27,9,
+                    12
+    CONTROL         "transparent",IDC_CTYPET,"Button",BS_AUTORADIOBUTTON,15,
+                    28,54,8
+    CONTROL         "Inherit",IDC_CTYPEI,"Button",BS_AUTORADIOBUTTON,89,28,
+                    44,8
+END
+
+IDD_SEEK DIALOG DISCARDABLE  0, 0, 307, 44
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Seek"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "",IDC_SLIDER_POS,"Static",SS_BLACKFRAME | NOT 
+                    WS_VISIBLE,7,9,293,25
+    LTEXT           "0",IDC_MIN,15,2,9,8
+    RTEXT           "100",IDC_MAX,283,2,13,8
+END
+
+IDD_LAYOUT_T1 DIALOG DISCARDABLE  0, 0, 385, 84
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Show all media",IDC_LAYOUT_SHOW_ALLMEDIAS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,4,63,10
+    CONTROL         "Tree1",IDC_TREE1,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | 
+                    WS_BORDER | WS_TABSTOP,10,18,118,34
+    LTEXT           "scale 1:1",IDC_LAYOUT_SCALE,138,4,42,8
+    PUSHBUTTON      "Preview Area",IDC_LAYOUT_PREVIEW,136,18,244,34,BS_FLAT | 
+                    NOT WS_VISIBLE | NOT WS_TABSTOP
+    LTEXT           "x",IDC_X,133,65,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_X,140,60,23,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "y",IDC_Y,170,65,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_Y,176,60,23,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "w",IDC_W,206,65,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_W,213,60,23,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "h",IDC_H,242,65,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_H,248,60,23,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "z",IDC_Z,288,65,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_Z,296,60,23,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    PUSHBUTTON      "&Properties...",IDCMD_ATTRIBUTES,331,61,51,13
+    PUSHBUTTON      "",IDC_ZOOMIN,189,3,14,12,BS_ICON | BS_CENTER | 
+                    BS_VCENTER | NOT WS_VISIBLE | NOT WS_TABSTOP
+    PUSHBUTTON      "",IDC_ZOOMOUT,207,3,14,12,BS_ICON | BS_CENTER | 
+                    BS_VCENTER | NOT WS_VISIBLE | NOT WS_TABSTOP
+END
+
+IDD_SOURCEEDIT DIALOG DISCARDABLE  0, 0, 402, 235
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT1,7,7,388,201,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_AUTOHSCROLL | ES_NOHIDESEL | ES_WANTRETURN | 
+                    WS_VSCROLL | WS_HSCROLL
+    DEFPUSHBUTTON   "OK",IDC_BUTTON1,7,215,50,14,WS_GROUP
+    PUSHBUTTON      "Apply",IDC_BUTTON2,64,215,50,14
+    PUSHBUTTON      "Revert",IDC_BUTTON3,121,215,50,14
+END
+
+IDD_EDITATTR_LS1x DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "scale 1:1",IDC_SCALE1,11,4,62,8
+    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
+                    WS_VISIBLE | NOT WS_TABSTOP
+    GROUPBOX        "",IDC_GROUP1,174,11,121,83
+    LTEXT           "Position and Size:",IDC_11,181,21,109,8
+    LTEXT           "x",-1,180,32,8,8
+    EDITTEXT        IDC_12,179,41,27,14,ES_AUTOHSCROLL
+    LTEXT           "y",-1,209,32,8,8
+    EDITTEXT        IDC_13,208,41,27,14,ES_AUTOHSCROLL
+    LTEXT           "w",-1,236,32,8,8
+    EDITTEXT        IDC_14,236,41,27,14,ES_AUTOHSCROLL
+    LTEXT           "h",-1,264,32,8,8
+    EDITTEXT        IDC_15,264,41,27,14,ES_AUTOHSCROLL
+    LTEXT           "",IDC_ATTR_INFO,6,132,290,18,SS_SUNKEN
+    LTEXT           "Z Index:",IDC_21,179,73,27,8
+    EDITTEXT        IDC_22,208,71,83,12,ES_AUTOHSCROLL
+END
+
+IDD_SOURCEEDIT1 DIALOG DISCARDABLE  0, 0, 188, 22
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDC_BUTTON1,8,5,50,14,WS_GROUP
+    PUSHBUTTON      "Apply",IDC_BUTTON2,69,5,50,14
+    PUSHBUTTON      "Revert",IDC_BUTTON3,130,5,50,14
+END
+
+IDD_EDITATTR_EMPTY DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "No properties to display",IDC_STATIC,85,78,130,8
+END
+
+IDD_LAYOUT_T2 DIALOG DISCARDABLE  0, 0, 256, 85
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "scale 1:1",IDC_LAYOUT_SCALE,8,4,42,8
+    PUSHBUTTON      "",IDC_ZOOMIN,59,3,14,12,BS_ICON | BS_CENTER | 
+                    BS_VCENTER | NOT WS_VISIBLE | NOT WS_TABSTOP
+    PUSHBUTTON      "",IDC_ZOOMOUT,77,3,14,12,BS_ICON | BS_CENTER | 
+                    BS_VCENTER | NOT WS_VISIBLE | NOT WS_TABSTOP
+    PUSHBUTTON      "Preview Area",IDC_LAYOUT_PREVIEW,6,18,244,34,BS_FLAT | 
+                    NOT WS_VISIBLE
+    LTEXT           "x",IDC_X,3,65,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_X,10,60,23,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "y",IDC_Y,40,65,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_Y,46,60,23,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "w",IDC_W,76,65,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_W,83,60,23,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "h",IDC_H,112,65,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_H,118,60,23,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    LTEXT           "z",IDC_Z,158,65,8,8
+    EDITTEXT        IDC_LAYOUT_REGION_Z,166,60,23,14,ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | ES_NUMBER
+    PUSHBUTTON      "&Properties...",IDUC_ATTRIBUTES,199,61,51,13
+    LTEXT           "",IDC_1,183,74,8,8,NOT WS_GROUP | WS_TABSTOP
+END
+
+IDD_EDITATTR_EVENTLIST DIALOGEX 0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    LISTBOX         IDC_EVENTLIST,6,8,234,52,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "New",IDC_NEWBUTTON,245,8,46,14
+    PUSHBUTTON      "Delete",IDC_DELETEBUTTON,245,30,46,14
+    CONTROL         "Delay",IDC_RDELAY,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,13,83,34,10
+    CONTROL         "Node",IDC_RNODE,"Button",BS_AUTORADIOBUTTON,13,93,33,10
+    CONTROL         "Top layout",IDC_RLAYOUT,"Button",BS_AUTORADIOBUTTON,13,
+                    113,49,10
+    CONTROL         "Indefinite",IDC_RINDEFINITE,"Button",BS_AUTORADIOBUTTON,
+                    67,83,45,10
+    CONTROL         "Access key",IDC_RACCESSKEY,"Button",BS_AUTORADIOBUTTON,
+                    67,93,53,10
+    CONTROL         "Wallclock",IDC_RWALLCLOCK,"Button",BS_AUTORADIOBUTTON,
+                    67,103,45,10
+    CONTROL         "Marker",IDC_RMARKER,"Button",BS_AUTORADIOBUTTON,67,113,
+                    38,10
+    EDITTEXT        IDC_THINGVALUE,173,72,95,14,ES_AUTOHSCROLL | WS_GROUP
+    PUSHBUTTON      "...",IDC_THINGBUTTON,268,73,13,12
+    COMBOBOX        IDC_EVENTTYPE,174,90,109,71,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDITOFFSET,174,108,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDITREPEAT,243,108,40,14,ES_AUTOHSCROLL
+    LTEXT           "",IDC_ATTR_INFO,6,132,290,18,SS_SUNKEN
+    GROUPBOX        "",IDC_EVENTLASSOO,6,62,290,65,0,0,HIDC_EVENTLASSOO
+    LTEXT           "Offset:",IDC_STATIC,150,111,22,8,0,WS_EX_RIGHT
+    LTEXT           "Event:",IDC_STATIC,150,92,22,8
+    LTEXT           "",IDC_THINGNAME,118,75,54,8,0,WS_EX_RIGHT
+    LTEXT           "Cause:",IDC_STATIC,43,72,64,7
+    LTEXT           "Repeat:",IDC_STATIC,217,111,26,8
+END
+
+IDD_ASSETSBAR DIALOG DISCARDABLE  0, 0, 188, 36
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Show all assets",IDC_RADIO_ALL,"Button",
+                    BS_AUTORADIOBUTTON,12,12,69,10
+    CONTROL         "Show unused assets",IDC_RADIO_UNUSED,"Button",
+                    BS_AUTORADIOBUTTON,93,12,81,10
+    GROUPBOX        "",IDC_STATIC,8,4,172,22
 END
 
 
@@ -1605,14 +2027,6 @@ BEGIN
         BOTTOMMARGIN, 40
     END
 
-    IDD_PREFERENCES, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 213
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 102
-    END
-
     IDD_CREATE_BOX, DIALOG
     BEGIN
         RIGHTMARGIN, 333
@@ -1634,7 +2048,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 181
         TOPMARGIN, 7
-        BOTTOMMARGIN, 100
+        BOTTOMMARGIN, 113
     END
 
     IDD_LINK_PROPERTY, DIALOG
@@ -1841,6 +2255,82 @@ BEGIN
     BEGIN
         BOTTOMMARGIN, 164
     END
+
+    IDD_PREFERENCES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 102
+    END
+
+    IDD_PREFERENCES2, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 115
+    END
+
+    IDD_LAYOUT2, DIALOG
+    BEGIN
+        RIGHTMARGIN, 424
+        BOTTOMMARGIN, 242
+    END
+
+    IDD_EDITATTR_LS1O4, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_EDITATTR_SUBREGION, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_LAYOUT3, DIALOG
+    BEGIN
+        RIGHTMARGIN, 424
+        BOTTOMMARGIN, 242
+    END
+
+    IDD_EDITATTR_COLORSEL, DIALOG
+    BEGIN
+        RIGHTMARGIN, 295
+    END
+
+    IDD_SEEK, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 300
+        BOTTOMMARGIN, 39
+    END
+
+    IDD_LAYOUT_T1, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 81
+    END
+
+    IDD_SOURCEEDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 395
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 229
+    END
+
+    IDD_SOURCEEDIT1, DIALOG
+    BEGIN
+        LEFTMARGIN, 8
+        RIGHTMARGIN, 180
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 19
+    END
+
+    IDD_LAYOUT_T2, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 82
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1864,6 +2354,39 @@ IDI_PAUSE               ICON    DISCARDABLE     "RES\\pause.ico"
 IDI_ICON_LINKSRC        ICON    DISCARDABLE     "res\\icon_lin.ico"
 IDI_ICON_LINKDST        ICON    DISCARDABLE     "res\\ico00008.ico"
 IDI_ICON_LINKSRCDST     ICON    DISCARDABLE     "res\\ico00009.ico"
+IDI_ICON_OPEN           ICON    DISCARDABLE     "res\\icon_ope.ico"
+IDI_ICON_CLOSED         ICON    DISCARDABLE     "res\\ico00004.ico"
+IDI_ICON_BANDWIDTHBAD   ICON    DISCARDABLE     "res\\ico00005.ico"
+IDI_ICON_BANDWIDTHGOOD  ICON    DISCARDABLE     "res\\ico00006.ico"
+IDI_ICON_ERROR          ICON    DISCARDABLE     "res\\ico00007.ico"
+IDI_ICON_TRANSOUT       ICON    DISCARDABLE     "res\\intransition.ico"
+IDI_ICON_TRANSIN        ICON    DISCARDABLE     "res\\outtransition.ico"
+IDI_EVENTIN             ICON    DISCARDABLE     "res\\eventin.ico"
+IDI_EVENTOUT            ICON    DISCARDABLE     "res\\eventout.ico"
+IDI_CAUSEEVENT          ICON    DISCARDABLE     "res\\causeeve.ico"
+IDI_HAPPYFACE           ICON    DISCARDABLE     "res\\happyfac.ico"
+IDI_SPACEMAN            ICON    DISCARDABLE     "res\\spaceman.ico"
+IDI_WALLCLOCK           ICON    DISCARDABLE     "res\\wallcloc.ico"
+IDI_REPEAT              ICON    DISCARDABLE     "res\\repeat.ico"
+IDI_FOCUSIN             ICON    DISCARDABLE     "res\\focusin.ico"
+IDI_ACTIVATEEVENT       ICON    DISCARDABLE     "res\\ico00010.ico"
+IDI_DURATION            ICON    DISCARDABLE     "res\\duration.ico"
+IDI_ANIMATION           ICON    DISCARDABLE     "res\\animatio.ico"
+IDI_PLAYING             ICON    DISCARDABLE     "res\\playing.ico"
+IDI_WAITSTOP            ICON    DISCARDABLE     "res\\waitstop.ico"
+IDI_IDLE                ICON    DISCARDABLE     "res\\idle.ico"
+IDI_ZOOMIN              ICON    DISCARDABLE     "res\\zoomin.ico"
+IDI_ZOOMOUT             ICON    DISCARDABLE     "res\\zoomout.ico"
+IDI_ICON_PAROPEN        ICON    DISCARDABLE     "res\\Par_open.ico"
+IDI_ICON_EXCLOPEN       ICON    DISCARDABLE     "res\\Excl_open.ico"
+IDI_ICON_SWITCHOPEN     ICON    DISCARDABLE     "res\\Switch_open.ico"
+IDI_ICON_PRIOOPEN       ICON    DISCARDABLE     "res\\Prio_open.ico"
+IDI_ICON_SEQOPEN        ICON    DISCARDABLE     "res\\Seq_open.ico"
+IDI_ICON_PARCLOSED      ICON    DISCARDABLE     "res\\Par_close.ico"
+IDI_ICON_SEQCLOSED      ICON    DISCARDABLE     "res\\Seq_close.ico"
+IDI_ICON_SWITCHCLOSED   ICON    DISCARDABLE     "res\\Switch_close.ico"
+IDI_ICON_PRIOCLOSED     ICON    DISCARDABLE     "res\\Prio_close.ico"
+IDI_ICON_EXCLCLOSED     ICON    DISCARDABLE     "res\\Excl_close.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1898,6 +2421,7 @@ BEGIN
     VK_SPACE,       IDUC_MAGIC_PLAY,        VIRTKEY, CONTROL, NOINVERT
     "W",            IDUC_CLOSE_WINDOW,      VIRTKEY, CONTROL, NOINVERT
     "X",            IDUC_CUT,               VIRTKEY, CONTROL, NOINVERT
+    "Y",            IDUC_REDO,              VIRTKEY, CONTROL, NOINVERT
     "Z",            IDUC_UNDO,              VIRTKEY, CONTROL, NOINVERT
 END
 
@@ -1941,6 +2465,7 @@ BEGIN
     VK_UP,          IDUC_PREVSIBLING,       VIRTKEY, NOINVERT
     "W",            IDUC_CLOSE_WINDOW,      VIRTKEY, CONTROL, NOINVERT
     "X",            IDUC_CUT,               VIRTKEY, CONTROL, NOINVERT
+    "Y",            IDUC_REDO,              VIRTKEY, CONTROL, NOINVERT
     "Z",            IDUC_UNDO,              VIRTKEY, CONTROL, NOINVERT
 END
 
@@ -2027,12 +2552,31 @@ BEGIN
     BUTTON      IDUC_RESTORE
     BUTTON      IDUC_CLOSE
     BUTTON      ID_BUTTON32790
-    BUTTON      IDUC_PLAY
-    BUTTON      IDUC_PAUSE
-    BUTTON      IDUC_STOP
     BUTTON      IDUC_HELP
     BUTTON      ID_PRINTDOC
     BUTTON      IDUC_CLOSE_WINDOW
+    BUTTON      IDUC_CANVAS_ZOOM_IN
+    BUTTON      IDUC_CANVAS_ZOOM_OUT
+END
+
+IDR_TB_PLAYER TOOLBAR DISCARDABLE  16, 15
+BEGIN
+    BUTTON      IDUC_PLAY
+    BUTTON      IDUC_PAUSE
+    BUTTON      IDUC_STOP
+END
+
+IDR_TB_ALIGNMENT TOOLBAR DISCARDABLE  16, 15
+BEGIN
+    BUTTON      IDUC_ALIGN_LEFT
+    BUTTON      IDUC_ALIGN_CENTER
+    SEPARATOR
+    BUTTON      IDUC_ALIGN_RIGHT
+    BUTTON      IDUC_ALIGN_TOP
+    BUTTON      IDUC_ALIGN_MIDDLE
+    BUTTON      IDUC_ALIGN_BOTTOM
+    BUTTON      IDUC_DISTRIBUTE_HORIZONTALLY
+    BUTTON      IDUC_DISTRIBUTE_VERTICALLY
 END
 
 
@@ -2044,6 +2588,13 @@ END
 IDD_NODE_INFO DLGINIT
 BEGIN
     IDC_NODE_TYPE, 0x403, 1, 0
+"\000" 
+    0
+END
+
+IDD_EDITATTR_EVENTLIST DLGINIT
+BEGIN
+    IDC_EVENTTYPE, 0x403, 1, 0
 "\000" 
     0
 END
@@ -2083,32 +2634,29 @@ BEGIN
     IDUC_OPENURL            "Open URL\nOpen URL"
 END
 
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDUC_CANVAS_ZOOM_IN     "Zoom In\nZoom In"
+    IDUC_CANVAS_ZOOM_OUT    "Zoom out\nZoom out"
+    DUC_CANVAS_ZOOM_IN      "Zoom In\nZoom In"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    UC_CANVAS_ZOOM_OUT      "Zoom out\nZoom out"
+    IDUC_ALIGN_LEFT         "Align left edges\nAlign left edges"
+    IDUC_ALIGN_CENTER       "Align vertical centers\nAlign vertical centers"
+    IDUC_ALIGN_RIGHT        "Align right edges\nAlign right edges"
+    IDUC_ALIGN_TOP          "Align tops\nAlign Tops"
+    IDUC_ALIGN_MIDDLE       "Align horizontal centers\nAlign horizontal centers"
+    IDUC_ALIGN_BOTTOM       "Align bottoms\nAlign bottoms"
+    IDUC_DISTRIBUTE_HORIZONTALLY 
+                            "Distribute horizontal space\nDistribute horizontal space"
+    IDUC_DISTRIBUTE_VERTICALLY 
+                            "Distribute vertical space\nDistribute vertical space"
+END
+
 #endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// Dutch (Netherlands) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NLD)
-#ifdef _WIN32
-LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_ICON_OPEN           ICON    DISCARDABLE     "res\\icon_ope.ico"
-IDI_ICON_CLOSED         ICON    DISCARDABLE     "res\\ico00004.ico"
-IDI_ICON_BANDWIDTHBAD   ICON    DISCARDABLE     "res\\ico00005.ico"
-IDI_ICON_BANDWIDTHGOOD  ICON    DISCARDABLE     "res\\ico00006.ico"
-IDI_ICON_ERROR          ICON    DISCARDABLE     "res\\ico00007.ico"
-#endif    // Dutch (Netherlands) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

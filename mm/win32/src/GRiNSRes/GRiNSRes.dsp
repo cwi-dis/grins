@@ -70,7 +70,14 @@ SOURCE="$(InputPath)"
 # Begin Group "Resources"
 
 # PROP Default_Filter ""
-# End Group
+# Begin Source File
+
+SOURCE=.\RES\animatio.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\causeeve.ico
+# End Source File
 # Begin Source File
 
 SOURCE=.\RES\Drag.cur
@@ -86,6 +93,30 @@ SOURCE=.\RES\Draglink.cur
 # Begin Source File
 
 SOURCE=.\RES\DragMove.cur
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\duration.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\eventin.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\eventout.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Excl_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Excl_open.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\focusin.ico
 # End Source File
 # Begin Source File
 
@@ -114,6 +145,14 @@ SOURCE=.\GRiNSRes.rc
 # Begin Source File
 
 SOURCE=.\RES\hand.cur
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\happyfac.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\html.bmp
 # End Source File
 # Begin Source File
 
@@ -153,6 +192,14 @@ SOURCE=.\RES\ico00009.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\ico00010.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\ico00011.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\icon1.ico
 # End Source File
 # Begin Source File
@@ -165,7 +212,39 @@ SOURCE=.\RES\icon_ope.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\idle.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\image.bmp
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\Build\products\g2-15\pro\intransition.ICO"
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\intransition.ICO
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Nodrop.cur
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\Build\products\g2-15\pro\outtransition.ICO"
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\outtransition.ICO
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Par_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Par_open.ico
 # End Source File
 # Begin Source File
 
@@ -181,6 +260,42 @@ SOURCE=.\RES\player8bit.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\playing.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Prio_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Prio_open.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\region.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\repeat.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Seq_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Seq_open.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\sound.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\spaceman.ico
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\Build\products\g2-15\lite\splash8bit.bmp"
 # End Source File
 # Begin Source File
@@ -189,11 +304,27 @@ SOURCE="..\..\..\Build\products\g2-15\pro\splash8bit.bmp"
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\Build\products\player\splash8bit.bmp
+SOURCE=..\..\..\Build\products\qt\pro\splash8bit.bmp
 # End Source File
 # Begin Source File
 
 SOURCE="..\..\..\Build\products\smil-10\splash8bit.bmp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\Build\products\smil-20\editor\splash8bit.bmp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\Build\products\smil-20\player\splash8bit.bmp"
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Build\products\snap\splash8bit.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Build\products\snap\win32\splash8bit.bmp
 # End Source File
 # Begin Source File
 
@@ -213,11 +344,64 @@ SOURCE="..\..\..\Build\products\g2-15\pro\splashsm.bmp"
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\Build\products\snap\splashsn.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Stop.cur
 # End Source File
 # Begin Source File
 
 SOURCE=.\RES\stop.ico
 # End Source File
+# Begin Source File
+
+SOURCE=.\RES\Switch_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Switch_open.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\tb_alignment.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\tb_player.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\text.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\toolbar1.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\video.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\viewport.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\waitstop.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\wallcloc.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\zoomin.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\zoomout.ico
+# End Source File
+# End Group
 # End Target
 # End Project
