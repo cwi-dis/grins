@@ -229,6 +229,15 @@ class ChannelWrapper(Wrapper):
 
 	def getdefault(self, name): # Return the default or None
 		if name == '.cname': return ''
+		if name == 'bgcolor' and self.channel.has_key('base_window'):
+			# special case code for background color
+			ch = self.channel
+			pname = ch['base_window']
+			pchan = ch.context.channeldict[pname]
+			try:
+				return pchan['bgcolor']
+			except KeyError:
+				pass
 		return MMAttrdefs.getdef(name)[1]
 
 	def setattr(self, name, value):
