@@ -11,9 +11,9 @@ implements SMILDocument, SMILController, SMILRenderer
     private int PAUSING = 1;
     private int PLAYING = 2;
         
-    GRiNSPlayer(String filename)
+    GRiNSPlayer(String filename, String license)
         {
-        open(filename);
+        open(filename, license);
         }
     
     public SMILController getController()
@@ -68,12 +68,29 @@ implements SMILDocument, SMILController, SMILRenderer
             }
         }
       
-    public void open(String fn)
+    public void open(String fn, String license)
         {
         if(hgrins!=0) return;
         initializeThreadContext();
-        hgrins = nconnect();
-        if(hgrins!=0) 
+        try {
+            hgrins = nconnect();
+            }
+        catch(Exception e)
+            {
+            System.out.println("Cann't connect to GRiNS"); 
+            }
+            
+        int permission = 0;
+        if(hgrins != 0) {
+            permission = ngetPermission(hgrins, license);      
+            if(permission == 0) {ndisconnect(hgrins); hgrins = 0;}
+            }
+
+        if(permission == 0){
+            uninitializeThreadContext(); 
+            return;
+            }
+        if(permission > 0) 
             {
             nopen(hgrins, fn);
             if(canvas!=null && canvas.isDisplayable())
@@ -256,6 +273,7 @@ implements SMILDocument, SMILController, SMILRenderer
     
     private native int nconnect();
     private native void ndisconnect(int hgrins);
+    private native int ngetPermission(int hgrins, String license);
     private native void nopen(int hgrins, String str);
     private native void nclose(int hgrins);
     private native void nplay(int hgrins);

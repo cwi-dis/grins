@@ -214,7 +214,8 @@ implements SMILListener, TimerListener
     private void open(String filename){
         
         // create SMIL doc
-	    smil = GRiNSToolkit.createDocument(filename);
+        String license = "";
+	    smil = GRiNSToolkit.createDocument(filename, license);
 	    
 	    // update create UI
 	    double dur = smil.getDuration();

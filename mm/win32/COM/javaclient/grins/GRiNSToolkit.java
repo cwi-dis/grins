@@ -12,9 +12,10 @@ public class GRiNSToolkit {
     *   specified filename or URL.
     *
     * @param  filenameOrUrl   document location as filename or a URL string.
+    * @param  license   GRiNS license string.
     *
     */
-    static public SMILDocument createDocument(String filenameOrUrl){
-        return new GRiNSPlayer(filenameOrUrl);
-    }
+    static public SMILDocument createDocument(String filenameOrUrl, String license){
+        return new GRiNSPlayer(filenameOrUrl, license);
+        }
 }
