@@ -303,21 +303,21 @@ class _DisplayList:
 		elif cmd == 'stipplebox':
 			if not self._overlap(region, entry[2]):
 				return
+			brush = entry[1]
+			rect = entry[2]
 			oldmode = dc.SetBkMode(win32con.TRANSPARENT)
 			oldpen = dc.SelectStockObject(win32con.NULL_PEN)
-			brush = entry[1]
-			x, y = 0, 0
-			brush.UnrealizeObject()
-			oldorg = dc.SetBrushOrg((x, y))
-			oldbrush = dc.SelectObject(entry[1])
-			dc.Rectangle(entry[2])
+			x, y = rect[:2]
+			oldbrush = dc.SelectObject(brush)
+			dc.Rectangle(rect)
 			if 1: # begin trick for more dense grid pattern 
+				x, y = dc.GetBrushOrg()
 				brush.UnrealizeObject()
-				dc.SetBrushOrg((x+4, y))
+				dc.SetBrushOrg(((x + 4) % 8, y % 8))
 				dc.SelectObject(brush)
-				dc.Rectangle(entry[2])
+				dc.Rectangle(rect)
+				dc.SetBrushOrg((x, y))
 				# end_trick
-			dc.SetBrushOrg(oldorg)
 			dc.SelectObject(oldbrush)
 			dc.SelectObject(oldpen)
 			dc.SetBkMode(oldmode)
