@@ -5,6 +5,9 @@ import Transitions
 import windowinterface
 import time
 
+# for ddraw.error
+import ddraw
+
 class TransitionEngine:
 	def __init__(self, window, outtrans, runit, dict):
 		self.__windows = [window,]
@@ -87,6 +90,7 @@ class TransitionEngine:
 			# just paint what wnd is responsible for
 			# i.e. do not paint children
 			wnd._paintOnDDS(self._active, wnd._rect)
+				
 
 		# do not reverse, already done indirectly
 		vfrom = wnd._passive
@@ -135,10 +139,17 @@ class TransitionEngine:
 	def __onIdle(self):
 		t_sec = time.time() - self.__start
 		if t_sec>=self.__end:
-			self.settransitionvalue(self.__endprogress)
-			self.endtransition()
+			try:
+				self.settransitionvalue(self.__endprogress)
+				self.endtransition()
+			except ddraw.error, arg:
+				print arg			
 		else:
-			self.settransitionvalue(t_sec/self.__transperiod)
+			try:
+				self.settransitionvalue(t_sec/self.__transperiod)
+			except ddraw.error, arg:
+				print arg			
+				
 	
 	def __register_for_timeslices(self):
 		if not self.__fiber_id:

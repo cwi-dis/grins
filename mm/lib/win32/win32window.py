@@ -5,6 +5,8 @@ from WMEVENTS import *
 
 import win32mu
 
+import win32api
+
 from win32ig import win32ig
 from win32displaylist import _DisplayList
 
@@ -983,9 +985,22 @@ class DDWndLayer:
 		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
 		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
 		ddsd.SetSize(w,h)
-		dds = self._ddraw.CreateSurface(ddsd)
+		dds = None
+		while dds is None:
+			try:
+				dds = self._ddraw.CreateSurface(ddsd)
+			except ddraw.error, arg:
+				print arg
+				dds = None
+				win32api.Sleep(50)
 		ddcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
-		dds.BltFill((0, 0, w, h), ddcolor)
+		while 1:
+			try:
+				dds.BltFill((0, 0, w, h), ddcolor)
+			except ddraw.error, arg:
+				print arg
+			else:
+				break
 		return dds
 
 	def flip(self):
@@ -1006,7 +1021,11 @@ class DDWndLayer:
 			else:
 				# OK, backBuffer resored, paint it
 				self.paint()
-		self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
+		try:
+			self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
+		except ddraw.error, arg:
+			print arg
+
 
 	def flipFullScreen(self):
 		if self._frontBuffer.IsLost():
@@ -1397,7 +1416,10 @@ class Region(Window):
 		# first paint self
 		rgn = self.getClipRgn(rel)
 		dst = self.getwindowpos(rel)
-		self._paintOnDDS(dds, dst, rgn)
+		try:
+			self._paintOnDDS(dds, dst, rgn)
+		except ddraw.error, arg:
+			print arg
 		rgn.DeleteObject()
 		
 		# then paint children bottom up
@@ -1415,7 +1437,10 @@ class Region(Window):
 			return
 		x, y, w, h = self.getwindowpos()
 		dds = self.createDDS()
-		dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
+		try:
+			dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
+		except ddraw.error, arg:
+			print arg			
 		return dds
 
 	def bltDDS(self, srfc):
@@ -1425,7 +1450,10 @@ class Region(Window):
 		buf = self._topwindow.getDrawBuffer()
 		if not buf: return
 		if rc_dst[2]!=0 and rc_dst[3]!=0:
-			buf.Blt(self.ltrb(rc_dst), srfc, rc_src, ddraw.DDBLT_WAIT)
+			try:
+				buf.Blt(self.ltrb(rc_dst), srfc, rc_src, ddraw.DDBLT_WAIT)
+			except ddraw.error, arg:
+				print arg			
 
 	def clearSurface(self, dds):
 		w, h = dds.GetSurfaceDesc().GetSize()
@@ -1435,7 +1463,10 @@ class Region(Window):
 			else:
 				r, g, b = 0, 0, 0
 			self._convbgcolor = dds.GetColorMatch((r,g,b))
-		dds.BltFill((0, 0, w, h), self._convbgcolor)
+		try:
+			dds.BltFill((0, 0, w, h), self._convbgcolor)
+		except ddraw.error, arg:
+			print arg			
 
 	# normal painting
 	def _paint_0(self):
@@ -1445,7 +1476,10 @@ class Region(Window):
 		buf = self._topwindow.getDrawBuffer()
 		if buf.IsLost() and not buf.Restore():
 			return
-		self._paintOnDDS(buf, dst, rgn)
+		try:
+			self._paintOnDDS(buf, dst, rgn)
+		except ddraw.error, arg:
+			print arg			
 		rgn.DeleteObject()
 
 		# then paint children bottom up
@@ -1494,7 +1528,10 @@ class Region(Window):
 		# first paint self on the complement of self._subwindows region
 		rgn2 = self.getChildrenRgnComplement(self._topwindow)
 		dst = self.getwindowpos(rel)
-		self._paintOnDDS(dds, dst, rgn2)
+		try:
+			self._paintOnDDS(dds, dst, rgn2)
+		except ddraw.error, arg:
+			print arg			
 		rgn2.DeleteObject()
 
 		# use GDI to paint transition surface 
@@ -1506,7 +1543,10 @@ class Region(Window):
 		srcDC = self.__getDC(src)	
 		dstDC.SelectClipRgn(rgn)
 		x, y, w, h = self.getwindowpos()
-		dstDC.BitBlt((x, y),(w, h),srcDC,(0, 0), win32con.SRCCOPY)
+		try:
+			dstDC.BitBlt((x, y),(w, h),srcDC,(0, 0), win32con.SRCCOPY)
+		except ddraw.error, arg:
+			print arg			
 		self.__releaseDC(dst,dstDC)
 		self.__releaseDC(src,srcDC)
 		
@@ -1528,14 +1568,20 @@ class Region(Window):
 		dst = self._orgrect
 		dds = self.createDDS(dst[2],dst[3])
 		self.clearSurface(dds)
-		self._paintOnDDS(dds, dst)
+		try:
+			self._paintOnDDS(dds, dst)
+		except ddraw.error, arg:
+			print arg			
 
 		# then paint children bottom up relative to us
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
-			w.paintOnDDS(dds, self)
-		
+			try:
+				w.paintOnDDS(dds, self)
+			except ddraw.error, arg:
+				print arg			
+
 		# restore truth
 		self._rect = temp
 
@@ -1811,7 +1857,11 @@ class Viewport(Region):
 				return
 
 		# first paint self
-		self._paintOnDDS(self.__drawBuffer, self._rect)
+		try:
+			self._paintOnDDS(self.__drawBuffer, self._rect)
+		except ddraw.error, arg:
+			print arg
+			return
 
 		# then paint children bottom up
 		L = self._subwindows[:]
@@ -1820,7 +1870,11 @@ class Viewport(Region):
 			w.paint()
 		
 		ltrb = self.ltrb(self._rect)
-		self._ctx.getDrawBuffer().Blt(ltrb, self.__drawBuffer, ltrb, ddraw.DDBLT_WAIT)
+
+		try:
+			self._ctx.getDrawBuffer().Blt(ltrb, self.__drawBuffer, ltrb, ddraw.DDBLT_WAIT)
+		except ddraw.error, arg:
+			print arg
 	# 
 	# Mouse section
 	# 
@@ -1851,6 +1905,8 @@ class Viewport(Region):
 
 
 #############################
+
+
 
 
 
