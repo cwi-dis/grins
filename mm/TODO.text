@@ -1,23 +1,17 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
-* end events for arrows.
-
 * Add two buttons "revert" and "close" to the source view.
 * Error management (go to the source view if there is an error)
 * Retain comments in the source view.
 * Multiple selection in the structure view.
 * Asset management.
 
-* Known bug - arrows don't get drawn well in the display list.
 * Test if editing the document makes the events stay properly.
 * Hyperlinks have dissapeared.
 * Multiple selection.
+* Errors in the player - make them selectable in a menu somewhere.
 
-Priority top-to-bottom.
-------------------------
-
-(discuss all later)
 --> Assets window
 	- File-based assets? Explorer window?
 	- Play media on the clipboard.
@@ -32,10 +26,5 @@ Priority top-to-bottom.
 	- Remove the menu entry that I added (edit in source view)
 	- Edit regions in the source view.
 
-
---
-
-* Create templates for Snap! (slideshow)
+* Create templates
 * Show whether a node is empty or not (in the Hierarchy View?).
-
-* Hyperlinks don't appear to work any more.

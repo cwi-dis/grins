@@ -590,11 +590,11 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 
 	# Response to left button down
 	def onLButtonDown(self, params):
-		if self.in_create_box_mode():
+		if self.in_create_box_mode(): # old code.. I'm scared to remove it. -mjvdg.
 			self.notifyListener('onLButtonDown',params)
 			return
-		msg=win32mu.Win32Msg(params)
-		self.onMouseEvent(msg.pos(),Mouse0Press)
+		msg=win32mu.Win32Msg(params) # translate the message to a useful Python list.
+		self.onMouseEvent(msg.pos(),Mouse0Press, params=params) # :-/ -mjvdg.
 
 	# Response to left button up
 	def onLButtonUp(self, params):
