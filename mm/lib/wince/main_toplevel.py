@@ -6,9 +6,7 @@ from appcon import *
 
 import main_window
 	
-preload_list = ['xmllib', 'Attrdefs', 'MMAttrdefs', 'MMNode', 'SMILTreeRead', 
-	'TopLevel', 'Player', 'SMILCssResolver', 'Channel',
-	'Scheduler', 'Transitions', 'Animators', 'gdi_layout',]
+from wince_preload import preload_list
 preload_list_msg = 0
 
 class Toplevel:
@@ -54,7 +52,10 @@ class Toplevel:
 		global preload_list, preload_list_msg
 		if preload_list:
 			self._mainwnd.setStatusMsg('Loading module %s' % preload_list[0])
-			exec 'import %s' % preload_list[0]
+			try:
+				exec 'import %s' % preload_list[0]
+			except:
+				pass
 			preload_list = preload_list[1:]
 		elif preload_list_msg == 0:
 			self._mainwnd.setStatusMsg('')
