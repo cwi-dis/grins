@@ -268,6 +268,7 @@ class Node:
 class RegionNode(Node):
 	def __init__(self, context, mmobj=None):
 		Node.__init__(self, context, mmobj)
+		self.media = None
 
 	def _initialUpdate(self):
 		self.pxleft, self.pxwidth = self._resolveCSS2Rule(self.left, self.width, self.right, self.container.pxwidth)
