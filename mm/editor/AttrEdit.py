@@ -256,20 +256,51 @@ class SlideWrapper(NodeWrapper):
 		import realsupport
 		tag = self.node.GetAttrDict()['tag']
 		if tag == 'fill':
-			namelist = ['color', 'displayfull', 'subregionxy', 'subregionwh', 'subregionanchor', 'start']
+			namelist = ['color', 'displayfull', 'subregionxy',
+				    'subregionwh', 'subregionanchor', 'start']
 		elif tag in ('fadein', 'crossfade', 'wipe'):
-			namelist = ['file', 'imgcrop', 'aspect', 'displayfull', 'subregionxy', 'subregionwh', 'subregionanchor', 'start', 'duration', 'maxfps', 'href']
+			namelist = ['file', 'fullimage', 'imgcropxy',
+				    'imgcropwh', 'imgcropanchor', 'aspect',
+				    'displayfull', 'subregionxy',
+				    'subregionwh', 'subregionanchor', 'start',
+				    'duration', 'maxfps', 'href']
 			if tag == 'wipe':
 				namelist.append('direction')
 				namelist.append('wipetype')
 		elif tag == 'fadeout':
-			namelist = ['color', 'subregionxy', 'displayfull', 'subregionwh', 'subregionanchor', 'start', 'duration', 'maxfps']
+			namelist = ['color', 'subregionxy', 'displayfull',
+				    'subregionwh', 'subregionanchor', 'start',
+				    'duration', 'maxfps']
 		elif tag == 'viewchange':
-			namelist = ['imgcrop', 'displayfull', 'subregionxy', 'subregionwh', 'subregionanchor', 'start', 'duration', 'maxfps']
+			namelist = ['fullimage', 'imgcropxy', 'imgcropwh',
+				    'imgcropanchor', 'displayfull',
+				    'subregionxy', 'subregionwh',
+				    'subregionanchor', 'start', 'duration',
+				    'maxfps']
 		else:
 			namelist = []
 		namelist.insert(0, 'tag')
 		return namelist
+
+	def commit(self):
+		node = self.node
+		attrdict = node.GetAttrDict()
+		if (attrdict.get('displayfull', 1) or
+		    attrdict.get('fullimage', 1)) and \
+		   attrdict['tag'] in ('fadein', 'crossfade', 'wipe') and \
+		   attrdict.get('file'):
+			import MMurl, Sizes
+			url = attrdict['file']
+			purl = MMAttrdefs.getattr(node.GetParent(), 'file')
+			url = MMurl.basejoin(purl, url)
+			url = node.GetContext().findurl(url)
+			w,h = Sizes.GetSize(url)
+			if w != 0 and h != 0:
+				if attrdict.get('displayfull', 1):
+					attrdict['subregionwh'] = w, h
+				if attrdict.get('fullimage', 1):
+					attrdict['imgcropwh'] = w, h
+		NodeWrapper.commit(self)
 
 
 class ChannelWrapper(Wrapper):

@@ -301,8 +301,17 @@
 (href (string) '' 'Hyperlink destination' default
 	'Destination URL of hyperlink from image (see RealPix documentation).' inherited)
 
-(imgcrop (tuple (int) (int) (int) (int)) (0 0 0 0) 'Image crop' default
-	'Crop image.  Values are x,y,w,h of image area to display.' normal)
+(imgcropwh (tuple (int) (int)) (0 0) 'Image crop size' default
+	'Crop image.  Values are width and height of image area to display.' normal)
+
+(imgcropxy (tuple (int) (int)) (0 0) 'Image crop coordinates' default
+	'Crop image.  Values are x,y coordinates of image area to display.' normal)
+
+(imgcropanchor (string) 'top-left' 'Image crop anchor' subregionanchor
+	'Anchor for image crop (x,y) coordinates' normal)
+
+(fullimage (bool) 1 'Use whole image' default
+	'Use whole image' normal)
 
 (maxfps (int) 0 'Max fps' default 'Maximum frames per second (see RealPix documentation).' inherited)
 

@@ -400,22 +400,28 @@ class RPParser(xmllib.XMLParser):
 
 	def start_fill(self, attributes):
 		destrect = self.__rect('dst', attributes)
-		dispfull = destrect == (0,0,0,0)
 		color = self.__color(attributes)
 		start = self.__time('start', attributes)
-		self.tags.append({'tag': 'fill', 'color': color, 'subregionxy': destrect[:2], 'subregionwh': destrect[2:], 'subregionanchor': 'top-left', 'start': start, 'displayfull': dispfull})
+		self.tags.append({'tag': 'fill', 'color': color, 'subregionxy': destrect[:2], 'subregionwh': destrect[2:], 'subregionanchor': 'top-left', 'start': start, 'displayfull': destrect == (0,0,0,0)})
 
 	def start_fadein(self, attributes):
 		self.__fadein_or_crossfade_or_wipe('fadein', attributes)
 
 	def start_fadeout(self, attributes):
 		destrect = self.__rect('dst', attributes)
-		dispfull = destrect == (0,0,0,0)
 		color = self.__color(attributes)
 		start = self.__time('start', attributes)
 		duration = self.__time('duration', attributes)
 		maxfps = attributes.get('maxfps', self.maxfps)
-		self.tags.append({'tag': 'fadeout', 'color': color, 'subregionxy': destrect[:2], 'subregionwh': destrect[2:], 'subregionanchor': 'top-left', 'start': start, 'duration': duration, 'maxfps': maxfps, 'displayfull': dispfull})
+		self.tags.append({'tag': 'fadeout',
+				  'color': color,
+				  'subregionxy': destrect[:2],
+				  'subregionwh': destrect[2:],
+				  'subregionanchor': 'top-left',
+				  'start': start,
+				  'duration': duration,
+				  'maxfps': maxfps,
+				  'displayfull': destrect == (0,0,0,0)})
 
 	def start_crossfade(self, attributes):
 		self.__fadein_or_crossfade_or_wipe('crossfade', attributes)
@@ -427,15 +433,24 @@ class RPParser(xmllib.XMLParser):
 		duration = self.__time('duration', attributes)
 		maxfps = attributes.get('maxfps', self.maxfps)
 		dstrect = self.__rect('dst', attributes)
-		dispfull = dstrect == (0,0,0,0)
 		srcrect = self.__rect('src', attributes)
 		start = self.__time('start', attributes)
-		self.tags.append({'tag': 'viewchange', 'imgcrop': srcrect, 'subregionxy': dstrect[:2], 'subregionwh': dstrect[2:], 'subregionanchor': 'top-left', 'start': start, 'duration': duration, 'maxfps': maxfps, 'displayfull': dispfull})
+		self.tags.append({'tag': 'viewchange',
+				  'imgcropxy': srcrect[:2],
+				  'imgcropwh': srcrect[2:],
+				  'imgcropanchor': 'top-left',
+				  'fullimage': srcrect == (0,0,0,0),
+				  'subregionxy': dstrect[:2],
+				  'subregionwh': dstrect[2:],
+				  'subregionanchor': 'top-left',
+				  'start': start,
+				  'duration': duration,
+				  'maxfps': maxfps,
+				  'displayfull': dstrect == (0,0,0,0)})
 
 	def __fadein_or_crossfade_or_wipe(self, tag, attributes):
 		aspect = (attributes.get('aspect', self.aspect) == 'true')
 		dstrect = self.__rect('dst', attributes)
-		dispfull = dstrect == (0,0,0,0)
 		duration = self.__time('duration', attributes)
 		maxfps = attributes.get('maxfps', self.maxfps)
 		srcrect = self.__rect('src', attributes)
@@ -446,7 +461,21 @@ class RPParser(xmllib.XMLParser):
 		elif not self.__images.has_key(target):
 			self.syntax_error("unknown `target' attribute")
 		url = attributes.get('url')
-		attrs = {'tag': tag, 'file': self.__images.get(target), 'imgcrop': srcrect, 'subregionxy': dstrect[:2], 'subregionwh': dstrect[2:], 'subregionanchor': 'top-left', 'aspect': aspect, 'start': start, 'duration': duration, 'maxfps': maxfps, 'href': url, 'displayfull': dispfull}
+		attrs = {'tag': tag,
+			 'file': self.__images.get(target),
+			 'imgcropxy': srcrect[:2],
+			 'imgcropwh': srcrect[2:],
+			 'imgcropanchor': 'top-left',
+			 'fullimage': srcrect == (0,0,0,0),
+			 'subregionxy': dstrect[:2],
+			 'subregionwh': dstrect[2:],
+			 'subregionanchor': 'top-left',
+			 'aspect': aspect,
+			 'start': start,
+			 'duration': duration,
+			 'maxfps': maxfps,
+			 'href': url,
+			 'displayfull': dstrect == (0,0,0,0)}
 		if tag == 'wipe':
 			type = attributes.get('type')
 			if type is None:
@@ -549,13 +578,35 @@ class RPParser(xmllib.XMLParser):
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 
 coordnames = 'x','y','w','h'
-def writecoords(f, str, coords):
-	if not coords:
-		return
+def writecoords(f, str, full, xy, wh, anchor):
+	if full:
+		coords = (0,0,0,0)
+	else:
+		if anchor == 'top-left':
+			pass
+		elif anchor == 'center-left':
+			xy = xy[0], xy[1]-wh[1]/2
+		elif anchor == 'bottom-left':
+			xy = xy[0], xy[1]-wh[1]
+		elif anchor == 'top-center':
+			xy = xy[0]-wh[0]/2, wh[1]
+		elif anchor == 'center':
+			xy = xy[0]-wh[0]/2, xy[1]-wh[1]/2
+		elif anchor == 'bottom-center':
+			xy = xy[0]-wh[0]/2, xy[1]-wh[1]
+		elif anchor == 'top-right':
+			xy = xy[0]-wh[0], wh[1]
+		elif anchor == 'center-right':
+			xy = xy[0]-wh[0], xy[1]-wh[1]/2
+		elif anchor == 'bottom-right':
+			xy = xy[0]-wh[0], xy[1]-wh[1]
+		coords = xy + wh
+
 	for i in range(4):
 		c = coords[i]
 		if c != 0:
 			f.write(' %s%s="%d"' % (str, coordnames[i], c))
+
 
 def writeRP(file, rp, node):
 	from SMILTreeWrite import nameencode
@@ -633,37 +684,19 @@ def writeRP(file, rp, node):
 				url = attrs.get('href')
 				if url:
 					f.write(' url=%s' % nameencode(url))
-			writecoords(f, 'src', attrs.get('imgcrop'))
+			writecoords(f, 'src', attrs.get('fullimage', 1),
+				    attrs.get('imgcropxy', (0,0)),
+				    attrs.get('imgcropwh', (0,0)),
+				    attrs.get('imgcropanchor', 'top-left'))
 		if tag == 'wipe':
 			direction = attrs.get('direction', 'left')
 			f.write(' direction="%s"' % direction)
 			wipetype = attrs.get('wipetype', 'normal')
 			f.write(' type="%s"' % wipetype)
-		if attrs.get('displayfull', 1):
-			writecoords(f, 'dst', (0,0,0,0))
-		else:
-			dstxy = attrs.get('subregionxy', (0,0))
-			dstwh = attrs.get('subregionwh', (0,0))
-			dstanchor = attrs.get('subregionanchor', 'top-left')
-			if dstanchor == 'top-left':
-				pass
-			elif dstanchor == 'center-left':
-				dstxy = dstxy[0], dstxy[1]-dstwh[1]/2
-			elif dstanchor == 'bottom-left':
-				dstxy = dstxy[0], dstxy[1]-dstwh[1]
-			elif dstanchor == 'top-center':
-				dstxy = dstxy[0]-dstwh[0]/2, dstwh[1]
-			elif dstanchor == 'center':
-				dstxy = dstxy[0]-dstwh[0]/2, dstxy[1]-dstwh[1]/2
-			elif dstanchor == 'bottom-center':
-				dstxy = dstxy[0]-dstwh[0]/2, dstxy[1]-dstwh[1]
-			elif dstanchor == 'top-right':
-				dstxy = dstxy[0]-dstwh[0], dstwh[1]
-			elif dstanchor == 'center-right':
-				dstxy = dstxy[0]-dstwh[0], dstxy[1]-dstwh[1]/2
-			elif dstanchor == 'bottom-right':
-				dstxy = dstxy[0]-dstwh[0], dstxy[1]-dstwh[1]
-			writecoords(f, 'dst', dstxy + dstwh)
+		writecoords(f, 'dst', attrs.get('displayfull', 1),
+			    attrs.get('subregionxy', (0,0)),
+			    attrs.get('subregionwh', (0,0)),
+			    attrs.get('subregionanchor', 'top-left'))
 		if tag != 'fill':
 			maxfps = attrs.get('maxfps')
 			if maxfps is not None:
