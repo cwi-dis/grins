@@ -2,14 +2,18 @@ __version__ = "$Id$"
 
 import win32ui,win32con
 from pywin.mfc import dialog
+import commctrl
 Sdk=win32ui.GetWin32Sdk()
 import grinsRC
 from usercmd import *
 
 class LightWeightControl:
-	def __init__(self,owner=None,id=-1):
+	def __init__(self,parent=None,id=-1,hwnd=None):
 		self._id=id
-		if owner: owner._controls.append(self)
+		self._parent=parent
+		if parent and hasattr(parent,'_subwindows'):
+			parent._subwindows.append(self)
+		self._hwnd=hwnd
 	def sendmessage(self,msg,wparam=0,lparam=0):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessage(self._hwnd,msg,wparam,lparam)
@@ -20,23 +24,47 @@ class LightWeightControl:
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessageRS(self._hwnd,msg,wparam,lparam)
 	def enable(self,f):
+		if not self._hwnd: raise error, 'os control has not been created'
 		Sdk.EnableWindow(self._hwnd,f)
+	def show(self):
+		if not self._hwnd: raise error, 'os control has not been created'
+		Sdk.ShowWindow(self._hwnd,SW_SHOW)
+	def hide(self):
+		if not self._hwnd: raise error, 'os control has not been created'
+		Sdk.ShowWindow(self._hwnd,SW_HIDE)
 	def attach(self,hwnd):
 		self._hwnd=hwnd
+	def attach_to_parent(self):
+		if not self._parent: raise error, 'attach_to_parent without parent'	
+		hparent = self._parent.GetSafeHwnd()
+		self.attach(Sdk.GetDlgItem(hparent,self._id))
 	def detach(self):
 		hwnd=self._hwnd
 		self._hwnd=None
 		return hwnd
 	def fromhandle(self,hwnd):
 		return self._class__(hwnd)
-	def create(self,x,y,w,h,parent=None):
-		pass
 	def hookcommand(self,obj,cb):
 		obj.HookCommand(cb,self._id)
 	def hookmessage(self,obj,cb):
 		obj.HookMessage(cb,self._id)
 	def hasid(self,id):
 		return id==self._id
+	def create(self,wc,name,pos,size,parent,id):
+		if hasattr(parent,'GetSafeHwnd'):
+			hwnd=parent.GetSafeHwnd()
+		else:
+			hwnd=parent
+		pl=(pos[0],pos[1],size[0],size[1])
+		self._hwnd=Sdk.CreateWindowEx(wc.exstyle,wc.classid,name,wc.style,
+				pl,hwnd,id)
+	def setwindowpos(self,hInsertAfter,rc,flags):
+		if not self._hwnd: raise error, 'os control has not been created'
+		Sdk.SetWindowPos(self._hwnd,hInsertAfter,rc,flags)
+	def getwindowrect(self):
+		if not self._hwnd: raise error, 'os control has not been created'
+		return Sdk.GetWindowRect(self._hwnd)
+
 # shortcut
 Control = LightWeightControl
 
@@ -113,18 +141,48 @@ class List(Control):
 
 	def setcb(self,cb):
 		self._cb=cb
-		
+	def callcb(self):
+		if self._cb: 
+			apply(apply,self._cb)
+
+
+####################################################
+# TAB CONTROL STUFF
+
+# commctrl extensions tab control
+LVM_FIRST  =            0x1000      # ListView messages
+TV_FIRST   =            0x1100      # TreeView messages
+HDM_FIRST  =            0x1200      # Header messages
+TCM_FIRST  =            0x1300      # Tab control messages
+TCN_FIRST =-550       
+TCN_LAST=-580
+TCN_SELCHANGE  = TCN_FIRST - 1
+TCN_SELCHANGING= TCN_FIRST - 2
+
+class TabCtrl(Control):
+	def __init__(self,owner=None,id=-1):
+		Control.__init__(self,owner,id)
+	def insertitem(self,ix,text):
+		mask,ixImage,mp_appdata,text=(commctrl.TCIF_TEXT,-1,0,text)
+		mp=Sdk.New('TCITEM',(mask,ixImage,mp_appdata,text))
+		self.sendmessage(commctrl.TCM_INSERTITEM,ix,mp)
+		Sdk.Delete(mp)
+	def setcursel(self,ix):
+		self.sendmessage(commctrl.TCM_SETCURSEL,ix)
+	def getcursel(self):
+		return self.sendmessage(commctrl.TCM_GETCURSEL)
+	
 ##############################
-class Dialog(dialog.Dialog):
+class ResDialog(dialog.Dialog):
 	def __init__(self,id,parent=None,resdll=None):
 		if not resdll:
 			import __main__
 			resdll=__main__.resdll
 		dialog.Dialog.__init__(self,id,resdll,parent)
-		self._controls=[]
+		self._subwindows = []
 	def attach_handles_to_controls(self):
 		hdlg = self.GetSafeHwnd()
-		for ctrl in self._controls:
+		for ctrl in self._subwindows:
 			ctrl.attach(Sdk.GetDlgItem(hdlg,ctrl._id))
 	def onevent(self,event):
 		try:
@@ -134,9 +192,9 @@ class Dialog(dialog.Dialog):
 		else:
 			apply(func,arg)
 
-class OpenLocationDlg(Dialog):
+class OpenLocationDlg(ResDialog):
 	def __init__(self,callbacks=None,parent=None):
-		Dialog.__init__(self,grinsRC.IDD_DIALOG_OPENLOCATION,parent)
+		ResDialog.__init__(self,grinsRC.IDD_DIALOG_OPENLOCATION,parent)
 		self._callbacks=callbacks
 
 		self._text= TextInput(self,grinsRC.IDC_EDIT_LOCATION)
@@ -149,7 +207,7 @@ class OpenLocationDlg(Dialog):
 		self._bopen.enable(0)
 		self._text.hookcommand(self,self.OnEditChange)
 		self._bbrowse.hookcommand(self,self.OnBrowse)
-		return Dialog.OnInitDialog(self)
+		return ResDialog.OnInitDialog(self)
 
 	def OnOK(self):
 		self.onevent('Open')
@@ -172,9 +230,9 @@ class OpenLocationDlg(Dialog):
 
 
 ##############################
-class LayoutDlg(Dialog):
+class LayoutDlg(ResDialog):
 	def __init__(self,cmddict=None,parent=None):
-		Dialog.__init__(self,grinsRC.IDD_LAYOUT,parent)
+		ResDialog.__init__(self,grinsRC.IDD_LAYOUT,parent)
 		self._parent=parent
 		self._layoutlist=List(self,grinsRC.IDC_LAYOUTS)
 		self._channellist=List(self,grinsRC.IDC_LAYOUT_CHANNELS)
@@ -192,7 +250,7 @@ class LayoutDlg(Dialog):
 		
 	def OnInitDialog(self):
 		self.attach_handles_to_controls()
-		return Dialog.OnInitDialog(self)
+		return ResDialog.OnInitDialog(self)
 
 	# cmif interface
 	def create(self):
@@ -217,20 +275,21 @@ class LayoutDlg(Dialog):
 		if self._parent:
 			self._parent.set_commandlist(list,'view')
 
-class LayoutNameDlg(Dialog):
+class LayoutNameDlg(ResDialog):
 	def __init__(self,callbacks=None,parent=None):
-		Dialog.__init__(self,grinsRC.IDD_LAYOUT_NAME,parent)
+		ResDialog.__init__(self,grinsRC.IDD_LAYOUT_NAME,parent)
 		self._callbacks=callbacks
 	def OnInitDialog(self):
-		return Dialog.OnInitDialog(self)
+		return ResDialog.OnInitDialog(self)
 	def show(self):
 		self.DoModal()
 
-class NewChannelDlg(Dialog):
+class NewChannelDlg(ResDialog):
 	def __init__(self,callbacks=None,parent=None):
-		Dialog.__init__(self,grinsRC.IDD_NEW_CHANNEL,parent)
+		ResDialog.__init__(self,grinsRC.IDD_NEW_CHANNEL,parent)
 		self._callbacks=callbacks
 	def OnInitDialog(self):
-		return Dialog.OnInitDialog(self)
+		return ResDialog.OnInitDialog(self)
 	def show(self):
 		self.DoModal()
+
