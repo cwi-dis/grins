@@ -103,987 +103,879 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\frozen.c
+SOURCE=..\GRiNS\frozen.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\frozen_extensions.c
+SOURCE=..\GRiNS\frozen_extensions.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M___main__.c
+SOURCE=..\GRiNS\M___main__.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M__CmifView.c
+SOURCE=..\GRiNS\M__CmifView.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M__LayoutView.c
+SOURCE=..\GRiNS\M__LayoutView.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M__LinkView.c
+SOURCE=..\GRiNS\M__LinkView.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M__PreferencesDialog.c
+SOURCE=..\GRiNS\M__PreferencesDialog.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M__SourceView.c
+SOURCE=..\GRiNS\M__SourceView.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M__UsergroupView.c
+SOURCE=..\GRiNS\M__UsergroupView.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_afxexttb.c
+SOURCE=..\GRiNS\M_afxexttb.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_afxres.c
+SOURCE=..\GRiNS\M_afxres.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AnchorDefs.c
+SOURCE=..\GRiNS\M_AnchorDefs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AnchorEdit.c
+SOURCE=..\GRiNS\M_AnchorEditForm.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AnchorEditDialog.c
+SOURCE=..\GRiNS\M_appcon.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AnchorEditForm.c
+SOURCE=..\GRiNS\M_AppToplevel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_appcon.c
+SOURCE=..\GRiNS\M_ArcInfoForm.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AppToplevel.c
+SOURCE=..\GRiNS\M_ArmStates.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ArcInfo.c
+SOURCE=..\GRiNS\M_ASXParser.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ArcInfoDialog.c
+SOURCE=..\GRiNS\M_Attrdefs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ArcInfoForm.c
+SOURCE=..\GRiNS\M_AttrEditForm.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ArmStates.c
+SOURCE=..\GRiNS\M_Attrgrs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ASXParser.c
+SOURCE=..\GRiNS\M_audio.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Attrdefs.c
+SOURCE=..\GRiNS\M_audio__aifc.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AttrEdit.c
+SOURCE=..\GRiNS\M_audio__au.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AttrEditDialog.c
+SOURCE=..\GRiNS\M_audio__convert.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AttrEditForm.c
+SOURCE=..\GRiNS\M_audio__file.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_audio.c
+SOURCE=..\GRiNS\M_audio__format.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_audio__aifc.c
+SOURCE=..\GRiNS\M_audio__wav.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_audio__au.c
+SOURCE=..\GRiNS\M_audio__what.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_audio__convert.c
+SOURCE=..\GRiNS\M_base64.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_audio__file.c
+SOURCE=..\GRiNS\M_bdb.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_audio__format.c
+SOURCE=..\GRiNS\M_bisect.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_audio__wav.c
+SOURCE=..\GRiNS\M_Channel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_audio__what.c
+SOURCE=..\GRiNS\M_ChannelMap.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Bandwidth.c
+SOURCE=..\GRiNS\M_chunk.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_base64.c
+SOURCE=..\GRiNS\M_cmd.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_bdb.c
+SOURCE=..\GRiNS\M_cmif.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_bisect.c
+SOURCE=..\GRiNS\M_CmifChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_calendar.c
+SOURCE=..\GRiNS\M_cmifwnd.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Channel.c
+SOURCE=..\GRiNS\M_colors.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ChannelMap.c
+SOURCE=..\GRiNS\M_commctrl.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ChannelView.c
+SOURCE=..\GRiNS\M_components.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ChannelViewDialog.c
+SOURCE=..\GRiNS\M_copy.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_chunk.c
+SOURCE=..\GRiNS\M_DisplayList.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Clipboard.c
+SOURCE=..\GRiNS\M_DrawTk.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_cmd.c
+SOURCE=..\GRiNS\M_DropTarget.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_cmif.c
+SOURCE=..\GRiNS\M_Duration.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_CmifChannel.c
+SOURCE=..\GRiNS\M_exceptions.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_cmifed.c
+SOURCE=..\GRiNS\M_exec_cmif.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_cmifwnd.c
+SOURCE=..\GRiNS\M_FileCache.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_commctrl.c
+SOURCE=..\GRiNS\M_flags.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_components.c
+SOURCE=..\GRiNS\M_Font.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_copy.c
+SOURCE=..\GRiNS\M_FormServer.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_DisplayList.c
+SOURCE=..\GRiNS\M_ftplib.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_DrawTk.c
+SOURCE=..\GRiNS\M_GenFormView.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_DropTarget.c
+SOURCE=..\GRiNS\M_GenWnd.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Duration.c
+SOURCE=..\GRiNS\M_getopt.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_EditMgr.c
+SOURCE=..\GRiNS\M_getpass.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_exceptions.c
+SOURCE=..\GRiNS\M_GLLock.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_exec_cmif.c
+SOURCE=..\GRiNS\M_gopherlib.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_FileCache.c
+SOURCE=..\GRiNS\M_GraphChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Font.c
+SOURCE=..\GRiNS\M_grins.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_FormServer.c
+SOURCE=..\GRiNS\M_grins_app_core.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ftplib.c
+SOURCE=..\GRiNS\M_grins_mimetypes.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_GenFormView.c
+SOURCE=..\GRiNS\M_grinsRC.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_GenWnd.c
+SOURCE=..\GRiNS\M_HDTL.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_getopt.c
+SOURCE=..\GRiNS\M_Help.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_getpass.c
+SOURCE=..\GRiNS\M_Hlinks.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_GLLock.c
+SOURCE=..\GRiNS\M_HtmlChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_gopherlib.c
+SOURCE=..\GRiNS\M_httplib.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_GraphChannel.c
+SOURCE=..\GRiNS\M_ImageChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_grins_app_core.c
+SOURCE=..\GRiNS\M_keyword.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_grins_mimetypes.c
+SOURCE=..\GRiNS\M_LabelChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_grinsRC.c
+SOURCE=..\GRiNS\M_LayoutChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_HDTL.c
+SOURCE=..\GRiNS\M_linecache.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Help.c
+SOURCE=..\GRiNS\M_longpath.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_HierarchyView.c
+SOURCE=..\GRiNS\M_macurl2path.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_HierarchyViewDialog.c
+SOURCE=..\GRiNS\M_MainDialog.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Hlinks.c
+SOURCE=..\GRiNS\M_MainFrame.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_HtmlChannel.c
+SOURCE=..\GRiNS\M_MediaChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_httplib.c
+SOURCE=..\GRiNS\M_MenuTemplate.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ImageChannel.c
+SOURCE=..\GRiNS\M_MidiChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_keyword.c
+SOURCE=..\GRiNS\M_mimetools.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_LabelChannel.c
+SOURCE=..\GRiNS\M_mimetypes.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_LayoutChannel.c
+SOURCE=..\GRiNS\M_MMAttrdefs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_LayoutView.c
+SOURCE=..\GRiNS\M_MMCache.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_LayoutViewDialog.c
+SOURCE=..\GRiNS\M_MMExc.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_license.c
+SOURCE=..\GRiNS\M_MMNode.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_LicenseDialog.c
+SOURCE=..\GRiNS\M_MMParser.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_licparser.c
+SOURCE=..\GRiNS\M_MMRead.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_linecache.c
+SOURCE=..\GRiNS\M_MMTypes.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_LinkEdit.c
+SOURCE=..\GRiNS\M_MMurl.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_LinkEditDialog.c
+SOURCE=..\GRiNS\M_MMWrite.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_longpath.c
+SOURCE=..\GRiNS\M_MPEGVideoDuration.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_macurl2path.c
+SOURCE=..\GRiNS\M_NodeInfoForm.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MainDialog.c
+SOURCE=..\GRiNS\M_ntpath.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MainFrame.c
+SOURCE=..\GRiNS\M_nturl2path.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MediaChannel.c
+SOURCE=..\GRiNS\M_NTVideoChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MenuTemplate.c
+SOURCE=..\GRiNS\M_NTVideoDuration.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MidiChannel.c
+SOURCE=..\GRiNS\M_NullChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_mimetools.c
+SOURCE=..\GRiNS\M_os.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_mimetypes.c
+SOURCE=..\GRiNS\M_patchlevel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMAttrdefs.c
+SOURCE=..\GRiNS\M_pdb.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMCache.c
+SOURCE=..\GRiNS\M_Player.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMExc.c
+SOURCE=..\GRiNS\M_PlayerCore.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMNode.c
+SOURCE=..\GRiNS\M_PlayerDialog.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMParser.c
+SOURCE=..\GRiNS\M_posixpath.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMRead.c
+SOURCE=..\GRiNS\M_pprint.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMTree.c
+SOURCE=..\GRiNS\M_Preferences.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMTypes.c
+SOURCE=..\GRiNS\M_PreferencesDialog.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMurl.c
+SOURCE=..\GRiNS\M_PseudoHtmlChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MMWrite.c
+SOURCE=..\GRiNS\M_PythonChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_MPEGVideoDuration.c
+SOURCE=..\GRiNS\M_pywin.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_NodeEdit.c
+SOURCE=..\GRiNS\M_pywin__debugger.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_NodeInfo.c
+SOURCE=..\GRiNS\M_pywin__debugger__dbgcon.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_NodeInfoDialog.c
+SOURCE=..\GRiNS\M_pywin__debugger__dbgpyapp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_NodeInfoForm.c
+SOURCE=..\GRiNS\M_pywin__debugger__debugger.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_NodeInfoHelper.c
+SOURCE=..\GRiNS\M_pywin__debugger__DebuggerResourcesCon.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ntpath.c
+SOURCE=..\GRiNS\M_pywin__dialogs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_nturl2path.c
+SOURCE=..\GRiNS\M_pywin__dialogs__ideoptions.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_NTVideoChannel.c
+SOURCE=..\GRiNS\M_pywin__dialogs__list.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_NTVideoDuration.c
+SOURCE=..\GRiNS\M_pywin__framework.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_NullChannel.c
+SOURCE=..\GRiNS\M_pywin__framework__app.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_os.c
+SOURCE=..\GRiNS\M_pywin__framework__cmdline.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_patchlevel.c
+SOURCE=..\GRiNS\M_pywin__framework__editor.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pdb.c
+SOURCE=..\GRiNS\M_pywin__framework__editor__color.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Player.c
+SOURCE=..\GRiNS\M_pywin__framework__editor__color__coloreditor.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_PlayerCore.c
+SOURCE=..\GRiNS\M_pywin__framework__editor__color__scintillacon.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_PlayerDialog.c
+SOURCE=..\GRiNS\M_pywin__framework__editor__configui.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_posixpath.c
+SOURCE=..\GRiNS\M_pywin__framework__editor__document.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pprint.c
+SOURCE=..\GRiNS\M_pywin__framework__editor__template.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Preferences.c
+SOURCE=..\GRiNS\M_pywin__framework__help.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_PreferencesDialog.c
+SOURCE=..\GRiNS\M_pywin__framework__interact.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_PseudoHtmlChannel.c
+SOURCE=..\GRiNS\M_pywin__framework__intpyapp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_PythonChannel.c
+SOURCE=..\GRiNS\M_pywin__framework__intpydde.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin.c
+SOURCE=..\GRiNS\M_pywin__framework__scriptutils.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__debugger.c
+SOURCE=..\GRiNS\M_pywin__framework__toolmenu.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__debugger__dbgcon.c
+SOURCE=..\GRiNS\M_pywin__framework__winout.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__debugger__dbgpyapp.c
+SOURCE=..\GRiNS\M_pywin__mfc.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__debugger__debugger.c
+SOURCE=..\GRiNS\M_pywin__mfc__afxres.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__debugger__DebuggerResourcesCon.c
+SOURCE=..\GRiNS\M_pywin__mfc__dialog.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__dialogs.c
+SOURCE=..\GRiNS\M_pywin__mfc__docview.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__dialogs__ideoptions.c
+SOURCE=..\GRiNS\M_pywin__mfc__object.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__dialogs__list.c
+SOURCE=..\GRiNS\M_pywin__mfc__thread.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework.c
+SOURCE=..\GRiNS\M_pywin__mfc__window.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__app.c
+SOURCE=..\GRiNS\M_pywin__tools.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__cmdline.c
+SOURCE=..\GRiNS\M_pywin__tools__browser.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__editor.c
+SOURCE=..\GRiNS\M_pywin__tools__hierlist.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__editor__color.c
+SOURCE=..\GRiNS\M_Queue.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__editor__color__coloreditor.c
+SOURCE=..\GRiNS\M_quopri.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__editor__color__scintillacon.c
+SOURCE=..\GRiNS\M_random.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__editor__configui.c
+SOURCE=..\GRiNS\M_rbtk.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__editor__document.c
+SOURCE=..\GRiNS\M_re.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__editor__template.c
+SOURCE=..\GRiNS\M_RealAudioChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__help.c
+SOURCE=..\GRiNS\M_RealChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__interact.c
+SOURCE=..\GRiNS\M_RealPixChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__intpyapp.c
+SOURCE=..\GRiNS\M_realsupport.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__intpydde.c
+SOURCE=..\GRiNS\M_RealTextChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__scriptutils.c
+SOURCE=..\GRiNS\M_RealVideoChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__toolmenu.c
+SOURCE=..\GRiNS\M_RealWindowChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__framework__winout.c
+SOURCE=..\GRiNS\M_regsub.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__mfc.c
+SOURCE=..\GRiNS\M_regutil.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__mfc__afxres.c
+SOURCE=..\GRiNS\M_repr.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__mfc__dialog.c
+SOURCE=..\GRiNS\M_rfc822.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__mfc__docview.c
+SOURCE=..\GRiNS\M_sched.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__mfc__object.c
+SOURCE=..\GRiNS\M_Scheduler.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__mfc__thread.c
+SOURCE=..\GRiNS\M_Selecter.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__mfc__window.c
+SOURCE=..\GRiNS\M_settings.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__tools.c
+SOURCE=..\GRiNS\M_site.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__tools__browser.c
+SOURCE=..\GRiNS\M_Sizes.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_pywin__tools__hierlist.c
+SOURCE=..\GRiNS\M_SMIL.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Queue.c
+SOURCE=..\GRiNS\M_SMILTreeRead.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_quopri.c
+SOURCE=..\GRiNS\M_SMILTreeWrite.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_random.c
+SOURCE=..\GRiNS\M_smpte.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_rbtk.c
+SOURCE=..\GRiNS\M_socket.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_re.c
+SOURCE=..\GRiNS\M_SocketChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_RealAudioChannel.c
+SOURCE=..\GRiNS\M_SoundChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_RealChannel.c
+SOURCE=..\GRiNS\M_SoundDuration.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_RealPixChannel.c
+SOURCE=..\GRiNS\M_splash.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_realsupport.c
+SOURCE=..\GRiNS\M_SR.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_RealTextChannel.c
+SOURCE=..\GRiNS\M_stat.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_RealVideoChannel.c
+SOURCE=..\GRiNS\M_string.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_RealWindowChannel.c
+SOURCE=..\GRiNS\M_StringIO.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_regsub.c
+SOURCE=..\GRiNS\M_StringStuff.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_regutil.c
+SOURCE=..\GRiNS\M_sysmetrics.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_repr.c
+SOURCE=..\GRiNS\M_tempfile.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_rfc822.c
+SOURCE=..\GRiNS\M_TextChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_sched.c
+SOURCE=..\GRiNS\M_Timing.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Scheduler.c
+SOURCE=..\GRiNS\M_token.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Selecter.c
+SOURCE=..\GRiNS\M_tokenize.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_settings.c
+SOURCE=..\GRiNS\M_TopLevel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_site.c
+SOURCE=..\GRiNS\M_TopLevelDialog.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Sizes.c
+SOURCE=..\GRiNS\M_trace.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_SMIL.c
+SOURCE=..\GRiNS\M_traceback.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_SMILTreeRead.c
+SOURCE=..\GRiNS\M_types.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_SMILTreeWrite.c
+SOURCE=..\GRiNS\M_urlcache.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_smpte.c
+SOURCE=..\GRiNS\M_urllib.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_socket.c
+SOURCE=..\GRiNS\M_urlparse.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_SocketChannel.c
+SOURCE=..\GRiNS\M_usercmd.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_SoundChannel.c
+SOURCE=..\GRiNS\M_usercmdui.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_SoundDuration.c
+SOURCE=..\GRiNS\M_UserDict.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_splash.c
+SOURCE=..\GRiNS\M_uu.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_SR.c
+SOURCE=..\GRiNS\M_version.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_stat.c
+SOURCE=..\GRiNS\M_VideoChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_staticlicense.c
+SOURCE=..\GRiNS\M_VideoDuration.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_string.c
+SOURCE=..\GRiNS\M_ViewServer.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_StringIO.c
+SOURCE=..\GRiNS\M_wc.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_StringStuff.c
+SOURCE=..\GRiNS\M_whrandom.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_sysmetrics.c
+SOURCE=..\GRiNS\M_win32con.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_tempfile.c
+SOURCE=..\GRiNS\M_win32ig.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_TextChannel.c
+SOURCE=..\GRiNS\M_win32menu.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Timing.c
+SOURCE=..\GRiNS\M_win32mu.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_token.c
+SOURCE=..\GRiNS\M_win32traceutil.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_tokenize.c
+SOURCE=..\GRiNS\M_windowinterface.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_TopLevel.c
+SOURCE=..\GRiNS\M_winerror.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_TopLevelDialog.c
+SOURCE=..\GRiNS\M_WMEVENTS.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_trace.c
+SOURCE=..\GRiNS\M_wndusercmd.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_traceback.c
+SOURCE=..\GRiNS\M_WordChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_types.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_urlcache.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_urllib.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_urlparse.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_usercmd.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_usercmdui.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_UserDict.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_UsergroupView.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_UsergroupViewDialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_uu.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_version.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_VideoChannel.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_VideoDuration.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_ViewDialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_ViewServer.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_wc.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_whrandom.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_win32con.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_win32ig.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_win32menu.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_win32mu.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_win32traceutil.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_windowinterface.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_winerror.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_WMEVENTS.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_wndusercmd.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_WordChannel.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_xmllib.c
+SOURCE=..\GRiNS\M_xmllib.c
 # End Source File
 # End Group
 # Begin Group "Resource Files"
