@@ -250,7 +250,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		try:
 			menu.TrackPopupMenu((rc,tc),
 				win32con.TPM_LEFTALIGN|win32con.TPM_LEFTBUTTON,self) 
-		except:
+		except 'x':
 			print 'TrackPopupMenu failed'
 
 	# Callback for commands from the popup menu
@@ -315,9 +315,10 @@ class _LinkView(docview.FormView,components.ControlsDict):
 
 	# create a menu from a list of pairs (str,callback)
 	def create_menu(self,mcl):
+		from flags import FLAG_ALL
 		list=[]
 		for item in mcl:
-			list.append((1,0,item[0],None,self._mid))
+			list.append((FLAG_ALL,0,item[0],None,self._mid))
 			self._mcb[self._mid]=item[1]
 			self._mid=self._mid+1
 		menu=win32menu.Menu('popup')
