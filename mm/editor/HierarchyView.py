@@ -75,9 +75,11 @@ f_channel = windowinterface.findfont('Helvetica', 8)
 ##	HOREXTRASIZE = f_title.strsize('XX')[0]
 ##	ARRSIZE = f_title.strsize('xx')[0]	# width of collapse/expand arrow
 ##	GAPSIZE = 1.0						# size of gap between nodes
-##	EDGSIZE = 1.0						# size of edges
+##	HEDGSIZE = 1.0						# size of edges
+##	VEDGSIZE = 1.0						# size of edges
+##	FLATBOX = 0
 
-class sizes:
+class sizes_time:
 	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
 	MINSIZE = 48 
 	MAXSIZE = 128
@@ -86,8 +88,24 @@ class sizes:
 	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
 	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
 	ARRSIZE = f_title.strsizePXL('xx')[0]	# width of collapse/expand arrow
-	GAPSIZE = 2						# size of gap between nodes
-	EDGSIZE = 2						# size of edges
+	GAPSIZE = 0 #2						# size of gap between nodes
+	HEDGSIZE = 0 #3						# size of edges
+	VEDGSIZE = 3 #3						# size of edges
+	FLATBOX = 1
+
+class sizes_notime:
+	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
+	MINSIZE = 48 
+	MAXSIZE = 128
+	TITLESIZE = f_title.fontheightPXL()*1.2
+	CHNAMESIZE = 0
+	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
+	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
+	ARRSIZE = f_title.strsizePXL('xx')[0]	# width of collapse/expand arrow
+	GAPSIZE = 2 #2						# size of gap between nodes
+	HEDGSIZE = 3 #3						# size of edges
+	VEDGSIZE = 3 #3						# size of edges
+	FLATBOX = 0
 
 ##class othersizes:
 ##	SIZEUNIT = windowinterface.UNIT_MM # units for the following
@@ -99,7 +117,9 @@ class sizes:
 ##	HOREXTRASIZE = f_title.strsize('XX')[0]
 ##	ARRSIZE = f_title.strsize('xx')[0]	# width of collapse/expand arrow
 ##	GAPSIZE = 1.0						# size of gap between nodes
-##	EDGSIZE = 1.0						# size of edges
+##	HEDGSIZE = 1.0						# size of edges
+##	VEDGSIZE = 1.0						# size of edges
+##	FLATBOX = 0
 
 
 #
@@ -116,7 +136,7 @@ class HierarchyView(HierarchyViewDialog):
 	#################################################
 
 	def __init__(self, toplevel):
-		self.sizes = sizes
+		self.sizes = sizes_notime
 		self.commands = [
 			CLOSE_WINDOW(callback = (self.hide, ())),
 
@@ -784,6 +804,7 @@ class HierarchyView(HierarchyViewDialog):
 			if self.timescale:
 				cw, ch = self.canvassize
 				w, h, b = node.boxsize
+				print "makebox", node, self.canvassize, node.boxsize #DBG
 				if DISPLAY_VERTICAL:
 					top = top + b / ch
 					bottom = top + h / ch
@@ -854,11 +875,13 @@ class HierarchyView(HierarchyViewDialog):
 		prevfocusobj = None
 		rootobj = None
 		rw, rh = self.window.getcanvassize(self.sizes.SIZEUNIT)
+		rw = float(rw)
+		rh = float(rh)
 		self.canvassize = rw, rh
 		self.titleheight = float(self.sizes.TITLESIZE) / rh
 		self.chnameheight = float(self.sizes.CHNAMESIZE) / rh
-		self.horedge = float(self.sizes.EDGSIZE) / rw
-		self.veredge = float(self.sizes.EDGSIZE) / rh
+		self.horedge = float(self.sizes.HEDGSIZE) / rw
+		self.veredge = float(self.sizes.VEDGSIZE) / rh
 		self.horgap = float(self.sizes.GAPSIZE) / rw
 		self.vergap = float(self.sizes.GAPSIZE) / rh
 		self.horsize = float(self.sizes.MINSIZE + self.sizes.HOREXTRASIZE) / rw
@@ -867,6 +890,7 @@ class HierarchyView(HierarchyViewDialog):
 		list = []
 		self.makeboxes(list, self.root, (0, 0, 1, 1))
 		for item in list:
+			print 'BOX', item #DBG
 			obj = Object(self, item)
 			self.objects.append(obj)
 			if item[0] is self.focusnode:
@@ -957,6 +981,10 @@ class HierarchyView(HierarchyViewDialog):
 
 	def timescalecall(self):
 		self.timescale = not self.timescale
+		if self.timescale:
+			self.sizes = sizes_time
+		else:
+			self.sizes = sizes_notime
 		self.settoggle(TIMESCALE, self.timescale)
 		if self.new_displist:
 			self.new_displist.close()
@@ -1099,8 +1127,8 @@ class HierarchyView(HierarchyViewDialog):
 			width = width - self.sizes.GAPSIZE
 		else:
 			height = height - self.sizes.GAPSIZE
-		width = max(width + 2 * self.sizes.EDGSIZE, minwidth)
-		height = height + self.sizes.EDGSIZE + self.sizes.LABSIZE
+		width = max(width + 2 * self.sizes.HEDGSIZE, minwidth)
+		height = height + self.sizes.VEDGSIZE + self.sizes.LABSIZE
 		node.boxsize = width, height, begin
 		return node.boxsize
 
@@ -1374,7 +1402,11 @@ class Object:
 			ct, cb = cb, ct
 		d = self.mother.new_displist
 		l, t, r, b = self.box
-		d.draw3dbox(cl, ct, cr, cb, (l, t, r - l, b - t))
+		if self.mother.sizes.FLATBOX:
+			d.fgcolor(ct)
+			d.drawbox((l, t, r-l, b-t))
+		else:
+			d.draw3dbox(cl, ct, cr, cb, (l, t, r - l, b - t))
 
 	# Menu handling functions
 
