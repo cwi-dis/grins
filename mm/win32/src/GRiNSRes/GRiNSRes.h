@@ -62,6 +62,7 @@
 #define IDD_EDITRECTATTR                257
 #define IDD_EDITRECTATTR1               257
 #define IDD_EDITATTR_LS1                257
+#define IDD_EDITATTR_2LIST              257
 #define IDD_PASSWD_DIALOG               259
 #define IDD_TEMPLATE_DIALOG             260
 #define IDD_PROGRESS                    262
@@ -115,6 +116,8 @@
 #define IDD_SOURCEEDIT                  315
 #define IDI_IDLE                        315
 #define IDR_TB_ALIGNMENT                319
+#define IDD_EDITATTR_LIST               322
+#define IDD_EVENT                       323
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
@@ -182,7 +185,8 @@
 #define IDD_EDITATTR_COLORSEL           387
 #define IDD_SEEK                        388
 #define IDD_LAYOUT_T1                   389
-#define IDD_SOURCEEDIT1                 390
+#define IDD_EDITATTR_LS1x               390
+#define IDD_SOURCEEDIT1                 391
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
@@ -252,7 +256,9 @@
 #define IDC_LIST1                       1072
 #define IDC_EDIT11                      1072
 #define IDC_EDIT13                      1073
+#define IDC_LIST3                       1073
 #define IDC_LEFT_MENU                   1074
+#define IDC_LIST4                       1074
 #define IDC_RIGHT_MENU                  1075
 #define IDC_STATIC_LEFT                 1076
 #define IDC_STATIC_RIGHT                1077
@@ -348,7 +354,9 @@
 #define IDC_BUTTON_QTNEXT               1186
 #define IDC_ADD_EXTERNAL                1186
 #define IDC_PROGRESS1                   1187
+#define IDC_BUTTON4                     1187
 #define IDC_INIT_NEW                    1188
+#define IDC_BUTTON7                     1188
 #define IDC_INIT_OPEN                   1189
 #define IDC_INIT_NOTHING                1190
 #define IDC_INIT_NEVER_AGAIN            1191
@@ -436,6 +444,15 @@
 #define IDC_GROUP5                      1286
 #define IDC_BUTTON2                     1288
 #define IDC_BUTTON3                     1289
+#define IDC_ADD                         1290
+#define IDC_BUTTON5                     1290
+#define IDC_BUTTON6                     1291
+#define IDC_EDIT                        1292
+#define IDC_BUTTON8                     1292
+#define IDC_BUTTON9                     1293
+#define IDC_STATIC2                     1294
+#define IDC_EVENTCAUSE                  1296
+#define IDC_EVENTTYPE                   1297
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -527,9 +544,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        321
+#define _APS_NEXT_RESOURCE_VALUE        325
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1288
+#define _APS_NEXT_CONTROL_VALUE         1298
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

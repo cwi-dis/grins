@@ -527,26 +527,23 @@ FONT 8, "MS Sans Serif"
 BEGIN
 END
 
-IDD_EDITATTR_LS1 DIALOG DISCARDABLE  0, 0, 300, 164
+IDD_EDITATTR_2LIST DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "scale 1:1",IDC_SCALE1,11,4,62,8
-    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
-                    WS_VISIBLE | NOT WS_TABSTOP
-    GROUPBOX        "",IDC_GROUP1,174,11,121,83
-    LTEXT           "Position and Size:",IDC_11,181,21,109,8
-    LTEXT           "x",IDC_GROUP1,180,32,8,8
-    EDITTEXT        IDC_12,179,41,27,14,ES_AUTOHSCROLL
-    LTEXT           "y",IDC_GROUP1,209,32,8,8
-    EDITTEXT        IDC_13,208,41,27,14,ES_AUTOHSCROLL
-    LTEXT           "w",IDC_GROUP1,236,32,8,8
-    EDITTEXT        IDC_14,236,41,27,14,ES_AUTOHSCROLL
-    LTEXT           "h",IDC_GROUP1,264,32,8,8
-    EDITTEXT        IDC_15,264,41,27,14,ES_AUTOHSCROLL
     LTEXT           "",IDC_ATTR_INFO,6,132,290,18,SS_SUNKEN
-    LTEXT           "Z Index:",IDC_21,179,73,27,8
-    EDITTEXT        IDC_22,208,71,83,12,ES_AUTOHSCROLL
+    LISTBOX         IDC_LIST3,6,80,234,40,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "End events:",IDC_STATIC2,7,68,39,8
+    PUSHBUTTON      "New",IDC_BUTTON4,244,80,50,11
+    PUSHBUTTON      "Delete",IDC_BUTTON5,244,93,50,11
+    PUSHBUTTON      "Edit",IDC_BUTTON6,244,106,50,11
+    LISTBOX         IDC_LIST4,6,20,234,40,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Begin events:",IDC_STATIC1,7,8,44,8
+    PUSHBUTTON      "New",IDC_BUTTON7,244,20,50,11
+    PUSHBUTTON      "Delete",IDC_BUTTON8,244,33,50,11
+    PUSHBUTTON      "Edit",IDC_BUTTON9,244,46,50,11
 END
 
 IDD_EDITATTR_S7 DIALOG DISCARDABLE  0, 0, 300, 164
@@ -1305,7 +1302,8 @@ BEGIN
     LTEXT           "scale 1:1",IDC_SCALE1,12,4,51,8
     PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,99,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
-    LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
+    CONTROL         "",IDC_ATTR_INFO,"Static",SS_LEFTNOWORDWRAP | SS_SUNKEN | 
+                    WS_GROUP,6,132,288,18
 END
 
 IDD_ANCHOR_NAME DIALOG DISCARDABLE  0, 0, 186, 55
@@ -1879,6 +1877,28 @@ BEGIN
     PUSHBUTTON      "Revert",IDC_BUTTON3,121,215,50,14
 END
 
+IDD_EDITATTR_LS1x DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "scale 1:1",IDC_SCALE1,11,4,62,8
+    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
+                    WS_VISIBLE | NOT WS_TABSTOP
+    GROUPBOX        "",IDC_GROUP1,174,11,121,83
+    LTEXT           "Position and Size:",IDC_11,181,21,109,8
+    LTEXT           "x",IDC_GROUP1,180,32,8,8
+    EDITTEXT        IDC_12,179,41,27,14,ES_AUTOHSCROLL
+    LTEXT           "y",IDC_GROUP1,209,32,8,8
+    EDITTEXT        IDC_13,208,41,27,14,ES_AUTOHSCROLL
+    LTEXT           "w",IDC_GROUP1,236,32,8,8
+    EDITTEXT        IDC_14,236,41,27,14,ES_AUTOHSCROLL
+    LTEXT           "h",IDC_GROUP1,264,32,8,8
+    EDITTEXT        IDC_15,264,41,27,14,ES_AUTOHSCROLL
+    LTEXT           "",IDC_ATTR_INFO,6,132,290,18,SS_SUNKEN
+    LTEXT           "Z Index:",IDC_21,179,73,27,8
+    EDITTEXT        IDC_22,208,71,83,12,ES_AUTOHSCROLL
+END
+
 IDD_SOURCEEDIT1 DIALOG DISCARDABLE  0, 0, 188, 22
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
@@ -1887,7 +1907,6 @@ BEGIN
     PUSHBUTTON      "Apply",IDC_BUTTON2,69,5,50,14
     PUSHBUTTON      "Revert",IDC_BUTTON3,130,5,50,14
 END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2544,6 +2563,115 @@ BEGIN
 END
 
 #endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_EDITATTR_LIST DIALOG DISCARDABLE  0, 0, 282, 160
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         IDC_LIST1,7,7,212,146,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "New",IDC_ADD,225,7,50,14
+    PUSHBUTTON      "Delete",IDC_DELETE,225,26,50,14
+    PUSHBUTTON      "Edit",IDC_EDIT,225,46,50,14
+END
+
+IDD_EVENT DIALOGEX 0, 0, 230, 126
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit event"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,48,105,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,119,105,50,14
+    COMBOBOX        IDC_EVENTCAUSE,7,7,100,30,CBS_DROPDOWN | CBS_SORT | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_EVENTTYPE,117,7,106,30,CBS_DROPDOWN | CBS_SORT | 
+                    WS_TABSTOP
+    LTEXT           "Thing name:",IDC_STATIC,24,30,66,8,0,WS_EX_RIGHT
+    EDITTEXT        IDC_EDIT1,97,27,89,14,ES_AUTOHSCROLL
+    LTEXT           "Offset:",IDC_STATIC,68,54,22,8,0,WS_EX_RIGHT
+    EDITTEXT        IDC_EDIT2,97,51,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT3,7,86,216,14,ES_AUTOHSCROLL | ES_READONLY
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_EDITATTR_LIST, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 275
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 153
+    END
+
+    IDD_EVENT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 223
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 119
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_EVENT DLGINIT
+BEGIN
+    IDC_EVENTCAUSE, 0x403, 11, 0
+0x6e69, 0x6564, 0x6966, 0x696e, 0x6574, "\000" 
+    IDC_EVENTCAUSE, 0x403, 5, 0
+0x6f6e, 0x6564, "\000" 
+    IDC_EVENTCAUSE, 0x403, 7, 0
+0x6572, 0x6967, 0x6e6f, "\000" 
+    IDC_EVENTCAUSE, 0x403, 5, 0
+0x7270, 0x7665, "\000" 
+    IDC_EVENTCAUSE, 0x403, 10, 0
+0x6361, 0x6563, 0x7373, 0x654b, 0x0079, 
+    IDC_EVENTCAUSE, 0x403, 7, 0
+0x616d, 0x6b72, 0x7265, "\000" 
+    IDC_EVENTCAUSE, 0x403, 10, 0
+0x6177, 0x6c6c, 0x6c63, 0x636f, 0x006b, 
+    IDC_EVENTTYPE, 0x403, 7, 0
+0x622e, 0x6765, 0x6e69, "\000" 
+    IDC_EVENTTYPE, 0x403, 5, 0
+0x652e, 0x646e, "\000" 
+    IDC_EVENTTYPE, 0x403, 15, 0
+0x612e, 0x7463, 0x7669, 0x7461, 0x4565, 0x6576, 0x746e, "\000" 
+    IDC_EVENTTYPE, 0x403, 7, 0
+0x632e, 0x696c, 0x6b63, "\000" 
+    IDC_EVENTTYPE, 0x403, 8, 0
+0x722e, 0x7065, 0x6165, 0x0074, 
+    0
+END
+
+#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
