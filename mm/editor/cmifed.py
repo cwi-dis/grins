@@ -190,6 +190,8 @@ def main():
 		opts, files = getopt.getopt(sys.argv[1:], 'qpj:snh:CHPSL')
 	except getopt.error, msg:
 		usage(msg)
+	if sys.argv[0] and sys.argv[0][0] == '-':
+		sys.argv[0] = 'cmifed'
 	try:
 		import splash
 	except ImportError:
@@ -207,9 +209,6 @@ def main():
 		else:
 			signal.signal(signal.SIGINT,
 				      lambda s, f, pdb=pdb: pdb.set_trace())
-
-	if sys.argv[0] and sys.argv[0][0] == '-':
-		sys.argv[0] = 'cmifed'
 
 ## 	for fn in files:
 ## 		try:
