@@ -64,7 +64,6 @@ class _ButtonSupport:
 			 'marginHeight': 0,
 			 'marginWidth': 0}
 		import imgconvert, splash
-		depth = toplevel._imgformat.descr['align'] / 8
 		# calculate background RGB values in case (some)
 		# images are transparent
 		bg = button.background
