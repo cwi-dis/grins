@@ -44,12 +44,12 @@ class LabelChannel(ChannelWindow):
 		fix_anchorlist(node, taglist)
 		buttons = []
 		if len(taglist) == 1:
-			line0, char0, line1, char1, name, type = taglist[0]
+			line0, char0, line1, char1, name, type, times = taglist[0]
 			if line0 == 0 and char0 == 0 and \
 			   line1 == len(parlist)-1 and \
 			   char1 == len(parlist[-1]):
 				taglist = []
-				buttons.append(name, (0.0,0.0,1.0,1.0), type)
+				buttons.append((name, (0.0,0.0,1.0,1.0), type, times))
 				if not drawbox:
 					self.armed_display.fgcolor(bucolor)
 		fontspec = MMAttrdefs.getattr(node, 'font')
@@ -89,7 +89,7 @@ class LabelChannel(ChannelWindow):
 			self.armed_display.setpos(x, y)
 		pline = pchar = 0
 		# for each anchor...
-		for line0, char0, line1, char1, name, type in taglist:
+		for line0, char0, line1, char1, name, type, times in taglist:
 			if (line0, char0) >= (line1, char1):
 				print 'Anchor without screenspace:', name
 				continue
@@ -114,7 +114,7 @@ class LabelChannel(ChannelWindow):
 				if not block and pchar == 0:
 					self.position(y, parlist[line], right)
 				box = self.armed_display.writestr(parlist[line][pchar:])
-				buttons.append(name, box, type)
+				buttons.append((name, box, type, times))
 				dummy = self.armed_display.writestr('\n')
 				pchar = 0
 				y = y + fontheight
@@ -122,7 +122,7 @@ class LabelChannel(ChannelWindow):
 			if not block and pchar == 0:
 				self.position(y, parlist[line1], right)
 			box = self.armed_display.writestr(parlist[line1][pchar:char1])
-			buttons.append(name, box, type)
+			buttons.append((name, box, type, times))
 			pline, pchar = line1, char1
 			self.armed_display.fgcolor(fgcolor)
 		# display text after last anchor
@@ -139,11 +139,11 @@ class LabelChannel(ChannelWindow):
 		else:
 			self.armed_display.fgcolor(self.getbgcolor(node))
 		hicolor = self.gethicolor(node)
-		for name, box, type in buttons:
+		for name, box, type, times in buttons:
 			button = self.armed_display.newbutton(box)
 			button.hicolor(hicolor)
 			button.hiwidth(3)
-			self.setanchor(name, type, button)
+			self.setanchor(name, type, button, times)
 		return 1
 
 	def position(self, y, line, right):
