@@ -53,6 +53,16 @@ def haschannelattreditor(channel):
 		return 0
 	return 1
 
+# This routine checks whether we are in CMIF or SMIL mode, and
+# whether the given attribute should be shown in the editor.
+def mustshowdisplayer(displayer):
+	if displayer[:4] != 'CMIF':
+		return 1
+	displayer = displayer[4:]
+	import settings
+	if settings.get('cmif'):
+		return 1
+	return 0
 
 # The "Wrapper" classes encapsulate the differences between attribute
 # editors for nodes and channels.  If you want editors for other
@@ -157,7 +167,8 @@ class NodeWrapper(Wrapper):
 			namelist = namelist + cclass.node_attrs
 			for name in cclass.chan_attrs:
 				if name in namelist: continue
-				if MMAttrdefs.getdef(name)[5] == 'channel':
+				defn = MMAttrdefs.getdef(name)
+				if defn[5] == 'channel':
 					namelist.append(name)
 			for name in cclass.node_attrs:
 				if name in namelist: continue
@@ -166,7 +177,7 @@ class NodeWrapper(Wrapper):
 		extras = []
 		for name in self.node.GetAttrDict().keys():
 			if name not in namelist and \
-					MMAttrdefs.getdef(name)[3] <> 'hidden':
+				     MMAttrdefs.getdef(name)[3] <> 'hidden':
 				extras.append(name)
 		extras.sort()
 		return namelist + extras
@@ -260,13 +271,14 @@ class ChannelWrapper(Wrapper):
 			namelist = namelist + cclass.chan_attrs
 			for name in cclass.node_attrs:
 				if name in namelist: continue
-				if MMAttrdefs.getdef(name)[5] == 'channel':
+				defn = MMAttrdefs.getdef(name)
+				if defn[5] == 'channel':
 					namelist.append(name)
 		# Merge in nonstandard attributes
 		extras = []
 		for name in self.channel.keys():
 			if name not in namelist and \
-					MMAttrdefs.getdef(name)[3] <> 'hidden':
+				    MMAttrdefs.getdef(name)[3] <> 'hidden':
 				extras.append(name)
 		extras.sort()
 		return namelist + extras
@@ -305,7 +317,13 @@ class AttrEditor(AttrEditorDialog):
 	def __open_dialog(self):
 		wrapper = self.wrapper
 		list = []
-		self.__namelist = namelist = wrapper.attrnames()
+		allnamelist = wrapper.attrnames()
+		namelist = []
+		for name in allnamelist:
+			displayername = wrapper.getdef(name)[3]
+			if mustshowdisplayer(displayername):
+				namelist.append(name)
+		self.__namelist = namelist
 		for i in range(len(namelist)):
 			name = namelist[i]
 			typedef, defaultvalue, labeltext, displayername, \
@@ -756,8 +774,8 @@ class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 class ChanneltypeAttrEditorField(PopupAttrEditorField):
 	# Choose from the standard channel types
 	def getoptions(self):
-		from ChannelMap import channeltypes
-		return ['Default'] + channeltypes
+		import ChannelMap
+		return ['Default'] + ChannelMap.getvalidchanneltypes()
 
 class FontAttrEditorField(PopupAttrEditorField):
 	# Choose from all possible font names
