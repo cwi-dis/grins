@@ -56,12 +56,11 @@ class LicenseDialog(windowinterface.MACDialog):
 		return 1
 			
 	def _optenable(self, onoff, item):
-		tp, h, rect = self.dialog.GetDialogItem(item)
-		ctl = h.as_Control()
+		ctl = self.dialog.GetDialogItemAsControl(item)
 		if onoff:
-			ctl.HiliteControl(0)
+			ctl.ActivateControl()
 		else:
-			ctl.HiliteControl(255)
+			ctl.DeactivateControl()
 
 class EnterkeyDialog(windowinterface.MACDialog):
 	def __init__(self, ok_callback):
