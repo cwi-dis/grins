@@ -13,7 +13,7 @@ noprearm = 1				# don't prearm
 default_settings = {
 ##	'lightweight': 0,		# Lightweight version
 
-	'system_bitrate': 14400,	# Slow modem
+	'system_bitrate': 56000,	# Fast modem
 	'system_captions': 0,		# Don't show captions
 	'system_language': 'en',	# English
 	'system_overdub_or_caption': 'caption', # Captions preferred over overdub
