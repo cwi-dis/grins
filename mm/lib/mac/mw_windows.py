@@ -464,8 +464,11 @@ class _CommonWindow:
 				if scale != 1:
 					w = int(xsize * scale + .5)
 					h = int(ysize * scale + .5)
-					image = imageop.scale(image, 1,
+					try:
+						image = imageop.scale(image, 1,
 							xsize, ysize, w, h)
+					except imageop.error:
+						raise error, 'Error scaling image'
 				bitmap = ''
 				for i in range(h):
 					# grey2mono doesn't pad lines :-(
@@ -482,8 +485,11 @@ class _CommonWindow:
 			if scale != 1:
 				w = int(xsize * scale + .5)
 				h = int(ysize * scale + .5)
-				image = imageop.scale(image, depth,
+				try:
+					image = imageop.scale(image, depth,
 						      xsize, ysize, w, h)
+				except imageop.error:
+					raise error, 'Error scaling image'
 			#
 			# Put it in the cache, possibly emptying other things
 			#
@@ -1018,7 +1024,7 @@ class _CommonWindow:
 		elif self._rb_dragpoint == LURF_BOTMID:
 			y1 = y
 		else:
-			raise 'funny dragpoint', self._rb_dragpoint
+			print 'funny dragpoint', self._rb_dragpoint
 		x0, y0 = self._rb_constrain((x0, y0))
 		x1, y1 = self._rb_constrain((x1, y1))
 		#
