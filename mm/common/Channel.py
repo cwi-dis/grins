@@ -4,7 +4,7 @@
 from AnchorDefs import *
 from debug import debug
 import MMAttrdefs
-import windowinterface
+import windowinterface, EVENTS
 error = 'Channel.error'
 
 channel_device = 1
@@ -719,8 +719,7 @@ class ChannelWindow(Channel):
 			self.window.bgcolor(self._attrdict['bgcolor'])
 		if self._attrdict.has_key('fgcolor'):
 			self.window.fgcolor(self._attrdict['fgcolor'])
-		import events, EVENTS
-		events.register(self.window, EVENTS.ResizeWindow, \
+		windowinterface.register(self.window, EVENTS.ResizeWindow, \
 			  self.resize, None)
 		if debug:
 			print 'registered Resize for', self
@@ -730,8 +729,8 @@ class ChannelWindow(Channel):
 		if debug:
 			print 'ChannelWindow.do_hide('+`self`+')'
 		if self.window:
-			import events, EVENTS
-			events.unregister(self.window, EVENTS.ResizeWindow)
+			windowinterface.unregister(self.window,
+						   EVENTS.ResizeWindow)
 			self.window.close()
 			self.window = None
 			self.armed_display = self.played_display = None
