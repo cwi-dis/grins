@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import time
 from Carbon import Qd
 from Carbon import QuickDraw
