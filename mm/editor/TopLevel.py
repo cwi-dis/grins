@@ -69,8 +69,14 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.hideviews()
 	#
 	def destroy(self):
-		BasicDialog.destroy(self)
 		self.destroyviews()
+		self.root.Destroy()
+		import Clipboard
+		type, data = Clipboard.getclip()
+		if type == 'node' and data <> None:
+			Clipboard.setclip('', None)
+			data.Destroy()
+		BasicDialog.destroy(self)
 	#
 	# Main interface.
 	#
@@ -261,7 +267,7 @@ class TopLevel(ViewDialog, BasicDialog):
 				obj.set_button(0)
 				return
 		self.editmgr.unregister(self)
-		self.editmgr.destroy()
+		self.editmgr.destroy() # kills subscribed views
 		self.help.destroy() # XXX Needed because help's a view now...
 		self.context.seteditmgr(None)
 		self.root.Destroy()

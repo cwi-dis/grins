@@ -56,7 +56,7 @@ class MovieWindow(ChannelWindow):
 	def clear(self):
 		self.node = self.vfile = self.lookahead = None
 		if self.wid <> 0:
-			gl.winset(self.wid)
+			self.setwin()
 			gl.RGBmode()
 			gl.gconfig()
 			self.rgbmode = 1
@@ -87,7 +87,9 @@ class MovieWindow(ChannelWindow):
 		self.vfile = None
 		try:
 			self.vfile = VFile.VinFile().init(filename)
-			self.vfile.warmcache()
+##			print 'Warming the cache...'
+##			self.vfile.warmcache()
+##			print 'Done.'
 		except EOFError:
 			print 'Empty movie file', `filename`
 			return
@@ -136,7 +138,7 @@ class MovieWindow(ChannelWindow):
 			except VerrorList:
 				return 0.0
 		else:
-			gl.winset(self.wid)
+			self.setwin()
 			try:
 				data, chromdata = \
 				  self.vfile.getnextframedata(size, chromsize)
@@ -215,9 +217,9 @@ class MovieChannel(Channel):
 			t = self.window.nextframe(0)
 			self.played = self.played + 1
 			now = self.player.timefunc()
-			while t and self.starttime + t <= now:
-				t = self.window.nextframe(1)
-				self.skipped = self.skipped + 1
+##			while t and self.starttime + t <= now:
+##				t = self.window.nextframe(1)
+##				self.skipped = self.skipped + 1
 			self.qid = self.player.enterabs(self.starttime + t, \
 				1, self.poll, cb_arg)
 	#
