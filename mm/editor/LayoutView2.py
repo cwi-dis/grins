@@ -476,7 +476,7 @@ class TreeHelper:
 		else:
 			parentNode = self.__nodeList.get(parentRef)
 		self.__onDelNode(parentNode, node)
-	
+
 class TreeNodeHelper:
 	def __init__(self, nodeRef, type):
 		# this method is called a lot of times. It has to be optimized
@@ -3422,8 +3422,12 @@ class PreviousWidget(Widget):
 		if self.currentViewport != None:
 			self.currentViewport.hideAllNodes()
 			self.currentViewport = None
+		self.previousCtrl.destroy()
 
 		self.previousCtrl = None
+		for node in self._nodeRefToNodeTree.values():
+			node._cleanup()
+		self._nodeRefToNodeTree = {}
 
 	def updateVisibility(self, nodeRefList, visible):
 		for nodeRef in nodeRefList:
@@ -3526,17 +3530,11 @@ class PreviousWidget(Widget):
 	#
 	
 	def updateRegionTree(self):
-		if debug: print 'LayoutView.updateRegionTree begin'
 		self.__mustBeUpdated = 0
-			
+		if self.currentViewport is not None:
 		# We assume here that no region has been added or supressed
-		viewportRefList = self._context.getViewportRefList()
-		for viewportRef in viewportRefList:
-			viewportNode = self.getNode(viewportRef)
-			if viewportNode is not None:
-				if debug: print 'LayoutView.updateRegionTree: update viewport',viewportNode.getName()
-				viewportNode.updateAllAttrdict()
-		if debug: print 'LayoutView.updateRegionTree end'
+			if debug: print 'LayoutView.updateRegionTree: update viewport',viewportNode.getName()
+			self.currentViewport.updateAllAttrdict()
 
 	def addRegion(self, parentRef, regionRef):
 		if regionRef.isDefault():
@@ -3617,7 +3615,7 @@ class PreviousWidget(Widget):
 				   
 	# ensure that the viewport is in showing state
 	def __showViewport(self, viewportRef):
-		if self.currentViewport == None or viewportRef != self.currentViewport.getNodeRef():
+		if self.currentViewport is None or viewportRef is not self.currentViewport.getNodeRef():
 			if debug: print 'LayoutView.select: change viewport =',viewportRef
 			self.displayViewport(viewportRef)
 			self.__mustBeUpdated = 1
@@ -3704,7 +3702,7 @@ class PreviousWidget(Widget):
 	def __hideRegion(self, regionRef):
 		regionNode = self.getNode(regionRef)
 		if regionNode is not None:
-			regionNode.toHiddenState()									
+			regionNode.toHiddenState()							
 		self.__mustBeUpdated = 1
 
 	def __hideMedia(self, mediaRef):
@@ -3805,7 +3803,8 @@ class PreviousWidget(Widget):
 			# shouldn't pass here
 			if debugPreview: print 'can''t show viewport ',viewportRef
 			return
-		self.currentViewport.showAllNodes()
+		self.currentViewport.updateNodes()
+		self.previousCtrl.update()
 		self.currentViewport.updateAllAttrdict()
 		self.__mustBeUpdated = 1
 
@@ -3814,7 +3813,7 @@ class PreviousWidget(Widget):
 		if len(objectList) != 1: return
 		
 		# xxx to optimize
-		for  nodeRef, nodeTree in self._nodeRefToNodeTree.items():
+		for nodeRef, nodeTree in self._nodeRefToNodeTree.items():
 			animateNode = nodeTree.getSeparatedAnimateNode()
 			if animateNode is not None:
 				if self._context.isSelected(animateNode):
@@ -3880,7 +3879,7 @@ class PreviousWidget(Widget):
 		if node is None:
 			return 0
 		return node.isShowed()
-				 
+
 class Node:
 	def __init__(self, nodeRef, ctx):
 		self._nodeRef = nodeRef
@@ -3891,7 +3890,7 @@ class Node:
 
 		self._cssResolver = ctx._cssResolver
 		self._cssNode = None
-		
+
 		# graphic control (implementation: system dependant)
 		self._graphicCtrl = None		
 
@@ -3913,10 +3912,8 @@ class Node:
 
 		# animation path support
 		self._path = None
-		
+
 	def _cleanup(self):
-		if self.isShowed:
-			self.hide()
 		self._ctx = None
 		self._viewport = None
 		self._parent = None
@@ -3931,6 +3928,7 @@ class Node:
 	def removeNode(self, node):
 		if self._viewport is not None and node._nodeType in (TYPE_REGION, TYPE_VIEWPORT):
 			self._viewport._mustUpdateEditBackground = 1
+		self.hideAllNodes()
 		node._cleanup()
 		try:
 			self._children.remove(node)
@@ -3973,10 +3971,8 @@ class Node:
 	def hide(self):
 		if debug: print 'Node.hide: ',self.getName()
 		if self._graphicCtrl != None:
-			if self._parent != None:
-				self._graphicCtrl.removeListener(self)
-				if self._parent._graphicCtrl != None:
-					self._parent._graphicCtrl.removeRegion(self._graphicCtrl)
+			self._graphicCtrl.removeListener(self)
+			self._graphicCtrl.destroy()
 			self._graphicCtrl = None
 			self._ctx.previousCtrl.update()
 
@@ -4117,9 +4113,7 @@ class Node:
 		if not self._wantToShow:
 			return
 		self._wantToShow = 0
-		for child in self._children:
-			child.toHiddenState()	
-		self.hide()
+		self.hideAllNodes()
 
 	# get the geom for region and media which depends of whether we edit or not an animation.
 	# if this node is being animated, we have to get an interpolated value.
@@ -4190,11 +4184,10 @@ class Node:
 		self._path = parentShape.addPolyline(pointList, self._graphicCtrl)
 
 	def removePath(self):
-		parentShape = self._parent._graphicCtrl
-		if self._path is None or parentShape is None:
+		if self._path is None:
 			return
 		
-		parentShape.removePolyline(self._path)
+		self._path.destroy()
 
 	def _getSelectedObject(self):
 		if self._path:
@@ -4206,6 +4199,16 @@ class Node:
 		else:
 			selObj = self._graphicCtrl
 		return selObj
+
+	def updateNodes(self):
+		if self._wantToShow:
+			if self.isShowed():
+				self.hideAllNodes()
+			self.show()
+			for child in self._children:
+				child.updateNodes()
+		else:
+			self.hideAllNodes()
 					
 class Region(Node):
 	def __init__(self, nodeRef, ctx):
@@ -4268,12 +4271,6 @@ class Region(Node):
 			parent = self._parent
 			self._cssResolver.unlink(self._cssNode)			
 			Node.hide(self)
-
-	def showAllNodes(self):
-		if self._wantToShow:
-			self.show()
-			for child in self._children:
-				child.showAllNodes()
 
 	#
 	# update of visualization attributes (not document)
@@ -4355,10 +4352,9 @@ class MediaRegion(Region):
 		if self._parent._graphicCtrl == None:
 			return
 
-		if self.isShowed():
+		if self._graphicCtrl:
 			# hide this node and its sub-nodes
 			self.hideAllNodes()
-
 
 		parent = self._parent
 
@@ -4504,19 +4500,20 @@ class MediaRegion(Region):
 		self.show()
 		if isSelected and self._graphicCtrl:	
 			self._ctx.previousCtrl.appendSelection([self._getSelectedObject()])
-			
+
 	def hide(self):
 		if self.isShowed():
 			parent = self._parent
 			self._cssResolver.unlink(self._mediaCssNode)			
-			self._cssResolver.unlink(self._cssNode)			
+			self._cssResolver.unlink(self._cssNode)
 			Node.hide(self)
 			self.removePath()
 
 	def _cleanup(self):
 		# XXX should allow the gc to destroy the media
 		# XXX To check if really need it
-		self._mediaCssNode.defaultSizeHandler = None
+		if self._mediaCssNode is not None:
+			self._mediaCssNode.defaultSizeHandler = None
 		Node._cleanup(self)
 		
 	def onProperties(self):
@@ -4654,6 +4651,12 @@ class Viewport(Node):
 		w,h=self._nodeRef.getPxGeom()
 		self._curattrdict['wingeom'] = (self.currentX,self.currentY,w,h)
 
+	def updateNodes(self):
+		self.hideAllNodes()
+		self.show()
+		for child in self._children:
+			child.updateNodes()
+
 	def show(self):
 		if debug: print 'Viewport.show : ',self.getName()
 		self.importAttrdict()
@@ -4678,13 +4681,6 @@ class Viewport(Node):
 
 		self._graphicCtrl.setListener(self)
 		
-	def showAllNodes(self):
-		if debug: print 'Viewport.showAllNodes : ',self.getName()
-		self.show()
-		for child in self._children:
-			child.showAllNodes()
-		self._ctx.previousCtrl.update()
-
 	#
 	# update of visualization attributes (not document)
 	#
@@ -4698,8 +4694,6 @@ class Viewport(Node):
 	#
 
 	def updateAllAttrdict(self):
-		if not self.isShowed():
-			return
 		if debug: print 'LayoutView.updateAllAttrdict:',self.getName()
 		self.computeEditBackground()
 		Node.updateAllAttrdict(self)
@@ -4709,8 +4703,7 @@ class Viewport(Node):
 			self.updateAllAttrdict()
 			return
 		# for now refresh all
-		if self.isShowed():
-			self.showAllNodes()
+		self.updateNodes()
 
 	def onProperties(self):
 		if features.CUSTOM_REGIONS in features.feature_set:

@@ -265,7 +265,7 @@ class _LayoutView2(GenFormView):
 			point = msg.pos()
 			flags = msg._wParam
 			self._slider.onSelect(point, flags)
-		if self._layout._drawContext.hasCapture():
+		if self._layout is not None and self._layout._drawContext.hasCapture():
 			self._layout.onNCLButton(params)
 
 	def onLButtonUp(self, params):
@@ -274,7 +274,7 @@ class _LayoutView2(GenFormView):
 			point = msg.pos()
 			flags = msg._wParam
 			self._slider.onDeselect(point, flags)
-		if self._layout._drawContext.hasCapture():
+		if self._layout is not None and self._layout._drawContext.hasCapture():
 			self._layout.onNCLButton(params)
 
 	def onMouseMove(self, params):
@@ -283,7 +283,7 @@ class _LayoutView2(GenFormView):
 			point = msg.pos()
 			flags = msg._wParam
 			self._slider.onDrag(point, flags)
-		if self._layout._drawContext.hasCapture():
+		if self._layout is not None and self._layout._drawContext.hasCapture():
 			self._layout.onNCLButton(params)
 
 	def onLButtonDblClk(self, params):
@@ -463,12 +463,16 @@ class _LayoutView2(GenFormView):
 		self.zoomOut()
 
 	def zoomIn(self):
+		if self._layout is None:
+			return
 		d2lscale = self._layout.getDeviceToLogicalScale()
 		d2lscale = d2lscale - 0.1
 		if d2lscale < 0.1 : d2lscale = 0.1
 		self._layout.updateScale(d2lscale)
 
 	def zoomOut(self):
+		if self._layout is None:
+			return
 		d2lscale = self._layout.getDeviceToLogicalScale()
 		d2lscale = d2lscale + 0.1
 		if d2lscale>10.0: d2lscale = 10.0
@@ -540,10 +544,14 @@ class _LayoutView2(GenFormView):
 		self.paneFocusCtrl.HookMessage(self.OnPaneFocusCtrlKey, win32con.WM_KEYDOWN)
 		
 	def OnSetPaneFocusCtrl(self, params):
+		if self._layout is None:
+			return
 		# hilight the pane to simulate the focus
 		self._layout.hilight(1)
 					
 	def OnKillPaneFocusCtrl(self, params):
+		if self._layout is None:
+			return
 		focusReceiver =  params[2] 
 		if focusReceiver != self._layout.GetSafeHwnd():
 			# remove the hilight from the pane
@@ -551,7 +559,7 @@ class _LayoutView2(GenFormView):
 
 	def OnPaneFocusCtrlKey(self, params):
 		key = params[2]
-		if key == win32con.VK_TAB:
+		if key == win32con.VK_TAB or self._layout is None:
 			# normal bevavior
 			return 1
 		else:
@@ -590,6 +598,8 @@ class _LayoutView2(GenFormView):
 			)
 
 	def resizeCtrls(self, w, h):
+		if self._layout is None:
+			return
 
 		# move controls in their right position
 		ctrlIDsToMove = self.getCtrlIdsToMoveDown()
@@ -868,7 +878,7 @@ class LayoutManager(LayoutManagerBase):
 		self._handlePathBrush = win32ui.CreateBrush(win32con.BS_SOLID, 0, 0)
 		
 		self.selInc = 0
-			
+
 	# allow to create a LayoutManager instance before the onInitialUpdate of dialog box
 	def onInitialUpdate(self, parent, rc, bgcolor):
 		self.createWindow(parent, rc, bgcolor, (0, 0, 1280, 1024))
@@ -883,20 +893,6 @@ class LayoutManager(LayoutManagerBase):
 	
 	def OnDestroy(self, params):
 		LayoutManagerBase.OnDestroy(self, params)
-		for pen in (self._blackBrush, self._blackPen, self._hiddenPen, self._selectedPen, self._hiddenSelectedPen, \
-					self._pathPen, self._hiddenPathPen, self._selectedPathPen, \
-					self._hiddenSelectedPathPen):
-			if pen:
-				Sdk.DeleteObject(pen)
-		self._blackBrush = 0
-		self._hiddenPen = 0
-		self._selectedPen = 0
-		self._hiddenSelectedPen = 0
-		self._pathPen = 0
-		self._hiddenPathPen = 0
-		self._selectedPathPen = 0
-		self._HiddenSelectedPathPen = 0
-		self._handlePathBrush = 0
 		
 	#
 	# winlayout.MSDrawContext listener interface
@@ -1031,6 +1027,30 @@ class LayoutManager(LayoutManagerBase):
 		self._drawContext.reset()
 		return self._viewport
 
+	def destroy(self):
+		self._drawContext.reset()
+		self._viewport = None
+
+		for pen in (self._blackBrush, self._blackPen, self._hiddenPen, self._selectedPen, self._hiddenSelectedPen, \
+					self._pathPen, self._hiddenPathPen, self._selectedPathPen, \
+					self._hiddenSelectedPathPen):
+			if pen:
+				Sdk.DeleteObject(pen)
+		self._blackBrush = 0
+		self._hiddenPen = 0
+		self._selectedPen = 0
+		self._hiddenSelectedPen = 0
+		self._pathPen = 0
+		self._hiddenPathPen = 0
+		self._selectedPathPen = 0
+		self._HiddenSelectedPathPen = 0
+		self._handlePathBrush = 0
+
+		self._drawContext.removeListener(self)
+		self._drawContext.setShapeContainer(None)
+		self._parent._layout = None
+		self._parent = None
+		
 	# selection of a list of nodes
 	def selectNodeList(self, shapeList):
 		for shape in self._selectedList:
@@ -1183,7 +1203,7 @@ def intersect(rect1, rect2):
 	rgn1.DeleteObject()
 	rgn2.DeleteObject()
 	return newRect
-		
+
 class Shape:
 	def __init__(self, context):
 		self._ctx = context
@@ -1192,7 +1212,8 @@ class Shape:
 		self._exclRgn  = []
 		self._exclMediaRgn  = []
 		self._mediadisplayrect = None
-
+		self._parent = None
+		
 	def computeExcludeRegion(self, exclRgnTop=[]):
 		self._exclRgn = exclRgnTop
 		
@@ -1308,54 +1329,27 @@ class RectShape(win32window.Window, Shape, UserEventMng):
 		poly._relatedShape = relatedShape
 		return poly
 
-	# remove a sub region
-	def removeRegion(self, region):
+	def destroy(self):
+		if self._parent is not None:
+			psubwindows = self._parent._subwindows
+			# remove the link with the parent
+			for ind in range(len(psubwindows)):
+				if psubwindows[ind] is self:
+					del psubwindows[ind]
+					break
+			self._parent = None
+
 		# update the selection
 		selectChanged = 0
 		for ind in range(len(self._ctx._selectedList)):
-			if self._ctx._selectedList[ind] is region:
+			if self._ctx._selectedList[ind] is self:
 				del self._ctx._selectedList[ind]
 				selectChanged = 1
 				break
 		if selectChanged:
 			self._ctx._drawContext.selectShapes(self._ctx._selectedList)
 
-		# remove the link with the parent
-		for ind in range(len(self._subwindows)):
-			if self._subwindows[ind] is region:
-				del self._subwindows[ind]
-				break
-
-		# do not forget to close region
-		# important resources like images will not be freed 
-		region.close()
-
-	# remove a polyline
-	def removePolyline(self, poly):
-		# update the selection
-		selectChanged = 0
-		for ind in range(len(self._ctx._selectedList)):
-			if self._ctx._selectedList[ind] is poly:
-				del self._ctx._selectedList[ind]
-				selectChanged = 1
-				break
-		if selectChanged:
-			self._ctx._drawContext.selectShapes(self._ctx._selectedList)
-
-		# remove the links
-		for ind in range(len(self._polyList)):
-			if self._polyList[ind] is poly:
-				del self._polyList[ind]
-				break
-
-		for ind in range(len(self._parent._polyList)):
-			if self._parent._polyList[ind] is poly:
-				del self._parent._polyList[ind]
-				break
-
-		if poly._relatedShape is not None:
-			poly._relatedShape._relatedShape = None
-			poly._relatedShape = None
+		self.close()
 		
 	# shape content. may be replaced by displaylist ???
 	def showName(self, bv):
@@ -1480,7 +1474,7 @@ class RectShape(win32window.Window, Shape, UserEventMng):
 			dc.FillSolidRect((x, y, x+w, y+h), win32api.RGB(255,127,80))
 			dc.FrameRectFromHandle((x, y, x+w, y+h), self._ctx._blackBrush)
 		dc.RestoreDC(hsave)
-		
+
 class Viewport(RectShape):
 	def __init__(self, name, context, attrdict, d2lscale):
 		RectShape.__init__(self, name, context, attrdict)
@@ -1507,6 +1501,10 @@ class Viewport(RectShape):
 
 		self.center()
 
+	def destroy(self):
+		RectShape.destroy(self)		
+		self._topwindow = None
+		
 	def center(self):
 		x, y, w, h = self._rectb
 		layout = self._ctx
@@ -1609,6 +1607,7 @@ class Region(RectShape):
 	def __init__(self, parent, name, context, attrdict, d2lscale):
 		RectShape.__init__(self, name, context, attrdict)
 
+		self._parent = parent
 		x, y, w, h = attrdict.get('wingeom')
 		units = attrdict.get('units')
 		z = attrdict.get('z')
@@ -1616,7 +1615,6 @@ class Region(RectShape):
 		bgcolor = attrdict.get('bgcolor')
 		
 		self._isTransparent = self.isTransparent(transparent, bgcolor)
-		
 		self.create(parent, (x, y, w, h), units, z, self._isTransparent, bgcolor)
 		self.setDeviceToLogicalScale(d2lscale)
 		
@@ -1665,19 +1663,45 @@ class Region(RectShape):
 			self.updatezindex(newZ)
 
 		self._ctx.update()
-
+			
 class Polyline(winlayout.Polyline, Shape, UserEventMng):
 	def __init__(self, parent, context, d2lscale, pointList):
 		self._ctx = context		
 		self.isSelected = 0
-		self._parent = parent
 		self._polyList = []
 		self._subwindows = []
+		self._name = 'poly'
 
 		Shape.__init__(self, context)
+		self._parent = parent
 		winlayout.Polyline.__init__(self, self._parent, pointList)
 		UserEventMng.__init__(self)
 		self.setDeviceToLogicalScale(d2lscale)
+
+	# remove a polyline
+	def destroy(self):
+		# update the selection
+		selectChanged = 0
+		for ind in range(len(self._ctx._selectedList)):
+			if self._ctx._selectedList[ind] is self:
+				del self._ctx._selectedList[ind]
+				selectChanged = 1
+				break
+		if selectChanged:
+			self._ctx._drawContext.selectShapes(self._ctx._selectedList)
+
+		# remove the links
+		if self._parent:
+			polyList = self._parent._polyList
+			for ind in range(len(polyList)):
+				if polyList[ind] is self:
+					del polyList[ind]
+					break
+			self._parent = None
+
+		if self._relatedShape is not None:
+			self._relatedShape._relatedShape = None
+			self._relatedShape = None
 		
 	def updateScale(self, d2lscale):
 		self.setDeviceToLogicalScale(d2lscale)
