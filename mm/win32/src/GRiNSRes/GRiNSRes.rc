@@ -1823,6 +1823,8 @@ FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "",IDC_SLIDER_POS,"Static",SS_BLACKFRAME | NOT 
                     WS_VISIBLE,7,9,293,25
+    LTEXT           "0",IDC_MIN,15,2,9,8
+    RTEXT           "100",IDC_MAX,283,2,13,8
 END
 
 

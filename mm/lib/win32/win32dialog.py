@@ -667,12 +667,16 @@ class SeekDialog(ResDialog):
 		self.updateposcallback = None
 		self._curpos = 0
 		
+		self._minind = Static(self, grinsRC.IDC_MIN)
+		self._maxind = Static(self, grinsRC.IDC_MAX)
+
 		self.CreateWindow(parent)
 		self.ShowWindow(win32con.SW_SHOW)
 		self.UpdateWindow()
 
 	def OnInitDialog(self):
 		self.SetWindowText(self._title)
+		self.attach_handles_to_subwindows()
 
 		l,t,r,b = self.GetWindowRect()
 		placeholder = Control(self, grinsRC.IDC_SLIDER_POS)
@@ -699,7 +703,11 @@ class SeekDialog(ResDialog):
 		self.close()
 	
 	def setRange(self, min, max):
-		self.slider.SetRange(int(math.floor(min)), int(math.ceil(max)))
+		imin = int(math.floor(min))
+		imax = int(math.ceil(max))
+		self._minind.settext('%d' % imin)
+		self._maxind.settext('%d' % imax)
+		self.slider.SetRange(imin, imax)
 		
 	def setPos(self, pos):
 		self.slider.SetPos(int(pos+0.5))
