@@ -1021,7 +1021,7 @@ class _BareSubWindow:
 				parent._subwindows.insert(i, self)
 				break
 		else:
-			parent._subwindows.insert(0, self)
+			parent._subwindows.append(self)
 		self._do_init(parent)
 		if parent._transparent:
 			self._transparent = parent._transparent
@@ -1097,7 +1097,7 @@ class _BareSubWindow:
 					parent._subwindows.insert(i, self)
 					break
 			else:
-				parent._subwindows.insert(0, self)
+				parent._subwindows.append(self)
 			# recalculate clipping regions
 			parent._mkclip()
 			# draw the window's contents
@@ -1123,7 +1123,7 @@ class _BareSubWindow:
 				parent._subwindows.insert(i+1, self)
 				break
 		else:
-			parent._subwindows.append(self)
+			parent._subwindows.insert(0, self)
 		# recalculate clipping regions
 		parent._mkclip()
 		# draw exposed windows
