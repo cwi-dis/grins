@@ -1322,10 +1322,22 @@ class HierarchyView(HierarchyViewDialog):
 			obj.draw()
 		if self.timescale:
 			self.drawtimescale()
+
+		# DEBUG, and make it obvious :-)
+		# Uncomment this code if you want a big, ugly box in the middle of the screen.
+		print "DEBUG: remove this (HierarchyView.py:1327)";
+#		import Interactive;
+#		bob = Interactive.Interactive(self);
+#		bob.pos_rel = (0.25,0.25,0.75,0.75);
+#		bob.window_size_abs = (0,0,200,200);
+#		bob.draw(displist);
+
+		self.new_displist = None
 		displist.render()
 		if self.displist:
 			self.displist.close()
 		self.displist = displist
+
 		self.new_displist = None
 
 	def drawtimescale(self):
