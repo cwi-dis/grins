@@ -351,20 +351,8 @@ class Viewport(Region):
 		self._ctx.update(rc)
 
 	def updateNow(self, rc = None):
-		wnd = self._ctx
-
-		# create wnd dc
-		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
-
-		# clip to rc
-		xywh_dev = wnd.LRtoDR(rc, round = 1)
-		ltrb_dev = self.ltrb(xywh_dev)
-		rgn = wingdi.CreateRectRgn(ltrb_dev)
-		dc.SelectClipRgn(rgn)
-		rgn.DeleteObject()
-
-		# do paint
-		self._ctx.paintOn(dc)
+		self.update(rc)
+		self._ctx.UpdateWindow()
 
 	def paint(self, dc, exlwnd = None):
 		ltrb = dc.GetClipBox()
