@@ -44,6 +44,7 @@ static struct PyMethodDef wingdi_methods[] = {
 	{"CreateDIBSurfaceFromFile", (PyCFunction)Wingdi_CreateDIBSurfaceFromFile, METH_VARARGS, ""},
 	{"BitBltDIBSurface", (PyCFunction)Wingdi_BitBltDIBSurface, METH_VARARGS, ""},
 	{"BltBlendDIBSurface", (PyCFunction)Wingdi_BltBlendDIBSurface, METH_VARARGS, ""},
+	{"StretchBltTransparent", (PyCFunction)Wingdi_StretchBltTransparent, METH_VARARGS, ""},
 #endif
 
 #ifndef _WIN32_WCE
