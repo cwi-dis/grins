@@ -96,11 +96,11 @@
 ##(format (enum ASCII PostScript) ASCII 'Format' default
 ##	'Format used by external text file (ASCII or PostScript)' channel)
 
-(help_winpos  (tuple (int) (int)) (-1 -1) 'Help window position' hidden
-	 'Position of help window' raw)
+##(help_winpos  (tuple (int) (int)) (-1 -1) 'Help window position' hidden
+##	 'Position of help window' raw)
 
-(help_winsize  (tuple (int) (int)) (400 600) 'Help window size' hidden
-	 'Size of help window' raw)
+##(help_winsize  (tuple (int) (int)) (400 600) 'Help window size' hidden
+##	 'Size of help window' raw)
 
 (hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' color
 	'Color used for anchors in window' channel)
