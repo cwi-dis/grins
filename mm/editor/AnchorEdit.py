@@ -21,13 +21,6 @@ import settings
 
 from AnchorDefs import *
 
-CMIF_TypeValues = [ ATYPE_WHOLE, ATYPE_DEST, ATYPE_NORMAL, ATYPE_PAUSE,
-	       ATYPE_AUTO, ATYPE_COMP, ATYPE_ARGS ]
-CMIF_TypeLabels = [  'whole node', 'dest only', 'partial node', 'pausing',
-		'auto-firing', 'composite', 'with arguments']
-SMIL_TypeValues = [ ATYPE_WHOLE, ATYPE_DEST, ATYPE_NORMAL ]
-SMIL_TypeLabels = [  'whole node', 'dest only', 'partial node']
-
 FALSE, TRUE = 0, 1
 
 # Top-level interface to show/hide a node's anchor editor
@@ -59,12 +52,6 @@ from AnchorEditDialog import AnchorEditorDialog
 class AnchorEditor(AnchorEditorDialog):
 
 	def __init__(self, toplevel, node):
-		if settings.get('cmif'):
-			self.TypeValues = CMIF_TypeValues
-			self.TypeLabels = CMIF_TypeLabels
-		else:
-			self.TypeValues = SMIL_TypeValues
-			self.TypeLabels = SMIL_TypeLabels
 		self.node = node
 		self.toplevel = toplevel
 		self.context = node.GetContext()
@@ -77,7 +64,7 @@ class AnchorEditor(AnchorEditorDialog):
 		self.getvalues(TRUE)
 		names = self.makelist()
 
-		AnchorEditorDialog.__init__(self, self.maketitle(), self.TypeLabels,
+		AnchorEditorDialog.__init__(self, self.maketitle(), TypeLabels,
 					    names, self.focus)
 
 		self.show_focus()
@@ -216,21 +203,21 @@ class AnchorEditor(AnchorEditorDialog):
 		self.selection_seteditable(editable)
 		self.export_setsensitive(1)
 		self.type_choice_show()
-		for i in range(len(self.TypeValues)):
-			if type == self.TypeValues[i]:
+		for i in range(len(TypeValues)):
+			if type == TypeValues[i]:
 				self.type_choice_setchoice(i)
 		if type == ATYPE_COMP:
 			self.composite_show()
 			self.edit_setsensitive(0)
 			self.composite_setlabel('Composite: ' + `loc`)
-			for i in range(len(self.TypeValues)):
+			for i in range(len(TypeValues)):
 				self.type_choice_setsensitive(
-					i, self.TypeValues[i] == ATYPE_COMP)
+					i, TypeValues[i] == ATYPE_COMP)
 			return
-		for i in range(len(self.TypeValues)):
-			if self.TypeValues[i] == ATYPE_COMP:
+		for i in range(len(TypeValues)):
+			if TypeValues[i] == ATYPE_COMP:
 				self.type_choice_setsensitive(i, 0)
-			elif self.TypeValues[i] in WholeAnchors:
+			elif TypeValues[i] in WholeAnchors:
 				self.type_choice_setsensitive(i, self.editable or type in WholeAnchors)
 			else:
 				# can choose this type if node is
@@ -370,7 +357,7 @@ class AnchorEditor(AnchorEditorDialog):
 			print 'AnchorEdit: no focus in setloc!'
 			return
 		i = self.type_choice_getchoice()
-		self.set_type(self.TypeValues[i])
+		self.set_type(TypeValues[i])
 
 
 	def edit_callback(self):

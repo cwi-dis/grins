@@ -24,3 +24,13 @@ ATYPE_WHOLE  = 6	# Whole-node source anchor
 WholeAnchors = (ATYPE_DEST, ATYPE_AUTO, ATYPE_COMP, ATYPE_WHOLE)
 SourceAnchors = ATYPE_AUTO, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_ARGS, ATYPE_WHOLE
 DestinationAnchors = ATYPE_DEST, ATYPE_NORMAL, ATYPE_COMP, ATYPE_ARGS, ATYPE_WHOLE
+
+import settings
+if settings.get('cmif'):
+	TypeValues = [ ATYPE_WHOLE, ATYPE_DEST, ATYPE_NORMAL, ATYPE_PAUSE,
+		       ATYPE_AUTO, ATYPE_COMP, ATYPE_ARGS ]
+	TypeLabels = [  'whole node', 'dest only', 'partial node', 'pausing',
+			'auto-firing', 'composite', 'with arguments']
+else:
+	TypeValues = [ ATYPE_WHOLE, ATYPE_DEST, ATYPE_NORMAL ]
+	TypeLabels = [  'whole node', 'dest only', 'partial node']
