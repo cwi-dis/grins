@@ -72,7 +72,8 @@ class HierarchyViewDialog(ViewDialog):
 				(LIGHT, None),
 				(LIGHT, 'Image Thumbnails', THUMBNAIL, 't'),
 				(LIGHT, 'Show Playable', PLAYABLE, 't'),
-				(LIGHT, 'Show Durations', TIMESCALE, 't'),
+				(SMIL, 'Show Durations', TIMESCALE, 't'),
+				(LIGHT, 'Check Bandwidth Usage', COMPUTE_BANDWIDTH),
 				]),
 			(LIGHT, 'Help', [
 				(LIGHT, 'Help...', HELP),
