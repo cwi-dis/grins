@@ -15,6 +15,14 @@ from Channel import Channel # the base class
 
 class ImageWindow() = (glwindow.glwindow)():
 	#
+	# Declaration of attributes that are relevant to this channel,
+	# respectively to nodes belonging to this channel.
+	#
+	chan_attrs = Channel.chan_attrs + ['winsize', 'winpos']
+	node_attrs = Channel.node_attrs + ['file', 'wait_for_close']
+	#
+	# Initialization function.
+	#
 	def init(self, (name, attrdict)):
 		self.name = name
 		self.attrdict = attrdict
