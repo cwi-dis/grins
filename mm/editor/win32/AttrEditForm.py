@@ -1603,7 +1603,7 @@ class EventCtrl(AttrCtrl):
 ##				self._thingbuttoncallback(None, win32con.BN_CLICKED)
 			if self._node:
 				pnode = self._node.GetParent()
-				if pnode and pnode.GetType() == 'seq':
+				if self._attr.getname() == 'beginlist' and pnode and pnode.GetType() == 'seq':
 					# Children of sequence nodes can only have
 					# delays
 					for k in self._radiobuttonwidgets.keys():
