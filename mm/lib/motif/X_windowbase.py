@@ -1187,6 +1187,7 @@ class _BareSubWindow:
 		else:
 			parent._subwindows.append(self)
 		self._do_init(parent)
+		self._motion_handler = parent._motion_handler
 		if parent._transparent:
 			self._transparent = parent._transparent
 		else:
@@ -1244,6 +1245,7 @@ class _BareSubWindow:
 		del self._region
 		del self._gc
 		del self._convert_color
+		del self._motion_handler
 
 	def settitle(self, title):
 		raise error, 'can only settitle at top-level'
