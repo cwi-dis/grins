@@ -198,6 +198,7 @@ class InlineTransitionEngine:
 		self.__transitiontype = klass(self, self.dict)
 
 		self.__running = 0		
+		self._lastvalue = None
 
 	def __del__(self):
 		if self.__transitiontype:
@@ -206,6 +207,7 @@ class InlineTransitionEngine:
 	def begintransition(self):
 		self.__createSurfaces()
 		self.__running = 1	
+		self._lastvalue = None
 
 	def endtransition(self):
 		if not self.__transitiontype: return
@@ -220,20 +222,36 @@ class InlineTransitionEngine:
 
 	def settransitionvalue(self, value):
 		if value<0.0 or value>1.0:
-			raise AssertionError
-		parameters = self.__transitiontype.computeparameters(value)
+			raise AssertionError, 'settransitionvalue out of range %d', value
 		
 		# transition window
 		wnd = self.window
 		if wnd.is_closed():
 			return
 		
+		if self._lastvalue == value:
+			wnd.update(wnd.getwindowpos())
+			return
+		self._lastvalue = value
+			
 		# hack until i find the bug
-		if value == 1.0 and not self.outtrans:
-			wnd._paintOnDDS(wnd._drawsurf, wnd._rect)
+		if value == 1.0: 
+			if self.outtrans: 
+				wnd.updateBackDDS(wnd._drawsurf, exclwnd=wnd)
+			else:
+				wnd._paintOnDDS(wnd._drawsurf, wnd._rect)
+			wnd.update(wnd.getwindowpos())
+			return
+		elif value==0.0:
+			if self.outtrans: 
+				wnd._paintOnDDS(wnd._drawsurf, wnd._rect)
+			else:
+				wnd.updateBackDDS(wnd._drawsurf, exclwnd=wnd)
 			wnd.update(wnd.getwindowpos())
 			return
 
+		# normal processing
+		parameters = self.__transitiontype.computeparameters(value)
 		if self.outtrans:
 			wnd._paintOnDDS(wnd._fromsurf, wnd._rect)
 			wnd.updateBackDDS(self._tosurf, exclwnd=wnd) 
