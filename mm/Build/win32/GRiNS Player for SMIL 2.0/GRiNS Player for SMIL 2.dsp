@@ -1033,10 +1033,6 @@ SOURCE=.\M_xmllib.c
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
-SOURCE=.\cmifdoc.ico
-# End Source File
-# Begin Source File
-
 SOURCE=.\cmifdocp.ico
 # End Source File
 # Begin Source File
@@ -1046,10 +1042,6 @@ SOURCE=.\Player.ico
 # Begin Source File
 
 SOURCE=.\Player.rc
-# End Source File
-# Begin Source File
-
-SOURCE=.\smildoc.ico
 # End Source File
 # Begin Source File
 
