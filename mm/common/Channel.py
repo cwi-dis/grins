@@ -320,12 +320,8 @@ class Channel:
 		pass
 
 	def getaltvalue(self, node):
-		# Return a value between 0 and 1 which gives "desirability"
-		# of playing this node if there are alternatives. Should
-		# return 0 for unplayable, 1 for no problems at all.
-		# Intermedeate values may be returned depending on bandwidth,
-		# quality, etc.
-		return 1.0
+		# Return 1 if this node is playable, 0 otherwise
+		return 1
 
 	#
 	# Methods used internally and by superclasses.
