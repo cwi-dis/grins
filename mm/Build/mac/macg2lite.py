@@ -1,13 +1,12 @@
 __version__ = "$Id$"
 
 #
-# Mac GRiNS Player wrapper
+# Mac GRiNS Lite for G2 wrapper
 #
 
 # First, immedeately disable the console window
-DEBUG=0
-
 import sys
+DEBUG=0
 if DEBUG:
 	print '** Verbose **'
 	quietconsole=None
@@ -18,6 +17,10 @@ elif len(sys.argv) > 1 and sys.argv[1] == '-v':
 else:
 	import quietconsole
 	quietconsole.install()
+	
+# XXXX Temp: enable Navigation
+import macfsn
+macfsn._install()
 
 ID_SPLASH_DIALOG=513
 # XXXX Debugging code: assure the resource file is available
@@ -25,12 +28,13 @@ import Res
 try:
 	Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 except:
-	Res.FSpOpenResFile(':player.rsrc', 0)
+	Res.FSpOpenResFile(':macg2lite.rsrc', 0)
+	Res.FSpOpenResFile(':editor.rsrc', 0)
 	Res.FSpOpenResFile(':playercontrols.rsrc', 0)
 	Res.FSpOpenResFile(':common.rsrc', 0)
-	Res.FSpOpenResFile(':playerballoons.rsrc', 0)
+	Res.FSpOpenResFile(':editorballoons.rsrc', 0)
 Res.GetResource('DLOG', ID_SPLASH_DIALOG)
-	
+
 # Now time for real work.
 import os
 import string
@@ -45,21 +49,40 @@ except ImportError:
 	STANDALONE=0
 else:
 	STANDALONE=1
+	
 #
 # Mangle sys.path. Here are the directives for macfreeze:
 #
 # macfreeze: path :
-# macfreeze: path :::grins:smil20
-# macfreeze: path :::grins:mac
-# macfreeze: path :::grins
+# macfreeze: path :::editor:g2lite
+# macfreeze: path :::editor:mac
+# macfreeze: path :::editor
 # macfreeze: path :::common:mac
 # macfreeze: path :::common
 # macfreeze: path :::lib:mac
 # macfreeze: path :::lib
 # macfreeze: path :::pylib
+# xxxx macfreeze: path :::mmpython:producer:mac:bin
+#
+# Modules we specifically don't want for the light version:
+# macfreeze: exclude ChannelView
+# macfreeze: exclude LayoutView
+# macfreeze: exclude UsergroupView
+# macfreeze: exclude LinkEdit
+# macfreeze: exclude AnchorEdit
+# macfreeze: exclude AnchorEditForm
+# macfreeze: exclude ArcInfoForm
+# macfreeze: exclude CmifChannel
+# macfreeze: exclude SocketChannel
+# macfreeze: exclude GraphChannel
+# macfreeze: exclude LabelChannel
+# macfreeze: exclude MidiChannel
+# macfreeze: exclude PythonChannel
+# macfreeze: exclude WordChannel
+# macfreeze: exclude HtmlChannel
+# macfreeze: exclude PseudoHtmlChannel
 #
 # and some modules we don't want:
-# macfreeze: exclude BandwidthCompute
 # macfreeze: exclude X_window
 # macfreeze: exclude X_windowbase
 # macfreeze: exclude GL_window
@@ -101,7 +124,6 @@ else:
 # macfreeze: exclude VcrChannel
 # macfreeze: exclude NTVideoChannel
 # macfreeze: exclude MPEGVideoChannel
-# macfreeze: exclude SGIVideoDuration
 # macfreeze: exclude audio.hcom
 # macfreeze: exclude audio.svx8
 # macfreeze: exclude audio.sdnr
@@ -116,13 +138,14 @@ else:
 # macfreeze: exclude readline
 # macfreeze: exclude CORBA.services
 # macfreeze: exclude win32ig
-# macfreeze: exclude win32ui
 # macfreeze: optional rma
-# macfreeze: exclude HierarchyView
+# macfreeze: exclude NodeInfoHelper
 # macfreeze: exclude dshow
-# macfreeze: exclude producer
-# macfreeze: exclude SMILTreeWrite
+# macfreeze: exclude win32ui
 # macfreeze: exclude linuxaudiodev
+# macfreeze: exclude NodeInfo
+# macfreeze: exclude AnchorEdit
+
 #
 # And here's the code for non-standalone version of the editor:
 
@@ -134,20 +157,25 @@ if not STANDALONE:
 	
 	CMIFPATH = [
 		CMIFDIR+":mac",
-		CMIFDIR+":grins:smil20",
-		CMIFDIR+":grins:mac",
-		CMIFDIR+":grins",
+		CMIFDIR+":editor:g2lite",
+		CMIFDIR+":editor:mac",
+		CMIFDIR+":editor",
 		CMIFDIR+":common:mac",
 		CMIFDIR+":common",
 		CMIFDIR+":lib:mac",
 		CMIFDIR+":lib",
 	# Overrides for Python distribution
 		CMIFDIR+":pylib",
+##	# XXXX Testing purposes only
+##		CMIFDIR+":mmpython:producer:mac:bin",
 	]
 	sys.path[0:0] = CMIFPATH
 	
 	os.environ["CMIF"] = CMIFDIR
 	#os.environ["CHANNELDEBUG"] = "1"
+else:
+	progdir=os.path.split(sys.argv[0])[0]
+	os.environ["CMIF"] = progdir
 
 # Next, show the splash screen
 import splash
@@ -157,6 +185,7 @@ license = settings.get('license')
 user = settings.get('license_user')
 org = settings.get('license_organization')
 splash.setuserinfo(user, org, license)
+
 	
 if len(sys.argv) > 1 and sys.argv[1] == '-p':
 	profile = 1
@@ -170,16 +199,16 @@ else:
 ##trace.set_trace()
 
 ##if len(sys.argv) < 2:
-##	splash.splash()
-##	fss, ok = macfs.PromptGetFile('SMIL file (cancel for URL)', 'TEXT')
+##	MacOS.splash()
+##	fss, ok = macfs.PromptGetFile('CMIF/SMIL file (cancel for URL)', 'TEXT')
 ##	if ok:
 ##		sys.argv = ["macgrins", fss.as_pathname()]
 ##	else:
 ##		import EasyDialogs
-##		url = EasyDialogs.AskString("SMIL URL")
+##		url = EasyDialogs.AskString("CMIF/SMIL URL")
 ##		if url is None:
 ##			sys.exit(0)
-##		sys.argv = ["macgrins", url]
+##		sys.argv = ["maccmifed", url]
 		
 no_exception=0
 try:
@@ -188,9 +217,9 @@ try:
 			import profile
 			fss, ok = macfs.StandardPutFile("Profile output:")
 			if not ok: sys.exit(1)
-			profile.run("import grins", fss.as_pathname())
+			profile.run("import cmifed", fss.as_pathname())
 		else:
-			import grins
+			import cmifed
 		no_exception=1
 	except SystemExit:
 		no_exception=1
@@ -198,6 +227,11 @@ finally:
 	if not no_exception:
 		if quietconsole:
 			quietconsole.revert()
-		print 'Type return to exit-',
-		sys.stdin.readline()
+##		if DEBUG:
+##			import pdb
+##			pdb.post_mortem(sys.exc_info()[2])
+##		elif quietconsole:
+##			quietconsole.revert()
+##			print 'Type return to exit-',
+##			sys.stdin.readline()
 	

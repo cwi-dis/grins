@@ -34,7 +34,7 @@ import macfreeze
 # Resources for the dialog
 #
 RESFILE="macbuild.rsrc"
-h = Res.OpenResFile(RESFILE)
+h = Res.FSpOpenResFile(RESFILE, 0)
 DIALOG_ID=512
 I_OK=1
 I_CANCEL=2
