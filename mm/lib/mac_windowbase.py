@@ -332,6 +332,7 @@ class _Toplevel(_Event):
 		self._menu_file = MyMenu(self._menubar, "File")
 		self._mitem_quit = MenuItem(self._menu_file, "Quit", "Q", (self._mselect_quit, ()))
 		self._mitem_abort = MenuItem(self._menu_file, "Abort", "", (self._mselect_abort, ()))
+		self._mitem_debug = MenuItem(self._menu_file, "Debug", "", (self._mselect_debug, ()))
 		self._menus = []
 		
 	def _addmenu(self, title):
@@ -344,6 +345,10 @@ class _Toplevel(_Event):
 		
 	def _mselect_abort(self):
 		raise 'User abort'
+		
+	def _mselect_debug(self):
+		import pdb
+		pdb.set_trace()
 
 	def _mselect_about(self, *args):
 		d = Dlg.GetNewDialog(ABOUT_ID, -1)
