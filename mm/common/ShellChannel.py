@@ -70,7 +70,7 @@ def startprog(prog, argv):
 		print 'fork:', msg
 		return None
 	if pid == 0: # Child
-		os.exec(prog, argv)
+		os.execv(prog, argv)
 		# Not reached
 	else: # Parent
 		return pid
