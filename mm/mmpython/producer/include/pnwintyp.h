@@ -153,6 +153,7 @@ typedef void* PNxWindowID;
  *      UNIX: Display*
  *	
  *	void*	param2
+ *      Mac:  for UpdateEvt, either NULL or RgnHandle to be filled with updated area
  *      UNIX: Native              XEvent*
  *            RMA_SURFACE_UPDATE  PNxWindow*
  *	

@@ -45,6 +45,7 @@ typedef _INTERFACE IRMAAudioPinProperties	IRMAAudioPinProperties;
 typedef _INTERFACE IRMAVideoPinProperties	IRMAVideoPinProperties;	
 typedef _INTERFACE IRMAVideoFilters			IRMAVideoFilters;
 typedef _INTERFACE IRMAVideoAnalysis		IRMAVideoAnalysis;
+typedef _INTERFACE IRMAWallclock			IRMAWallclock;
 
 /****************************************************************************
  *  Function:
@@ -1501,7 +1502,78 @@ DECLARE_INTERFACE_(IRMAVideoPinProperties, IUnknown)
 	float fFrameRate) PURE;
 
 };
-     
+
+
+/****************************************************************************
+ * 
+ *  Interface:
+ *
+ *	IRMAVideoPinProperties2
+ *
+ *  Purpose:
+ *
+ *	Manages all of the input properties for the video pin. These properties should accurately
+ *	describe the source data that will be coming into the pin
+ *
+ *  IID_IRMAVideoPinProperties2:
+ *
+ *  {2EBF90B1-4264-11d4-8728-00D0B7068A6E}
+ *	
+ *
+ */
+DEFINE_GUID(IID_IRMAVideoPinProperties2, 
+			0x2ebf90b1, 0x4264, 0x11d4, 0x87, 0x28, 0x0, 0xd0, 0xb7, 0x6, 0x8a, 0x6e);
+
+
+#undef INTERFACE
+#define INTERFACE IRMAVideoPinProperties2
+
+DECLARE_INTERFACE_(IRMAVideoPinProperties2, IRMAVideoPinProperties)
+{
+    /***********************************************************************/
+    /*
+     *	IUnknown methods
+     */
+    STDMETHOD(QueryInterface)		(THIS_
+					 REFIID riid,
+					 void** ppvObj) PURE;
+
+    STDMETHOD_(UINT32,AddRef)		(THIS) PURE;
+
+    STDMETHOD_(UINT32,Release)		(THIS) PURE;
+
+    /************************************************************************
+     *
+     * IRMAVideoPinProperties2 methods
+     */
+
+    /************************************************************************
+     *	Method:
+     *	    IRMAVideoPinProperties2::GetDisplaySize/SetDisplaySize
+     *	Purpose:
+     *	    Get/Set the desired display size for the video stream
+     *	    If you do not set this, or pass in 0,0, then the input
+     *	    size will be used.
+     *	    The codec will downsample on encode, or upsample on decode
+     *	    depending on the difference between the display size and
+     *	    input size
+     *	Valid Ranges:
+     *	    32 <= width <= 640 
+     *	    32 <= height <= 480
+     *	    Both width and height must be evenly divisible by 4
+     *	    Values that are not valid will be set to the nearest valid number
+     *	Parameters:
+     *	    nDisplayWidth - [in/out] width to display video
+     *	    nDisplayHeight - [in/out] height to display video
+     */    
+    STDMETHOD(GetDisplaySize)	(THIS_
+	UINT32* pnDisplayWidth, UINT32* pnDisplayHeight) PURE;
+    STDMETHOD(SetDisplaySize)	(THIS_
+	UINT32 nDisplayWidth, UINT32 nDisplayHeight) PURE;
+
+};
+  
+   
 /****************************************************************************
  * 
  *  Interface:
@@ -1989,5 +2061,83 @@ DECLARE_INTERFACE_(IRMAVideoAnalysis, IUnknown)
     STDMETHOD(SetAnalysisMode)	(THIS_
 	ENCODE_ANALYSIS_MODE nAnalysisMode) PURE;   
 };
+
+
+/****************************************************************************
+ * 
+ *  Interface:
+ *
+ *	IRMAWallclock
+ *
+ *  Purpose:
+ *
+ *	Enable/disable wallclock.  Wallclock is used to for synchronize live 
+ *	broadcasts from different machines within a single SMIL presentation.  Please
+ *	see the RealSystem G2 Production Guide for more details on wallclock.
+ *
+ *  IID_IRMAWallclock:
+ *
+ *  {{CDB34BB1-3801-11d4-968F-00D0B7068A6E}
+ *	
+ *
+ */
+DEFINE_GUID(IID_IRMAWallclock, 
+    0xcdb34bb1, 0x3801, 0x11d4, 0x96, 0x8f, 0x0, 0xd0, 0xb7, 0x6, 0x8a, 0x6e);
+
+#undef INTERFACE
+#define INTERFACE IRMAWallclock
+
+DECLARE_INTERFACE_(IRMAWallclock, IUnknown)
+{
+    /***********************************************************************/
+    /*
+     *	IUnknown methods
+     */
+    STDMETHOD(QueryInterface)		(THIS_
+					 REFIID riid,
+					 void** ppvObj) PURE;
+
+    STDMETHOD_(UINT32,AddRef)		(THIS) PURE;
+
+    STDMETHOD_(UINT32,Release)		(THIS) PURE;
+
+    /************************************************************************
+     *
+     * IRMAWallclock methods
+     */
+
+    /************************************************************************
+     *	Method:
+     *	    IRMAWallclock::GetDoWallclock/SetDoWallclock
+     *	Purpose:
+     *	    Get/Set whether wallclock is enabled.
+     *	Notes:
+     *	    Can't be set after calling PrepareToEncode (until DoneEncoding 
+	 *		or CancelEncoding are called).  By default, wallclock is
+	 *		disabled.
+     */
+    STDMETHOD(GetDoWallclock)	(THIS_
+		BOOL* pbDoWallclock) PURE;
+    STDMETHOD(SetDoWallclock)	(THIS_
+		BOOL bDoWallclock) PURE;   
+
+    /************************************************************************
+     *	Method:
+     *	    IRMAWallclock::GetBaseWallclockTime/SetBaseWallclockTime
+     *	Purpose:
+     *	    Get/Set the base wallclock time.
+     *	Notes:
+     *	    Can be set before or after PrepareToEncode.  Can only be set 
+	 *		once per encoding session.  If wallclock is enabled, all samples 
+	 *		passed into the input pins will be discarded until the base
+	 *		wallclock time is set.
+     */
+    STDMETHOD(GetBaseWallclockTime)	(THIS_
+		UINT32* pulBaseWallclockTime) PURE;
+    STDMETHOD(SetBaseWallclockTime)	(THIS_
+		UINT32 ulBaseWallclockTime) PURE;
+
+};
+
 
 #endif //_RMBLDENG_H_

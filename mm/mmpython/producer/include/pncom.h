@@ -62,6 +62,20 @@
 #endif
 
 /*
+ *  CONSTMETHOD:
+ *	Use this for constant methods in an interface 
+ *	Compiles away under C
+ */
+#if !defined( CONSTMETHOD )
+
+#if defined(__cplusplus)
+#define CONSTMETHOD	const
+#else
+#define CONSTMETHOD
+#endif
+
+#endif
+/*
  *  CALL:
  *
  *	Used by C users to easily call a function through an interface
