@@ -2562,6 +2562,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		from windowinterface import UNIT_PXL
 		id = self.__checkid(attributes, checkid = checkid)
+		self.__fix_attributes(attributes)
 		# experimental code for switch layout
 		self.__elementindex = self.__elementindex+1
 		
@@ -3177,6 +3178,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.setliteral()
 				return
 		self.__context.attributes['project_boston'] = 1
+		self.__fix_attributes(attributes)
 
 		# default values
 		attrdict = {'regAlign': 'topLeft'}
