@@ -7,8 +7,8 @@ import MMAttrdefs
 from AnchorDefs import *
 import WMEVENTS
 import os
-import Qt
-import QuickTime
+from Carbon import Qt
+from Carbon import QuickTime
 
 QT_AVAILABLE = windowinterface._qtavailable()
 if not QT_AVAILABLE:
