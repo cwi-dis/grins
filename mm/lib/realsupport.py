@@ -608,6 +608,25 @@ def writecoords(f, str, full, xy, wh, anchor):
 			f.write(' %s%s="%d"' % (str, coordnames[i], c))
 
 
+def _writeFadeout(f, start, attrs):
+	color = attrs.get('fadeoutcolor', (0,0,0))
+	for name, val in colors.items():
+		if color == val:
+			color = name
+			break
+	else:
+		color = '#%02x%02x%02x' % color
+	f.write('  <fadeout start="%g" duration="%g" color="%s"' %
+		(start, attrs.get('fadeoutduration',0), color))
+	writecoords(f, 'dst', attrs.get('displayfull', 1),
+		    attrs.get('subregionxy', (0,0)),
+		    attrs.get('subregionwh', (0,0)),
+		    attrs.get('subregionanchor', 'top-left'))
+	maxfps = attrs.get('maxfps')
+	if maxfps is not None:
+		f.write(' maxfps="%d"' % maxfps)
+	f.write('/>\n')
+
 def writeRP(file, rp, node):
 	from SMILTreeWrite import nameencode
 
@@ -660,23 +679,7 @@ def writeRP(file, rp, node):
 			if t > start:
 				break
 			del fadeouts[0]
-			color = a.get('fadeoutcolor', (0,0,0))
-			for name, val in colors.items():
-				if color == val:
-					color = name
-					break
-			else:
-				color = '#%02x%02x%02x' % color
-			f.write('  <fadeout start="%g" duration="%g" color="%s"' %
-				(t, a.get('fadeoutduration',0), color))
-			writecoords(f, 'dst', a.get('displayfull', 1),
-				    a.get('subregionxy', (0,0)),
-				    a.get('subregionwh', (0,0)),
-				    a.get('subregionanchor', 'top-left'))
-			maxfps = a.get('maxfps')
-			if maxfps is not None:
-				f.write(' maxfps="%d"' % maxfps)
-			f.write('/>\n')
+			_writeFadeout(f, t, a)
 		tag = attrs.get('tag', 'fill')
 		f.write('  <%s' % tag)
 		f.write(' start="%g"' % start)
@@ -733,25 +736,8 @@ def writeRP(file, rp, node):
 					break
 			else:
 				fadeouts.append((t, attrs))
-	for start,a in fadeouts:
-		color = a.get('fadeoutcolor', (0,0,0))
-		for name, val in colors.items():
-			if color == val:
-				color = name
-				break
-		else:
-			color = '#%02x%02x%02x' % color
-		duration = a.get('fadeoutduration',0)
-		f.write('  <fadeout start="%g" duration="%g" color="%s"' %
-			(start, duration, color))
-		writecoords(f, 'dst', a.get('displayfull', 1),
-			    a.get('subregionxy', (0,0)),
-			    a.get('subregionwh', (0,0)),
-			    a.get('subregionanchor', 'top-left'))
-		maxfps = a.get('maxfps')
-		if maxfps is not None:
-			f.write(' maxfps="%d"' % maxfps)
-		f.write('/>\n')
+	for start, a in fadeouts:
+		_writeFadeout(f, start, a)
 	f.write('</imfl>\n')
 	f.close()
 	if rp.duration < start + duration:
