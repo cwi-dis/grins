@@ -370,7 +370,7 @@ class SchedulerContext:
 			arc.__in_sched_arcs = 0
 		if depth == 0 and event == 'begin':
 			# also do children that are runnable
-			for child in node.GetSchedChildren():
+			for child in node.wtd_children:
 				for arc in child.FilterArcList(child.GetBeginList()):
 					if arc.qid is None and arc.isresolved(self):
 						t = child.isresolved(self)

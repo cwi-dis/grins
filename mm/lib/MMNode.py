@@ -4081,10 +4081,11 @@ class MMNode(MMTreeElement):
 			wtd_children = self.wtd_children
 		if path and self.type == 'seq' and path[0] in wtd_children:
 			wtd_children = wtd_children[wtd_children.index(path[0]):]
+		self.wtd_children = wtd_children[:]
 
-		if termtype == 'FIRST':
+		if self.type != 'seq' and termtype == 'FIRST':
 			terminating_children = wtd_children[:]
-		elif termtype in ('LAST', 'ALL', 'MEDIA'):
+		elif self.type == 'seq' or termtype in ('LAST', 'ALL', 'MEDIA'):
 			terminating_children = []
 		else:
 			terminating_children = []
@@ -4128,6 +4129,14 @@ class MMNode(MMTreeElement):
 			beginlist = child.GetBeginList()
 			beginlist = self.FilterArcList(beginlist)
 			subpath = None
+			if self.type == 'seq':
+				t = child.isresolved(sctx)
+				if t is not None and t < curtime:
+					d = child.calcfullduration(sctx)
+					if d is not None and t + d < curtime:
+						if debug: print 'removing',child,'from wtd_children'
+						self.wtd_children.remove(child)
+						continue
 			if path and path[0] is child:
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = sctx.parent.timefunc() - self.start_time)
 				self_body.arcs.append((srcnode, arc))
