@@ -89,9 +89,9 @@ class MatrixWipeTransition(TransitionClass):
 		hr = self.hsteps
 		vr = self.vsteps
 		for i in range(hr+1):
-			self.hboundaries.append(x0+int((x1-x0)*float(i)/(hr+1)+0.5))
+			self.hboundaries.append(x0 + int((x1-x0)*float(i)/hr + 0.5))
 		for i in range(vr+1):
-			self.vboundaries.append(y0+int((y1-y0)*float(i)/(vr+1)+0.5))
+			self.vboundaries.append(y0 + int((y1-y0)*float(i)/vr + 0.5))
 		
 	def move_resize(self, ltrb):
 		TransitionClass.move_resize(self, ltrb)
@@ -249,8 +249,6 @@ class TransitionEngine:
 		mustredraw is true we should do the recalc even if the transition hasn't advanced."""
 		if self.running:
 			self.value = float(time.time() - self.starttime) / self.duration
-			if self.value >= 0.5:
-				pass # DBG
 			if self.value >= 1.0:
 				self._cleanup()
 				return
