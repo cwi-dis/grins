@@ -8,6 +8,45 @@ class FancyURLopener(_OriginalFancyURLopener):
 		apply(_OriginalFancyURLopener.__init__, (self,) + args)
 		self.tempcache = {}
 
+	def open_data(self, url, data=None):
+		# ignore POSTed data
+		#
+		# syntax of data URLs:
+		# dataurl   := "data:" [ mediatype ] [ ";base64" ] "," data
+		# mediatype := [ type "/" subtype ] *( ";" parameter )
+		# data      := *urlchar
+		# parameter := attribute "=" value
+		import StringIO, mimetools, time
+		try:
+			[type, data] = string.split(url, ',', 1)
+		except ValueError:
+			raise IOError, ('data error', 'bad data URL')
+		if not type:
+			type = 'text/plain;charset=US-ASCII'
+		semi = string.rfind(type, ';')
+		if semi >= 0 and '=' not in type[semi:]:
+			encoding = type[semi+1:]
+			type = type[:semi]
+		else:
+			encoding = ''
+		msg = []
+		msg.append('Date: %s'%time.strftime('%a, %d %b %Y %T GMT',
+						    time.gmtime(time.time())))
+		msg.append('Content-type: %s' % type)
+		if encoding == 'base64':
+			import base64
+			data = base64.decodestring(data)
+		else:
+			data = unquote(data)
+		msg.append('Content-length: %d' % len(data))
+		msg.append('')
+		msg.append(data)
+		msg = string.join(msg, '\n')
+		f = StringIO.StringIO(msg)
+		headers = mimetools.Message(f, 0)
+		f.fileno = None		# needed for addinfourl
+		return addinfourl(f, headers, url)
+
 	def http_error_default(self, url, fp, errcode, errmsg, headers):
 		void = fp.read()
 		fp.close()
