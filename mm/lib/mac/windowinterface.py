@@ -105,6 +105,4 @@ def htmlwindow(url):
 	return None
 
 from imgimagesize import GetImageSize
-def GetVideoSize(file):
-	# XXX to be implemented
-	return 0, 0
+from mw_toplevel import GetVideoSize
