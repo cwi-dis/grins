@@ -53,10 +53,6 @@ def rpconvert(node):
 	em.setnodeattr(node, 'file', None)
 	em.setnodetype(node, 'par')
 	em.setnodeattr(node, 'channel', None)
-	try:
-		del node._internalchtype
-	except AttributeError:
-		pass
 	em.setnodeattr(node, 'bgcolor', None)
 	em.setnodeattr(node, 'transparent', None)
 	if node.GetAttrDef('fill', 'default') == 'default' and node.GetInherAttrDef('fillDefault', 'inherit') == 'inherit':
@@ -135,7 +131,6 @@ def rpconvert(node):
 				em.setnodeattr(newnode, 'scale', 0)
 			else:
 				em.setnodeattr(newnode, 'scale', -3)
-		newnode._internalchtype = chtype
 		chname = '%s %d' % (regionname, i)
 		while ctx.channeldict.has_key(chname):
 			i = i + 1
