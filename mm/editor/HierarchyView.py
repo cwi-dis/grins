@@ -161,7 +161,13 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.timelinezoomcommands = [
 			ZOOMIN(callback = (self.timelinezoom, ('in',))),
+			ZOOMIN2(callback = (self.timelinezoom, (2,))),
+			ZOOMIN4(callback = (self.timelinezoom, (4,))),
+			ZOOMIN8(callback = (self.timelinezoom, (8,))),
 			ZOOMOUT(callback = (self.timelinezoom, ('out',))),
+			ZOOMOUT2(callback = (self.timelinezoom, (0.5,))),
+			ZOOMOUT4(callback = (self.timelinezoom, (0.25,))),
+			ZOOMOUT8(callback = (self.timelinezoom, (0.125,))),
 			ZOOMRESET(callback = (self.timelinezoom, (None,))),
 			]
 
@@ -2138,9 +2144,12 @@ class HierarchyView(HierarchyViewDialog):
 			node.min_pxl_per_sec = scale * 1.2
 		elif inout == 'out':
 			node.min_pxl_per_sec = scale / 1.2
-		else:			# reset zoom
+		elif inout is None:
 			node.min_pxl_per_sec = 0
 			del node.min_pxl_per_sec
+		else:
+			# else a factor with which to zoom in/out
+			node.min_pxl_per_sec = scale * inout
 		self.need_resize = 1
 		self.draw()
 		
