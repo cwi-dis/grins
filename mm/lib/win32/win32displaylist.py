@@ -523,13 +523,12 @@ class _DisplayList:
 		mediaBox = float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
 		
-		# preset media display rect and scale for animation
-		self._window.setmediadisplayrect( (dest_x, dest_y, width, height) )
-		self._window.setmediafit(int(scale))
-
-		#
-		if self._directdraw:
+		if self._directdraw: # XXX: i.e. player, revisit this
+			# preset media display rect and scale for animation
+			self._window.setmediadisplayrect( (dest_x, dest_y, width, height) )
+			self._window.setmediafit(int(scale))
 			self.setMediaBox(mediaBox)
+
 		if units == UNIT_PXL:
 			return dest_x - x, dest_y - y, width, height
 		else:
