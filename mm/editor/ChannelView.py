@@ -1118,8 +1118,36 @@ class NodeBox(GO):
 		c.append('a', 'Node attr...', (self.attrcall, ()))
 		c.append('e', 'Edit contents...', (self.editcall, ()))
 		c.append('t', 'Edit anchors...', (self.anchorcall, ()))
+		arcmenu = []
+		for arc in MMAttrdefs.getattr(node, 'synctolist'):
+			xuid, xside, delay, yside = arc
+			try:
+				xnode = node.MapUID(xuid)
+			except NoSuchUIDError:
+				# Skip sync arc from non-existing node
+				continue
+			if mother.viewroot.IsAncestorOf(xnode) and \
+			   xnode.GetType() in leaftypes and \
+			   xnode.GetChannel():
+				xname = MMAttrdefs.getattr(xnode, 'name')
+				if not xname:
+					xname = '#' + xuid
+				arcmenu.append('', 'From %s of node "%s"' % (('begin', 'end')[xside], xname), (self.selsyncarc, (xnode, xside, delay, yside)))
+		if arcmenu:
+			c.append('', 'Select sync arc', arcmenu)
 		self.menutitle = 'Node ' + self.name + ' ops'
 
+
+	def selsyncarc(self, xnode, xside, delay, yside):
+		ynode = self.node
+		mother = self.mother
+		for arc in mother.arcs:
+			if (xnode, xside, yside, ynode) == (arc.snode, arc.sside, arc.dside, arc.dnode):
+				mother.init_display()
+				arc.select()
+				mother.drawarcs()
+				mother.render()
+				return
 
 	def getnode(self):
 		return self.node
@@ -1168,15 +1196,15 @@ class NodeBox(GO):
 		root = self.mother.root
 		snode, sside, delay, dnode, dside, new = \
 			self.mother.lockednode.node, 1, 0.0, self.node, 0, 1
-		# find a sync arc between the two nodes and use that
-		list = dnode.GetRawAttrDef('synctolist', None)
-		if list == None:
-			list = []
-		suid = snode.GetUID()
-		for (xn, xs, de, ys) in list:
-			if xn == suid:
-				sside, delay, dside, new = xs, de, ys, 0
-				break
+##		# find a sync arc between the two nodes and use that
+##		list = dnode.GetRawAttrDef('synctolist', None)
+##		if list == None:
+##			list = []
+##		suid = snode.GetUID()
+##		for (xn, xs, de, ys) in list:
+##			if xn == suid:
+##				sside, delay, dside, new = xs, de, ys, 0
+##				break
 		editmgr.addsyncarc(snode, sside, delay, dnode, dside)
 		self.mother.cleanup()
 		editmgr.commit()
