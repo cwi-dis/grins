@@ -49,6 +49,8 @@ import wingeneric
 
 import usercmd
 
+import winstruct
+
 class MainWnd(wingeneric.Wnd, DocumentFrame):
 	def __init__(self):
 		wingeneric.Wnd.__init__(self)	
@@ -66,7 +68,7 @@ class MainWnd(wingeneric.Wnd, DocumentFrame):
 		self.get_toplevel().serve_events(params)
 	
 	def OnCommand(self, params):
-		cmdid = Win32Msg(params).id()
+		cmdid = winstruct.Win32Msg(params).id()
 		import usercmdui
 		cmd = usercmdui.id2usercmd(cmdid)
 		print cmd
@@ -84,19 +86,3 @@ class MainWnd(wingeneric.Wnd, DocumentFrame):
 		import __main__
 		return __main__.toplevel
 
-############################
-# XXX: import win32mu
-def loword(v):
-	return v & 0xFFFF
-
-def hiword(v):
-	return (v >> 16) & 0xFFFF
-
-class Win32Msg:
-	def __init__(self,params):
-		self._hwnd,self._message,self._wParam,self._lParam,self._time,self._pt=params
-	def pos(self):
-		return loword(self._lParam), hiword(self._lParam)
-	def id(self):
-		return loword(self._wParam); 
-############################
