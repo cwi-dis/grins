@@ -380,7 +380,7 @@ def restore():
 	if hasattr(features, 'RTIPA') and features.RTIPA:
 		read_RTIPA()
 	# end RTIPA
-	read_components_from_skin(get('skin'))
+	read_components_from_skin()
 
 def factory_defaults():
 	global user_settings
@@ -622,12 +622,13 @@ def read_RTIPA():
 # RTIPA end
 #
 
-def read_components_from_skin(url = None):
+def read_components_from_skin():
 	global components
 	import MMurl
 	import parseskin
 	del components[:]
-	if url is None:
+	url = get('skin')
+	if not url:
 		components = ['http://www.oratrix.com/GRiNS/smil2.0']
 		return
 	try:
