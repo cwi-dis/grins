@@ -4,6 +4,15 @@ SMILdtd = "http://www.w3.org/TR/REC-smil/SMIL10.dtd"
 CMIFns = "http://www.cwi.nl/Chameleon/"
 
 class SMIL:
+	# some abbreviations
+	__bag = CMIFns + ' ' 'bag'
+	__cmif = CMIFns + ' ' 'cmif'
+	__shell = CMIFns + ' ' 'shell'
+	__socket = CMIFns + ' ' 'socket'
+	__user_attributes = CMIFns + ' ' 'user-attributes'
+	__u_group = CMIFns + ' ' 'u-group'
+
+	# all allowed entities with all their attributes
 	attributes = {
 		'smil': {'id':None},
 		'head': {'id':None},
@@ -40,7 +49,6 @@ class SMIL:
 			'id':None,
 			'region':None,
 			'repeat':'1',
-## 			'sync':None,
 			'system-bitrate':None,
 			'system-captions':None,
 			'system-language':None,
@@ -48,7 +56,8 @@ class SMIL:
 			'system-required':None,
 			'system-screen-depth':None,
 			'system-screen-size':None,
-			'title':None},
+			'title':None,
+			__u_group:None},
 		'seq': {'abstract':'',
 			'author':'',
 			'begin':None,
@@ -64,7 +73,8 @@ class SMIL:
 			'system-required':None,
 			'system-screen-depth':None,
 			'system-screen-size':None,
-			'title':None},
+			'title':None,
+			__u_group:None},
 		'switch': {'id':None,
 			   'system-bitrate':None,
 			   'system-captions':None,
@@ -72,7 +82,23 @@ class SMIL:
 			   'system-overdub-or-caption':None,
 			   'system-required':None,
 			   'system-screen-depth':None,
-			   'system-screen-size':None},
+			   'system-screen-size':None,
+			   __u_group:None},
+		__bag: {CMIFns+' ' 'abstract':'',
+			CMIFns+' ' 'author':'',
+			CMIFns+' ' 'bag-index':None,
+			CMIFns+' ' 'copyright':'',
+			CMIFns+' ' 'id':None,
+			CMIFns+' ' 'system-bitrate':None,
+			CMIFns+' ' 'system-captions':None,
+			CMIFns+' ' 'system-language':None,
+			CMIFns+' ' 'system-overdub-or-caption':None,
+			CMIFns+' ' 'system-required':None,
+			CMIFns+' ' 'system-screen-depth':None,
+			CMIFns+' ' 'system-screen-size':None,
+			CMIFns+' ' 'title':None,
+			CMIFns+' ' 'bag-index':None,
+			__u_group:None},
 		'ref': {'abstract':'',
 			'alt':None,
 			'author':'',
@@ -81,7 +107,6 @@ class SMIL:
 			'clip-end':None,
 			'copyright':'',
 			'dur':None,
-## 			'encoding':'base64',
 			'end':None,
 			'fill':None,
 			'id':None,
@@ -97,7 +122,8 @@ class SMIL:
 			'system-screen-depth':None,
 			'system-screen-size':None,
 			'title':None,
-			'type':None},
+			'type':None,
+			__u_group:None},
 		'a': {'href':None,
 		      'id':None,
 		      'show':'replace',
@@ -105,59 +131,55 @@ class SMIL:
 		'anchor': {'begin':None,
 			   'coords':None,
 			   'end':None,
-## 			   'fragment-id':None,
 			   'href':None,
 			   'id':None,
 			   'show':'replace',
 			   'skip-content':'true',
-			   'title':None},
+			   'title':None,
+			   CMIFns+' ' 'fragment-id':None},
+		__user_attributes: {CMIFns+' ' 'id':None,
+				    },
+		__u_group: {CMIFns+' ' 'id':None,
+			    CMIFns+' ' 'u_state':'RENDERED',
+			    CMIFns+' ' 'title':None,
+			    CMIFns+' ' 'override':'allowed',
+			    },
 		}
-	__bag_attributes = {'abstract':'',
-			    'author':'',
-			    'bag-index':None,
-			    'copyright':'',
-			    'id':None,
-			    'system-bitrate':None,
-			    'system-captions':None,
-			    'system-language':None,
-			    'system-overdub-or-caption':None,
-			    'system-required':None,
-			    'system-screen-depth':None,
-			    'system-screen-size':None,
-			    'title':None}
-	__user_attributes_attributes = {'id':None,
-					}
-	__u_group_attributes = {'id':None,
-				'u_state':'RENDERED',
-				'title':None,
-				'override':'allowed',
-				}
-
-	attributes['ref'] = attributes['ref']
-	attributes['text'] = attributes['ref'].copy()
-	attributes['text']['encoding'] = 'UTF'
-	attributes['audio'] = attributes['ref']
-	attributes['img'] = attributes['ref']
-	attributes['video'] = attributes['ref']
-	attributes['animation'] = attributes['ref']
-	attributes['textstream'] = attributes['ref'].copy()
-	attributes['textstream']['encoding'] = 'UTF'
 
 	__media_object = ['audio', 'video', 'text', 'img', 'animation',
-			  'textstream', 'ref']
-	__schedule = ['par', 'seq'] + __media_object
+			  'textstream', 'ref', __cmif, __shell, __socket]
+
+	__at = None
+	for __el in __media_object:
+		if ' ' in __el:
+			attributes[__el] = __at = {}
+			for key, val in attributes['ref'].items():
+				if ' ' in key:
+					__at[key] = val
+				else:
+					__at[CMIFns+' '+key] = val
+		else:
+			attributes[__el] = attributes['ref']
+	del __el, __at
+
+	__schedule = ['par', 'seq', __bag] + __media_object
 	__container_content = __schedule + ['switch', 'a']
 	__assoc_link = ['anchor']
 	__empty = []
+
+	# all entities with their allowed content
 	entities = {
 		'smil': ['head', 'body'],
-		'head': ['layout', 'switch', 'meta'],
+		'head': ['layout', 'switch', 'meta', __user_attributes],
+		__user_attributes: [__u_group,],
+		__u_group: __empty,
 		'layout': ['region', 'root-layout'],
 		'region': __empty,
 		'meta': __empty,
 		'body': __container_content,
 		'par': __container_content,
 		'seq': __container_content,
+		__bag: __container_content,
 		'switch': ['layout'] + __container_content,
 		'ref': __assoc_link,
 		'audio': __assoc_link,
@@ -166,46 +188,14 @@ class SMIL:
 		'text': __assoc_link,
 		'animation': __assoc_link,
 		'textstream': __assoc_link,
+		__cmif: __assoc_link,
+		__shell: __assoc_link,
+		__socket: __assoc_link,
 		'a': __schedule + ['switch'],
 		'anchor': __empty,
 		}
 
-	def init_cmif_namespace(self, prefix):
-		self.attributes[prefix + ':cmif'] = d = {}
-		for key, val in self.attributes['text'].items():
-			d[prefix + ':' + key] = val
-		self.attributes[prefix + ':socket'] = d = {}
-		for key, val in self.attributes['text'].items():
-			d[prefix + ':' + key] = val
-		self.attributes[prefix + ':shell'] = d = {}
-		for key, val in self.attributes['text'].items():
-			d[prefix + ':' + key] = val
-		self.attributes[prefix + ':bag'] = d = {}
-		for key, val in self.__bag_attributes.items():
-			d[prefix + ':' + key] = val
-
-		for tag in ('cmif', 'socket', 'shell'):
-			key = '%s:%s' % (prefix, tag)
-			self.__media_object.append(key)
-			self.entities[key] = self.__assoc_link
-			self.__schedule.append(key)
-			self.__container_content.append(key)
-			self.entities['a'].append(key)
-			self.entities['switch'].append(key)
-		self.__schedule.append(prefix + ':bag')
-		self.__container_content.append(prefix + ':bag')
-		self.entities['a'].append(prefix + ':bag')
-		self.entities['switch'].append(prefix + ':bag')
-		self.entities[prefix + ':bag'] = self.__container_content
-
-		self.attributes[prefix + ':user_attributes'] = d = {}
-		for key, val in self.__user_attributes_attributes.items():
-			d[prefix + ':' + key] = val
-		u_group = '%s:u_group' % prefix
-		self.attributes[u_group] = d = {}
-		for key, val in self.__u_group_attributes.items():
-			d['%s:%s' % (prefix, key)] = val
-		self.entities['head'].append('%s:user_attributes' % prefix)
-		self.entities['%s:user_attributes' % prefix] = [u_group]
-		for tag in ['par', 'seq', '%s:bag' % prefix, 'switch'] + self.__media_object:
-			self.attributes[tag][u_group] = None
+	# cleanup
+	del __bag, __cmif, __shell, __socket, __user_attributes
+	del __u_group, __media_object, __schedule, __container_content,
+	del __assoc_link, __empty
