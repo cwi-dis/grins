@@ -24,7 +24,7 @@ default_settings = {
 	'root_expanded': 1,		# Root node always expanded
 	'recent_documents':[],		# Recently used documents
 # HierarchyView colors
-	'structure_bgcolor': (200, 200, 200), # Light gray
+	'structure_bgcolor': (150, 150, 150), # Light gray
 	'structure_leafcolor': (208, 182, 160),	# Pale pinkish, match channel view
 	'structure_bagcolor': (152, 174, 200), # Light blue
 	'structure_altcolor': (152, 200, 174), # Light green
@@ -39,7 +39,9 @@ default_settings = {
 	'structure_focusright': (40, 40, 40),
 	'structure_focusbottom': (40, 40, 40),
 # ChannelView colors
-	'timeline_bgcolor': (200, 200, 200), # Light gray
+	'timeline_bgcolor': (150, 150, 150), # Light gray
+	'timeline_guttertop': (80, 80, 80),
+	'timeline_gutterbottom': (175, 175, 175),
 	'timeline_bordercolor': (75, 75, 75), # Dark gray
 	'timeline_channelcolor': (240, 240, 240), # Very light gray
 	'timeline_channeloffcolor': (160, 160, 160), # Darker gray
@@ -53,10 +55,10 @@ default_settings = {
 	'timeline_lockedcolor': (200, 255, 0), # Yellowish green
 	'timeline_anchorcolor': (255, 127, 0), # Orange/pinkish
 	# Focus color assignments (from light to dark gray)
-	'timeline_focusleft': (244, 244, 244),
-	'timeline_focustop': (204, 204, 204),
+	'timeline_focusleft': (200, 200, 200),
+	'timeline_focustop': (200, 200, 200),
 	'timeline_focusright': (40, 40, 40),
-	'timeline_focusbottom': (91, 91, 91),
+	'timeline_focusbottom': (40, 40, 40),
 	# Arm colors
 	'timeline_armactivecolor': (255, 255, 0),
 	'timeline_arminactivecolor': (255, 200, 0),
