@@ -1241,7 +1241,8 @@ class SMILWriter(SMIL):
 	def pop(self):
 		if self.__ignoring > 0:
 			self.__ignoring = self.__ignoring - 1
-			return
+			if self.__ignoring > 0:
+				return
 		fp = self.fp
 		if self.__isopen:
 			start, end = fp.write('/>\n')
