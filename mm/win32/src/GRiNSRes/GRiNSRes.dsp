@@ -141,7 +141,19 @@ SOURCE=.\RES\ico00007.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\ico00008.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\ico00009.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\icon1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\icon_lin.ico
 # End Source File
 # Begin Source File
 
