@@ -10,6 +10,8 @@ import MMAttrdefs
 import AttrEdit
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
+import dialogs
+from AnchorDefs import A_TYPE, A_ID, ATYPE_WHOLE
 
 from MMNode import interiortypes
 
@@ -21,13 +23,16 @@ dirstr = ['->', '<-', '<->']
 class Struct: pass
 
 # The menus:
-LEFT_MENU = 'All|From Time Chart focus|From Block View focus'
+LEFT_MENU = 'All|Dangling|Interesting|From Time Chart focus' + \
+	  '|From Block View focus'
 RIGHT_MENU = LEFT_MENU + '|All related anchors|No anchors, links only'
 M_ALL = 1
-M_TCFOCUS = 2
-M_BVFOCUS = 3
-M_RELATION = 4
-M_NONE = 5
+M_DANGLING = 2
+M_INTERESTING = 3
+M_TCFOCUS = 4
+M_BVFOCUS = 5
+M_RELATION = 6
+M_NONE = 7
 
 class LinkEdit(ViewDialog, BasicDialog):
 	#
@@ -57,6 +62,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 		flp.merge_full_form(self, self.form, form)
 		self.left.node_menu.set_menu(LEFT_MENU)
 		self.right.node_menu.set_menu(RIGHT_MENU)
+		self.interesting = []
 		return self
 	#
 	def fixtitle(self):
@@ -96,6 +102,21 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.left = self.right = None
 		BasicDialog.destroy(self)
 	#
+	# Method to return a whole-node anchor for a node, or optionally
+	# create one.
+	def wholenodeanchor(self, node):
+		alist = MMAttrdefs.getattr(node, 'anchorlist')
+		for a in alist:
+			if a[A_TYPE] == ATYPE_WHOLE:
+				return (node.GetUID(), a[A_ID])
+		em = self.editmgr
+		if not em.transaction(): return None
+		a = ('0', ATYPE_WHOLE, [])
+		alist.append(a)
+		em.setnodeattr(node, 'anchorlist', alist[:])
+		em.commit()
+		return (node.GetUID(), '0')
+	#
 	# The fill functions. These are set in the left and right structures
 	# and used to fill the browsers.
 	#
@@ -115,7 +136,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 		if str <> self.right:
 			print 'LinkEdit: left anchorlist cannot be related!'
 		str.sel_label.label = 'Related'
-		str.anchors = []	 # XXXX To be done
+		str.anchors = []
 		if self.left.focus == None:
 			return
 		lfocus = self.left.anchors[self.left.focus]
@@ -123,6 +144,47 @@ class LinkEdit(ViewDialog, BasicDialog):
 		for l in links:
 			if not l[ANCHOR2] in str.anchors:
 				str.anchors.append(l[ANCHOR2])
+
+	def fill_dangling(self, str):
+		str.sel_label.label = 'Dangling'
+		all = getanchors(self.root, 1)
+		nondangling = \
+			  self.context.hyperlinks.findnondanglinganchordict()
+		str.anchors = []
+		for a in all:
+			if not nondangling.has_key(a):
+				str.anchors.append(a)
+
+	def fill_interesting(self, str):
+		str.sel_label.label = 'Interesting'
+		str.anchors = self.interesting[:]
+	#
+	def finish_link(self, node):
+		if not self.interesting:
+			dialogs.showmessage('No reasonable sources for link')
+			return
+		anchors = ['Cancel']
+		for a in self.interesting:
+			anchors.append(self.makename(a))
+		i = dialogs.multchoice('Choose source anchor', anchors, 0)
+		if i == 0:
+			return
+		srcanchor = self.interesting[i-1]
+		dstanchor = self.wholenodeanchor(node)
+		if not dstanchor:
+			return
+		self.interesting.remove(srcanchor)
+		link = srcanchor, dstanchor, DIR_1TO2, TYPE_JUMP
+		self.context.hyperlinks.addlink(link)
+		
+	def set_interesting(self, anchor):
+		self.interesting.append(anchor)
+
+	def makename(self, (uid, aid)):
+		node = self.context.mapuid(uid)
+		nodename = node.GetRawAttrDef('name', uid)
+		if type(aid) <> type(''): aid = `aid`
+		return '#' + nodename + '.' + aid
 	#
 	# This functions re-loads one of the anchor browsers.
 	#
@@ -148,11 +210,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 		str.anchor_browser.clear_browser()
 		str.fillfunc(str)
 		for a in str.anchors:
-			uid, aid = a
-			node = self.context.mapuid(uid)
-			nodename = node.GetRawAttrDef('name', uid)
-			if type(aid) <> type(''): aid = `aid`
-			name = '#' + nodename + '.' + aid
+			name = self.makename(a)
 			str.anchor_browser.add_browser_line(name)
 		if focusvalue:
 			try:
@@ -316,6 +374,12 @@ class LinkEdit(ViewDialog, BasicDialog):
 		if ind == M_ALL:
 			str.node = None
 			str.fillfunc = self.fill_all
+		elif ind == M_DANGLING:
+			str.node = None
+			str.fillfunc = self.fill_dangling
+		elif ind == M_INTERESTING:
+			str.node = None
+			str.fillfunc = self.fill_interesting
 		elif ind == M_TCFOCUS:
 			str.node = self.GetTimeChartFocus()
 			if str.node == None:
@@ -403,6 +467,9 @@ class LinkEdit(ViewDialog, BasicDialog):
 	def GetHierarchyViewFocus(self):
 		return self.toplevel.hierarchyview.getfocus()
 
+
+	
+
 #
 # General functions
 #
@@ -419,3 +486,5 @@ def getanchors(node, recursive):
 		for i in children:
 			anchors = anchors + getanchors(i, 1)
 	return anchors
+#
+# Return a dest-only anchor for a node

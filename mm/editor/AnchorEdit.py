@@ -26,6 +26,8 @@ from AnchorDefs import *
 
 form_template = None	# result of flp.parse_form is stored here
 
+TypeValues = [ ATYPE_WHOLE, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO]
+TypeLabels = [ 'dest only', 'normal', 'pausing', 'auto-firing']
 
 # Top-level interface to show/hide a node's anchor editor
 
@@ -82,6 +84,9 @@ class AnchorEditor(Dialog):
 		#
 		flp.merge_full_form(self, self.form, form_template)
 		self.id_input.set_input_return(1)
+		self.type_choice.clear_choice()
+		for t in TypeLabels:
+			self.type_choice.addto_choice(t)
 		#
 		return self
 
@@ -144,6 +149,12 @@ class AnchorEditor(Dialog):
 		anchorlist = MMAttrdefs.getattr(self.node, 'anchorlist')
 		modanchorlist(anchorlist)
 		if anchorlist <> self.anchorlist:
+			# Communicate new anchors to Link editor:
+			for a in anchorlist:
+				if not a in self.anchorlist:
+					aid = (self.uid, a[A_ID])
+					self.toplevel.links.set_interesting(\
+						  aid)
 			self.anchorlist = anchorlist[:]
 			if self.anchorlist:
 				self.focus = 0
@@ -159,7 +170,12 @@ class AnchorEditor(Dialog):
 		if not em.transaction(): return 0
 		self.changed = 0
 		n = self.node
+		old_alist = MMAttrdefs.getattr(self.node, 'anchorlist')
 		em.setnodeattr(n, 'anchorlist', self.anchorlist[:])
+		for a in self.anchorlist:
+			if not a in old_alist:
+				aid = (self.uid, a[A_ID])
+				self.toplevel.links.set_interesting(aid)
 		em.commit()
 		return 1
 
@@ -204,10 +220,9 @@ class AnchorEditor(Dialog):
 		a = self.anchorlist[self.focus]
 		loc = a[A_ARGS]
 		type = a[A_TYPE]
-		self.whole_button.set_button(type == ATYPE_WHOLE)
-		self.auto_button.set_button(type == ATYPE_AUTO)
-		self.normal_button.set_button(type == ATYPE_NORMAL)
-		self.pause_button.set_button(type == ATYPE_PAUSE)
+		for i in range(len(TypeValues)):
+			if type == TypeValues[i]:
+				self.type_choice.set_choice(i+1)
 		if type in (ATYPE_NORMAL, ATYPE_PAUSE) and self.editable:
 			self.edit_button.show_object()
 		else:
@@ -318,12 +333,16 @@ class AnchorEditor(Dialog):
 				self.focus = None
 		self.show_focus()
 
-	def setloc_callback(self, obj, value):
-		# value can be '0', '1', '2' or '3' (a string!)
+	def type_callback(self, obj, value):
 		if self.focus == None:
 			print 'AnchorEdit: no focus in setloc!'
 			return
-		self.set_type(eval(value))
+		i = obj.get_choice()
+		if i == 0:
+			self.set_type(None)
+		else:
+			self.set_type(TypeValues[i-1])
+
 
 	def edit_callback(self, *dummy):
 		if self.focus == None:
