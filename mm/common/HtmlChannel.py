@@ -122,8 +122,9 @@ class HtmlChannel(Channel.ChannelWindow):
 
 	def stopplay(self, node):
 		Channel.ChannelWindow.stopplay(self, node)
-		self.htmlw.SetValues({'text': '', 'headerText':'',
-				      'footerText':''})
+		if self.htmlw:
+			self.htmlw.SetValues({'text': '', 'headerText': '',
+					      'footerText': ''})
 
 	def getstring(self, node):
 		if node.type == 'imm':
