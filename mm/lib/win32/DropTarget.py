@@ -8,6 +8,8 @@ win32con.MK_ALT = 0x20
 from appcon import DROPEFFECT_NONE, DROPEFFECT_COPY, \
 	DROPEFFECT_MOVE, DROPEFFECT_LINK, DROPEFFECT_SCROLL
 
+DEBUG=1
+
 # grins registered clipboard formats
 CF_FILE = Sdk.RegisterClipboardFormat('FileName')
 CF_NODE = Sdk.RegisterClipboardFormat('Node')
@@ -33,16 +35,16 @@ def GetData(dataobj):
 		data = dataobj.GetGlobalData(format)
 		if data is not None:
 			return name, data
+	if DEBUG:
+		print "No supported format in drag object"
 	return None
 
 
-class DropTarget:
-	cfmap = {'FileName':CF_FILE}
+class CoreDropTarget:
+	cfmap = {}
 	def __init__(self):
 		self._isregistered=0
 		self._dropmap={
-			'FileName':(self.dragfile,self.dropfile),
-			'URL': (self.dragurl, self.dropurl),
 		}
 
 	def registerDropTarget(self):
@@ -73,6 +75,8 @@ class DropTarget:
 		if callbacks:
 			dragcb = callbacks[0]
 			return dragcb(dataobj, kbdstate, x, y)
+		if DEBUG:
+			print "No handler for dragfmt",fmt_name,"in", self
 		return DROPEFFECT_NONE
 				
 	def OnDrop(self,dataobj,effect,x,y):
@@ -81,6 +85,8 @@ class DropTarget:
 		if callbacks:
 			dropcb = callbacks[1]
 			return dropcb(dataobj, effect, x, y)
+		if DEBUG:
+			print "No handler for dragfmt",fmt_name,"in", self
 		return DROPEFFECT_NONE
 
 	def OnDragLeave(self):
@@ -92,6 +98,74 @@ class DropTarget:
 		return (kbdstate & win32con.MK_SHIFT)!=0
 	def isAltPressed(self, kbdstate):
 		return (kbdstate & win32con.MK_ALT)!=0
+
+# The DropTargetListener is used if the drop events don't
+# come in in this class but in a subwindow. The subwindow should
+# be a subclass of DropTargetProxy.
+class DropTargetListener(CoreDropTarget):
+	def __init__(self):
+		self._realtargets = []
+		CoreDropTarget.__init__(self)
+
+	def registerDropTargetFor(self, subwindow):
+		if subwindow in self._realtargets:
+			return
+		subwindow.registerDropTargetWithListener(self)
+		self._realtargets.append(subwindow)
+
+	def unregisterDropTarget(self):
+		for subwindow in self._realtargets:
+			subwindow.unregisterDropTarget()
+		self._realtargets = None
+
+class DropTargetProxy:
+	def __init__(self):
+		self.__listener = None
+
+	def registerDropTargetWithListener(self, listener):
+		self.__listener = listener
+		self.RegisterDropTarget()
+
+	def unregisterDropTarget(self):
+		self.__listener = None
+		self.UnregisterDropTarget()
+
+	def OnDragEnter(self,dataobj,kbdstate,x,y):
+		if not self.__listener:
+			if DEBUG:
+				print "No __listener for drag/drop in", self
+		return self.__listener.OnDragEnter(dataobj,kbdstate,x,y)
+
+	def OnDragOver(self,dataobj,kbdstate,x,y):
+		if not self.__listener:
+			if DEBUG:
+				print "No __listener for drag/drop in", self
+		return self.__listener.OnDragOver(dataobj,kbdstate,x,y)
+				
+	def OnDrop(self,dataobj,effect,x,y):
+		if not self.__listener:
+			if DEBUG:
+				print "No __listener for drag/drop in", self
+		return self.__listener.OnDrop(dataobj,effect,x,y)
+
+	def OnDragLeave(self):
+		if not self.__listener:
+			if DEBUG:
+				print "No __listener for drag/drop in", self
+		return self.__listener.OnDragLeave()
+
+# DropTarget is for use in display-list based views. It
+# has handlers for drag/drop of files and urls and sends
+# the event too the upper layers as a WMEVENT.
+# XXXX The file/url handling should be a separate mixin.
+class DropTarget(CoreDropTarget):
+	cfmap = {'FileName':CF_FILE}
+	def __init__(self):
+		CoreDropTarget.__init__(self)
+		self._dropmap={
+			'FileName':(self.dragfile,self.dropfile),
+			'URL': (self.dragurl, self.dropurl),
+		}
 
 	def dragfile(self,dataobj,kbdstate,x,y):
 		filename=dataobj.GetGlobalData(CF_FILE)
