@@ -119,7 +119,9 @@ def showarceditor(arrow):
 		arceditor = arrow.arceditor
 		return # Arc editor form is already active
 	except NameError:
-		pass
+		pass # No arc editor active
+	except AttributeError:
+		pass # No arc editor active (new style exceptions)
 	#
 	arceditor = ArcEditor().init(arrow)
 
@@ -129,11 +131,15 @@ def hidearceditor(arrow):
 		arceditor = arrow.arceditor
 	except NameError:
 		return # No arc editor active
+	except AttributeError:
+		return # No arc editor active (new style exceptions)
 
 def hasarceditor(arrow):
 	try:
 		arceditor = arrow.arceditor
 		return 1
 	except NameError:
+		return 0
+	except AttributeError: # new style exceptions
 		return 0
 
