@@ -9,8 +9,8 @@ import struct
 import MacOS
 
 _fmt_to_mac = {
-	imgformat.macrgb16 : (16, 16, 3, 5),
-	imgformat.macrgb : (16, 32, 3, 8),
+	imgformat.macrgb16 : (16, 16, 3, 5, 2),
+	imgformat.macrgb : (16, 32, 3, 8, 4),
 }
 
 def mkpixmap(w, h, fmt, data):
@@ -19,7 +19,7 @@ def mkpixmap(w, h, fmt, data):
 	
 	rv = struct.pack("lHhhhhhhlllhhhhlll",
 		id(data)+MacOS.string_id_to_buffer,
-		w*2 + 0x8000,
+		w*fmtinfo[4] + 0x8000,
 		0, 0, h, w,
 		0,
 		0, 0, # XXXX?
