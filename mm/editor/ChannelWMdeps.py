@@ -126,9 +126,9 @@ class Channel:
 	def arm_and_measure(self, node):
 		if prearm_disabled: return
 		now = time.millitimer()
-		self.player.setarmedmode(node, ARM_ARMING)
+		node.setarmedmode(ARM_ARMING)
 		self.arm(node)
-		self.player.setarmedmode(node, ARM_ARMED)
+		node.setarmedmode(ARM_ARMED)
 		duration = (time.millitimer() - now)/1000.0
 		node.SetAttr('arm_duration', duration)
 		self.player.timing_changed = 1
@@ -139,10 +139,10 @@ class Channel:
 			node.prearm_event = None
 			del node.prearm_event
 			return
-		self.player.setarmedmode(node, ARM_ARMING)
+		node.setarmedmode(ARM_ARMING)
 		node.prearm_event = None
 		self.arm(node)
-		self.player.setarmedmode(node, ARM_ARMED)
+		node.setarmedmode(ARM_ARMED)
 
 	def clear(self):
 		# Sanity checks:
@@ -158,6 +158,7 @@ class Channel:
 	# Start playing a node.
 
 	def play(self, (node, callback, arg)):
+		node.setarmedmode(ARM_PLAYING)
 		secs = self.getduration(node)
 		self.cb = (callback, arg)
 		self.node = node
@@ -166,6 +167,7 @@ class Channel:
 	# Function called when an even't time is up.
 
 	def done(self, dummy):
+		self.node.setarmedmode(ARM_NONE)
 		self.qid = None
 		if self.haspauseanchor:
 			return

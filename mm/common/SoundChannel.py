@@ -23,6 +23,7 @@ MAXQSIZE = 100*1024		# Max audio-queue size=100K
 
 from MMExc import *
 import MMAttrdefs
+from ArmStates import *
 
 from Channel import Channel
 
@@ -76,6 +77,7 @@ class SoundChannel(Channel):
 		self.cancelled_qid = 0
 		self.armed_node = None
 		self.armed_info = None
+		self.node = None
 		return self
 	#
 	def __repr__(self):
@@ -117,6 +119,9 @@ class SoundChannel(Channel):
 			callback(arg)
 			return
 
+		self.node = node
+		node.setarmedmode(ARM_PLAYING)
+		
 		self.old_info = self.info
 		self.info = self.armed_info
 		
@@ -207,6 +212,9 @@ class SoundChannel(Channel):
 			self.cancelled_qid = 0
 	#
 	def stop(self):
+		if self.node:
+			self.node.setarmedmode(ARM_DONE)
+			self.node = None
 		if self.port <> None:
 			closeport(self.port)
 			self.info = self.port = self.config = None

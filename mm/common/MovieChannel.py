@@ -26,6 +26,8 @@ import GL
 
 import VFile
 
+from ArmStates import *
+
 # Errors that VFile operations may raise
 VerrorList = VFile.Error, os.error, IOError, RuntimeError, EOFError
 
@@ -212,6 +214,7 @@ class MovieChannel(Channel):
 			self.late_arm(node)
 		else:
 			self.window.popup()
+		node.setarmedmode(ARM_PLAYING)
 		self.armed_node = None
 		self.starttime = self.player.timefunc()
 		self.played = self.skipped = 0
