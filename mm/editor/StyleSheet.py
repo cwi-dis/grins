@@ -82,7 +82,7 @@ class StyleSheet(ViewDialog, BasicDialog):
 		#
 		x, y, w, h = 225, 250, 75, 39
 		self.editbutton = \
-			form.add_button(NORMAL_BUTTON,x,y,w,h, 'Edit')
+			form.add_button(NORMAL_BUTTON,x,y,w,h, 'Edit...')
 		self.editbutton.set_call_back(self.edit_callback, None)
 		#
 		x, y, w, h = 50, 290, 250, 30

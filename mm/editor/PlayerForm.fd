@@ -30,7 +30,7 @@ argument:
 class: 41
 type: 1
 box: 190.000000 10.000000 70.000000 30.000000
-boxtype: 5
+boxtype: 4
 colors: 55 37
 alignment: 4
 style: 0
@@ -180,7 +180,7 @@ argument:
 class: 41
 type: 1
 box: 10.000000 10.000000 40.000000 30.000000
-boxtype: 5
+boxtype: 4
 colors: 55 37
 alignment: 4
 style: 0
