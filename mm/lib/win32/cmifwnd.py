@@ -1145,10 +1145,11 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 					rcKeep = rcKeep0,rcKeep[1],rcKeep2,rcKeep[3]
 				else:
 					# clipped at left
+					rcKeep2 = rcKeep[2]
 					delta = clip[0]-x
 					x = x + delta
 					left = left + delta
-					delta = int(rcKeep[2] * float(delta)/w + .5)
+					delta = int(rcKeep2 * float(delta)/w + .5)
 					rcKeep0 = rcKeep[0] + delta
 					rcKeep2 = rcKeep2 - delta
 					rcKeep = rcKeep0,rcKeep[1],rcKeep2,rcKeep[3]
@@ -1188,10 +1189,11 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 					rcKeep = rcKeep[0],rcKeep1,rcKeep[2],rcKeep3
 				else:
 					# clipped at top
+					rcKeep3 = rcKeep[3]
 					delta = clip[1]-y
 					y = y + delta
 					top = top + delta
-					delta = int(rcKeep[3] * float(delta)/h + .5)
+					delta = int(rcKeep3 * float(delta)/h + .5)
 					rcKeep1 = rcKeep[1] + delta
 					rcKeep3 = rcKeep3 - delta
 					rcKeep = rcKeep[0],rcKeep1,rcKeep[2],rcKeep3
