@@ -89,6 +89,19 @@ class MainDialog:
 		else:
 			windowinterface.showmessage('Incorrect filetype for drop/paste')
 
+	def openfile_callback(self):
+		"""Callback for OPENFILE menu command"""
+		import windowinterface
+		f=windowinterface.getmainwnd()
+		windowinterface.FileDialog('Open file', '.', '*.smil', '',
+					   self.__openfile_done, None, 1,
+					   parent = f)
+
+	def __openfile_done(self, filename):
+		"""End of OPENFILE menu command. Open the file (as url)"""
+		url = self.__path2url(filename)
+		if url:
+			self.openURL_callback(url)
 
 	def set_recent_list(self, list):
 		import windowinterface
