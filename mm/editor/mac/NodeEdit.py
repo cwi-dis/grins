@@ -124,7 +124,7 @@ def showeditor(node, url=None):
 			return
 		if node.GetType() <> 'ext':
 			windowinterface.showmessage(
-				'Only extern nodes can be edited',
+				'Only external nodes can be edited.',
 				mtype = 'error')
 			return
 		import MMAttrdefs
@@ -134,7 +134,7 @@ def showeditor(node, url=None):
 	utype, host, path, params, query, fragment = urlparse.urlparse(url)
 	if (utype and utype != 'file') or (host and host != 'localhost'):
 		windowinterface.showmessage(
-			'Can only edit local files',
+			'Can only edit local files.',
 			mtype = 'warning')
 		return
 	filename = MMurl.url2pathname(path)
