@@ -1,1 +1,0 @@
-Pythonwin /run iGRiNS_Snap.py
