@@ -1,0 +1,8 @@
+<ASX version = "3.0">
+    <BANNER HREF = "MoreInfo.jpg">
+        <MOREINFO HREF = "step1.html" />
+    </BANNER>
+    <ENTRY>
+        <REF HREF = "D:\ufs\mm\cmif\mmpython\wmsdk\testdata\usa.asf" />
+    </ENTRY>
+</ASX>

@@ -1,0 +1,24 @@
+<ASX version = "3.0">
+   <ABSTRACT>This text will show up as a Tooltip and in the Properties 
+   dialog box for the file</ABSTRACT>
+   <TITLE>Title for this file</TITLE>
+   <AUTHOR>The Name of the Author for this File</AUTHOR>
+   <COPYRIGHT>1998 by Your Company</COPYRIGHT>
+   <MoreInfo href = "http://www.microsoft.com/netshow" />
+   <Entry>
+      <Ref href = "mms://netshow.microsoft.com/sbnasfs/control.asf" />
+      <MoreInfo href = "http://www.microsoft.com/netshow" Banner =
+      "http://servername/path/banner1.gif" Style = "IMAGE">
+      <Abstract>This is the description for this clip.</Abstract>
+      </MoreInfo>
+   </Entry>
+   <Entry>
+      <Title>Markers Discussion</Title>
+      <Copyright>1998 Microsoft Corporation</Copyright>
+      <Logo href = "http://servername/path/banner2.gif" Style = "ICON" />
+      <MoreInfo href = "http://www.microsoft.com/netshow"></MoreInfo>
+      <Ref href = "mms://netshow.microsoft.com/sbnasfs/marker.asf" />
+      <Ref href = "http://netshow.microsoft.com/sbnasfs/marker.asf" />
+   </Entry>
+</ASX>
+
