@@ -1,4 +1,9 @@
+#ifdef __sgi
 #include <audio.h>
+#endif
+#ifdef sun
+#include <multimedia/libaudio.h>
+#endif
 #include <stropts.h>
 #include <poll.h>
 #include "thread.h"
@@ -20,7 +25,7 @@ struct sound_data {
 	int nchannels;		/* # of channels (mono or stereo) */
 	int sampwidth;		/* size of samples in bytes */
 	int nsamples;		/* # of samples to play */
-	int samprate;		/* sampling frequency */
+	int framerate;		/* sampling frequency */
 	long offset;		/* offset in file of first sample */
 	int bufsize;		/* size of sampbuf in samples */
 	char *sampbuf;		/* buffer used for read/writing samples */
@@ -29,7 +34,12 @@ struct sound_data {
 struct sound {
 	type_sema s_sema;	/* semaphore to protect s_flag */
 	int s_flag;
+#ifdef __sgi
 	ALport s_port;		/* audio port used for playing sound */
+#endif
+#ifdef sun
+	int s_port;		/* file descriptor of audio device */
+#endif
 	double s_playrate;	/* speed with which to play samples */
 	struct sound_data s_play;
 	struct sound_data s_arm;
@@ -121,7 +131,7 @@ sound_arm(self, file, delay, duration, attrlist, anchorlist)
 		return 0;
 	}
 	PRIV->s_arm.nchannels = 1;
-	PRIV->s_arm.samprate = 8000;
+	PRIV->s_arm.framerate = 8000;
 	PRIV->s_arm.sampwidth = 1;
 	PRIV->s_arm.offset = 0;
 	PRIV->s_playrate = 1.0;
@@ -136,7 +146,7 @@ sound_arm(self, file, delay, duration, attrlist, anchorlist)
 		PRIV->s_arm.sampwidth = getintvalue(v);
 	v = dictlookup(attrlist, "samprate");
 	if (v && is_intobject(v))
-		PRIV->s_arm.samprate = getintvalue(v);
+		PRIV->s_arm.framerate = getintvalue(v);
 	v = dictlookup(attrlist, "offset");
 	if (v && is_intobject(v))
 		PRIV->s_arm.offset = getintvalue(v);
@@ -157,16 +167,16 @@ sound_armer(self)
 		free(PRIV->s_arm.sampbuf);
 		PRIV->s_arm.sampbuf = NULL;
 	}
-	PRIV->s_arm.bufsize = PRIV->s_arm.samprate * PRIV->s_arm.nchannels;
+	PRIV->s_arm.bufsize = PRIV->s_arm.framerate * PRIV->s_arm.nchannels;
 	if (PRIV->s_arm.bufsize > PRIV->s_arm.nsamples)
 		PRIV->s_arm.bufsize = PRIV->s_arm.nsamples;
 	PRIV->s_arm.sampbuf = malloc(PRIV->s_arm.bufsize*PRIV->s_arm.sampwidth);
 
-	dprintf(("sound_armer(%lx): nchannels: %d, nsamples: %d, nframes: %d, sampwidth: %d, samprate: %d, offset: %d, file: %lx (fd= %d), bufsize = %d\n",
+	dprintf(("sound_armer(%lx): nchannels: %d, nsamples: %d, nframes: %d, sampwidth: %d, framerate: %d, offset: %d, file: %lx (fd= %d), bufsize = %d\n",
 		 (long) self,
 		 PRIV->s_arm.nchannels, PRIV->s_arm.nsamples,
 		 PRIV->s_arm.nsamples / PRIV->s_arm.nchannels,
-		 PRIV->s_arm.sampwidth, PRIV->s_arm.samprate,
+		 PRIV->s_arm.sampwidth, PRIV->s_arm.framerate,
 		 PRIV->s_arm.offset, PRIV->s_arm.f, fileno(PRIV->s_arm.f),
 		 PRIV->s_arm.bufsize));
 
@@ -193,44 +203,86 @@ static void
 sound_player(self)
 	mmobject *self;
 {
+#ifdef __sgi
 	long buf[2];
 	ALconfig config;
+	int portfd;
+#endif
+#ifdef sun
+	Audio_hdr hdr;
+#endif
 	int nsamps = PRIV->s_play.nsamples;
 	int n;
 	int rate;
-	int portfd;
 	struct pollfd pollfd[2];
 
 	denter(sound_player);
 
+	/* check for multiple active sound channels */
 	down_sema(device_sema);
+#ifdef __sgi
 	if (device_used++ == 0) {
 		/* first one to open the device */
 		buf[0] = AL_OUTPUT_RATE;
 		ALgetparams(AL_DEFAULT_DEVICE, buf, 2L);
 		sound_rate = old_rate = buf[1];
 	}
-	if (sound_rate != PRIV->s_play.samprate) {
+	if (sound_rate != PRIV->s_play.framerate) {
 		if (device_used > 1)
 			printf("Warning: two channels with different sampling rates active\n");
 		buf[0] = AL_OUTPUT_RATE;
-		buf[1] = PRIV->s_play.samprate;
+		buf[1] = PRIV->s_play.framerate;
 		ALsetparams(AL_DEFAULT_DEVICE, buf, 2L);
-		sound_rate = PRIV->s_play.samprate;
+		sound_rate = PRIV->s_play.framerate;
 	}
+#endif
+#ifdef sun
+	if (device_used > 1) {
+		printf("Warning: only one active soundchannel at the time is supported\n");
+		up_sema(device_sema);
+		return;
+	}
+	device_used++;
+#endif
 	up_sema(device_sema);
+
+	/* open an audio port */
 	down_sema(PRIV->s_sema);
+#ifdef __sgi
 	config = ALnewconfig();
 	ALsetwidth(config, PRIV->s_play.sampwidth);
 	ALsetchannels(config, PRIV->s_play.nchannels);
 	
 	PRIV->s_port = ALopenport("sound channel", "w", config);
-	PRIV->s_flag |= PORT_OPEN;
 	portfd = ALgetfd(PRIV->s_port);
+#endif
+#ifdef sun
+	PRIV->s_port = open("/dev/audio", 1);
+	if (PRIV->s_port < 0) {
+		printf("Warning: cannot open audio device\n");
+		up_sema(PRIV->s_sema);
+		down_sema(device_sema);
+		device_used--;
+		up_sema(device_sema);
+		return;
+	}
+	hdr.sample_rate = PRIV->s_play.framerate;
+	hdr.samples_per_unit = 1;
+	hdr.bytes_per_unit = PRIV->s_play.sampwidth;
+	hdr.channels = PRIV->s_play.nchannels;
+	hdr.encoding = AUDIO_ENCODING_LINEAR;
+	hdr.data_size = PRIV->s_play.nsamples * PRIV->s_play.sampwidth;
+	audio_set_play_config(PRIV->s_port, &hdr);
+#endif
+	PRIV->s_flag |= PORT_OPEN;
 	up_sema(PRIV->s_sema);
 
 	rate = 0;
-	while (nsamps > 0 || ALgetfilled(PRIV->s_port) > 0) {
+	while (nsamps > 0
+#ifdef __sgi
+	       || ALgetfilled(PRIV->s_port) > 0
+#endif
+	       ) {
 		if (PRIV->s_play.sampsread > 0) {
 			n = PRIV->s_play.sampsread;
 			PRIV->s_play.sampsread = 0;
@@ -250,18 +302,23 @@ sound_player(self)
 		} else
 			n = 0;
 
+#ifdef __sgi
 		if (n == 0)
 			ALsetfillpoint(PRIV->s_port, ALgetqueuesize(config));
 		else
 			ALsetfillpoint(PRIV->s_port, n);
 		pollfd[0].fd = portfd;
+#endif
+#ifdef sun
+		pollfd[0].fd = PRIV->s_port;
+#endif
 		pollfd[0].events = POLLOUT;
 		pollfd[0].revents = 0;
 		pollfd[1].fd = PRIV->s_pipefd[0];
 		pollfd[1].events = POLLIN;
 		pollfd[1].revents = 0;
 		dprintf(("sound_player(%lx): polling\n", (long) self));
-		if (poll(&pollfd, sizeof(pollfd)/sizeof(pollfd[0]), -1) < 0) {
+		if (poll(pollfd, sizeof(pollfd)/sizeof(pollfd[0]), -1) < 0) {
 			perror("poll");
 			break;
 		}
@@ -273,9 +330,17 @@ sound_player(self)
 			(void) read(PRIV->s_pipefd[0], &c, 1);
 			dprintf(("sound_player(%lx): read %c\n", (long) self, c));
 			down_sema(PRIV->s_sema);
-			if (c == 'p' || c == 'r')
+			if (c == 'p' || c == 'r') {
+#ifdef __sgi
 				filled = ALgetfilled(PRIV->s_port);
+#endif
+#ifdef sun
+				audio_pause_play(PRIV->s_port);
+#endif
+			}
+#ifdef __sgi
 			ALcloseport(PRIV->s_port);
+#endif
 			if (c == 'p' || c == 'r') {
 				fseek(PRIV->s_play.f, -(filled + n) * PRIV->s_play.sampwidth, 1);
 				dprintf(("sound_player(%lx): filled = %ld, nsamps before = %ld\n", (long) self, filled, nsamps));
@@ -289,8 +354,14 @@ sound_player(self)
 				down_sema(PRIV->s_sema);
 			}
 			if (c == 'r') {
-				PRIV->s_port = ALopenport("sound channel", "w", config);
+#ifdef __sgi
+				PRIV->s_port = ALopenport("sound channel", "w",
+							  config);
 				portfd = ALgetfd(PRIV->s_port);
+#endif
+#ifdef sun
+				audio_resume_play(PRIV->s_port);
+#endif
 				up_sema(PRIV->s_sema);
 				continue;
 			} else {
@@ -313,7 +384,12 @@ sound_player(self)
 					s = n;
 				if (rate == 0) {
 					dprintf(("sound_player(%lx): write %d samples\n", (long) self, s));
+#ifdef __sgi
 					ALwritesamps(PRIV->s_port, p, s);
+#endif
+#ifdef sun
+					write(PRIV->s_port, p, s * PRIV->s_play.sampwidth);
+#endif
 				}
 				rate++;
 				if (rate >= PRIV->s_playrate)
@@ -323,22 +399,38 @@ sound_player(self)
 			}
 		} else {
 			dprintf(("sound_player(%lx): write %d samples\n", (long) self, n));
+#ifdef __sgi
 			ALwritesamps(PRIV->s_port, PRIV->s_play.sampbuf, n);
+#endif
+#ifdef sun
+			write(PRIV->s_port, PRIV->s_play.sampbuf,
+			      n * PRIV->s_play.sampwidth);
+#endif
 		}
 	}
 	down_sema(PRIV->s_sema);
+#ifdef __sgi
 	ALcloseport(PRIV->s_port);
+#endif
+#ifdef sun
+	close(PRIV->s_port);
+#endif
  cleanup:
 	PRIV->s_port = NULL;
 	PRIV->s_flag &= ~PORT_OPEN;
 	up_sema(PRIV->s_sema);
 	down_sema(device_sema);
+#ifdef __sgi
 	if (--device_used == 0) {
 		/* last one to close the audio port */
 		buf[0] = AL_OUTPUT_RATE;
 		buf[1] = old_rate;
 		ALsetparams(AL_DEFAULT_DEVICE, buf, 2L);
 	}
+#endif
+#ifdef sun
+	device_used--;
+#endif
 	up_sema(device_sema);
 }
 
@@ -479,7 +571,7 @@ soundchannel_init(self, args)
 		INCREF(sound_chan_obj);
 	}
 
-	return sound_chan_obj;
+	return (object *) sound_chan_obj;
 }
 
 static struct methodlist soundchannel_methods[] = {

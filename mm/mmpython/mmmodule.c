@@ -29,7 +29,6 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  * For extensive comments on this code, see the file mmmodule.doc.
  */
 
-#include <gl.h>
 #include "thread.h"
 #include "allobjects.h"
 #include "modsupport.h"
@@ -57,9 +56,6 @@ void
 my_qenter(ev, val)
     long ev, val;
 {
-#if 0
-	qenter(ev, val);
-#endif
 	if (qenter_sync_fd >= 0) {
 		char c;
 

@@ -62,12 +62,12 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include "patchlevel.h"
 
-#define VERSION "0.9.%d (%s)"
+#define VERSION "0.9.%d++ (%s)"
 
 #ifdef __DATE__
 #define DATE __DATE__
 #else
-#define DATE ">= 29 Jul 1993"
+#define DATE ">= 3 Nov 1993"
 #endif
 
 char version[80];
@@ -299,11 +299,19 @@ extern void initmalloc();
 #ifdef USE_XLIB
 extern void initXlib();
 #endif
+#ifdef USE_PARSER
+extern void initparser();
+#endif
+#ifdef USE_RGBIMG
+extern void initrgbimg();
+#endif
 /* -- ADDMODULE MARKER 1 -- */
 extern void initmm();
+#ifndef sun			/* these not yet ported */
 extern void initmoviechannel();
-extern void initsoundchannel();
 extern void initmpegchannel();
+#endif
+extern void initsoundchannel();
 
 struct {
 	char *name;
@@ -486,11 +494,21 @@ struct {
        {"Xlib", initXlib},
 #endif
 
+#ifdef USE_PARSER
+       {"parser", initparser},
+#endif
+
+#ifdef USE_RGBIMG
+       {"rgbimg", initrgbimg},
+#endif
+
 /* -- ADDMODULE MARKER 2 -- */
 	{"mm", initmm},
-	{"moviechannel", initmoviechannel},
 	{"soundchannel", initsoundchannel},
+#ifndef sun
+	{"moviechannel", initmoviechannel},
 	{"mpegchannel", initmpegchannel},
+#endif
 
 	{0,		0}		/* Sentinel */
 };
