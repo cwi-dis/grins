@@ -153,10 +153,6 @@ class _Toplevel:
 		      adornments, canvassize,
 		      commandlist, resizable, bgcolor)
 		if hasattr(wnd, '_viewport'):
-			# WMP_EXPORT experimental section
-			regcb = adornments.get('register')
-			if regcb: regcb(wnd._viewport)
-			# /WMP_EXPORT experimental section
 			return wnd._viewport
 		return wnd
 
