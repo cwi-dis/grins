@@ -231,11 +231,39 @@ large_int = wmfapi.large_int
 
 import time
 import windowinterface
+
+
+"""
+System profiles
+0 Dial-up Modems - ISDN Multiple Bit Rate Video
+1 Intranet - High Speed LAN Multiple Bit Rate Video
+2 28.8, 56, and 100 Multiple Bit Rate Video
+3 6.5 voice audio
+4 16 AM Radio
+5 28.8 FM Radio Mono
+6 28.8 FM Radio Stereo
+7 56 Dial-up High Quality Stereo
+8 64 Near CD Quality Audio
+9 96 CD Quality Audio
+10 128 CD Quality Audio
+11 28.8 Video - Voice
+12 28.8 Video - Audio Emphasis
+13 28.8 Video for Web Server
+14 56 Dial-up Modem Video
+15 56 Dial-up Video for Web Server
+16 100 Video
+17 250 Video
+18 512 Video
+19 1Mb Video
+20 3Mb Video
+"""
+# select profile
+SYSTEM_PROFILE  = 14
 		
 class WMWriter:
 	def __init__(self, ctx, w, h, filename):
 		profman = wmfapi.CreateProfileManager()
-		prof = profman.LoadSystemProfile(18) 
+		prof = profman.LoadSystemProfile(SYSTEM_PROFILE) 
 		writer = wmfapi.CreateDDWriter(prof)
 		writer.SetOutputFilename(filename)
 		rgbfmt = self.__getFormat(ctx._pxlfmt)
