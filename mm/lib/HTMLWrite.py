@@ -104,7 +104,7 @@ def WriteFTP(root, filename, smilurl, ftpparams, oldfilename='', evallicense = 0
 		ftp.write(smilurl+'\n')
 		ftp.close()
 	except FtpWriter.all_errors, msg:
-		windowinterface.showmessage('FTP upload failed:\n' + msg, mtype = 'error')
+		windowinterface.showmessage('Webserver upload failed:\n' + msg, mtype = 'error')
 		return
 	#
 	# Now create and upload the webpage
@@ -120,7 +120,7 @@ def WriteFTP(root, filename, smilurl, ftpparams, oldfilename='', evallicense = 0
 			windowinterface.showmessage(msg, mtype = 'error')
 			return
 	except FtpWriter.all_errors, msg:
-		windowinterface.showmessage('FTP upload failed:\n' + msg, mtype = 'error')
+		windowinterface.showmessage('Webserver upload failed:\n' + msg, mtype = 'error')
 		return
 
 def ramfilename(htmlfilename):
