@@ -849,6 +849,12 @@ class BandwidthComputeDialog(ResDialog):
 	def OnInitDialog(self):
 		self.attach_handles_to_subwindows()
 		self._message.settext(self._caption)
+		self._preroll.settext('Computing...')
+		self._stalltime.settext('Computing...')
+		self._stallcount.settext('Computing...')
+		self._errorcount.settext('Computing...')
+		self._message2.settext('')
+		self._ok.settext('OK')
 		self._help.hookcommand(self,self.OnHelp)
 		self.init_subwindows()
 		return ResDialog.OnInitDialog(self)
@@ -890,6 +896,7 @@ class BandwidthComputeDialog(ResDialog):
 		self.callback = callback
 		self._ok.enable(1)
 		if cancancel:
+			self._ok.settext('Proceed')
 			self._cancel.enable(1)
 
 	def close(self):
