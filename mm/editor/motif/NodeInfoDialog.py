@@ -79,6 +79,7 @@ class NodeInfoDialog:
 			in the immediate part
 		"""
 
+		import settings
 		self.__window = w = windowinterface.Window(
 			title, resizable = 1,
 			deleteCallback = (self.cancel_callback, ()))
