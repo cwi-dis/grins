@@ -37,7 +37,7 @@ item: Global
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=C:\PROGRA~1\WISEIN~1
+  Variable Default2=C:\PROGRA~1\Wise
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -1879,7 +1879,7 @@ item: Edit Registry
   end
   item: Key
     Key=SMILfile\DefaultIcon
-    New Value=%MAINDIR%\GRiNS_SV1.exe,2
+    New Value=%MAINDIR%\GRiNS_SV2.exe,2
     Root=32
   end
 end
@@ -1925,7 +1925,7 @@ item: Edit Registry
   end
   item: Key
     Key=GRiNSProject\DefaultIcon
-    New Value=%MAINDIR%\GRiNS_SV1.exe,2
+    New Value=%MAINDIR%\GRiNS_SV2.exe,2
   end
   item: Key
     Key=MIME\Database\Content Type\application/x-grins-project
