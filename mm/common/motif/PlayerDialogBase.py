@@ -42,7 +42,7 @@ class PlayerDialogBase:
 		title -- string to be displayed as window title
 		"""
 
-		self.__window = None
+		self._window = None
 		self.__title = title
 		self.__coords = coords
 		self.__state = -1
@@ -52,9 +52,9 @@ class PlayerDialogBase:
 
 	def close(self):
 		"""Close the dialog and free resources."""
-		if self.__window is not None:
-			self.__window.close()
-			self.__window = None
+		if self._window is not None:
+			self._window.close()
+			self._window = None
 		del self.__channels
 		del self.__channeldict
 		del self.menu_created
@@ -66,28 +66,27 @@ class PlayerDialogBase:
 	def show(self, subwindowof=None):
 		"""Show the control panel."""
 
-		if self.__window is not None:
-			self.__window.pop()
+		if self._window is not None:
+			self._window.pop()
 			return
 		self.__state = -1
 		x, y, w, h = self.__coords
 		if subwindowof is not None:
 			raise 'kaboo kaboo'
-		self.__window = w = windowinterface.newwindow(
+		self._window = w = windowinterface.newwindow(
 			x, y, 0, 0, self.__title, resizable = 0,
 			adornments = self.adornments,
 			commandlist = self.stoplist)
 		if self.__channels:
 			self.setchannels(self.__channels)
-		w.set_toggle(SYNCCV, self.sync_cv)
 
 	def hide(self):
 		"""Hide the control panel."""
 
-		if self.__window is None:
+		if self._window is None:
 			return
-		self.__window.close()
-		self.__window = None
+		self._window.close()
+		self._window = None
 
 	def settitle(self, title):
 		"""Set (change) the title of the window.
@@ -96,8 +95,8 @@ class PlayerDialogBase:
 		title -- string to be displayed as new window title.
 		"""
 		self.__title = title
-		if self.__window is not None:
-			self.__window.settitle(title)
+		if self._window is not None:
+			self._window.settitle(title)
 
 	def setchannels(self, channels):
 		"""Set the list of channels.
@@ -119,7 +118,7 @@ class PlayerDialogBase:
 			   channel == self.menu_created._name:
 				continue
 			menu.append((channel, (channel,), 't', onoff))
-		w = self.__window
+		w = self._window
 		if w is not None:
 			w.set_dynamiclist(CHANNELS, menu)
 
@@ -154,7 +153,7 @@ class PlayerDialogBase:
 			state = self.__state
 		ostate = self.__state
 		self.__state = state
-		w = self.__window
+		w = self._window
 		if w is None and self.menu_created is not None:
 			if hasattr(self.menu_created, 'window'):
 				w = self.menu_created.window
@@ -179,5 +178,5 @@ class PlayerDialogBase:
 		panel.
 		"""
 
-		if self.__window is not None:
-			return self.__window.getgeometry()
+		if self._window is not None:
+			return self._window.getgeometry()
