@@ -922,10 +922,11 @@ class _Button:
 	# Animation experimental methods
 
 	def updatecoordinates(self, coords):
-		self._coordinates = coords
+		if self.is_closed(): return		
+		self._coordinates = self._dispobj._pxl2rel(coords)
+		self._dispobj._window.updateMouseCursor()
 
 #       drawing dissabled
-#		if self.is_closed(): return
 #		diffdl = self._dispobj._window.newdisplaylist()
 #		diffdl = self._dispobj.drawboxanchor(coords)
 #		cmdname = '%d' % id(self)
