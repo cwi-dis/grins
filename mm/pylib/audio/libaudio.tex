@@ -1,4 +1,4 @@
-\chapter{audio ---
+\section{\module{audio} ---
 	 Package for reading and playing audio files}
 \declaremodule{}{audio}
 \moduleauthor{Sjoerd Mullender}{Sjoerd.Mullender@cwi.nl}
@@ -40,23 +40,29 @@ dev.wait()                           # wait for output to drain
 
 Here is a short glossary of terms used in this document.
 
-\begin{tableii}{|c|p{24em}|}{code}{Term}{Meaning}
+\begin{tableii}{c|p{24em}}{code}{Term}{Meaning}
 \lineii{sample}{one audio sample}
 \lineii{frame}{one audio sample for each channel}
 \lineii{framerate}{the number of audio frames per second}
 \end{tableii}
 
-\section{\module{audio} functions and variables}
+The following modules are described:
+
+\localmoduletable
+
+
+\subsection{\module{audio} functions and variables}
 
 The \module{audio} module defines only a single function:
 
-\begin{funcdesc}{reader}{filename\optional{, dstfmts, rates}}
-Create a reader object (see below) for audio file \var{filename}.  The
-header of the file will be read, and the format and frame rate of the
-audio file will be made available through the reader interface.  If
-\var{dstfmts} or \var{rates} is specified, a converter is created that
-converts the audio to the desired format and frame rate.  See the
-\module{audio.convert} module for details.
+\begin{funcdesc}{reader}{filename\optional{, dstfmts\optional{, rates}}}
+Create a reader object (see Section \ref{reader-objects}, ``Reader
+objects'') for audio file \var{filename}.  The header of the file will
+be read, and the format and frame rate of the audio file will be made
+available through the reader interface.  If \var{dstfmts} or
+\var{rates} is specified, a converter is created that converts the
+audio to the desired format and frame rate.  See Section
+\ref{module-audio.convert} ``\module{audio.convert}'' for details.
 \end{funcdesc}
 
 This module also defines an exception:
@@ -66,23 +72,81 @@ Exception raised by the audio modules on various errors, such as bad
 file format.
 \end{excdesc}
 
-\section{\module{audio.file} functions}
+
+\subsection{Reader objects
+            \label{reader-objects}}
+
+A reader object is returned by \function{audio.reader()}, by
+\function{audio.file.reader()}, and by \function{audio.convert.convert()}.
+Reader objects provide a uniform interface to the audio data and
+format descriptions.  Reader objects have the following methods:
+
+\begin{methoddesc}[audio.reader]{getformat}{}
+Returns the format object that describes the audio data.
+\end{methoddesc}
+
+\begin{methoddesc}[audio.reader]{getframerate}{}
+Returns the frame rate of the audio data.
+\end{methoddesc}
+
+\begin{methoddesc}[audio.reader]{readframes}{\optional{nframes}}
+Returns a tuple consisting of the audio data of up to \var{nframes}
+frames, and the number of frames actually read.  If \var{nframes} is
+omitted, or is negative, returns all remaining audio data.
+\end{methoddesc}
+
+\begin{methoddesc}[audio.reader]{getnframes}{}
+Returns the number of remaining audio frames in the data.  Returns \code{-1}
+if the number of frames is unknown.
+\end{methoddesc}
+
+\begin{methoddesc}[audio.reader]{rewind}{}
+Resets the audio stream to the beginning.
+\end{methoddesc}
+
+\begin{methoddesc}[audio.reader]{getpos}{}
+Returns a magic cookie representing the current position in the audio
+stream.  The only use of this cookie is to pass it to the
+\method{setpos()} method.
+\end{methoddesc}
+
+\begin{methoddesc}[audio.reader]{setpos}{pos}
+Set the audio stream to the position \var{pos}.  Only values for
+\var{pos} as returned by \method{getpos()} are valid.
+\end{methoddesc}
+
+
+\section{\module{audio.file}
+         --- High-level audio file interface}
+\declaremodule{}{audio.file}
+\moduleauthor{Sjoerd Mullender}{Sjoerd.Mullender@cwi.nl}
+\sectionauthor{Sjoerd Mullender}{Sjoerd.Mullender@cwi.nl}
+
+\modulesynopsis{High-level audio file interface}
 
 This module defines a single function:
 
 \begin{funcdesc}{reader}{filename}
-Create a reader object (see below) for audio file \var{filename}.  The
-header of the file will be read, and the format and frame rate of the
-audio file will be made available through the reader interface.
+Create a reader object (see Section \ref{reader-objects}, ``Reader
+objects'') for audio file \var{filename}.  The header of the file will
+be read, and the format and frame rate of the audio file will be made
+available through the reader interface.
 \end{funcdesc}
 
-\section{\module{audio.convert} functions}
+
+\section{\module{audio.convert}
+         --- On-the-fly format conversions}
+\declaremodule{}{audio.convert}
+\moduleauthor{Sjoerd Mullender}{Sjoerd.Mullender@cwi.nl}
+\sectionauthor{Sjoerd Mullender}{Sjoerd.Mullender@cwi.nl}
+
+\modulesynopsis{On-the-fly format conversion interface}
 
 This module defines a number of converters plus one function to create
 a new reader object that does the necessary conversions to get from
 one format to another.
 
-\begin{funcdesc}{convert}{rdr\optional{, dstfmts, rates}}
+\begin{funcdesc}{convert}{rdr\optional{, dstfmts\optional{, rates}}}
 Find a sequence of conversions to convert the audio from the given
 reader object \var{rdr} to any of the formats given in \var{dstfmts}
 at any of the frame rates given by \var{rates}.  If no \var{dstfmts}
@@ -103,14 +167,21 @@ found to a format that the frame rate conversion function can handle
 is specified, a conversion is made to one of the destination formats.
 \end{funcdesc}
 
-\section{\module{audio.format} variables and methods}
+
+\section{\module{audio.format}
+         --- Runtime descriptions of specific audio formats}
+\declaremodule{}{audio.format}
+\moduleauthor{Sjoerd Mullender}{Sjoerd.Mullender@cwi.nl}
+\sectionauthor{Sjoerd Mullender}{Sjoerd.Mullender@cwi.nl}
+
+\modulesynopsis{Runtime descriptions of specific audio formats}
 
 This module defines a number of objects that represent in-core audio
 formats.  The objects have a number of methods with which more
-information about the format can be gotten.  See below for a
-description of these methods.  The frame rate is not part of the
-format, since it would increase the number of possible formats to an
-unmanageable number.
+information about the format can be gotten.  See Section
+\ref{format-objects}, ``Format objects'' for a description of these
+methods.  The frame rate is not part of the format, since it would
+increase the number of possible formats to an unmanageable number.
 
 \begin{datadesc}{ulaw_mono}
 8 bits per sample, 1 channel, $\mu$-law encoded.
@@ -180,6 +251,10 @@ Either \var{linear_16_stereo_big} or \var{linear_16_stereo_little},
 depending on the natural byte-order of the system.
 \end{datadesc}
 
+
+\subsection{Format objects
+            \label{format-objects}}
+
 Format objects have the following methods:
 
 \begin{methoddesc}[audio.format]{getname}{}
@@ -209,27 +284,35 @@ Returns the number of frames in a single block.  Returns 0 if the
 number of frames per block is variable.
 \end{methoddesc}
 
+
 The linear formats also have the following method:
 
 \begin{methoddesc}[audio.format]{getbps}{}
 Returns the number of bits per sample.
 \end{methoddesc}
 
-\section{\module{audio.merge} functions}
+
+\section{\module{audio.merge}
+         --- Merge multiple audio streams}
+\declaremodule{}{audio.merge}
+\moduleauthor{Sjoerd Mullender}{Sjoerd.Mullender@cwi.nl}
+\sectionauthor{Sjoerd Mullender}{Sjoerd.Mullender@cwi.nl}
+
+\modulesynopsis{Merge multiple audio streams}
 
 This module defines a single function:
 
 \begin{funcdesc}{merge}{\optional{reader...}}
 Create a merge object that represents a set of merged audio streams.
-\function{merge} may be called with any number of arguments.  The
+\function{merge()} may be called with any number of arguments.  The
 arguments should either be a reader object instance, or a tuple
 consisting of a reader object instance and a callback as described
-below in the \method{add} method.  If any arguments are given, the
-\method{add} method is called for each of the arguments.
+below in the \method{add()} method.  If any arguments are given, the
+\method{add()} method is called for each of the arguments.
 \end{funcdesc}
 
 The merge object has all of the reader object methods, except that
-\method{getpos} and \method{setpos} currently raise an exception and
+\method{getpos()} and \method{setpos()} currently raise an exception and
 should not be used.  The other methods should only be called when at
 least one stream is added.  In addition, a merge object has the
 following methods:
@@ -242,63 +325,29 @@ first element is a callable object, and the second a tuple giving the
 arguments with which the callable object should be called.
 
 The \var{rdr} may have any format, but conversion to some internal
-format may be added by \method{add}.
+format may be added by \method{add()}.
 
-The \method{add} method may be called at any time.
+The \method{add()} method may be called at any time.
 \end{methoddesc}
 
 \begin{methoddesc}[audio.format]{delete}{rdr}
 Remove the given \var{rdr} from the list of merged readers.
 \end{methoddesc}
 
-\section{Reader object}
 
-A reader object is returned by \code{audio.reader()}, by
-\code{audio.file.reader()}, and by \code{audio.convert.convert()}.
-Reader objects provide a uniform interface to the audio data and
-format descriptions.  Reader objects have the following methods:
+\section{\module{audio.dev}
+         --- Portable audio device interface}
+\declaremodule{}{audio.dev}
+\moduleauthor{Sjoerd Mullender}{Sjoerd.Mullender@cwi.nl}
+\sectionauthor{Sjoerd Mullender}{Sjoerd.Mullender@cwi.nl}
 
-\begin{methoddesc}[audio.reader]{getformat}{}
-Returns the format object that describes the audio data.
-\end{methoddesc}
-
-\begin{methoddesc}[audio.reader]{getframerate}{}
-Returns the frame rate of the audio data.
-\end{methoddesc}
-
-\begin{methoddesc}[audio.reader]{readframes}{\optional{nframes}}
-Returns a tuple consisting of the audio data of up to \var{nframes}
-frames, and the number of frames actually read.  If \var{nframes} is
-omitted, or is negative, returns all remaining audio data.
-\end{methoddesc}
-
-\begin{methoddesc}[audio.reader]{getnframes}{}
-Returns the number of remaining audio frames in the data.  Returns -1
-if the number of frames is unknown.
-\end{methoddesc}
-
-\begin{methoddesc}[audio.reader]{rewind}{}
-Resets the audio stream to the beginning.
-\end{methoddesc}
-
-\begin{methoddesc}[audio.reader]{getpos}{}
-Returns a magic cookie representing the current position in the audio
-stream.  The only use of this cookie is to pass it to the
-\method{setpos} method.
-\end{methoddesc}
-
-\begin{methoddesc}[audio.reader]{setpos}{pos}
-Set the audio stream to the position \var{pos}.  Only values for
-\var{pos} as returned by \method{getpos} are valid.
-\end{methoddesc}
-
-\section{\module{audio.dev} functions}
+\modulesynopsis{System-independent interface to the audio hardware}
 
 This module is a system-independent interface to the audio hardware.
 The way to use this module is to first obtain an audio device object.
 Before data can be written, the format and frame rate parameters have
-to be set.  When all data has been written, either \method{wait} or
-\method{stop} should be called.  These methods may reset the audio
+to be set.  When all data has been written, either \method{wait()} or
+\method{stop()} should be called.  These methods may reset the audio
 hardware to the initial state.
 
 There is only one function in this module:
@@ -308,9 +357,13 @@ Returns an object representing an audio output stream.  \var{qsize} is
 the queue size in bytes of the internal output buffer.  Whether or not
 this argument is used is system-dependent.
 
-If a \var{fmt} argument is passed, it is passed to the \method{setformat}
-method (see below).
+If a \var{fmt} argument is passed, it is passed to the \method{setformat()}
+method (see Section \ref{device-objects}, ``Audio Device objects'').
 \end{funcdesc}
+
+
+\subsection{Audio Device objects
+	    \label{device-objects}}
 
 The audio device object has the following methods:
 
@@ -327,15 +380,15 @@ handle any output frame rate.
 
 \begin{methoddesc}[audio.dev]{setformat}{fmt}
 Set the output format.  This method must be called before
-\method{writeframes} is called, and the format given must be one of the
-formats returned by \method{getformats}.
+\method{writeframes()} is called, and the format given must be one of the
+formats returned by \method{getformats()}.
 \end{methoddesc}
 
 \begin{methoddesc}[audio.dev]{setframerate}{rate}
 Set the output frame rate.  This method must be called before
-\method{writeframes} is called, and, if \method{getrates} does not return
+\method{writeframes()} is called, and, if \method{getrates()} does not return
 \code{None}, the frame rate given must be one of the rates returned by
-\method{getrates}
+\method{getrates()}.
 \end{methoddesc}
 
 \begin{methoddesc}[audio.dev]{writeframes}{data}
@@ -359,5 +412,5 @@ device.
 
 \begin{methoddesc}[audio.dev]{getfillable}{}
 Return the number of frames that can be written without
-\method{writeframes} blocking.
+\method{writeframes()} blocking.
 \end{methoddesc}
