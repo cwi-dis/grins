@@ -589,6 +589,9 @@ class Channel:
 		if self._is_shown and node.IsPlayable() and \
 		   not self.do_arm(node, same):
 			return
+		if not self._armcontext:
+			# The player has aborted
+			return
 		self.arm_1()
 
 	# Called by the scheduler when it is not sure whether this
@@ -1359,7 +1362,9 @@ class ChannelWindow(Channel):
 		windowinterface.showmessage(
 			'While arming%s on channel %s:\n%s' %
 				(nmsg, self._name, msg),
-			mtype = 'warning', grab = 1, parent = self.window)
+			mtype = 'question', grab = 1, parent = self.window,
+			cancelCallback = (self._player.cc_stop, ()))
+
 
 	def defanchor(self, node, anchor, cb):
 		# This method is called when the user defines a new anchor. It
