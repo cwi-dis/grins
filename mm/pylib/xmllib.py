@@ -55,6 +55,7 @@ attrfind = re.compile(
     _S + '(?P<name>' + _Name + ')'
     '(' + _opS + '=' + _opS +
     '(?P<value>\'[^\']*\'|"[^"]*"|[-a-zA-Z0-9.:+*%?!()_#=~]+))')
+attrtrans = string.maketrans(' \r\n\t', '    ')
 
 
 # XML parser base class -- find tags and call handler functions.
@@ -446,6 +447,7 @@ class XMLParser:
 				  (attrname, tag))
 	    if attrdict.has_key(attrname):
 		self.syntax_error('attribute specified twice')
+            attrvalue = string.translate(attrvalue, attrtrans)
 	    attrdict[attrname] = self.translate_references(attrvalue)
 	    k = res.end(0)
 	if attributes is not None:
