@@ -8,7 +8,10 @@ import windowinterface
 
 import MMAttrdefs
 
-from MMNode import alltypes, leaftypes, interiortypes
+from MMTypes import alltypes, leaftypes, interiortypes
+# make a copy, but replace "bag" with "choice".  Use this for user interaction.
+Alltypes = alltypes[:]
+Alltypes[Alltypes.index('bag')] = 'choice'
 
 def shownodeinfo(toplevel, node, new = 0):
 	try:
@@ -39,7 +42,7 @@ class NodeInfo(NodeInfoDialog):
 		except ValueError:
 			i = 0		# 'undefined'
 		NodeInfoDialog.__init__(self, title, self.allchannelnames, i,
-					alltypes, alltypes.index(self.type),
+					Alltypes, alltypes.index(self.type),
 					self.name, self.url,
 					self.children, self.immtext)
 		self.show_correct_group()
@@ -180,7 +183,7 @@ class NodeInfo(NodeInfoDialog):
 	def updateform(self):
 		self.setname(self.name)
 
-		self.settypes(alltypes, alltypes.index(self.type))
+		self.settypes(Alltypes, alltypes.index(self.type))
 
 		try:
 			i = self.allchannelnames.index(self.channelname)
@@ -250,6 +253,7 @@ class NodeInfo(NodeInfoDialog):
 	#
 	def type_callback(self):
 		newtype = self.gettype()
+		if newtype == 'choice': newtype = 'bag'
 		if newtype == self.type:
 			return
 		# Check that the change is allowed.
@@ -316,7 +320,7 @@ class NodeInfo(NodeInfoDialog):
 			cwd = os.getcwd()
 		url = self.url
 		if url == '' or url == '/dev/null':
-			dir, url = cwd, ''
+			dir, file = cwd, ''
 		else:
 			utype, url = MMurl.splittype(url)
 			if utype:
