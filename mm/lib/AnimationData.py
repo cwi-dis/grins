@@ -292,6 +292,9 @@ class AnimationData:
 		w = self.getWidthAt(keyTime)
 		h = self.getHeightAt(keyTime)
 		return x, y, w, h
+	
+	def getDomRect(self):
+		return self._domrect
 
 	def getColorAt(self, keyTime):
 		keyTime = self._clampKeyTime(keyTime)

@@ -5080,10 +5080,11 @@ class MMNode(MMTreeElement):
 			# temporary test
 			if 0:
 				print '-----------------------------'
+				print 'DOM rect=', self._animationData.getDomRect()
 				self._animationData.createAnimators()
 				t = 0.0
 				for i in range(11):
-					print 'rect=', self._animationData.getRectAt(t)
+					print 't=',t, ' rect=', self._animationData.getRectAt(t)
 					t = t + 0.1
 
 class FakeRootNode(MMNode):
