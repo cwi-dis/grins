@@ -221,8 +221,11 @@ class EventStruct:
 		d = self.get_offset()
 		if d == 0:
 			return r
-		elif not d.startswith('-'):
-			d = "+"+d
+		else:
+			if d < 0:
+				d = `d`
+			else:
+				d = "+"+`d`
 		return r+d
 		
 	def get_cause(self):
