@@ -19,7 +19,25 @@ self.close_callback is also called.
 
 __version__ = "$Id$"
 
+from usercmd import *
+
 class MainDialog:
+	adornments = {
+		'toolbar' : [
+			('New', NEW_DOCUMENT),
+			('Open...', OPEN),
+			('Preferences...', PREFERENCES),
+			('Exit', EXIT),
+			],
+		'close': [ EXIT, ],
+		}
+	if __debug__:
+		adornments['toolbar'][3:3] = [
+			('Trace', TRACE, 't'),
+			('Debug', DEBUG),
+			('Crash', CRASH),
+			]
+
 	def __init__(self, title):
 		"""Create the Main dialog.
 
@@ -31,34 +49,56 @@ class MainDialog:
 		title -- string to be displayed as window title
 		"""
 
-		import windowinterface
+		import windowinterface, WMEVENTS
 
-		self.__window = w = windowinterface.Window(
-			title, resizable = 0,
-			deleteCallback = (self.close_callback, ()))
-		buttons = [('New', (self.new_callback, ())),
-			('Open\nLocation...', (self.__openURL_callback, ())),
-			('Open\nFile...', (self.__openfile_callback, ())),
-			('Exit', (self.close_callback, ())),
-			]
-		if __debug__:
-			buttons[2:2] = [
-				('Trace', (self.trace_callback, ()), 't'),
-				('Debug', (self.debug_callback, ())),
-				]
-		buttons = w. ButtonRow(buttons, vertical = 0, tight = 1,
-			top = None, bottom = None, left = None, right = None)
+		self.__window = w = windowinterface.newcmwindow(None, None, 0, 0,
+				title, adornments = self.adornments,
+				commandlist = self.commandlist)
+
+	def open_callback(self):
+		import windowinterface
+		w = windowinterface.Window('Open location', resizable = 1,
+					   grab = 1, parent = self.__window, horizontalSpacing = 5, verticalSpacing = 5)
+		l = w.Label('Open location', top = None, left = None, right = None)
+		f = w.SubWindow(left = None, top = l, right = None, horizontalSpacing = 5, verticalSpacing = 5)
+		t = f.TextInput(None, '', None, (self.__tcallback, ()),
+				modifyCB = self.__modifyCB,
+				left = None, top = None, bottom = None)
+		f.Button('Browse...', (self.__openfile_callback, ()),
+			 top = None, left = t, right = None, bottom = None)
+		s = w.Separator(top = f, left = None, right = None)
+		r = w.ButtonRow([('Open', (self.__tcallback, ())),
+				 ('Cancel', (self.__ccallback, ()))],
+				vertical = 0, tight = 1, top = f, left = None,
+				right = None, bottom = None)
+		self.__text = t
+		self.__owindow = w
 		w.show()
 
-	def __openURL_callback(self):
-		import windowinterface
-		windowinterface.InputDialog('Open location', '',
-					    self.open_callback)
+	def __modifyCB(self, text):
+		# HACK: this hack is because the SGI file browser adds
+		# a space to the end of the filename when you drag and
+		# drop it.
+		if text and len(text) > 1 and text[-1] == ' ':
+			return text[:-1]
+
+	def __ccallback(self):
+		self.__owindow.close()
+		self.__owindow = None
+		self.__text = None
+
+	def __tcallback(self):
+		text = self.__text.gettext()
+		self.__ccallback()
+		if text:
+			self.openURL_callback(text)
 
 	def __openfile_callback(self):
 		import windowinterface
+		windowinterface.setwaiting()
 		windowinterface.FileDialog('Open file', '.', '*.smil', '',
-					   self.__filecvt, None, 1)
+					   self.__filecvt, None, 1,
+					   parent = self.__owindow)
 
 	def __filecvt(self, filename):
 		import os, MMurl
@@ -74,25 +114,7 @@ class MainDialog:
 				file = os.path.join(f, file)
 			if dir == cwd:
 				filename = file
-		self.open_callback(MMurl.pathname2url(filename))
+		self.__text.settext(MMurl.pathname2url(filename))
 
 	def setbutton(self, button, value):
 		pass			# for now...
-
-	# Callback functions.  These functions should be supplied by
-	# the user of this class (i.e., the class that inherits from
-	# this class).
-	def new_callback(self):
-		pass
-
-	def open_callback(self, url):
-		pass
-
-	def close_callback(self):
-		pass
-
-	def trace_callback(self):
-		pass
-
-	def debug_callback(self):
-		pass

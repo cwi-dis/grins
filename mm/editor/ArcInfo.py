@@ -176,13 +176,11 @@ class ArcInfo(ArcInfoDialog):
 		top.setwaiting()
 		top.channelview.globalsetfocus(self.snode)
 		top.hierarchyview.globalsetfocus(self.snode)
-		top.setready()
 
 	def pushdstfocus_callback(self):
 		top = self.cview.toplevel
 		top.setwaiting()
 		top.channelview.globalsetfocus(self.dnode)
 		top.hierarchyview.globalsetfocus(self.dnode)
-		top.setready()
 
 showarcinfo = ArcInfo

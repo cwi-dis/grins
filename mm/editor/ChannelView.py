@@ -18,6 +18,7 @@ from math import sin, cos, atan2, pi, ceil, floor
 import windowinterface, WMEVENTS
 from ChannelViewDialog import ChannelViewDialog, GOCommand, \
 	ChannelBoxCommand, NodeBoxCommand, ArcBoxCommand
+from usercmd import *
 
 from MMNode import alltypes, leaftypes, interiortypes
 import MMAttrdefs
@@ -78,6 +79,7 @@ PLACING_NEW = 1
 PLACING_COPY = 2
 PLACING_MOVE = 3
 
+begend = ('begin', 'end')
 
 
 # Channel view class
@@ -90,18 +92,22 @@ class ChannelView(ChannelViewDialog):
 	def __init__(self, toplevel):
 		self.window = None
 		self.displist = self.new_displist = None
-		self.waiting = 0
 		self.last_geometry = None
 		self.toplevel = toplevel
-		self.root = self.toplevel.root
+		self.root = toplevel.root
 		self.viewroot = None
 		self.context = self.root.context
 		self.editmgr = self.context.editmgr
 		self.focus = None
 		self.future_focus = None
 		self.showall = 1
+		self.showarcs = 1
 		self.placing_channel = 0
 		self.thumbnails = 0
+		self.layouts = [('All channels', ())]
+		for name in self.context.layouts.keys():
+			self.layouts.append((name, (name,)))
+		self.curlayout = None
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		ChannelViewDialog.__init__(self)
 		self.delayed_drawarcs_id = None
@@ -143,16 +149,6 @@ class ChannelView(ChannelViewDialog):
 		self.editmgr.unregister(self)
 		self.toplevel.checkviews()
 
-	def setwaiting(self):
-		self.waiting = 1
-		if self.window:
-			self.window.setcursor('watch')
-
-	def setready(self):
-		self.waiting = 0
-		if self.window:
-			self.window.setcursor('')
-
 	def is_showing(self):
 		return self.window is not None
 
@@ -172,6 +168,12 @@ class ChannelView(ChannelViewDialog):
 		pass
 
 	def commit(self):
+		self.layouts = [('All channels', ())]
+		for name in self.context.layouts.keys():
+			self.layouts.append((name, (name,)))
+		if self.curlayout is not None and \
+		   not self.context.layouts.has_key(self.curlayout):
+			self.curlayout = None
 		if self.future_focus is not None:
 			focus = self.future_focus
 			self.future_focus = None
@@ -184,7 +186,7 @@ class ChannelView(ChannelViewDialog):
 		elif self.focus.__class__ is NodeBox:
 			focus = 'n', self.focus.node
 		elif self.focus.__class__ is ArcBox:
-			focus = 'a', None
+			focus = 'a', self.focus.arcid
 		else:
 			focus = '', None
 		self.cleanup()
@@ -209,7 +211,7 @@ class ChannelView(ChannelViewDialog):
 		elif self.focus.__class__ is NodeBox:
 			focus = 'n', self.focus.node
 		elif self.focus.__class__ is ArcBox:
-			focus = 'a', None
+			focus = 'a', self.focus.arcid
 		else:
 			focus = '', None
 		self.recalc(focus)
@@ -218,6 +220,7 @@ class ChannelView(ChannelViewDialog):
 
 	def thumbnailcall(self):
 		self.thumbnails = not self.thumbnails
+		self.settoggle(THUMBNAIL, self.thumbnails)
 		if self.new_displist:
 			self.new_displist.close()
 		self.new_displist = self.window.newdisplaylist(BGCOLOR)
@@ -226,6 +229,12 @@ class ChannelView(ChannelViewDialog):
 
 	def canvascall(self, code):
 		self.window.setcanvassize(code)
+
+	def layoutcall(self, name = None):
+		curlayout = self.curlayout
+		self.curlayout = name
+		if curlayout != name:
+			self.resize()
 
 	def redraw(self):
 		if self.new_displist:
@@ -250,7 +259,6 @@ class ChannelView(ChannelViewDialog):
 		else:
 			self.toplevel.setwaiting()
 			self.select(x, y)
-			self.toplevel.setready()
 
 	# Time-related subroutines
 
@@ -315,18 +323,35 @@ class ChannelView(ChannelViewDialog):
 	# Toggle 'showall' setting
 
 	def toggleshow(self):
+		self.toplevel.setwaiting()
 		self.showall = (not self.showall)
 		for c in self.context.channels:
 			c.chview_map = None
+		self.settoggle(TOGGLE_UNUSED, self.showall)
 		self.redraw()
+
+	def togglearcs(self):
+		self.toplevel.setwaiting()
+		self.showarcs = not self.showarcs
+		self.settoggle(TOGGLE_ARCS, self.showarcs)
+		self.arcs = []
+		self.resize()
 
 	# Return list of currently visible channels
 
 	def visiblechannels(self):
+		layout = {}
+		for ch in self.context.layouts.get(self.curlayout, self.context.channels):
+			layout[ch.name] = 0
 		if self.showall:
-			return self.context.channels
+			channels = self.context.channels
 		else:
-			return self.usedchannels
+			channels = self.usedchannels
+		ret = []
+		for ch in channels:
+			if layout.has_key(ch.name):
+				ret.append(ch)
+		return ret
 
 	# Recalculate the set of objects we should be drawing
 
@@ -342,13 +367,24 @@ class ChannelView(ChannelViewDialog):
 
 		self.objects = []
 		self.focus = self.lockednode = None
-		self.baseobject = GO(self, '(base)')
+		self.baseobject = BaseBox(self, '(base)')
 		self.objects.append(self.baseobject)
 		self.timescaleobject = TimeScaleBox(self)
 		self.objects.append(self.timescaleobject)
 		self.initchannels(focus)
 		self.initnodes(focus)
 		self.initarcs(focus)
+
+		# enable Next and Prev Minidoc commands if there are minidocs
+		if self.baseobject.descendants or \
+		   self.baseobject.ancestors or \
+		   self.baseobject.siblings:
+			for obj in self.objects:
+				obj.commandlist = obj.commandlist + [
+					NEXT_MINIDOC(callback = (obj.nextminicall, ())),
+					PREV_MINIDOC(callback = (obj.prevminicall, ())),
+					]
+
 		focus = self.focus
 		self.baseobject.select()
 		if focus is not None:
@@ -449,10 +485,14 @@ class ChannelView(ChannelViewDialog):
 		self.fixtitle()
 		self.draw()
 
+	def focuscall(self):
+		top = self.toplevel
+		top.setwaiting()
+		top.hierarchyview.globalsetfocus(self.viewroot)
+
 	def setviewrootcb(self, node):
 		self.toplevel.setwaiting()
 		self.setviewroot(node)
-		self.toplevel.setready()
 
 	def fixtitle(self):
 		title = 'Channel View (' + self.toplevel.basename + ')'
@@ -487,7 +527,8 @@ class ChannelView(ChannelViewDialog):
 				channel.used = 1
 				obj = NodeBox(self, node)
 				self.objects.append(obj)
-				if focus[0] == 'n' and focus[1] is node:
+				if (focus[0] == 'n' and focus[1] is node) or \
+				   (focus[0] == 'a' and focus[1][3] is node):
 					obj.select()
 		elif t in bagtypes:
 			self.scandescendants(node)
@@ -504,8 +545,7 @@ class ChannelView(ChannelViewDialog):
 				self.scandescendants(c)
 			elif c.IsMiniDocument():
 				name = c.GetRawAttrDef('name', '(NoName)')
-				tuple = ('', name, (self.setviewrootcb, (c,)))
-				self.baseobject.descendants.append(tuple)
+				self.baseobject.descendants.append((name, (c,)))
 			elif t in interiortypes:
 				self.scandescendants(c)
 
@@ -515,8 +555,7 @@ class ChannelView(ChannelViewDialog):
 		for node in path[:-1]:
 			if node.IsMiniDocument():
 				name = node.GetRawAttrDef('name', '(NoName)')
-				tuple = ('', name, (self.setviewrootcb, (node,)))
-				self.baseobject.ancestors.append(tuple)
+				self.baseobject.ancestors.append((name, (node,)))
 
 	def addsiblings(self):
 		self.baseobject.siblings[:] = []
@@ -535,12 +574,13 @@ class ChannelView(ChannelViewDialog):
 				name = c.GetRawAttrDef('name', '(NoName)')
 				if c is self.viewroot:
 					name = name + ' (current)'
-				tuple = ('', name, (self.setviewrootcb, (c,)))
-				self.baseobject.siblings.append(tuple)
+				self.baseobject.siblings.append((name, (c,)))
 
 	# Arc stuff
 
 	def initarcs(self, focus):
+		if not self.showarcs:
+			return
 		arcs = []
 		self.scanarcs(self.viewroot, focus, arcs)
 		self.objects[len(self.objects):] = self.arcs = arcs
@@ -548,12 +588,12 @@ class ChannelView(ChannelViewDialog):
 	def scanarcs(self, node, focus, arcs):
 		type = node.GetType()
 		if type in leaftypes and node.GetChannel():
-			self.addarcs(node, arcs)
+			self.addarcs(node, arcs, focus)
 		elif type not in bagtypes:
 			for c in node.GetChildren():
 				self.scanarcs(c, focus, arcs)
 
-	def addarcs(self, ynode, arcs):
+	def addarcs(self, ynode, arcs, focus):
 		for arc in MMAttrdefs.getattr(ynode, 'synctolist'):
 			xuid, xside, delay, yside = arc
 			try:
@@ -565,6 +605,9 @@ class ChannelView(ChannelViewDialog):
 				obj = ArcBox(self,
 					     xnode, xside, delay, ynode, yside)
 				arcs.append(obj)
+				if focus[0] == 'a' and \
+				   focus[1] == (xnode, xside, delay, ynode, yside):
+					obj.select()
 
 	# Focus stuff (see also recalc)
 
@@ -625,7 +668,7 @@ class ChannelView(ChannelViewDialog):
 
 	# Create a new channel
 	# XXXX Index is obsolete!
-	def newchannel(self, index):
+	def newchannel(self, index, chtype = None):
 		if self.visiblechannels() <> self.context.channels:
 			windowinterface.showmessage(
 				  "You can't create a new channel\n" +
@@ -646,6 +689,14 @@ class ChannelView(ChannelViewDialog):
 			return		# Not possible at this time
 		editmgr.rollback()
 		from ChannelMap import commonchanneltypes, otherchanneltypes
+		if chtype is not None:
+			if chtype not in commonchanneltypes + otherchanneltypes:
+				windowinterface.showmessage(
+					'Unknown channel type in newchannel',
+					mtype = 'error')
+				return
+			self.select_cb(chtype)
+			return
 		prompt = 'Select channel type, then place channel:'
 		list = []
 		for name in commonchanneltypes + otherchanneltypes:
@@ -657,8 +708,9 @@ class ChannelView(ChannelViewDialog):
 	def select_cb(self, name):
 		self.placing_channel = PLACING_NEW
 		self.placing_type = name
-		windowinterface.setcursor('stop')
-		self.window.setcursor('channel')
+		self.finish_channel(1.0, 1.0)
+## 		windowinterface.setcursor('stop')
+## 		self.window.setcursor('channel')
 
 	def copychannel(self, name):
 		if self.visiblechannels() <> self.context.channels:
@@ -746,6 +798,9 @@ class ChannelView(ChannelViewDialog):
 				# multiple root windows
 				root_layout = ''
 		    editmgr.addchannel(name, index, self.placing_type)
+		    if self.curlayout and self.context.layouts.has_key(self.curlayout):
+			layoutchannels = self.context.layouts[self.curlayout]
+			layoutchannels.append(self.context.channeldict[name])
 		elif placement_type == PLACING_COPY:
 		    editmgr.copychannel(name, index, self.placing_orig)
 		else:
@@ -765,7 +820,6 @@ class ChannelView(ChannelViewDialog):
 			import AttrEdit
 			AttrEdit.showchannelattreditor(self.toplevel,
 						       channel, new = 1)
-		self.toplevel.setready()
 
 	# Window stuff
 
@@ -800,10 +854,32 @@ class GO(GOCommand):
 		self.ancestors = []
 		self.descendants = []
 		self.siblings = []
+		self.arcmenu = []
 
 		# Menu and shortcut definitions are stored as data in
 		# the class
 
+		self.menutitle = 'Base ops'
+		self.commandlist = [
+			CLOSE_WINDOW(callback = (mother.hide, ())),
+			CANVAS_HEIGHT(callback = (self.canvascall,
+					(windowinterface.DOUBLE_HEIGHT,))),
+			CANVAS_WIDTH(callback = (self.canvascall,
+					(windowinterface.DOUBLE_WIDTH,))),
+			CANVAS_RESET(callback = (self.canvascall,
+					(windowinterface.RESET_CANVAS,))),
+			NEW_CHANNEL(callback = (self.newchannelcall, ())),
+			ANCESTORS(callback = mother.setviewrootcb),
+			SIBLINGS(callback = mother.setviewrootcb),
+			DESCENDANTS(callback = mother.setviewrootcb),
+			TOGGLE_UNUSED(callback = (mother.toggleshow, ())),
+			THUMBNAIL(callback = (mother.thumbnailcall, ())),
+			TOGGLE_ARCS(callback = (mother.togglearcs, ())),
+			LAYOUTS(callback = mother.layoutcall),
+			]
+		import Help
+		if hasattr(Help, 'hashelp') and Help.hashelp():
+			self.commandlist.append(HELP(callback=(self.helpcall,())))
 		GOCommand.__init__(self)
 
 	def __repr__(self):
@@ -881,31 +957,30 @@ class GO(GOCommand):
 	def canvascall(self, code):
 		self.mother.canvascall(code)
 
-	def newchannelcall(self):
-		self.mother.newchannel(self.newchannelindex())
+	def newchannelcall(self, chtype = None):
+		self.mother.newchannel(self.newchannelindex(), chtype)
 
 	def nextminicall(self):
 		mother = self.mother
 		mother.toplevel.setwaiting()
 		mother.nextviewroot()
-		mother.toplevel.setready()
 
 	def prevminicall(self):
 		mother = self.mother
 		mother.toplevel.setwaiting()
 		mother.prevviewroot()
-		mother.toplevel.setready()
-
-	def toggleshowcall(self):
-		mother = self.mother
-		mother.toplevel.setwaiting()
-		mother.toggleshow()
-		mother.toplevel.setready()
 
 	def newchannelindex(self):
 		# NB Overridden by ChannelBox to insert before current!
 		return len(self.mother.context.channelnames)
 
+
+class BaseBox(GO):
+	def __init__(self, mother, name):
+		GO.__init__(self, mother, name)
+		self.commandlist = self.commandlist + [
+			PUSHFOCUS(callback = (mother.focuscall, ())),
+			]
 
 # Class for the time scale object
 
@@ -992,6 +1067,16 @@ class ChannelBox(GO, ChannelBoxCommand):
 		except KeyError:
 			self.ctype = '???'
 
+		self.commandlist = self.commandlist + [
+			ATTRIBUTES(callback = (self.attrcall, ())),
+			DELETE(callback = (self.delcall, ())),
+			MOVE_CHANNEL(callback = (self.movecall, ())),
+			COPY_CHANNEL(callback = (self.copycall, ())),
+			TOGGLE_ONOFF(callback = (self.channel_onoff, ())),
+			HIGHLIGHT(callback = (self.highlight, ())),
+			UNHIGHLIGHT(callback = (self.unhighlight, ())),
+			]
+		self.menutitle = 'Channel %s ops' % self.name
 		ChannelBoxCommand.__init__(self)
 
 	def channel_onoff(self):
@@ -1000,7 +1085,6 @@ class ChannelBox(GO, ChannelBoxCommand):
 		ch = self.channel
 		if player.is_showing():
 			player.channel_callback(ch.name)
-			self.mother.toplevel.setready()
 			return
 		try:
 			isvis = ch.attrdict['visible']
@@ -1008,7 +1092,6 @@ class ChannelBox(GO, ChannelBoxCommand):
 			isvis = 1
 		ch.attrdict['visible'] = not isvis
 		self.mother.channels_changed()
-		self.mother.toplevel.setready()
 
 	def reshape(self):
 		top, bottom = self.mother.mapchannel(self.channel)
@@ -1092,7 +1175,6 @@ class ChannelBox(GO, ChannelBoxCommand):
 		import AttrEdit
 		AttrEdit.showchannelattreditor(self.mother.toplevel,
 					       self.channel)
-		self.mother.toplevel.setready()
 
 	def delcall(self):
 		if self.channel in self.mother.usedchannels:
@@ -1109,7 +1191,6 @@ class ChannelBox(GO, ChannelBoxCommand):
 		editmgr.delchannel(self.name)
 		mother.cleanup()
 		editmgr.commit()
-		mother.toplevel.setready()
 
 	def movecall(self):
 	        self.mother.movechannel(self.name)
@@ -1159,6 +1240,33 @@ class NodeBox(GO, NodeBoxCommand):
 		self.locked = 0
 		GO.__init__(self, mother, name)
 		self.is_node_object = 1
+		self.commandlist = self.commandlist + [
+			PLAYNODE(callback = (self.playcall, ())),
+			PLAYFROM(callback = (self.playfromcall, ())),
+			PUSHFOCUS(callback = (self.focuscall, ())),
+			FINISH_ARC(callback = (self.newsyncarccall, ())),
+			FINISH_LINK(callback = (self.hyperlinkcall, ())),
+			INFO(callback = (self.infocall, ())),
+			ATTRIBUTES(callback = (self.attrcall, ())),
+			CONTENT(callback = (self.editcall, ())),
+			ANCHORS(callback = (self.anchorcall, ())),
+			SYNCARCS(callback = self.selsyncarc),
+			]
+		self.arcmenu = arcmenu = []
+		if mother.showarcs:
+			for arc in MMAttrdefs.getattr(node, 'synctolist'):
+				xuid, xside, delay, yside = arc
+				try:
+					xnode = node.MapUID(xuid)
+				except NoSuchUIDError:
+					# Skip sync arc from non-existing node
+					continue
+				if xnode.FindMiniDocument() is mother.viewroot:
+					xname = MMAttrdefs.getattr(xnode, 'name')
+					if not xname:
+						xname = '#' + xuid
+					arcmenu.append('From %s of node "%s" to %s of self' % (begend[xside], xname, begend[yside]), (xnode, xside, delay, yside))
+		self.menutitle = 'Node %s ops' % self.name
 		NodeBoxCommand.__init__(self, mother, node)
 
 
@@ -1172,7 +1280,6 @@ class NodeBox(GO, NodeBoxCommand):
 				arc.select()
 				mother.drawarcs()
 				mother.render()
-				mother.toplevel.setready()
 				return
 
 	def getnode(self):
@@ -1372,37 +1479,31 @@ class NodeBox(GO, NodeBoxCommand):
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.player.playsubtree(self.node)
-		top.setready()
 
 	def playfromcall(self):
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.player.playfrom(self.node)
-		top.setready()
 
 	def attrcall(self):
 		self.mother.toplevel.setwaiting()
 		import AttrEdit
 		AttrEdit.showattreditor(self.mother.toplevel, self.node)
-		self.mother.toplevel.setready()
 
 	def infocall(self):
 		self.mother.toplevel.setwaiting()
 		import NodeInfo
 		NodeInfo.shownodeinfo(self.mother.toplevel, self.node)
-		self.mother.toplevel.setready()
 
 	def editcall(self):
 		self.mother.toplevel.setwaiting()
 		import NodeEdit
 		NodeEdit.showeditor(self.node)
-		self.mother.toplevel.setready()
 
 	def anchorcall(self):
 		self.mother.toplevel.setwaiting()
 		import AnchorEdit
 		AnchorEdit.showanchoreditor(self.mother.toplevel, self.node)
-		self.mother.toplevel.setready()
 
 	def newsyncarccall(self):
 		self.mother.init_display()
@@ -1413,7 +1514,6 @@ class NodeBox(GO, NodeBoxCommand):
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.hierarchyview.globalsetfocus(self.node)
-		top.setready()
 
 	def hyperlinkcall(self):
 		self.mother.toplevel.links.finish_link(self.node)
@@ -1449,9 +1549,15 @@ class INodeBox(GO):
 class ArcBox(GO, ArcBoxCommand):
 
 	def __init__(self, mother, snode, sside, delay, dnode, dside):
+		self.arcid = snode, sside, delay, dnode, dside
 		self.snode, self.sside, self.delay, self.dnode, self.dside = \
 			snode, sside, delay, dnode, dside
 		GO.__init__(self, mother, 'arc')
+		self.commandlist = self.commandlist + [
+			INFO(callback = (self.infocall, ())),
+			DELETE(callback = (self.delcall, ())),
+			]
+		self.meutitle = 'Sync arc ops'
 		ArcBoxCommand.__init__(self)
 
 
@@ -1501,7 +1607,6 @@ class ArcBox(GO, ArcBoxCommand):
 		ArcInfo.showarcinfo(self.mother, self.mother.root,
 				    self.snode, self.sside, self.delay,
 				    self.dnode, self.dside)
-		self.mother.toplevel.setready()
 
 	def delcall(self):
 		mother = self.mother
@@ -1513,10 +1618,8 @@ class ArcBox(GO, ArcBoxCommand):
 			self.delay, self.dnode, self.dside)
 		mother.cleanup()
 		editmgr.commit()
-		mother.toplevel.setready()
 
 	def selnode(self, node):
 		top = self.mother.toplevel
 		top.setwaiting()
 		self.mother.globalsetfocus(node)
-		top.setready()

@@ -1,114 +1,54 @@
 #
-# Command/menu mapping for the mac, editor version
+# Command/menu mapping for the win32, editor version
+#
+# (adapted from mac original)
 #
 
-class CommandID:
-	number = 0
-	
-	def __init__(self):
-		self.id = CommandID.number
-		CommandID.number = CommandID.number + 1
-		
+from usercmd import *
+
+# plus wnds arrange cmds
+from wndusercmd import *
+
 # Types of menu entries
 [ENTRY, TOGGLE, SEP, CASCADE] = range(4)
 
 #
-# Global commands
-#
-CLOSE_WINDOW=CommandID()
-UNDO=CommandID()
-CUT=CommandID()
-COPY=CommandID()
-PASTE=CommandID()
-DELETE=CommandID()
-#
-# MainDialog commands
-#	
-NEW_DOCUMENT=CommandID()
-OPEN_URL=CommandID()
-OPEN_FILE=CommandID()
-TRACE=CommandID()
-DEBUG=CommandID()
-CONSOLE=CommandID()
-EXIT=CommandID()
-SAVE=CommandID()
-SAVE_AS=CommandID()
-RESTORE=CommandID()
-CLOSE=CommandID()
-#
-# TopLevel commands
-#
-PLAY=CommandID()
-PLAYERVIEW=CommandID()
-HIERARCHYVIEW=CommandID()
-CHANNELVIEW=CommandID()
-LINKVIEW=CommandID()
-#
-# Hierarchy view commands
-#
-PASTE_BEFORE=CommandID()
-PASTE_AFTER=CommandID()
-PASTE_UNDER=CommandID()
-NEW_BEFORE=CommandID()
-NEW_AFTER=CommandID()
-NEW_UNDER=CommandID()
-NEW_SEQ=CommandID()
-NEW_PAR=CommandID()
-NEW_CHOICE=CommandID()
-NEW_ALT=CommandID()
-ZOOMIN=CommandID()
-ZOOMOUT=CommandID()
-ZOOMHERE=CommandID()
-#
-# Command to hierarchy/channel view
-#
-CANVAS_WIDTH=CommandID()
-CANVAS_HEIGHT=CommandID()
-CANVAS_RESET=CommandID()
-INFO=CommandID()
-ATTRIBUTES=CommandID()
-ANCHORS=CommandID()
-CONTENT=CommandID()
-PLAYNODE=CommandID()
-PLAYFROM=CommandID()
-PUSHFOCUS=CommandID()
-FINISH_LINK=CommandID()
-FINISH_ARC=CommandID()
-#
-# Channel view commands
-#
-NEW_CHANNEL=CommandID()
-TOGGLE_UNUSED=CommandID()
-NEXT_MINIDOC=CommandID()
-PREV_MINIDOC=CommandID()
-MOVE_CHANNEL=CommandID()
-COPY_CHANNEL=CommandID()
-TOGGLE_ONOFF=CommandID()
+# missing commands from menubar
+UNUSED_COMMANDS=(
+	ANCESTORS,
+	DESCENDANTS,
+	SIBLINGS,
+	SYNCARCS,
+	MAGIC_PLAY,
+)
 
 #
 # Menu structure
 #
+
 MENUBAR=(
 	('File', (
 		(ENTRY, 'New', 'N', NEW_DOCUMENT),
-		(ENTRY, 'Open URL...', 'U', OPEN_URL),
-		(ENTRY, 'Open...', 'O', OPEN_FILE),
-		(ENTRY, 'Close window', 'W', CLOSE_WINDOW),
+		(ENTRY, 'Open...', 'O', OPEN),
 		(ENTRY, 'Close document', None, CLOSE),
 		(SEP,),
 		(ENTRY, 'Save', 'S', SAVE),
 		(ENTRY, 'Save as...', None, SAVE_AS),
 		(ENTRY, 'Restore', None, RESTORE),
 		(SEP,),
+		(ENTRY, 'Preferences...', None, PREFERENCES),
+		(SEP,),
 		(CASCADE, 'Debug', (
 			(TOGGLE, 'Enable call tracing', None, TRACE),
 			(ENTRY, 'Enter debugger', None, DEBUG),
+			(ENTRY, 'Abort', None, CRASH),
 			(ENTRY, 'Show log/debug window', None, CONSOLE))),
 		(SEP,),
-		(ENTRY, 'Quit', 'Q', EXIT))),
+		(ENTRY, 'Exit', 'Q', EXIT))),
 
 	('Edit', (
 		(ENTRY, 'Undo', 'Z', UNDO),
+		(SEP,),
 		(ENTRY, 'Cut', 'X', CUT),
 		(ENTRY, 'Copy', 'C', COPY),
 		(ENTRY, 'Paste', 'V', PASTE),
@@ -133,9 +73,11 @@ MENUBAR=(
 
 	('View', (
 		(TOGGLE, 'Player', '1', PLAYERVIEW),
-		(TOGGLE, 'Hierarchy', '2', HIERARCHYVIEW),
-		(TOGGLE, 'Channel/timeline', '3', CHANNELVIEW),
-		(TOGGLE, 'Hyperlinks', '4', LINKVIEW),
+		(TOGGLE, 'Layout', '2', LAYOUTVIEW),
+		(TOGGLE, 'Hierarchy', '3', HIERARCHYVIEW),
+		(TOGGLE, 'Channel/timeline', '4', CHANNELVIEW),
+		(TOGGLE, 'Hyperlinks', '5', LINKVIEW),
+		(TOGGLE, 'Source', '6', SOURCE),
 		(SEP,),
 		(ENTRY, 'Zoom in', None, ZOOMIN),
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
@@ -145,16 +87,21 @@ MENUBAR=(
 			(ENTRY, 'Enlarge height', None, CANVAS_HEIGHT),
 			(ENTRY, 'Reset', None, CANVAS_RESET))),
 		(SEP,),
-		(ENTRY, 'Toggle unused channels', 'T', TOGGLE_UNUSED),
+		(TOGGLE, 'Show unused channels', 'T', TOGGLE_UNUSED),
+		(TOGGLE, 'Show sync arcs', None, TOGGLE_ARCS),
+		(TOGGLE, 'Show image thumbnails', None, THUMBNAIL),
 		(SEP,),
 		(CASCADE, 'Mini-document', (
 			(ENTRY, 'Next', None, NEXT_MINIDOC),
 			(ENTRY, 'Previous', None, PREV_MINIDOC))))),
 		
 	('Play', (
-		(ENTRY, 'Whole document', 'P', PLAY),
-		(ENTRY, 'Node', None, PLAYNODE),
-		(ENTRY, 'Starting at node', None, PLAYFROM))),
+		(ENTRY, 'Play document', 'P', PLAY),
+		(ENTRY, 'Pause', None, PAUSE),
+		(ENTRY, 'Stop', None, STOP),
+		(SEP,),
+		(ENTRY, 'Play node', None, PLAYNODE),
+		(ENTRY, 'Play from node', None, PLAYFROM))),
 
 	('Focus', (
 		(ENTRY, 'Synchronize', 'F', PUSHFOCUS),
@@ -165,7 +112,18 @@ MENUBAR=(
 		(ENTRY, 'Edit content', 'E', CONTENT),
 		(SEP,),
 		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
-		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC))))
+		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC))),
+
+	('Window', (
+		(ENTRY, 'Close', 'W', CLOSE_WINDOW),
+		(SEP,),
+		(ENTRY, '&Cascade', 'C', CASCADE_WNDS),
+		(ENTRY, 'Tile &Horizontally', 'H', TILE_HORZ),
+		(ENTRY, '&Tile Vertically', 'T', TILE_VERT),)),
+
+	('Help', (
+		(ENTRY, 'Help...', None, HELP),
+		(SEP,),
+		(ENTRY, 'About...', None, ABOUT_CMIF))))
 		
-			
 		

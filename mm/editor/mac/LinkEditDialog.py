@@ -111,6 +111,7 @@ class LinkEditDialog(windowinterface.MACDialog):
 		"""
 		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_LINKEDIT,
 				ITEMLIST_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
+		self._window.register(WMEVENTS.WindowExit, self._close_window, ())
 		
 		self._left_client_data = cbarg1
 		self._right_client_data = cbarg2
@@ -123,6 +124,9 @@ class LinkEditDialog(windowinterface.MACDialog):
 		# Create the menus
 		self._leftmenu = windowinterface.FullPopupMenu(menu1)
 		self._rightmenu = windowinterface.FullPopupMenu(menu2)
+		
+	def _close_window(self, *dummies):
+		self.delete_callback()
 						
 	def do_itemhit(self, item, event):
 		if item == ITEM_LEFT_NODESELECT:
@@ -164,7 +168,8 @@ class LinkEditDialog(windowinterface.MACDialog):
 			self.ok_callback()
 		else:
 			print 'Unexpected dialog event, item', item, 'event', event
-			
+		return 1
+		
 	def _typeclick(self, item):
 		self.linktypesetchoice(item)
 		self.linktype_callback()

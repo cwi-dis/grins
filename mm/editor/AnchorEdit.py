@@ -242,6 +242,7 @@ class AnchorEditor(AnchorEditorDialog):
 		if self.focus is None:
 			print 'AnchorEdit: set_type without focus!'
 			return
+		self.toplevel.setwaiting()
 		old = new = self.anchorlist[self.focus]
 		if type is None:
 			type = new[A_TYPE]

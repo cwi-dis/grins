@@ -5,85 +5,86 @@
 from ViewDialog import ViewDialog
 import windowinterface
 import WMEVENTS
+from usercmd import *
 
 class HierarchyViewDialog(ViewDialog):
-
-	def __init__(self):
-		ViewDialog.__init__(self, 'hview_')
-		self.menu = [
+	adornments = {
+		'shortcuts': {'d': DELETE,
+			      'x': CUT,
+			      'c': COPY,
+			      'p': PLAYNODE,
+			      'G': PLAYFROM,
+			      'i': INFO,
+			      'a': ATTRIBUTES,
+			      'e': CONTENT,
+			      't': ANCHORS,
+			      'L': FINISH_LINK,
+			      'f': PUSHFOCUS,
+			      'z': ZOOMOUT,
+			      '.': ZOOMHERE,
+			      'Z': ZOOMIN,
+			      },
+		'menubar': [
 			('Close', [
-				(None, 'Close', (self.hide, ())),
+				('Close', CLOSE_WINDOW),
 				]),
 			('Edit', [
-				(None, 'New node', [
-					(None, 'Before focus',
-					 (self.createbeforecall, ())),
-					(None, 'After focus',
-					 (self.createaftercall, ())),
-					(None, 'Under focus',
-					 (self.createundercall, ())),
-					(None, 'Above focus', [
-						(None, 'Sequential',
-						 (self.createseqcall, ())),
-						(None, 'Parallel',
-						 (self.createparcall, ())),
-						(None, 'Choice',
-						 (self.createbagcall, ())),
-						(None, 'Alternate',
-						 (self.createaltcall, ())),
+				('New node', [
+					('Before focus', NEW_BEFORE),
+					('After focus', NEW_AFTER),
+					('Under focus', NEW_UNDER),
+					('Above focus', [
+						('Sequential', NEW_SEQ),
+						('Parallel', NEW_PAR),
+						('Choice', NEW_CHOICE),
+						('Alternate', NEW_ALT),
 						]),
 					]),
-				('d', 'Delete focus', (self.deletecall, ())),
+				('Delete focus', DELETE),
 				None,
-				('x', 'Cut focus', (self.cutcall, ())),
-				('c', 'Copy focus', (self.copycall, ())),
-				(None, 'Paste', [
-					(None, 'Before focus',
-					 (self.pastebeforecall, ())),
-					(None, 'After focus',
-					 (self.pasteaftercall, ())),
-					(None, 'Under focus',
-					 (self.pasteundercall, ())),
+				('Cut focus', CUT),
+				('Copy focus', COPY),
+				('Paste', [
+					('Before focus', PASTE_BEFORE),
+					('After focus', PASTE_AFTER),
+					('Under focus', PASTE_UNDER),
 					])
 				]),
 			('Node', [
-				('p', 'Play node', (self.playcall, ())),
-				('G', 'Play from node', (self.playfromcall, ())),
+				('Play node', PLAYNODE),
+				('Play from node', PLAYFROM),
 				None,
-				('i', 'Node info...', (self.infocall, ())),
-				('a', 'Node attr...', (self.attrcall, ())),
-				('e', 'Edit contents...', (self.editcall, ())),
-				('t', 'Edit anchors...', (self.anchorcall, ())),
+				('Node info...', INFO),
+				('Node attr...', ATTRIBUTES),
+				('Edit contents...', CONTENT),
+				('Edit anchors...', ANCHORS),
 				None,
-				('L', 'Finish hyperlink...', (self.hyperlinkcall, ()))
+				('Finish hyperlink...', FINISH_LINK)
 				]),
 			('Focus', [
-				('f', 'Push focus', (self.focuscall, ())),
-				('z', 'Zoom out', (self.zoomoutcall, ())),
-				('.', 'Zoom here', (self.zoomherecall, ())),
-				('Z', 'Zoom in', (self.zoomincall, ()))
+				('Synchronize', PUSHFOCUS),
+				None,
+				('Zoom out', ZOOMOUT),
+				('Zoom here', ZOOMHERE),
+				('Zoom in', ZOOMIN)
 				]),
 			('View', [
-				(None, 'Double height of canvas',
-				 (self.canvascall,
-				  (windowinterface.DOUBLE_HEIGHT,))),
-				(None, 'Double width of canvas',
-				 (self.canvascall,
-				  (windowinterface.DOUBLE_WIDTH,))),
-				(None, 'Reset canvas size',
-				 (self.canvascall,
-				  (windowinterface.RESET_CANVAS,))),
-				(None, 'Show thumbnails',
-				 (self.thumbnailcall, ()),
-				 't', self.thumbnails),
+				('Double height of canvas', CANVAS_HEIGHT),
+				('Double width of canvas', CANVAS_WIDTH),
+				('Reset canvas size', CANVAS_RESET),
+				(('Show thumbnails', 'Hide thumbnails'),
+				 THUMBNAIL, 't'),
 				]),
-			]
-		import Help
-		if Help.hashelp():
-			self.menu.append(
-				('Help', [
-					('h', 'Help...', (self.helpcall, ())),
-					]))
+			('Help', [
+				('Help...', HELP),
+				]),
+			],
+		'toolbar': None, # no images yet...
+		'close': [ CLOSE_WINDOW, ],
+		}
+
+	def __init__(self):
+		ViewDialog.__init__(self, 'hview_')
 
 	# transf from HierarchyView
 	def helpcall(self):
@@ -97,12 +98,13 @@ class HierarchyViewDialog(ViewDialog):
 		title = 'Hierarchy View (%s)' % self.toplevel.basename
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
-		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, menubar=self.menu, canvassize = (w, h))
-		if self.waiting:
-			self.window.setcursor('watch')
+		self.window = windowinterface.newcmwindow(x, y, w, h, title,
+				pixmap = 1, adornments = self.adornments,
+				canvassize = (w, h),
+				commandlist = self.commands)
+		self.window.set_toggle(THUMBNAIL, self.thumbnails)
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
-		self.window.register(WMEVENTS.WindowExit, self.hide, None)
 
 	def hide(self, *rest):
 		self.save_geometry()
@@ -116,3 +118,8 @@ class HierarchyViewDialog(ViewDialog):
 			title = 'Hierarchy View (' + self.toplevel.basename + ')'
 			self.window.settitle(title)
 
+	def settoggle(self, command, onoff):
+		self.window.set_toggle(command, onoff)
+
+	def setcommands(self, commandlist):
+		self.window.set_commandlist(commandlist)

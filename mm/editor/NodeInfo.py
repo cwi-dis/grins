@@ -99,17 +99,42 @@ class NodeInfo(NodeInfoDialog):
 	def kill(self):
 		self.close()
 
+	def calcchannelnames(self):
+		layout = MMAttrdefs.getattr(self.node, 'layout')
+		layoutchannels = self.context.layouts.get(layout, [])
+		if layout:
+			channelnames1 = self.newchannels[:]
+			channelnames2 = []
+		else:
+			channelnames1 = []
+			channelnames2 = self.newchannels[:]
+		for ch in layoutchannels:
+			channelnames1.append(ch.name)
+		channelnames1.sort()
+		for chname in self.context.channelnames:
+			if chname not in channelnames1:
+				channelnames2.append(chname)
+		channelnames2.sort()
+		if channelnames1 and channelnames2:
+			# add separator between lists
+			sep = [None]
+		else:
+			sep = []
+		allchannelnames = channelnames1 + sep + channelnames2
+		if allchannelnames:
+			sep = [None]
+		else:
+			sep = []
+		self.allchannelnames = [UNDEFINED] + sep + \
+				       allchannelnames + \
+				       sep + [NEW_CHANNEL]
+
 	def getvalues(self, always):
 		#
 		# First get all values (except those changed, if
 		# always is true)
 		#
-		allchannelnames = self.context.channelnames + \
-				  self.newchannels
-		allchannelnames.sort()
-		self.allchannelnames = [UNDEFINED] + \
-				       allchannelnames + \
-				       [NEW_CHANNEL]
+		self.calcchannelnames()
 		if always:
 			self.changed = 0
 		if always or not self.ch_name():
@@ -213,8 +238,14 @@ class NodeInfo(NodeInfoDialog):
 					root = ''
 		index = len(context.channelnames)
 		em.addchannel(channelname, index, self.guesstype())
+		ch = context.channeldict[channelname]
 		if root:
-			context.channeldict[channelname]['base_window'] = root
+			ch['base_window'] = root
+		# if the node belongs to a layout, add the new channel
+		# to that layouf
+		layout = MMAttrdefs.getattr(self.node, 'layout')
+		if context.layouts.has_key(layout):
+			em.addlayoutchannel(layout, ch)
 
 	def guesstype(self):
 		# guess channel type from URL
@@ -361,10 +392,8 @@ class NodeInfo(NodeInfoDialog):
 			self.changed = 1
 			if self.channelname not in all:
 				self.newchannels.append(self.channelname)
-				all.insert(len(all) - 1, self.channelname)
-				l = all[1:-1]
-				l.sort()
-				all[1:-1] = l
+				self.calcchannelnames()
+				all = self.allchannelnames
 		self.setchannelnames(all, all.index(self.channelname))
 			
 	def attributes_callback(self):

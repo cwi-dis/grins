@@ -2,11 +2,89 @@ from ViewDialog import ViewDialog
 import windowinterface
 import WMEVENTS
 import MMAttrdefs
-import Help
-
-begend = ('begin', 'end')
+from usercmd import *
 
 class ChannelViewDialog(ViewDialog):
+	adornments = {
+		'shortcuts': {
+			'n': NEW_CHANNEL,
+			'N': NEXT_MINIDOC,
+			'P': PREV_MINIDOC,
+			'T': TOGGLE_UNUSED,
+			'i': INFO,
+			'a': ATTRIBUTES,
+			'd': DELETE,
+			'm': MOVE_CHANNEL,
+			'c': COPY_CHANNEL,
+			'p': PLAYNODE,
+			'G': PLAYFROM,
+			'f': PUSHFOCUS,
+			's': FINISH_ARC,
+			'L': FINISH_LINK,
+			'e': CONTENT,
+			't': ANCHORS,
+			},
+		'menubar': [
+			('Close', [
+				('Close', CLOSE_WINDOW),
+				]),
+			('Edit', [
+				('Undo', UNDO),
+				('Delete', DELETE),
+				('New channel...', NEW_CHANNEL),
+				('Move channel', MOVE_CHANNEL),
+				('Copy channel', COPY_CHANNEL),
+				None,
+				('Toggle on/off', TOGGLE_ONOFF),
+				]),
+			('Focus', [
+				('Synchronize', PUSHFOCUS),
+				None,
+				('Play node', PLAYNODE),
+				('Play from node', PLAYFROM),
+				None,
+				('Show info...', INFO),
+				('Show attributes...', ATTRIBUTES),
+				('Show anchors...', ANCHORS),
+				('Edit content...', CONTENT),
+				None,
+				('Finish hyperlink to focus...', FINISH_LINK),
+				('Finish syncarc from focus...', FINISH_ARC),
+				None,
+				('Select sync arc', SYNCARCS),
+				]),
+			('Layouts', LAYOUTS),
+			('View', [
+				(('Show unused channels',
+				  'Hide unused channels'),
+				 TOGGLE_UNUSED, 't'),
+				(('Show sync arcs', 'Hide sync arcs'),
+				 TOGGLE_ARCS, 't'),
+				(('Show thumbnails', 'Hide thumbnails'),
+				 THUMBNAIL, 't'),
+				None,
+				('Minidocument', [
+					('Next', NEXT_MINIDOC),
+					('Previous', PREV_MINIDOC),
+					('Ancestors', ANCESTORS),
+					('Siblings', SIBLINGS),
+					('Descendants', DESCENDANTS),
+					]),
+				None,
+				('Highlight', HIGHLIGHT),
+				('Unhighlight', UNHIGHLIGHT),
+				None,
+				('Double height of canvas', CANVAS_HEIGHT),
+				('Double width of canvas', CANVAS_WIDTH),
+				('Reset canvas size', CANVAS_RESET),
+				]),
+			('Help', [
+				('Help...', HELP),
+				]),
+			],
+		'toolbar': None, # no images yet...
+		'close': [ CLOSE_WINDOW, ],
+		}
 
 	def __init__(self):
 		ViewDialog.__init__(self, 'cview_')
@@ -14,111 +92,48 @@ class ChannelViewDialog(ViewDialog):
 	def show(self, title):
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
-		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, canvassize = (w, h))
-		if self.waiting:
-			self.window.setcursor('watch')
+		self.window=windowinterface.newview(x, y, w, h, title, 
+			adornments = self.adornments,canvassize = (w, h),
+			context='cview_')
+		self.window.set_toggle(THUMBNAIL, self.thumbnails)
+		self.window.set_toggle(TOGGLE_UNUSED, self.showall)
+		self.window.set_toggle(TOGGLE_ARCS, self.showarcs)
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
-		self.window.register(WMEVENTS.WindowExit, self.hide, None)
 
 	def hide(self, *rest):
-		#self.save_geometry()# <-- until corrected inc the core code
+		self.save_geometry()
 		self.window.close()
 		self.window = None
 		self.displist = self.new_displist = None
 
 	def setcommands(self, commandlist, title):
-		self.window.create_menu(commandlist, title = title)
+		self.window.set_commandlist(commandlist)
+		self.window.set_dynamiclist(ANCESTORS, self.baseobject.ancestors)
+		self.window.set_dynamiclist(SIBLINGS, self.baseobject.siblings)
+		self.window.set_dynamiclist(DESCENDANTS, self.baseobject.descendants)
+		self.window.set_dynamiclist(SYNCARCS, (self.focus and self.focus.arcmenu) or [])
+		self.window.set_dynamiclist(LAYOUTS, self.layouts)
+
+	def settoggle(self, command, onoff):
+		self.window.set_toggle(command, onoff)
 
 class GOCommand:
 	def __init__(self):
-		self.commandlist = c = []
-		if Help.hashelp():
-			c.append('h', 'Help...', (self.helpcall, ()))
-		c.append('', 'Canvas', [
-			('', 'Double height',
-			 (self.canvascall, (windowinterface.DOUBLE_HEIGHT,))),
-			('', 'Double width',
-			 (self.canvascall, (windowinterface.DOUBLE_WIDTH,))),
-			('', 'Double size',
-			 (self.canvascall, (windowinterface.DOUBLE_SIZE,))),
-			('', 'Reset',
-			 (self.canvascall, (windowinterface.RESET_CANVAS,)))])
-		c.append('n', 'New channel...',  (self.newchannelcall, ()))
-		c.append('N', 'Next mini-document', (self.nextminicall, ()))
-		c.append('P', 'Previous mini-document', (self.prevminicall, ()))
-		c.append('',  'Ancestors', self.ancestors)
-		c.append('', 'Siblings', self.siblings)
-		c.append('', 'Descendants', self.descendants)
-		c.append('T', 'Toggle unused channels', (self.toggleshowcall, ()))
-		self.menutitle = 'Base ops'
+		pass
 
 	def helpcall(self):
-		Help.givehelp('Channel_view')
+		pass
+
 
 class ChannelBoxCommand:
 	def __init__(self):
-		c = self.commandlist
-		c.append(None)
-## 		c.append('i', '', (self.attrcall, ()))
-		c.append('a', 'Channel attr...', (self.attrcall, ()))
-		c.append('d', 'Delete channel',  (self.delcall, ()))
-		c.append('m', 'Move channel', (self.movecall, ()))
-		c.append('c', 'Copy channel', (self.copycall, ()))
-		c.append(None)
-		c.append('', 'Toggle on/off', (self.channel_onoff, ()))
-		c.append(None)
-		c.append('', 'Highlight window', (self.highlight, ()))
-		c.append('', 'Unhighlight window', (self.unhighlight, ()))
-		self.menutitle = 'Channel ' + self.name + ' ops'
+		pass
 
 class NodeBoxCommand:
 	def __init__(self, mother, node):
-		c = self.commandlist
-		c.append(None)
-		c.append('p', 'Play node...', (self.playcall, ()))
-		c.append('G', 'Play from here...', (self.playfromcall, ()))
-		c.append('f', 'Push focus', (self.focuscall, ()))
-		c.append(None)
-		c.append('s', 'Finish sync arc...', (self.newsyncarccall, ()))
-		c.append('L', 'Finish hyperlink...', (self.hyperlinkcall, ()))
-		c.append(None)
-		c.append('i', 'Node info...', (self.infocall, ()))
-		c.append('a', 'Node attr...', (self.attrcall, ()))
-		c.append('e', 'Edit contents...', (self.editcall, ()))
-		c.append('t', 'Edit anchors...', (self.anchorcall, ()))
-		arcmenu = []
-		for arc in MMAttrdefs.getattr(node, 'synctolist'):
-			xuid, xside, delay, yside = arc
-			try:
-				xnode = node.MapUID(xuid)
-			except NoSuchUIDError:
-				# Skip sync arc from non-existing node
-				continue
-			if xnode.FindMiniDocument() is mother.viewroot:
-				xname = MMAttrdefs.getattr(xnode, 'name')
-				if not xname:
-					xname = '#' + xuid
-				arcmenu.append('', 'From %s of node "%s" to %s of self' % (begend[xside], xname, begend[yside]), (self.selsyncarc, (xnode, xside, delay, yside)))
-		if arcmenu:
-			c.append('', 'Select sync arc', arcmenu)
-		self.menutitle = 'Node ' + self.name + ' ops'
+		pass
 
 class ArcBoxCommand:
 	def __init__(self):
-		c = self.commandlist
-		c.append(None)
-		c.append('i', 'Sync arc info...', (self.infocall, ()))
-		c.append('d', 'Delete sync arc',  (self.delcall, ()))
-		sname = MMAttrdefs.getattr(self.snode, 'name')
-		if not sname:
-			sname = '#' + self.snode.GetUID()
-		dname = MMAttrdefs.getattr(self.dnode, 'name')
-		if not dname:
-			dname = '#' + self.dnode.GetUID()
-		c.append('', 'Select node', [
-			('', 'Source node "%s"' % sname, (self.selnode, (self.snode,))),
-			('', 'Destination node "%s"' % dname, (self.selnode, (self.dnode,))),
-			])
-		self.menutitle = 'Sync arc ' + self.name + ' ops'
-
+		pass

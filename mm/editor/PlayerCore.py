@@ -28,6 +28,7 @@ class PlayerCore(Selecter):
 		self.editmgr.register(self)
 		self.chans_showing = 0
 		Selecter.__init__(self)
+		self.context.registergetchannelbynode(self.getchannelbynode)
 	#
 	# EditMgr interface (as dependent client).
 	#
@@ -52,7 +53,6 @@ class PlayerCore(Selecter):
 			if self.userplayroot.GetRoot() is not self.root:
 				self.userplayroot = self.root
 		self.locked = 0
-		self.measure_armtimes = 1
 		self.showstate()
 	#
 	def rollback(self):
@@ -67,7 +67,6 @@ class PlayerCore(Selecter):
 	def fullreset(self):
 		self.reset()
 		self.playroot = self.userplayroot = self.root
-		self.measure_armtimes = 0
 	#
 	# play_done - Upcall by scheduler to indicate that all is done.
 	#
@@ -156,13 +155,11 @@ class PlayerCore(Selecter):
 		self.makemenu()
 	#
 	def checkchannels(self):
-		chchanged = 0
 		# XXX Ought to detect renamed channels...
 		# (1) Delete channels that have disappeared
 		# or whose type has changed
 		for name in self.channelnames[:]:
 			if name not in self.context.channelnames:
-				chchanged = 1
 ## 				print 'Detected deleted channel'
 				self.killchannel(name)
 			else:
@@ -172,7 +169,6 @@ class PlayerCore(Selecter):
 				if oldtype <> newtype:
 ## 					print 'Detected retyped channel'
 					self.killchannel(name)
-					chchanged = 1
 		# (2) Add new channels that have appeared
 		for name in self.context.channelnames:
 			if name not in self.channelnames:
@@ -181,16 +177,11 @@ class PlayerCore(Selecter):
 				self.newchannel(name, attrdict)
 				i = self.context.channelnames.index(name)
 				self.channelnames.insert(i, name)
-				self.channels[name].show()
-				chchanged = 1
 		# (3) Update visibility of all channels
 		for name in self.channelnames:
 			self.channels[name].check_visible()
-		# (4) Update menu
-		self.makemenu()
-		## Not needed (this is only used inside commit!)
-		##if chchanged:
-		##	self.toplevel.channelview.channels_changed()
+		# (4) Update layout and menu
+		self.setlayout(self.curlayout, self.curchannel)
 	#
 	def getchannelbyname(self, name):
 		if self.channels.has_key(name):
@@ -214,15 +205,13 @@ class PlayerCore(Selecter):
 		aftershow = self.aftershow
 		self.aftershow = None
 		if aftershow:
-			apply(aftershow[0], aftershow[1])
+			apply(apply, aftershow)
 
 	def showchannels(self):
-		self.before_chan_show()
 		for name in self.channelnames:
 			ch = self.channels[name]
 			if ch.may_show():
 				ch.show()
-		self.after_chan_show()
 		self.makemenu()
 	#
 	def hidechannels(self):
@@ -253,7 +242,5 @@ class PlayerCore(Selecter):
 		chclass = channelmap[type]
 		ch = chclass(name, attrdict, self.scheduler, self)
 		ch.setpaused(self.pausing)
-		if self.waiting:
-			ch.setwaiting()
 		self.channels[name] = ch
 		self.channeltypes[name] = type

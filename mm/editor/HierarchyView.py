@@ -10,6 +10,7 @@ import windowinterface, WMEVENTS
 import MMAttrdefs
 import MMNode
 from HierarchyViewDialog import HierarchyViewDialog
+from usercmd import *
 
 
 def fix(r, g, b): return r, g, b	# Hook for color conversions
@@ -55,10 +56,62 @@ class HierarchyView(HierarchyViewDialog):
 	#################################################
 
 	def __init__(self, toplevel):
+		self.commands = [
+			CLOSE_WINDOW(callback = (self.hide, ())),
+
+			NEW_UNDER(callback = (self.createundercall, ())),
+
+			COPY(callback = (self.copycall, ())),
+
+			PLAYNODE(callback = (self.playcall, ())),
+			PLAYFROM(callback = (self.playfromcall, ())),
+			INFO(callback = (self.infocall, ())),
+			ATTRIBUTES(callback = (self.attrcall, ())),
+			CONTENT(callback = (self.editcall, ())),
+			ANCHORS(callback = (self.anchorcall, ())),
+			FINISH_LINK(callback = (self.hyperlinkcall, ())),
+
+			PUSHFOCUS(callback = (self.focuscall, ())),
+
+			CANVAS_HEIGHT(callback = (self.canvascall,
+					(windowinterface.DOUBLE_HEIGHT,))),
+			CANVAS_WIDTH(callback = (self.canvascall,
+					(windowinterface.DOUBLE_WIDTH,))),
+			CANVAS_RESET(callback = (self.canvascall,
+					(windowinterface.RESET_CANVAS,))),
+			THUMBNAIL(callback = (self.thumbnailcall, ())),
+			]
+		self.zoomincommands = [
+			ZOOMIN(callback = (self.zoomincall, ())),
+			ZOOMHERE(callback = (self.zoomherecall, ())),
+			]
+		self.zoomoutcommand = [
+			ZOOMOUT(callback = (self.zoomoutcall, ())),
+			]
+		self.pasteinteriorcommands = [
+			PASTE_UNDER(callback = (self.pasteundercall, ())),
+			]
+		self.pastenotatrootcommands = [
+			PASTE_BEFORE(callback = (self.pastebeforecall, ())),
+			PASTE_AFTER(callback = (self.pasteaftercall, ())),
+			]
+		self.notatrootcommands = [
+			NEW_BEFORE(callback = (self.createbeforecall, ())),
+			NEW_AFTER(callback = (self.createaftercall, ())),
+			NEW_SEQ(callback = (self.createseqcall, ())),
+			NEW_PAR(callback = (self.createparcall, ())),
+			NEW_CHOICE(callback = (self.createbagcall, ())),
+			NEW_ALT(callback = (self.createaltcall, ())),
+			DELETE(callback = (self.deletecall, ())),
+			CUT(callback = (self.cutcall, ())),
+			]
+		import Help
+		if hasattr(Help, 'hashelp') and Help.hashelp():
+			self.commands.append(HELP(callback=(self.helpcall,())))
+
 		self.window = None
 		self.displist = None
 		self.new_displist = None
-		self.waiting = 0
 		self.last_geometry = None
 		self.toplevel = toplevel
 		self.root = self.toplevel.root
@@ -72,8 +125,32 @@ class HierarchyView(HierarchyViewDialog):
 	def __repr__(self):
 		return '<HierarchyView instance, root=' + `self.root` + '>'
 
+	def aftersetfocus(self):
+		import Clipboard
+		commands = self.commands
+		if self.focusnode is not self.root:
+			# can't do certain things to the root
+			commands = commands + self.notatrootcommands
+		if self.viewroot is not self.focusnode:
+			# can only zoom in if focus is different from viewroot
+			commands = commands + self.zoomincommands
+		if self.viewroot is not self.root:
+			# can only zoom out if we're not already viewing root
+			commands = commands + self.zoomoutcommand
+		t, n = Clipboard.getclip()
+		if t == 'node' and n is not None:
+			# can only paste if there's something to paste
+			if self.focusnode.GetType() in MMNode.interiortypes:
+				# can only paste inside interior nodes
+				commands = commands + self.pasteinteriorcommands
+			if self.focusnode is not self.root:
+				# can't paste before/after root node
+				commands = commands + self.pastenotatrootcommands
+		self.setcommands(commands)
+
 	def show(self):
 		HierarchyViewDialog.show(self)
+		self.aftersetfocus()
 		self.window.bgcolor(BGCOLOR)
 		self.objects = []
 		# Other administratrivia
@@ -91,16 +168,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.cleanup()
 		self.editmgr.unregister(self)
 		self.toplevel.checkviews()
-
-	def setwaiting(self):
-		self.waiting = 1
-		if self.window:
-			self.window.setcursor('watch')
-
-	def setready(self):
-		self.waiting = 0
-		if self.window:
-			self.window.setcursor('')
 
 	def is_showing(self):
 		return self.window is not None
@@ -148,6 +215,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def redraw(self, *rest):
 		# RESIZE event.
+		self.toplevel.setwaiting()
 		self.recalc()
 		self.draw()
 
@@ -155,7 +223,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.toplevel.setwaiting()
 		x, y = params[0:2]
 		self.select(x, y)
-		self.toplevel.setready()
 
 ## 	# this doesn't work yet...
 ## 	def rawkey(self, dev, val):
@@ -212,9 +279,13 @@ class HierarchyView(HierarchyViewDialog):
 		parent = node.GetParent()
 		siblings = parent.GetChildren()
 		nf = siblings.index(node)
-		if nf < len(siblings)-1: self.focusnode = siblings[nf+1]
-		elif nf > 0: self.focusnode = siblings[nf-1]
-		else: self.focusnode = parent
+		if nf < len(siblings)-1:
+			self.focusnode = siblings[nf+1]
+		elif nf > 0:
+			self.focusnode = siblings[nf-1]
+		else:
+			self.focusnode = parent
+		self.aftersetfocus()
 		em.delnode(node)
 		if cut:
 			import Clipboard
@@ -225,7 +296,6 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			self.destroynode = node
 		em.commit()
-		self.toplevel.setready()
 
 	def copyfocus(self):
 		node = self.focusnode
@@ -237,6 +307,7 @@ class HierarchyView(HierarchyViewDialog):
 		if t == 'node' and n is not None:
 			n.Destroy()
 		Clipboard.setclip('node', node.DeepCopy())
+		self.aftersetfocus()
 
 	def create(self, where):
 		node = self.focusnode
@@ -257,11 +328,16 @@ class HierarchyView(HierarchyViewDialog):
 			children = node.GetChildren()
 			if children:
 				type = children[0].GetType()
+		if where <> 0:
+			layout = MMAttrdefs.getattr(parent, 'layout')
+		else:
+			layout = MMAttrdefs.getattr(node, 'layout')
 		node = self.root.context.newnode(type)
+		if not layout and self.toplevel.layoutview.curlayout is not None:
+			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
 		if self.insertnode(node, where):
 			import NodeInfo
 			NodeInfo.shownodeinfo(self.toplevel, node, new = 1)
-		self.toplevel.setready()
 
 	def insertparent(self, type):
 		node = self.focusnode
@@ -287,10 +363,10 @@ class HierarchyView(HierarchyViewDialog):
 		em.addnode(parent, i, newnode)
 		em.addnode(newnode, 0, node)
 		self.focusnode = newnode
+		self.aftersetfocus()
 		em.commit()
 		import NodeInfo
 		NodeInfo.shownodeinfo(self.toplevel, newnode)
-		self.toplevel.setready()
 
 	def paste(self, where):
 		import Clipboard
@@ -311,7 +387,6 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			Clipboard.setclip(type, node.DeepCopy())
 		dummy = self.insertnode(node, where)
-		self.toplevel.setready()
 
 	def insertnode(self, node, where):
 		# 'where' is coded as follows: -1: before; 0: under; 1: after
@@ -342,6 +417,7 @@ class HierarchyView(HierarchyViewDialog):
 				i = i+1
 			em.addnode(parent, i, node)
 		self.focusnode = node
+		self.aftersetfocus()
 		em.commit()
 		return 1
 
@@ -358,8 +434,13 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return
 		path = self.focusnode.GetPath()
-		i = path.index(self.viewroot)
-		self.viewroot = path[i+1]
+		try:
+			i = path.index(self.viewroot)
+		except ValueError:
+			# the focus is on one of the stacked (folded) nodes
+			self.viewroot = self.focusnode
+		else:
+			self.viewroot = path[i+1]
 		self.recalc()
 		self.draw()
 
@@ -383,6 +464,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.focusnode = None
 		if self.focusnode is None:
 			self.focusnode = self.viewroot
+		self.aftersetfocus()
 
 	# Clear the list of objects
 	def cleanup(self):
@@ -476,6 +558,7 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			self.focusnode = None
 			self.focusobj = None
+		self.aftersetfocus()
 
 	# Select the given node as focus, possibly zooming around
 	def setfocusnode(self, node):
@@ -492,6 +575,7 @@ class HierarchyView(HierarchyViewDialog):
 		for vr in path:
 			self.viewroot = vr
 			self.focusnode = node
+			self.aftersetfocus()
 			self.recalc()
 			if self.focusnode is node:
 				break
@@ -518,6 +602,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.focusobj.selected = 1
 		else:
 			self.focusnode = None
+		self.aftersetfocus()
 
 	# Make a list of geometries for boxes
 	def makegeometries(self):
@@ -572,6 +657,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def thumbnailcall(self):
 		self.thumbnails = not self.thumbnails
+		self.settoggle(THUMBNAIL, self.thumbnails)
 		if self.new_displist:
 			self.new_displist.close()
 		self.new_displist = self.window.newdisplaylist(BGCOLOR)
@@ -877,37 +963,31 @@ class Object:
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.player.playsubtree(self.node)
-		top.setready()
 
 	def playfromcall(self):
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.player.playfrom(self.node)
-		top.setready()
 
 	def attrcall(self):
 		self.mother.toplevel.setwaiting()
 		import AttrEdit
 		AttrEdit.showattreditor(self.mother.toplevel, self.node)
-		self.mother.toplevel.setready()
 
 	def infocall(self):
 		self.mother.toplevel.setwaiting()
 		import NodeInfo
 		NodeInfo.shownodeinfo(self.mother.toplevel, self.node)
-		self.mother.toplevel.setready()
 
 	def editcall(self):
 		self.mother.toplevel.setwaiting()
 		import NodeEdit
 		NodeEdit.showeditor(self.node)
-		self.mother.toplevel.setready()
 
 	def anchorcall(self):
 		self.mother.toplevel.setwaiting()
 		import AnchorEdit
 		AnchorEdit.showanchoreditor(self.mother.toplevel, self.node)
-		self.mother.toplevel.setready()
 
 	def hyperlinkcall(self):
 		self.mother.toplevel.links.finish_link(self.node)
@@ -916,25 +996,21 @@ class Object:
 		top = self.mother.toplevel
 		top.setwaiting()
 		top.channelview.globalsetfocus(self.node)
-		top.setready()
 
 	def zoomoutcall(self):
 		mother = self.mother
-		mother.setwaiting()
+		mother.toplevel.setwaiting()
 		mother.zoomout()
-		mother.setready()
 
 	def zoomincall(self):
 		mother = self.mother
-		mother.setwaiting()
+		mother.toplevel.setwaiting()
 		mother.zoomin()
-		mother.setready()
 
 	def zoomherecall(self):
 		mother = self.mother
-		mother.setwaiting()
+		mother.toplevel.setwaiting()
 		mother.zoomhere()
-		mother.setready()
 
 	def deletecall(self):
 		self.mother.deletefocus(0)
@@ -944,9 +1020,8 @@ class Object:
 
 	def copycall(self):
 		mother = self.mother
-		mother.setwaiting()
+		mother.toplevel.setwaiting()
 		mother.copyfocus()
-		mother.setready()
 
 	def createbeforecall(self):
 		self.mother.create(-1)

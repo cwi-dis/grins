@@ -131,6 +131,7 @@ class ArcInfoDialog(windowinterface.MACDialog):
 			self.apply_callback()
 		else:
 			print 'Unknown ArcInfoDialog item', item, 'event', event
+		return 1
 
 	#
 	# interface methods

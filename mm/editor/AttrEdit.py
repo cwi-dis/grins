@@ -141,7 +141,7 @@ class NodeWrapper(Wrapper):
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['name', 'channel', 'comment', 'loop']
+		namelist = ['name', 'layout', 'channel', 'comment', 'loop']
 		ntype = self.node.GetType()
 		if ntype == 'bag':
 			namelist.append('bag_index')
@@ -318,6 +318,8 @@ class AttrEditor(AttrEditorDialog):
 				C = FontAttrEditorField
 			elif displayername == 'color':
 				C = ColorAttrEditorField
+			elif displayername == 'layoutname':
+				C = LayoutnameAttrEditorField
 			elif displayername == 'channelname':
 				C = ChannelnameAttrEditorField
 			elif displayername == 'basechannelname':
@@ -400,13 +402,12 @@ class AttrEditor(AttrEditorDialog):
 			# can't do a transaction
 			return 1
 		# this may take a while...
-		windowinterface.setcursor('watch')
+		self.wrapper.toplevel.setwaiting()
 		for name, value in dict.items():
 			self.wrapper.delattr(name)
 			if value is not None:
 				self.wrapper.setattr(name, value)
 		self.wrapper.commit()
-		windowinterface.setcursor('')
 
 	#
 	# EditMgr interface
@@ -687,6 +688,13 @@ class TransparencyAttrEditorField(PopupAttrEditorField):
 			return 'Default'
 		return self.__values[self.__valuesmap.index(value)]
 
+class LayoutnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
+	# Choose from the current layout names
+	def getoptions(self):
+		list = self.wrapper.context.layouts.keys()
+		list.sort()
+		return ['Default', 'undefined'] + list
+		
 class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current channel names
 	def getoptions(self):
