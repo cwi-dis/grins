@@ -305,39 +305,39 @@ ora-layout-regp-bottomLeft.smil	Works (Jack, 7-Sep)
 ora-layout-regp-bottomMid.smil	Works (Jack, 7-Sep)
 ora-layout-regp-bottomMid2.smil	Works (Jack, 7-Sep)
 ora-layout-regp-center.smil	Works (Jack, 7-Sep)
-ora-layout-regp-fit-mpeg.smil	Does not work: background is black in stead of yellow (Jack, 12-Sep)
-ora-layout-regp-fit-mpeg2.smil
-ora-layout-regp-fit-mpeg3.smil
-ora-layout-regp-fit-qt2.smil
-ora-layout-regp-fit-qt3.smil
-ora-layout-regp-fit-rv.smil
-ora-layout-regp-html.smil
-ora-layout-regp-midLeft.smil
-ora-layout-regp-midRight.smil
-ora-layout-regp-midRight2.smil
-ora-layout-regp-mpeg.smil
-ora-layout-regp-ra.smil
-ora-layout-regp-rp.smil
-ora-layout-regp-rt.smil
-ora-layout-regp-rv.smil
-ora-layout-regp-text.smil
-ora-layout-regp-topLeft.smil
-ora-layout-regp-topMid.smil
-ora-layout-regp-topRight.smil
-ora-layout-regp-topRight2.smil
-ora-layout-regp-udef-def.smil
-ora-layout-regp-udef-left.smil
-ora-layout-regp-udef-rega.smil
-ora-layout-regp-udef-right.smil
-ora-layout-regp-udef-top.smil
-ora-layout-shbg-al-al.smil
-ora-layout-shbg-al-wa.smil
-ora-layout-shbg-sp.smil
-ora-layout-shbg-wa-al.smil
-ora-layout-shbg-wa-sw.smil
-ora-layout-shbg-wa-wa.smil
-ora-layout-shbg-wa.smil
-ora-layout-subreg-bottom.smil
+ora-layout-regp-fit-mpeg.smil	Does not work: regpoint wrong, background is black in stead of yellow (Jack, 12-Sep)
+ora-layout-regp-fit-mpeg2.smil	Does not work: regpoint wrong, subregion background is black (Jack, 12-Sep)
+ora-layout-regp-fit-mpeg3.smil	Does not work: regpoint wrong, subregion background is black (Jack, 12-Sep)
+ora-layout-regp-fit-qt2.smil	Does not work: regpoint wrong, subregion background is black (Jack, 12-Sep)
+ora-layout-regp-fit-qt3.smil	Does not work: regpoint wrong, subregion background is black (Jack, 12-Sep)
+ora-layout-regp-fit-rv.smil	Does not work: regpoint wrong, subregion background is black (Jack, 12-Sep)
+ora-layout-regp-html.smil	Bug in the document (Jack, 12-Sep)
+ora-layout-regp-midLeft.smil	Works (Jack, 12-Sep)
+ora-layout-regp-midRight.smil	Works (Jack, 12-Sep)
+ora-layout-regp-midRight2.smil	Works (Jack, 12-Sep)
+ora-layout-regp-mpeg.smil	Does not work, regpoint doesn't work for video (Jack, 12-Sep)
+ora-layout-regp-ra.smil	Works, but document comment is wrong (Jack, 12-Sep)
+ora-layout-regp-rp.smil	Doesn't work: RealPix appears broken (Jack, 12-Sep)
+ora-layout-regp-rt.smil	Does not work: regpoint wrong (Jack, 12-Sep)
+ora-layout-regp-rv.smil	Does not work: regpoint wrong (Jack, 12-Sep)
+ora-layout-regp-text.smil	Works, sort of: text is topleft, but that is expected (Jack, 12-Sep)
+ora-layout-regp-topLeft.smil	Works (Jack, 12-Sep)
+ora-layout-regp-topMid.smil	Works (Jack, 12-Sep)
+ora-layout-regp-topRight.smil	Works (Jack, 12-Sep)
+ora-layout-regp-topRight2.smil	Works (Jack, 12-Sep)
+ora-layout-regp-udef-def.smil	Works (Jack, 12-Sep)
+ora-layout-regp-udef-left.smil	Works (Jack, 12-Sep)
+ora-layout-regp-udef-rega.smil	Works (Jack, 12-Sep)
+ora-layout-regp-udef-right.smil	Works (Jack, 12-Sep)
+ora-layout-regp-udef-top.smil	Works (Jack, 12-Sep)
+ora-layout-shbg-al-al.smil	Works (Jack, 12-Sep)
+ora-layout-shbg-al-wa.smil	Works (Jack, 12-Sep)
+ora-layout-shbg-sp.smil	Does not work: we don't see the colors (missing InvalRect?) (Jack, 12-Sep)
+ora-layout-shbg-wa-al.smil	Does not work: we don't see the colors (missing InvalRect?) (Jack, 12-Sep)
+ora-layout-shbg-wa-sw.smil	Does not work: we don't see the colors (missing InvalRect?) (Jack, 12-Sep)
+ora-layout-shbg-wa-wa.smil	Does not work: we don't see the colors (missing InvalRect?) (Jack, 12-Sep)
+ora-layout-shbg-wa.smil	Works (Jack, 12-Sep)
+ora-layout-subreg-bottom.smil	Does not work: the area is correct but the image not bottom-aligned (Jack, 12-Sep)
 ora-layout-subreg-left-pc.smil
 ora-layout-subreg-left.smil
 ora-layout-subreg-right-pc.smil
