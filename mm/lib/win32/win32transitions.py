@@ -83,11 +83,10 @@ class TransitionEngine:
 	
 	def __register_for_timeslices(self):
 		if not self.__fiber_id:
-			self.__fiber_id=windowinterface.register( (self.onIdle,()) )
+			windowinterface.setidleproc(self.onIdle)
+			self.__fiber_id = 1
 
 	def __unregister_for_timeslices(self):
 		if self.__fiber_id:
-			windowinterface.unregister(self.__fiber_id)
-			self.__fiber_id=0
-
-
+			windowinterface.cancelidleproc(self.onIdle)
+			self.__fiber_id = 0
