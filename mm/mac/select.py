@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # select workaround for MacCmif
 #
