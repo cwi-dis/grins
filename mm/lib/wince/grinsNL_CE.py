@@ -19,6 +19,9 @@ from usercmd import *
 
 from version import version
 
+# empty document, used to get a working skin
+EMPTYDOC = 'data:application/smil,<smil/>'
+
 class Main(MainDialog):
 	def __init__(self):
 		import windowinterface, features
@@ -62,14 +65,20 @@ class Main(MainDialog):
 ##			settings.factory_defaults()
 		MainDialog.__init__(self, 'GRiNS')
 		if settings.get('skin'):
-			self.openURL_callback('data:application/smil,<smil/>')
+			self.openURL_callback(EMPTYDOC)
 ##		self._update_recent(None)
 
 	def skin_callback(self):
-		MainDialog.skin_callback(self)
 		import settings
-		if settings.get('skin'):
-			self.openURL_callback('data:application/smil,<smil/>')
+		oldskin = settings.get('skin')
+		MainDialog.skin_callback(self)
+		newskin = settings.get('skin')
+		if newskin and oldskin != newskin:
+			if self.tops:
+				url = self.tops[0].url
+			else:
+				url = EMPTYDOC
+			self.openURL_callback(url)
 
 	def openURL_callback(self, url):
 		import windowinterface
