@@ -46,7 +46,7 @@
 (base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
 	'Border offset' default 'Position/size in percent of base window' channel)
 
-(transparent (bool) 0 'Transparent' transparency
+(transparent (int) 0 'Transparent' transparency
 	'Determines transparency of window' raw)
 
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
