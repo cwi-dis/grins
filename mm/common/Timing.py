@@ -89,7 +89,7 @@ def cleanup(node):
 # Return a node's nominal duration, in seconds, as a floating point value.
 # Should only be applied to leaf nodes.
 #
-from AnchorDefs import A_TYPE, ATYPE_PAUSE, ATYPE_ARGS
+##from AnchorDefs import ATYPE_PAUSE, ATYPE_ARGS
 #
 is_warned = 0
 
@@ -103,7 +103,7 @@ def getduration(node):
 		return d
 	# Check for pausing anchor
 ##	for a in node.GetRawAttrDef('anchorlist', []):
-##		if a[A_TYPE] in (ATYPE_PAUSE, ATYPE_ARGS):
+##		if a.atype in (ATYPE_PAUSE, ATYPE_ARGS):
 ##			if not is_warned:
 ##				print 'Warning: document contains (obsolete) pausing anchors'
 ##				is_warned = 1

@@ -120,7 +120,7 @@ class HtmlChannel(Channel.ChannelWindow):
 				return
 			a = self.played_anchor
 			self.anchor_triggered(self.play_node,
-					      [(a[A_ID], a[A_TYPE])],
+					      [(a.aid, a.atype)],
 					      None)
 		if action == 'extend-adjust':
 			self.time = None
@@ -167,17 +167,16 @@ class HtmlChannel(Channel.ChannelWindow):
 		alist = node.GetRawAttrDef('anchorlist', [])
 		for i in range(len(alist)-1,-1,-1):
 			a = alist[i]
-			atype = a[A_TYPE]
-			if atype == ATYPE_WHOLE:
+			if a.atype == ATYPE_WHOLE:
 				if self.armed_anchor:
 					print 'multiple whole-node anchors on node'
 				self.armed_anchor = a
 		anchors = []
 		for a in alist:
-			atype = a[A_TYPE]
+			atype = a.atype
 			if atype in SourceAnchors and \
 			   atype not in WholeAnchors:
-				anchors.append(a[A_ID])
+				anchors.append(a.aid)
 		return 1
 
 	_boldfonts = [('boldFont', 9.0),
@@ -312,8 +311,8 @@ class HtmlChannel(Channel.ChannelWindow):
 
 	def findanchortype(self, name):
 		for a in MMAttrdefs.getattr(self.play_node, 'anchorlist'):
-			if a[A_ID] == name:
-				return a[A_TYPE]
+			if a.aid == name:
+				return a.atype
 		return None
 
 	def fixanchorlist(self, node):
@@ -334,15 +333,16 @@ class HtmlChannel(Channel.ChannelWindow):
 		if len(anchorlist) == 0:
 			return
 		nodeanchorlist = MMAttrdefs.getattr(node, 'anchorlist')[:]
-		oldanchorlist = map(lambda x:x[A_ID], nodeanchorlist)
+		oldanchorlist = map(lambda x: x.aid, nodeanchorlist)
 		newanchorlist = []
 		for a in anchorlist:
 			if a not in oldanchorlist:
 				newanchorlist.append(a)
 		if not newanchorlist:
 			return
+		from MMNode import MMAnchor
 		for a in newanchorlist:
-			nodeanchorlist.append((a, ATYPE_NORMAL, [], (0,0), None))
+			nodeanchorlist.append(MMAnchor(a, ATYPE_NORMAL, [], (0,0), None))
 		node.SetAttr('anchorlist', nodeanchorlist)
 		MMAttrdefs.flushcache(node)
 
