@@ -97,6 +97,7 @@ class AnchorEditorDialog(windowinterface.MACDialog):
 				
 		# Enable correct set of type labels
 		self.__numtypes = len(typelabels)
+		self.type_choice_hide()		# Correctly shown later
 
 		self.__anchor_browser = self._window.ListWidget(ITEM_BROWSER)
 		self.selection_setlist(list, initial)
