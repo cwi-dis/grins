@@ -224,7 +224,9 @@ class ChannelView(ViewDialog):
 		if self.placing_channel:
 			self.finish_channel(x, y)
 		else:
+			self.toplevel.setwaiting()
 			self.select(x, y)
+			self.toplevel.setready()
 
 	# Time-related subroutines
 
@@ -710,6 +712,7 @@ class ChannelView(ViewDialog):
 		editmgr = self.editmgr
 		if not editmgr.transaction():
 			return		    
+		self.toplevel.setwaiting()
 		i = 1
 		context = self.context
 		if placement_type in (PLACING_NEW, PLACING_COPY):
@@ -739,6 +742,7 @@ class ChannelView(ViewDialog):
 		if placement_type in (PLACING_NEW, PLACING_COPY):
 			import AttrEdit
 			AttrEdit.showchannelattreditor(channel, new = 1)
+		self.toplevel.setready()
 
 	# Window stuff
 
