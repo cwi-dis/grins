@@ -1130,9 +1130,18 @@ HRESULT BltBlend8(IDirectDrawSurface *surf,
 	hr=surf->Lock(0,&desc,DDLOCK_WAIT ,0);
 	if(hr!=DD_OK) return hr;
 	hr=from->Lock(0,&desc1,DDLOCK_WAIT | DDLOCK_READONLY,0);
-	if(hr!=DD_OK) return hr;
+	if(hr!=DD_OK)
+		{	
+		surf->Unlock(0);
+		return hr;
+		}
 	hr=to->Lock(0,&desc2,DDLOCK_WAIT | DDLOCK_READONLY,0);
-	if(hr!=DD_OK) return hr;
+	if(hr!=DD_OK)
+		{	
+		surf->Unlock(0);
+		from->Unlock(0);
+		return hr;
+		}
 	bool usingtable = false;
 	if(w*h>65536)
 		{
@@ -1188,9 +1197,18 @@ HRESULT BltBlend16(IDirectDrawSurface *surf,
 	hr=surf->Lock(0,&desc,DDLOCK_WAIT,0);
 	if(hr!=DD_OK) return hr;
 	hr=from->Lock(0,&desc1,DDLOCK_WAIT | DDLOCK_READONLY,0);
-	if(hr!=DD_OK) return hr;
+	if(hr!=DD_OK)
+		{	
+		surf->Unlock(0);
+		return hr;
+		}
 	hr=to->Lock(0,&desc2,DDLOCK_WAIT | DDLOCK_READONLY,0);
-	if(hr!=DD_OK) return hr;
+	if(hr!=DD_OK)
+		{	
+		surf->Unlock(0);
+		from->Unlock(0);
+		return hr;
+		}
 	int weight = int(prop*256);	
 	for(int row=h-1;row>=0;row--)
 		{
@@ -1236,9 +1254,18 @@ HRESULT BltBlend24(IDirectDrawSurface *surf,
 	hr=surf->Lock(0,&desc,DDLOCK_WAIT,0);
 	if(hr!=DD_OK) return hr;
 	hr=from->Lock(0,&desc1,DDLOCK_WAIT | DDLOCK_READONLY,0);
-	if(hr!=DD_OK) return hr;
+	if(hr!=DD_OK)
+		{	
+		surf->Unlock(0);
+		return hr;
+		}
 	hr=to->Lock(0,&desc2,DDLOCK_WAIT | DDLOCK_READONLY,0);
-	if(hr!=DD_OK) return hr;
+	if(hr!=DD_OK)
+		{	
+		surf->Unlock(0);
+		from->Unlock(0);
+		return hr;
+		}
 
 	int weight = int(prop*256);	
 	for(int row=h-1;row>=0;row--)
@@ -1285,9 +1312,18 @@ HRESULT BltBlend32(IDirectDrawSurface *surf,
 	hr=surf->Lock(0,&desc,DDLOCK_WAIT,0);
 	if(hr!=DD_OK) return hr;
 	hr=from->Lock(0,&desc1,DDLOCK_WAIT | DDLOCK_READONLY,0);
-	if(hr!=DD_OK) return hr;
+	if(hr!=DD_OK)
+		{	
+		surf->Unlock(0);
+		return hr;
+		}
 	hr=to->Lock(0,&desc2,DDLOCK_WAIT | DDLOCK_READONLY,0);
-	if(hr!=DD_OK) return hr;
+	if(hr!=DD_OK)
+		{	
+		surf->Unlock(0);
+		from->Unlock(0);
+		return hr;
+		}
 	int weight = int(prop*256);	
 	for(int row=h-1;row>=0;row--)
 		{
@@ -1329,16 +1365,8 @@ DirectDrawSurface_BltBlend(DirectDrawSurfaceObject *self, PyObject *args)
 			&DirectDrawSurfaceType,&ddsTo, &prop))
 		return NULL;
 
-	DDSURFACEDESC desc;
-	ZeroMemory(&desc, sizeof(desc));
-	desc.dwSize = sizeof(desc);
-	desc.dwFlags = DDSD_WIDTH | DDSD_HEIGHT;
-	self->pI->GetSurfaceDesc(&desc);
-	DWORD width  = desc.dwWidth;
-	DWORD height = desc.dwHeight;
-
 	HRESULT hr;
-
+	
 	// try restoring target if lost
 	hr = self->pI->IsLost();
 	if(hr==DDERR_SURFACELOST)
@@ -1363,6 +1391,38 @@ DirectDrawSurface_BltBlend(DirectDrawSurfaceObject *self, PyObject *args)
 		return Py_None;
 	}
 
+	// cache surface dimensions
+	if(IsRectEmpty(&self->rc)){
+		hr = GetSurfaceRect(self->pI, &self->rc);
+		if (FAILED(hr)){
+			seterror("DirectDrawSurface_BltBlend:GetSurfaceRect", hr);
+			return NULL;
+			}
+		}
+	if(IsRectEmpty(&ddsFrom->rc)){
+		hr = GetSurfaceRect(ddsFrom->pI, &ddsFrom->rc);
+		if (FAILED(hr)){
+			seterror("DirectDrawSurface_BltBlend:GetSurfaceRect", hr);
+			return NULL;
+			}
+		}
+	if(IsRectEmpty(&ddsTo->rc)){
+		hr = GetSurfaceRect(ddsTo->pI, &ddsTo->rc);
+		if (FAILED(hr)){
+			seterror("DirectDrawSurface_BltBlend:GetSurfaceRect", hr);
+			return NULL;
+			}
+		}
+
+	if(!EqualRect(&self->rc, &ddsFrom->rc) || !EqualRect(&ddsFrom->rc, &ddsTo->rc))
+		{
+		seterror("DirectDrawSurface_BltBlend: surface mismatch");
+		return NULL;
+		}
+	
+	DWORD width = self->rc.right - self->rc.left;
+	DWORD height = self->rc.bottom - self->rc.top;
+	
 	Py_BEGIN_ALLOW_THREADS
 	if (dwRGBBitCount==8)
 		hr=BltBlend8(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
