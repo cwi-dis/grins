@@ -51,6 +51,7 @@ class MMNodeContext:
 		if settings.activeFullSmilCss:
 			from SMILCssResolver import SMILCssResolver
 			self.cssResolver = SMILCssResolver(self)
+			self.icssResolver = SMILCssResolver(self)
 
 	def __repr__(self):
 		return '<MMNodeContext instance, channelnames=' \
@@ -654,8 +655,10 @@ class MMChannel:
 		self.d_attrdict = {}
 		if settings.activeFullSmilCss:
 			self._cssId = None
+			self._icssId = None
 			if type == 'layout':
-				self.newCssId(isRoot)
+				self._cssId = self.newCssId(isRoot)
+				self._icssId = self.newCssId(isRoot, animated=1)
 				# allow to maintains the compatibility with old version
 				# this flag shouldn't be accessible in the future
 				self.attrdict['base_winoff'] = (0, 0, 100, 100)
@@ -663,12 +666,15 @@ class MMChannel:
 	def __repr__(self):
 		return '<MMChannel instance, name=' + `self.name` + '>'
 
-	def newCssId(self, isRoot = 0):
-		if not isRoot:
-			self._cssId = self.context.cssResolver.newRegion()
+	def newCssId(self, isRoot = 0, animated=0):
+		if animated:
+			resolver = self.context.icssResolver
 		else:
-			self._cssId = self.context.cssResolver.newRootNode()
-		return self._cssId
+			resolver = self.context.icssResolver
+		if not isRoot:
+			return resolver.newRegion()
+		else:
+			return resolver.newRootNode()
 
 	def _setname(self, name): # Only called from context.setchannelname()
 		self.name = name
@@ -678,6 +684,7 @@ class MMChannel:
 		if settings.activeFullSmilCss:
 			if self.attrdict.get('type') == 'layout':
 				self.context.cssResolver.unlink(self._cssId)
+				self.context.icssResolver.unlink(self._icssId)
 
 	def stillvalid(self):
 		return self.context is not None
@@ -696,30 +703,46 @@ class MMChannel:
 		return self.context.channeldict.get(cname)
 	# end new
 
-	def getCssId(self):
-		return self._cssId
+	def getCssId(self, animated=0):
+		if animated: return self._icssId
+		else: return self._cssId
 
-	def setCssAttr(self, name, value):
-		self.context.cssResolver.setRawAttr(self._cssId, name, value)
+	def setCssAttr(self, name, value, animated):
+		if animated:
+			resolver = self.context.icssResolver
+			id = self._icssId
+		else:
+			resolver = self.context.icssResolver
+			id = self._cssId
+		resolver.setRawAttr(id, name, value)
 
 	def getCssAttr(self, name, defaultValue=None):
-		value = self.context.cssResolver.getAttr(self._cssId, name)
+		if animated:
+			resolver = self.context.icssResolver
+			id = self._icssId
+		else:
+			resolver = self.context.icssResolver
+			id = self._cssId
+		value = resolver.getAttr(id, name)
 		if value == None:
 			return defaultValue
 
 	def getCssRawAttr(self, name, defaultValue=None):
-		if self._cssId == None:
+		if animated:
+			resolver = self.context.icssResolver
+			id = self._icssId
+		else:
+			resolver = self.context.icssResolver
+			id = self._cssId
+		if id == None:
 			return defaultValue
-		value = self.context.cssResolver.getRawAttr(self._cssId, name)
+		value = resolver.getRawAttr(id, name)
 		if value == None:
 			return defaultValue
 		return value
 
 	def isCssAttr(self, name):
-		if name in ['top', 'left', 'right', 'width', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']:
-			return 1
-
-		return 0
+		return name in ['top', 'left', 'right', 'width', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']
 
 	#
 	# Set animated attribute
@@ -847,7 +870,7 @@ class MMChannel:
 			return self.d_attrdict[key]
 		if key == 'base_winoff':
 			if settings.activeFullSmilCss:
-				return self.getPxGeom()
+				return self.getPxGeom(animated)
 		if self.attrdict.has_key(key):
 			return self.attrdict[key]
 		if key == 'bgcolor' and \
@@ -864,27 +887,38 @@ class MMChannel:
 				return pchan.get(key, default)
 		return default
 
-	def getPxGeom(self):
+	def getPxGeom(self, animated=0):
+		if animated:
+			resolver = self.context.icssResolver
+			id = self._icssId
+		else:
+			resolver = self.context.icssResolver
+			id = self._cssId
 		if self.attrdict.get('type') == 'layout':
-			return self.context.cssResolver.getPxGeom(self._cssId)
+			return resolver.getPxGeom(id)
 		else:
 			print 'getPxGeom unsupported on no layout channel'
 			return (0, 0, 100, 100)
 
 	# this method change the pixel geometry of the channel. The modification is reflected in the raw attribute.
 	# for instance, if the raw attribute is specified in pourcent value, the new value still specify in pourcent value, but with a new value.
-	def setPxGeom(self, geom):
+	def setPxGeom(self, geom, animated=0):
+		if animated:
+			resolver = self.context.icssResolver
+			id = self._icssId
+		else:
+			resolver = self.context.icssResolver
+			id = self._cssId
 		if self.attrdict.get('type') == 'layout':
 			left, top, width, height = geom
-			self.context.cssResolver.changePxValue(self._cssId, 'left', left)
-			self.context.cssResolver.changePxValue(self._cssId, 'width', width)
-			self.context.cssResolver.changePxValue(self._cssId, 'top', top)
-			self.context.cssResolver.changePxValue(self._cssId, 'height', height)
+			resolver.changePxValue(id, 'left', left)
+			resolver.changePxValue(id, 'width', width)
+			resolver.changePxValue(id, 'top', top)
+			resolver.changePxValue(id, 'height', height)
 		else:
 			print 'setPxGeom unsupported on no layout channel'
 
-	def getCssId(self):
-		return self._cssId
+
 
 # representation of anchors
 class MMAnchor:
