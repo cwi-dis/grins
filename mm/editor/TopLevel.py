@@ -317,7 +317,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.basename = base[:-5]
 		else:
 			self.basename = base
-		self.window.settitle(self.basename)
+		self.window.settitle(MMurl.unquote(self.basename))
 		for v in self.views:
 			v.fixtitle()
 
