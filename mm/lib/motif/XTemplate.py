@@ -98,11 +98,15 @@ class TemplateDialog:
 		self.__gc.FillRectangle(0, 0, WIDTH, HEIGHT)
 		filename = self.__descriptions[index][1]
 		if filename:
-			rdr = img.reader(toplevel._imgformat, filename)
-			depth = toplevel._imgformat.descr['align'] / 8
+			try:
+				rdr = img.reader(toplevel._imgformat, filename)
+			except:
+				# don't try to display non-existing image...
+				return
 			xim = toplevel._visual.CreateImage(
 				toplevel._visual.depth, X.ZPixmap, 0, rdr.read(),
-				rdr.width, rdr.height, depth * 8, rdr.width * depth)
+				rdr.width, rdr.height, toplevel._imgformat.descr['align'], 0)
+			xim.byte_order = toplevel._byteorder
 			self.__gc.PutImage(xim, 0, 0, (WIDTH-rdr.width)/2, (HEIGHT-rdr.height)/2, rdr.width, rdr.height)
 
 	def __expose(self, widget, client_data, call_data):
