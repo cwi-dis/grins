@@ -10,29 +10,36 @@ import MMAttrdefs
 import os
 from stat import ST_SIZE
 import Duration
-import urllib
+import MMurl
+from urlcache import urlcache
 
 CONTINUOUS_CHANNELS = ['video', 'mpeg', 'movie', 'sound',  'RealAudio',
 			     'RealVideo']
 REAL_CHANNELS = ['RealAudio', 'RealVideo', 'RealText', 'RealPix', 'RealFlash']
 
 def get(node):
-	if node.GetType() != 'ext':
+	ntype = node.GetType()
+	if ntype not in ('ext', 'slide'):
 		# Nodes that are not external consume no bandwidth
 		return 0, 0
 	
-	channel = node.GetChannel()
 	context = node.GetContext()
-	ctype = channel['type']
+	ctype = node.GetChannelType()
 	url = MMAttrdefs.getattr(node, 'file')
+	if ntype == 'slide':
+		purl = MMAttrdefs.getattr(node.GetParent(), 'file')
+		url = MMurl.basejoin(purl, url)
 	url = context.findurl(url)
+	val = urlcache[url].get('bandwidth')
+	if val is not None:
+		return val
 
 	# We skip bandwidth retrieval for nonlocal urls (too expensive)
-	type, rest = urllib.splittype(url)
+	type, rest = MMurl.splittype(url)
 	if type and type != 'file':
 ##		print "DBG: Bandwidth.get: skip nonlocal", url
 		return 0, 0
-	host, rest = urllib.splithost(rest)
+	host, rest = MMurl.splithost(rest)
 	if host and host != 'localhost':
 ##		print "DBG: Bandwidth.get: skip nonlocal", url
 		return 0, 0
@@ -48,17 +55,10 @@ def get(node):
 		if info.has_key('bitrate'):
 			bandwidth = info['bitrate']
 ##		print "DBG: Bandwidth.get: real:", url, prearm, bandwidth
+		urlcache[url]['bandwidth'] = prearm, bandwidth
 		return prearm, bandwidth
 	
-	# Okay, get the filesize
-	filename = urllib.url2pathname(rest)
-	try:
-		# XXXX Incorrect for mac (resource fork size)
-		statb = os.stat(filename)
-	except os.error:
-##		print "DBG: Bandwidth.get: nonexisting", filename
-		return 0, 0
-	filesize = statb[ST_SIZE]
+	filesize = GetSize(url)
 
 	if ctype in CONTINUOUS_CHANNELS:
 		duration = Duration.get(node, ignoreloop=1)
@@ -66,7 +66,36 @@ def get(node):
 			print "Duration.Get: cannot obtain duration:", filename
 			return 0, 0
 ##		print 'DBG: Bandwidth.get: continuous',filename, filesize, float(filesize)*8/duration
+		urlcache[url]['bandwidth'] = 0, float(filesize)*8/duration
 		return 0, float(filesize)*8/duration
 	else:
 ##		print 'DBG: Bandwidth.get: discrete',filename, filesize, float(filesize)*8
+		urlcache[url]['bandwidth'] = float(filesize)*8, 0
 		return float(filesize)*8, 0
+
+def GetSize(url):
+	val = urlcache[url].get('filesize')
+	if val is not None:
+		return val
+
+	# We skip bandwidth retrieval for nonlocal urls (too expensive)
+	type, rest = MMurl.splittype(url)
+	if type and type != 'file':
+##		print "DBG: Bandwidth.GetSize: skip nonlocal", url
+		return 0
+	host, rest = MMurl.splithost(rest)
+	if host and host != 'localhost':
+##		print "DBG: Bandwidth.GetSize: skip nonlocal", url
+		return 0
+
+	# Okay, get the filesize
+	filename = MMurl.url2pathname(rest)
+	try:
+		# XXXX Incorrect for mac (resource fork size)
+		statb = os.stat(filename)
+	except os.error:
+##		print "DBG: Bandwidth.get: nonexisting", filename
+		return 0
+	filesize = statb[ST_SIZE]
+	urlcache[url]['filesize'] = filesize
+	return filesize
