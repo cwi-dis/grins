@@ -80,12 +80,12 @@ import features
 
 # views types
 from _LayoutView import _LayoutView
+from _LayoutView2 import _LayoutView2
 from _UsergroupView import _UsergroupView
 from _TransitionView import _TransitionView
 from _LinkView import _LinkView
 from _StructView import _StructView
 from _SourceView import _SourceView
-from _LayoutView2 import _LayoutView2
 
 #  Player views
 from _PlayerView import _PlayerView  
@@ -95,8 +95,7 @@ _SourceView=_SourceView
 _HierarchyView=_StructView
 _ChannelView=_StructView
 _LinkView=_LinkView
-_LayoutView=_LayoutView
-_LayoutView2=_LayoutView2
+_LayoutView=_LayoutView2
 
 # player document views
 if IsPlayer:
@@ -119,8 +118,6 @@ appview={
 	5:{'cmd':usercmd.HIDE_USERGROUPVIEW,'title':'User groups','id':'ugview_','class':_UsergroupView,'freezesize':1},
 	6:{'cmd':usercmd.HIDE_TRANSITIONVIEW,'title':'Transitions','id':'trview_','class':_TransitionView,'freezesize':1},
 	7:{'cmd':usercmd.HIDE_SOURCE,'title':'Source','id':'sview_','class':_SourceView,'hosted':0},
-#	8:{'cmd':-1,'title':'','id':'cmifview_','class':_CmifView,'hosted':0},
-	9:{'cmd':usercmd.HIDE_LAYOUTVIEW2,'title':'Layout view 2','id':'lview2_','class':_LayoutView2,'freezesize':1},
 }
 
 
@@ -169,7 +166,7 @@ class GRiNSToolbar(window.Wnd):
 		window.Wnd.__init__(self,wndToolBar)
 
 		# enable/dissable tools draging
-		self._enableToolDrag = 0
+		self._enableToolDrag = 1
 		# shortcut for GRiNS private clipboard format
 		self.CF_TOOL = Sdk.RegisterClipboardFormat('Tool')
 		if self._enableToolDrag:
@@ -200,8 +197,7 @@ class GRiNSToolbar(window.Wnd):
 			if math.fabs(xp-x)>4 or math.fabs(yp-y)>4:
 				str='%d %d' % (xp, yp)
 				# start drag and drop
-				print 'Drag-and-Drop not implemented yet for toolbars'
-				# self.DoDragDrop(self.CF_TOOL, str)
+				self.DoDragDrop(self.CF_TOOL, str)
 				self._dragging = None
 				self.ReleaseCapture()
 
