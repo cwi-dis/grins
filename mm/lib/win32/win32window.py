@@ -1136,12 +1136,15 @@ class DDWndLayer:
 				win32api.Sleep(50)
 		ddcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
 		while 1:
-			try:
-				dds.BltFill((0, 0, w, h), ddcolor)
-			except ddraw.error, arg:
-				print arg
+			if dds.IsLost():
+				win32api.Sleep(50)
 			else:
-				break
+				try:
+					dds.BltFill((0, 0, w, h), ddcolor)
+				except ddraw.error, arg:
+					print arg
+				else:
+					break
 		return dds
 
 	def flip(self):
@@ -1487,6 +1490,9 @@ class Region(Window):
 		if wc==0 or hc==0:
 			return
 		
+		if dds.IsLost():
+			return
+
 		if self._active_displist:
 			entry = self._active_displist._list[0]
 			if entry[0] == 'clear' and entry[1]:
@@ -1605,7 +1611,8 @@ class Region(Window):
 				r, g, b = 0, 0, 0
 			self._convbgcolor = dds.GetColorMatch((r,g,b))
 		try:
-			dds.BltFill((0, 0, w, h), self._convbgcolor)
+			if not dds.IsLost():
+				dds.BltFill((0, 0, w, h), self._convbgcolor)
 		except ddraw.error, arg:
 			print arg			
 
@@ -2063,6 +2070,8 @@ class ViewportContext:
 		#wp, hp = self.__getBoundaries16(w, h)
 		wp, hp = self.__getWMPViewport(w, h, 4, 3)
 		
+		print 'Exporting using surface: width=', wp, 'height=',hp
+
 		self._viewport = Viewport(self, (wp-w)/2, (hp-h)/2, w, h, bgcolor)
 		self._rect = 0, 0, wp, hp
 
