@@ -93,7 +93,7 @@ def get(node, target=0):
 		return 0, bitrate
 
 	attrs = {'project_quality':MMAttrdefs.getattr(node, 'project_quality')}
-	filesize = GetSize(url, target, attrs)
+	filesize = GetSize(url, target, attrs, MMAttrdefs.getattr(node, 'project_convert'))
 	if filesize is None:
 		return None, 0
 
@@ -101,7 +101,7 @@ def get(node, target=0):
 	urlcache[url]['bandwidth'] = float(filesize)*8, 0
 	return float(filesize)*8, 0
 
-def GetSize(url, target=0, attrs = {}):
+def GetSize(url, target=0, attrs = {}, convert = 1):
 	val = urlcache[url].get('filesize')
 	if val is not None:
 		return val
@@ -122,7 +122,7 @@ def GetSize(url, target=0, attrs = {}):
 	except IOError:
 		raise Error, 'Media item does not exist'
 	tmp = None
-	if target and hdrs.maintype == 'image':
+	if target and hdrs.maintype == 'image' and convert:
 		import tempfile, realconvert
 		tmp = tempfile.mktemp('.jpg')
 		dir, file = os.path.split(tmp)

@@ -452,7 +452,7 @@ class SlideShow:
 					slide_node.set_infoicon('bandwidthgood')
 				continue	# And if we saw it before we're done too
 			try:
-				filesize = Bandwidth.GetSize(ctx.findurl(url), target=1, attrs=slide)
+				filesize = Bandwidth.GetSize(ctx.findurl(url), target=1, attrs=slide, convert = slide.get('project_convert', 1))
 			except Bandwidth.Error, arg:
 				if slide_node:
 					slide_node.set_infoicon('error', arg)
