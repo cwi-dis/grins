@@ -1360,7 +1360,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.editmgr.register(self)
 
 		# read the document		
-		self.read_it()
+		self.read_it(isReloading=1)
 
 		# check initial errors, and don't allow cancel
 		self.__checkInitialErrors(0)
@@ -1375,11 +1375,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 		self.showviews(showing)
 
-	def read_it(self):
+	def read_it(self, isReloading=0):
 		self.changed = 0
 		if self.new_file:
 			if type(self.new_file) == type(''):
-				self.do_read_it(self.new_file)
+				self.do_read_it(self.new_file, isReloading)
 			else:
 				import SMILTreeRead
 				self.root = SMILTreeRead.ReadString(EMPTY, self.filename)
@@ -1389,7 +1389,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if user:
 				self.root.GetContext().attributes['author'] = user
 		else:
-			self.do_read_it(self.filename)
+			self.do_read_it(self.filename, isReloading)
 		self.root = self.checkParseErrors(self.root)
 		self.setRoot(self.root)
 		if self.new_file:
@@ -1400,7 +1400,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def progressCallback(self, pValue):
 		self.progress.set(self.progressMessage, None, None, pValue*100, 100)
 		
-	def do_read_it(self, filename):
+	def do_read_it(self, filename, isReloading=0):
 ##		import time
 ##		print 'parsing', filename, '...'
 ##		t0 = time.time()
@@ -1419,7 +1419,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				self.progressMessage = "Loading GRiNS document..."				
 			self.progress.set(self.progressMessage)
 			
-			check_compatibility = mtype == 'application/x-grins-project'
+			check_compatibility = mtype == 'application/x-grins-project' and not isReloading
 			try:
 				self.root = SMILTreeRead.ReadFile(filename, self.printfunc, self.new_file, check_compatibility, \
 												  progressCallback=(self.progressCallback, 0.5))
