@@ -2625,9 +2625,13 @@ class SvgRenderer(Renderer):
 	def __init__(self,wnd,rc,baseURL=''):
 		Renderer.__init__(self,wnd,rc,baseURL)
 		self._svgdoc = None
+		self._svgplayer = None
 		self._adjrc = None
 			
 	def __del__(self):
+		if self._svgplayer:
+			self._svgplayer.stop()
+			del self._svgplayer
 		del self._svgdoc
 	
 	def isstatic(self):
@@ -2635,6 +2639,9 @@ class SvgRenderer(Renderer):
 
 	def load(self, rurl):
 		self._svgdoc = None
+		if self._svgplayer:
+			self._svgplayer.stop()
+			self._svgplayer = None
 		if rurl:
 			url = self.urlqual(rurl)
 			import MMmimetypes
@@ -2643,13 +2650,19 @@ class SvgRenderer(Renderer):
 				mtype, subtype = string.split(mtype, '/')
 				if mtype == 'image' and subtype == 'svg-xml':
 					self._svgdoc = svgdom.GetSvgDocument(url)
+					src_x, src_y, dest_x, dest_y, width, height,rcKeep = self.adjustSize(self._svgdoc.getSize())
+					self._adjrc = dest_x, dest_y,dest_x + width, dest_y + height
+					if self._svgdoc.hasTiming():
+						rendercb = (self.renderSvgOffscreenOn, (self._svgdoc, None, (dest_x, dest_y, width, height)))
+						from windowinterface import toplevel
+						self._svgplayer = svgdom.SVGPlayer(self._svgdoc, toplevel, rendercb, 0.1)
+						self._svgplayer.play()
 		self.update()
 
 	def render(self, dc):
 		if self._svgdoc is None: return
-		src_x, src_y, dest_x, dest_y, width, height,rcKeep = self.adjustSize(self._svgdoc.getSize())
-		self.renderSvgOn(self._svgdoc, dc.GetSafeHdc(), (dest_x, dest_y, width, height))
-		self._adjrc = dest_x, dest_y,dest_x + width, dest_y + height
+		l, t, r, b = self._adjrc
+		self.renderSvgOffscreenOn(self._svgdoc, dc, (l, t, r-l, b-t))
 
 	def renderSvgOn(self, svgdoc, hdc, dstrect):
 		if svgdoc is None or not hdc: return
@@ -2664,6 +2677,42 @@ class SvgRenderer(Renderer):
 		renderer = svgrender.SVGRenderer(svgdoc, svggraphics)
 		renderer.render()
 		svggraphics.tkShutdown()
+
+	def renderSvgOffscreenOn(self, svgdoc, dc, dstrect):
+		if dc is None:
+			try:
+				dc = self._wnd.GetDC()
+			except:
+				return
+			else:
+				releaseDC = 1
+		else:
+			releaseDC = 0
+		l, t, w, h = dstrect
+		bmp = win32ui.CreateBitmap()
+		try:
+			bmp.CreateCompatibleBitmap(dc, w, h)
+		except:
+			print 'failed to create compatible bitmap'
+			return
+		dcc = dc.CreateCompatibleDC()
+		dcc.OffsetViewportOrg((0, 0))
+		dcc.SetWindowOrg((0,0))
+		oldBitmap = dcc.SelectObject(bmp)
+		dcc.FillSolidRect((0, 0, w, h), win32api.RGB(255,255,255))
+		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+		dcc.FrameRectFromHandle((0, 0, w-1, h-1),br)
+		Sdk.DeleteObject(br)
+		self.renderSvgOn(svgdoc, dcc.GetSafeHdc(), (0, 0, w, h))
+		dcc.SetViewportOrg((0, 0))
+		dcc.SetWindowOrg((0,0))
+		dcc.SetMapMode(win32con.MM_TEXT)
+		dc.BitBlt((l,t),(w, h), dcc, (0, 0), win32con.SRCCOPY)
+		dcc.SelectObject(oldBitmap)
+		dcc.DeleteDC()
+		del bmp
+		if releaseDC:
+			self._wnd.ReleaseDC(dc)
 
 #################################
 class HtmlRenderer(Renderer):
@@ -3171,6 +3220,10 @@ class ImagePreviewPage(PreviewPage):
 class SvgPreviewPage(PreviewPage):
 	def __init__(self,form):
 		PreviewPage.__init__(self, form,'svg')	
+	def OnDestroy(self,params):
+		if self._renderer and self._renderer._svgplayer:
+			self._renderer._svgplayer.stop()
+			self._renderer._svgplayer = None
 
 class VideoPreviewPage(PreviewPage):
 	def __init__(self,form):
