@@ -54,6 +54,7 @@ class SMILHtmlTimeWriter(SMIL):
 		self.__isopen = 0
 		self.__stack = []
 		self.ch2style = {}
+		self.__layoutstack = []
 
 	def writeAsHtmlTime(self):
 		write = self.fp.write
@@ -96,12 +97,11 @@ class SMILHtmlTimeWriter(SMIL):
 		# body contents
 
 		# document
-		self.writetag('div',[('class', 'time'),])
 			
 		# viewports
 		ch = self.top_levels[0]
 		name = self.ch2name[ch]
-		self.writetag('div', [('class', name),])
+		self.writetag('div', [('id',name), ('style', self.ch2style[ch]),])
 		self.push()
 		self.writenode(self.root, root = 1)
 		self.pop()
@@ -238,26 +238,28 @@ class SMILHtmlTimeWriter(SMIL):
 	def writemedianode(self, x, attrlist, mtype, regionName, src):
 		lch = self.root.GetContext().getchannel(regionName)
 		
-		attrlist.insert(0, ('class', 'time'))
-
+		pushed = 0
+		dlist = []
 		if self.ch2style.has_key(lch):
-			attrlist.append(('style', self.ch2style[lch]))
-		self.writetag('div', attrlist)
-		self.push()
+			dlist.append(('style', self.ch2style[lch]))
+		if dlist:
+			self.writetag('div', dlist)
+			self.push()
+			pushed = 1
 
-		
-		mattrlist = []
+		mattrlist = attrlist[:]
 		if src:
 			mattrlist.append(('src', src))
 		if mtype=='video':
-			mtype = 't:media'
+			mtype = 'media'
 		geoms = x.getPxGeomMedia()
 		if geoms:
 			subRegGeom, mediaGeom = geoms
 			style = 'position=absolute;left=%d;top=%d;width=%d;height=%d;' % subRegGeom
 			mattrlist.append( ('style',style) )
-		self.writetag(mtype, mattrlist)
-		self.pop()
+		self.writetag('t:'+mtype, mattrlist)
+		if pushed: 
+			self.pop()
 
 	def writelayout(self):
 		x = xmargin = 20
@@ -275,7 +277,7 @@ class SMILHtmlTimeWriter(SMIL):
 				bgcolor = '#%02x%02x%02x' % bgcolor
 			style = 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;background-color=%s;' % (x, y, w, h, bgcolor)
 			self.ch2style[ch] = style
-			self.fp.write('.'+name + ' {' + style + '}\n')
+			#self.fp.write('.'+name + ' {' + style + '}\n')
 
 			if self.__subchans.has_key(ch.name):
 				for sch in self.__subchans[ch.name]:
@@ -305,7 +307,7 @@ class SMILHtmlTimeWriter(SMIL):
 		self.ch2style[ch] = style
 
 		name = self.ch2name[ch]
-		self.fp.write('.'+name + ' {' + style + '}\n')
+		#self.fp.write('.'+name + ' {' + style + '}\n')
 		
 		if self.__subchans.has_key(ch.name):
 			for sch in self.__subchans[ch.name]:
