@@ -373,6 +373,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		# Returns the icon to show for incoming and outgiong hyperlinks.
 		links = self.node.context.hyperlinks
 		is_src, is_dst = links.findnodelinks(self.node)
+##		print 'DBG: getlinkicon', node, is_src, is_dst
 		if is_src:
 			if is_dst:
 				return 'linksrcdst'
@@ -1973,86 +1974,71 @@ class TimelineWidget(MMWidgetDecoration):
 class IconBox(MMWidgetDecoration):
 	def __init__(self, mmwidget, mother):
 		MMWidgetDecoration.__init__(self, mmwidget, mother)
-		self._icons = {}
-		self.iconlist = []	# a list of icon names, the order is kept.
-		self.remember_click = (0,0)
-		self.selected_iconname = None
+		self._iconlist = []
 
 	def destroy(self):
-		for iconname in self.iconlist:
-			self._icons[iconname].destroy()
-		self._icons = None
+		for icon in self._iconlist:
+			icon.destroy()
+		self._iconlist = []
 		MMWidgetDecoration.destroy(self)
 
-	def add_icon(self, iconname, callback=None, contextmenu=None, arrowto=None):
+	def add_icon(self, iconname=None, callback=None, contextmenu=None, arrowto=None):
 		# iconname - name of an icon, decides which icon to use.
 		# callback - function to call when icon is clicked on.
 		# contextmenu - pop-up menu to use.
 		# arrowto - Draw an arrow to another icon on the screen.
-		i = Icon(self.mmwidget, self.mother)
-		i.set_icon(iconname)
+		icon = Icon(self.mmwidget, self.mother)
+		icon.set_icon(iconname)
 		if callback:
-			i.set_callback(callback)
+			icon.set_callback(callback)
 		if contextmenu:
-			i.set_contextmenu(contextmenu)
+			icon.set_contextmenu(contextmenu)
 		if arrowto:
-			i.add_arrow(arrowto)
-		self._icons[iconname] = i
-		if iconname not in self.iconlist:
-			self.iconlist.append(iconname)
+			icon.add_arrow(arrowto)
+		self._iconlist.append(i)
 		self.recalc_minsize()
-		return i
-
-	def get_icon(self, iconname):
-		return self._icons.get(iconname)
-
-	def del_icon(self, iconname):
-		del self._icons[iconname]
-		self.iconlist.remove(iconname)
-		self.recalc_minsize()
+		return icon
 
 	def recalc_minsize(self):
 		# Always the number of icons.
-		self.boxsize = (len(self._icons) * ICONSIZE), ICONSIZE
+		self.boxsize = (len(self._iconlist) * ICONSIZE), ICONSIZE
 		return self.boxsize
 
 	def get_clicked_obj_at(self, coords):
 		x,y = coords
-		return self.__get_icon(x)
+		return self.__get_icon_at_position(x)
 
 	def is_hit(self, pos):
 		l,t,a,b = self.pos_abs
 		x,y = pos
-		if l < x < l+(len(self._icons)*ICONSIZE) and t < y < t+ICONSIZE:
+		if l < x < l+(len(self._iconlist)*ICONSIZE) and t < y < t+ICONSIZE:
 			return 1
 		else:
 			return 0
 
 	def draw(self, displist):
 		l,t,r,b = self.pos_abs
-		for iconname in self.iconlist:
-			i = self._icons[iconname]
+		for iconname in self._iconlist:
+			i = self._iconlist[iconname]
 			i.moveto((l,t,r,b))
 			i.draw(displist)
 			l = l + ICONSIZE
+
 	draw_selected = draw
 
-	def __get_icon_name(self, x):
+	def __get_icon_at_position(self, x):
 		l,t,r,b = self.pos_abs
-		if len(self.iconlist) > 0:
+		if len(self._iconlist) > 0:
 			index = int((x-l)/ICONSIZE)
-			if index >= 0 and index < len(self.iconlist):
-				return self.iconlist[index]
+			if index >= 0 and index < len(self._iconlist):
+				return self._iconlist[index]
 		else:
 			return None
-
-	def __get_icon(self, x):
-		return self._icons[self.__get_icon_name(x)]
 
 	def mouse0release(self, coords):
 		x,y = coords
 		l,t,r,b = self.pos_abs
-		icon = self.__get_icon(x)
+		icon = self.__get_icon_at_position(x)
 		if icon:
 			icon.mouse0release(coords)
 		else:
