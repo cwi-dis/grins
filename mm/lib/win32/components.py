@@ -682,6 +682,7 @@ class ChannelUndefDlg(ResDialog):
 		self._bcancel = Button(self,win32con.IDCANCEL)
 		self._bundef= Button(self,grinsRC.IDC_LEAVE_UNDEF)
 		self._bopen = Button(self,win32con.IDOK)
+		self._icon=win32ui.GetApp().LoadIcon(grinsRC.IDI_GRINS_QUESTION)
 		self._cb_ok=None
 		self._cb_undef_ok=None
 		self._cb_cancel=None
@@ -693,6 +694,21 @@ class ChannelUndefDlg(ResDialog):
 		self._chantext.settext(self._default_name)
 		self._bundef.hookcommand(self,self.OnUndef)
 		return ResDialog.OnInitDialog(self)
+
+	def OnPaint(self):
+		dc, paintStruct = self._obj_.BeginPaint()
+		dc.DrawIcon(self.getIconPos(),self._icon)
+		self._obj_.EndPaint(paintStruct)
+
+	def getIconPos(self):
+		rc=win32mu.Rect(self.GetWindowRect())
+		wnd=self.GetDlgItem(grinsRC.IDC_STATIC_ICON)
+		rc1=win32mu.Rect(wnd.GetWindowRect())
+		x=rc1.left-rc.left;y=rc1.top-rc.top
+		import sysmetrics
+		cxframe,cyframe,cxborder,cyborder,cycaption = sysmetrics.GetSystemMetrics()
+		y=y-cyframe-cyborder-cycaption
+		return (x,y)
 
 	def show(self):
 		self.DoModal()
@@ -713,6 +729,7 @@ class ChannelUndefDlg(ResDialog):
 		if self._cb_undef_ok:
 			apply(self._cb_undef_ok,())
 		self.close()
+
 
 # Implementation of a modeless message box
 class ModelessMessageBox(ResDialog):
