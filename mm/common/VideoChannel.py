@@ -200,7 +200,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if not self.__stopped:
 			if self.__qid:
 				return
-			self.__qid = None
 			self.played_movie = None
 			self.playdone(0)
 
