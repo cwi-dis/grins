@@ -91,6 +91,13 @@
 #define IDB_BITMAP2                     292
 #define IDI_ICON_TRANSOUT               293
 #define IDI_ICON_TRANSIN                294
+#define IDB_VIEWPORT                    295
+#define IDB_REGION                      296
+#define IDB_IMAGE                       297
+#define IDB_VIDEO                       298
+#define IDB_TEXT                        299
+#define IDB_HTML                        300
+#define IDB_SOUND                       301
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
@@ -487,7 +494,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        295
+#define _APS_NEXT_RESOURCE_VALUE        302
 #define _APS_NEXT_COMMAND_VALUE         32865
 #define _APS_NEXT_CONTROL_VALUE         1285
 #define _APS_NEXT_SYMED_VALUE           104

@@ -117,6 +117,10 @@ SOURCE=.\RES\hand.cur
 # End Source File
 # Begin Source File
 
+SOURCE=.\Res\html.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\ico00001.ico
 # End Source File
 # Begin Source File
@@ -173,6 +177,10 @@ SOURCE=.\RES\icon_ope.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\Res\image.bmp
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\Build\products\g2-15\pro\intransition.ICO"
 # End Source File
 # Begin Source File
@@ -202,6 +210,10 @@ SOURCE=.\RES\play.ico
 # Begin Source File
 
 SOURCE=.\RES\player8bit.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\region.bmp
 # End Source File
 # Begin Source File
 
@@ -258,6 +270,18 @@ SOURCE=.\RES\Stop.cur
 # Begin Source File
 
 SOURCE=.\RES\stop.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\text.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\video.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Res\viewport.bmp
 # End Source File
 # End Target
 # End Project
