@@ -5,6 +5,7 @@ import MMAttrdefs
 from MMTypes import *
 from MMExc import *
 from SR import *
+import Duration
 
 class MMNodeContext(MMNodeBase.MMNodeContext):
 	def __init__(self, nodeclass):
@@ -735,6 +736,21 @@ class MMNode(MMNodeBase.MMNode):
 		return sr_list, self.wtd_children
 
 	def gensr_par(self):
+		termtype = MMAttrdefs.getattr(self, 'terminator')
+		if termtype == 'FIRST':
+			return self.gensr_par_first()
+		elif termtype == 'LAST':
+			return self.gensr_par_last()
+		# Find the terminating child
+		for child in self.wtd_children:
+			if MMAttrdefs.getattr(child, 'name') == termtype:
+				break
+		else:
+			print 'Warning: terminating child', termtype, 'not found'
+			return self.gensr_par_last()
+		return self.gensr_par_terminator(child)
+
+	def gensr_par_last(self):
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
 		if not self.wtd_children:
@@ -752,6 +768,62 @@ class MMNode(MMNodeBase.MMNode):
 			slist.append((SCHED_STOP, arg))
 		return [  ([(SCHED, self) ]+in0, alist+out0), \
 			  ( plist, [(SCHED_DONE, self)]), \
+			  ([(SCHED_STOP, self)]+in1, slist+out1) ], \
+			  self.wtd_children
+
+	def gensr_par_first(self):
+		# XXXX Incorrect: make distinction between timed/nontimed
+		in0, in1 = self.sync_from
+		out0, out1 = self.sync_to
+		if not self.wtd_children:
+			# Empty node needs special code:
+			return [ \
+			     ([(SCHED, self)]+in0,[(SCHED_DONE, self)]+out0),\
+			     ([(SCHED_STOP, self)]+in1,out1) ], []
+		alist = []
+		plist_timed = []
+		plist_nontimed = []
+		slist = []
+		for i in self.wtd_children:
+			arg = i
+			alist.append((SCHED, arg))
+			if Duration.get(arg) > 0:
+				plist_timed.append((SCHED_DONE, arg))
+			else:
+				plist_nontimed.append((SCHED_DONE, arg))
+			slist.append((SCHED_STOP, arg))
+		# note: plist triggers SCHED_DONE as a firstaction, not
+		# a normal action
+		return [  ([(SCHED, self) ]+in0, alist+out0), \
+			  ( plist_timed, [], [(SCHED_DONE, self)]), \
+			  ( plist_nontimed, []), \
+			  ([(SCHED_STOP, self)]+in1, slist+out1) ], \
+			  self.wtd_children
+
+	def gensr_par_terminator(self, termnode):
+		in0, in1 = self.sync_from
+		out0, out1 = self.sync_to
+		if not self.wtd_children:
+			# Empty node needs special code:
+			return [ \
+			     ([(SCHED, self)]+in0,[(SCHED_DONE, self)]+out0),\
+			     ([(SCHED_STOP, self)]+in1,out1) ], []
+		alist = []
+		plist = []
+		slist = []
+		for i in self.wtd_children:
+			arg = i
+			alist.append((SCHED, arg))
+			if arg != termnode:
+				plist.append((SCHED_DONE, arg))
+			slist.append((SCHED_STOP, arg))
+		# note: only termnode SCHED_DONE is important for our
+		# SCHED_DONE, the rest is ignored. Also note that we put
+		# the SCHED_DONE in the first-time-only event list, because
+		# that will cause it to be executed at low priority.
+		return [  ([(SCHED, self) ]+in0, alist+out0), \
+			  ([(SCHED_DONE, termnode)], [], [(SCHED_DONE, self)]), \
+			  ( plist, []), \
 			  ([(SCHED_STOP, self)]+in1, slist+out1) ], \
 			  self.wtd_children
 # 	#
@@ -808,9 +880,11 @@ class MMNode(MMNodeBase.MMNode):
 		sractions = [None]*len(srlist)
 		srevents = {}
 		for actionpos in range(len(srlist)):
-			events, actions = srlist[actionpos]
+			# Replace eventlist by count, and store events in dict
+			events = srlist[actionpos][0]
 			nevents = len(events)
-			sractions[actionpos] = (nevents, actions)
+			sractions[actionpos] = (nevents,) + \
+					       srlist[actionpos][1:]
 			for ev in events:
 				if srevents.has_key(ev):
 					raise 'Scheduler: Duplicate event:', \
