@@ -13,6 +13,15 @@
                 = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
 _DEFINE_GUID(IID_IDirectDrawSurface,0x6C14DB81,0xA733,0x11CE,0xA5,0x21,0x00,0x20,0xAF,0x0B,0xE5,0x60);
 
+// REM Impl Note:
+// 1. Connect to GRiNS COM server and set it to the appropriate mode
+// 2. When GRiNS needs to update its viewport should call 
+//    InvalidateRect or InvalidateRegion of IHTMLPaintSite
+//    So, GRiNS should have access to this interface
+// 3. When CBehavior::Draw gets called we should pass to GRiNS COM server 
+//    the viewport's direct draw surface for painting 
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CBehavior
 
