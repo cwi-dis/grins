@@ -3,9 +3,9 @@
 # For now, this play only movies recorded by Jack's "camcorder" program.
 # The format is the following:
 #	first line: "CMIF video 1.0"
-#	second line: "width, height, packfactor"
+#	second line: "(width, height, packfactor)"
 #	each image:
-#		one line: "time, datasize"
+#		one line: "(time, datasize)"
 #		datasize bytes of binary data
 # For compatibility with some old movies the header line, pack factor and
 # data size are optional.  Default pack factor is 2; default data size is
@@ -44,8 +44,9 @@ class MovieWindow() = ChannelWindow():
 	#
 	def clear(self):
 		self.fp = None
-		gl.winset(self.wid)
-		self.erase()
+		if self.wid <> 0:
+			gl.winset(self.wid)
+			self.erase()
 	#
 	def erase(self):
 		gl.RGBcolor(255, 255, 255)
