@@ -164,7 +164,7 @@ class FileDialog:
 			pass
 		# For motif we only support simple filters, for now, and replace all else
 		# by '*'.
-		if not filter type(filter) != type('') or '/' in filter:
+		if not filter or type(filter) != type('') or '/' in filter:
 			filter = '*'
 		self.filter = filter
 		filter = os.path.join(directory, filter)
