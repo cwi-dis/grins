@@ -1,5 +1,4 @@
 
-
 import "unknwn.idl";
 
 
@@ -13,8 +12,6 @@ import "unknwn.idl";
 	helpstring("IGRiNSPlayerAuto Interface"),
 	pointer_default(unique)
 ]
-
-
 interface IGRiNSPlayerAuto : IUnknown
 	{
 	HRESULT setWindow([in] HWND hwnd);
@@ -31,7 +28,7 @@ interface IGRiNSPlayerAuto : IUnknown
 	HRESULT setTime([in] double t);
 	HRESULT getSpeed([out] double *ps);
 	HRESULT setSpeed([in] double s);
-	}
+	};
 
 // {8443A49C-5957-4019-AEC5-D13CEBF3FCF3}
 //DEFINE_GUID(<<name>>, 
@@ -42,16 +39,14 @@ interface IGRiNSPlayerAuto : IUnknown
 	version(1.0),
 	helpstring("GRiNSPlayerAuto COM Library")
 ]
-
-// {56EF6B3D-E9D9-4e2f-8C62-D5DDC7AAF20C}
-//DEFINE_GUID(<<name>>, 
-//0x56ef6b3d, 0xe9d9, 0x4e2f, 0x8c, 0x62, 0xd5, 0xdd, 0xc7, 0xaa, 0xf2, 0xc);
-
 library GRiNSPlayerAutoLib
 {
-	[uuid(56EF6B3D-E9D9-4e2f-8C62-D5DDC7AAF20C)]
+	[
+		uuid(56EF6B3D-E9D9-4e2f-8C62-D5DDC7AAF20C),
+		helpstring("GRiNSPlayerAuto Class")
+	]
 	coclass GRiNSPlayerAuto {
 		[default] interface IGRiNSPlayerAuto;
 		// interface IOther;
-	}
-}
+	};
+};

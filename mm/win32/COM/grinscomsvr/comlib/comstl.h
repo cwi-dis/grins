@@ -1,6 +1,7 @@
 #ifndef INC_COMSTL
 #define INC_COMSTL
 
+
 template <class T, class M>
 class ComCreator
 	{
@@ -41,9 +42,9 @@ class ClassFactory : public IClassFactory
 		{   
 		if(!ppv) return E_POINTER;
 		*ppv = NULL;
-		if(InlineIsEqualGUID(iid, IID_IUnknown))
+		if(IsEqualGUID(iid, IID_IUnknown))
 			return InterfaceCaster<IUnknown,ClassFactory>::Cast(ppv,this);
-		else if(InlineIsEqualGUID(iid, IID_IClassFactory))
+		else if(IsEqualGUID(iid, IID_IClassFactory))
 			return InterfaceCaster<IClassFactory,ClassFactory>::Cast(ppv,this);
 		return E_NOINTERFACE;
 		}
