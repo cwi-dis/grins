@@ -12,7 +12,6 @@ from Hlinks import Hlinks
 import MMurl
 import settings
 import features
-from HDTL import HD, TL
 import string, os
 import MMStates
 ##import Bandwidth
