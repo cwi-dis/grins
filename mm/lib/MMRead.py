@@ -13,28 +13,33 @@ import sys
 # Read a CMF file, given by filename
 #
 def ReadFile(filename):
-	return _readopenfile(open(filename, 'r'), filename)
+	return ReadFileContext(filename, _newctx())
+
+def ReadFileContext(filename, context):
+	return ReadOpenFileContext(open(filename, 'r'), filename, context)
 
 
 # Read a CMF file that is already open (for reading)
 #
 def ReadOpenFile(fp, filename):
-	return _readopenfile(fp, filename)
+	return ReadOpenFileContext(fp, filename, _newctx())
+
+def ReadOpenFileContext(fp, filename, context):
+	p = MMParser.MMParser().init(fp, context)
+	return _readparser(p, filename)
 
 
 # Read a CMF file from a string
 #
 def ReadString(string, name):
-	p = MMParser.MMParser().init(MMParser.StringInput(string), _newctx())
+	return ReadString(string, name, _newctx())
+
+def ReadStringContext(string, name, context):
+	p = MMParser.MMParser().init(MMParser.StringInput(string), context)
 	return _readparser(p, name)
 
 
 # Private functions to read nodes
-
-
-def _readopenfile(fp, filename):
-	p = MMParser.MMParser().init(fp, _newctx())
-	return _readparser(p, filename)
 
 def _newctx():
 	return MMNode.MMNodeContext().init(MMNode.MMNode)
