@@ -1791,6 +1791,7 @@ class ChannelWindow(Channel):
 		if not self.window:
 			return
 		otherwindow = self._find_multiregion_transition(out_trans, outtranstime)
+		print 'OTHERWINDOW', otherwindow
 		if otherwindow:
 			self.window.jointransition(otherwindow)
 		else:
@@ -1826,12 +1827,15 @@ class ChannelWindow(Channel):
 		else:
 			top_lchan = our_lchan
 		rv = top_lchan._has_multiregion_transition(trid, transtime, recursive=1)
-		our_lchan._active_multiregion_transition = (trid, transtime)
+		our_lchan._active_multiregion_transition = (trid, transtime, self.window)
+		print 'STORE', our_lchan._active_multiregion_transition, self, our_lchan
 		return rv
 		
 	def _has_multiregion_transition(self, trid, transtime, recursive=0):
-		if (trid, transtime) == self._active_multiregion_transition:
-			return self.window
+		if self._active_multiregion_transition and \
+				(trid, transtime) == self._active_multiregion_transition[:2]:
+			print 'RETRIEVE', self._active_multiregion_transition
+			return self._active_multiregion_transition[2]
 		if recursive:
 			for child in self._subchannels:
 				rv = child._has_multiregion_transition(trid, transtime, recursive=1)
