@@ -613,6 +613,14 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.fp.write('</p>')
 			self.pop()
 
+		elif mtype == 'text':
+			attrlist.append( ('align','center') )
+			attrlist.append( ('frameborder','0') )
+			attrlist.append( ('marginwidth','0') )
+			attrlist.append( ('marginheight','0') )
+			attrlist.append( ('scrolling','no') )		
+			self.writetag('iframe', attrlist)
+
 		else:
 			self.writetag('t:'+mtype, attrlist)
 					
