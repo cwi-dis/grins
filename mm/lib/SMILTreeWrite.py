@@ -1034,7 +1034,7 @@ cmif_chan_attrs_ignore = {
 	# end new
 	'showBackground':0,	
 	'soundLevel':0,
-	'regAlign':0, 'regPoint':0,
+	'regAlign':0, 'regPoint':0, 'close':0, 'open':0
 	}
 
 qt_node_attrs = {
@@ -1622,6 +1622,9 @@ class SMILWriter(SMIL):
 					attrlist.append(('width', '%d' % int(w + .5)))
 					attrlist.append(('height', '%d' % int(h + .5)))
 			if self.smilboston:
+				for key, val in ch.items():
+					if not cmif_chan_attrs_ignore.has_key(key):
+						attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
 				self.writetag('viewport', attrlist)
 				self.push()
 				self.writeregion(ch)
