@@ -2,8 +2,9 @@ __version__ = "$Id$"
 
 from UsergroupViewDialog import UsergroupViewDialog, UsergroupEditDialog
 from usercmd import *
+from ViewDialog import ViewDialog
 
-class UsergroupView(UsergroupViewDialog):
+class UsergroupView(UsergroupViewDialog, ViewDialog):
 	def __init__(self, toplevel):
 		self.toplevel = toplevel
 		self.root = toplevel.root
