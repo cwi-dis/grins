@@ -1994,7 +1994,7 @@ class ChannelWindow(Channel):
 		if not self.window:
 			return
 		otherwindow = self._find_multiregion_transition(out_trans, outtranstime)
-		print 'OTHERWINDOW', otherwindow
+##		print 'OTHERWINDOW', otherwindow
 		if otherwindow:
 			self.window.jointransition(otherwindow)
 		else:
