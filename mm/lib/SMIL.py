@@ -2,7 +2,6 @@ __version__ = "$Id$"
 
 EVALcomment = ' Created with an evaluation copy of GRiNS '
 SMIL_BASIC = 'text/smil-basic-layout'
-SMIL_EXTENDED = 'text/smil-extended-layout'
 SMILpubid = "-//W3C//DTD SMIL 1.0//EN"
 SMILdtd = "http://www.w3.org/TR/REC-smil/SMIL10.dtd"
 SMILBostonPubid = "-//W3C//DTD SMIL 2.0//EN"

@@ -22,7 +22,6 @@ error = 'SMILTreeRead.error'
 
 LAYOUT_NONE = 0				# must be 0
 LAYOUT_SMIL = 1
-LAYOUT_EXTENDED = 2
 LAYOUT_UNKNOWN = -1			# must be < 0
 
 CASCADE = 1	# cascade regions for nodes without region attr
@@ -166,6 +165,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_head_switch = 0
 		self.__in_meta = 0
 		self.__seen_body = 0
+		self.__in_body = 0
 		self.__in_layout = LAYOUT_NONE
 		self.__seen_layout = 0
 		self.__has_layout = 0
@@ -2239,28 +2239,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				self.__in_layout = LAYOUT_SMIL
 			self.__seen_layout = LAYOUT_SMIL
-		elif attributes['type'] == SMIL_EXTENDED:
-			if self.__in_head_switch and \
-			   self.__context.attributes.get('project_boston') == 0:
-				# ignore text/smil-extended-layout if we're
-				# specifically using SMIL 1.0 and we're
-				# inside a switch (if we're not in a switch
-				# we'll complain below)
-				self.__in_layout = LAYOUT_UNKNOWN
-				if not self.__seen_layout:
-					self.__seen_layout = LAYOUT_UNKNOWN
-				self.setliteral()
-				return
-			if self.__context.attributes.get('project_boston') == 0:
-				self.syntax_error('layout type %s not compatible with SMIL 1.0' % SMIL_EXTENDED)
-			self.__context.attributes['project_boston'] = 1
-			if self.__seen_layout > 0:
-				# if we've seen SMIL_BASIC/SMIL_EXTENDED
-				# already, ignore this one
-				self.__in_layout = LAYOUT_UNKNOWN
-			else:
-				self.__in_layout = LAYOUT_EXTENDED
-			self.__seen_layout = LAYOUT_EXTENDED
 		else:
 			self.__in_layout = LAYOUT_UNKNOWN
 			if not self.__seen_layout:
@@ -2274,8 +2252,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if not self.__in_layout:
 			self.syntax_error('region not in layout')
 			return
-		if self.__in_layout != LAYOUT_SMIL and \
-		   self.__in_layout != LAYOUT_EXTENDED:
+		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
 		from windowinterface import UNIT_PXL
@@ -2404,8 +2381,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 
 		if self.__region is not None:
-			if self.__viewport is None:
-				self.syntax_error('no nested regions allowed in root-layout windows')
+##			if self.__viewport is None:
+##				self.syntax_error('no nested regions allowed in root-layout windows')
 			if self.__context.attributes.get('project_boston') == 0:
 				self.syntax_error('nested regions not compatible with SMIL 1.0')
 			self.__context.attributes['project_boston'] = 1
@@ -2444,8 +2421,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__region = self.__region[1]
 
 	def start_root_layout(self, attributes):
-		if self.__in_layout != LAYOUT_SMIL and \
-		   self.__in_layout != LAYOUT_EXTENDED:
+		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
 		self.__fix_attributes(attributes)
@@ -2487,12 +2463,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		pass
 
 	def start_viewport(self, attributes):
-		if self.__in_layout != LAYOUT_SMIL and \
-		   self.__in_layout != LAYOUT_EXTENDED:
+		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
-		if self.__in_layout != LAYOUT_EXTENDED:
-			self.syntax_error('viewport not allowed in layout type %s' % SMIL_BASIC)
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('viewport not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
@@ -2550,12 +2523,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__viewport = None
 
 	def start_regpoint(self, attributes):
-		if self.__in_layout != LAYOUT_SMIL and \
-		   self.__in_layout != LAYOUT_EXTENDED:
+		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
-		if self.__in_layout != LAYOUT_EXTENDED:
-			self.syntax_error('regPoint not allowed in layout type %s' % SMIL_BASIC)
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('regPoint not compatible with SMIL 1.0')
 			
