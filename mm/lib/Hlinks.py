@@ -144,6 +144,8 @@ class Hlinks:
 		return dict
 		
 	def findnodelinks(self, node):
+		# Note by Jack: this code should be run once on commit, and store
+		# the results in a dictionary indexed by node.
 		interesting = []
 		uid = node.GetUID()
 		for a1, a2, dir, tp, stp, dtp in self.links:
@@ -159,3 +161,28 @@ class Hlinks:
 			if dir in (DIR_2TO1, DIR_2WAY):
 				is_dst = 1
 		return is_src, is_dst
+
+		
+	def nodehasdanglinganchor(self, node):
+		# XXXX Note by Jack: fixinteresting should only be called on commit(),
+		# and it should create a cachedict indexed by node.
+		import MMAttrdefs
+		import AnchorDefs
+		uid = node.GetUID()
+		aiddict = {}
+		for anchor in MMAttrdefs.getattr(node, 'anchorlist'):
+			if not anchor.atype in AnchorDefs.SourceAnchors:
+				continue
+			aiddict[anchor.aid] = 1
+		if not aiddict:
+			return 0
+		for a1, a2, dir, tp, stp, dtp in self.links:
+			if type(a1) == type(()) and a1[0] == uid:
+				if aiddict.has_key(a1[1]):
+					del aiddict[a1[1]]
+			if type(a2) == type(()) and a2[0] == uid:
+				if aiddict.has_key(a2[1]):
+					del aiddict[a2[1]]
+			if not aiddict:
+				return 0
+		return not not aiddict
