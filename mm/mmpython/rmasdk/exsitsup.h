@@ -2,24 +2,10 @@
  * 
  *  $Id$
  *  
- *  Copyright (C) 1995,1996,1997 RealNetworks.
- *  All rights reserved.
- *
- *  This program contains proprietary information of RealNetworks, Inc.,
- *  and is licensed subject to restrictions on use and distribution.
- *
  */
 #ifndef _EXSITSUP_H_
 #define _EXSITSUP_H_
 
-
-// forward declares
-class ExampleWindowlessSite;
-
-// for PyObject
-#ifndef Py_PYTHON_H
-#include "Python.h"
-#endif
 
 /****************************************************************************
  *
@@ -29,12 +15,27 @@ class ExampleWindowlessSite;
  */
 class ExampleSiteSupplier :  public IRMASiteSupplier
 {
+    /****** Private Class Variables ****************************************/
+    INT32 m_lRefCount;
+    IRMASiteManager* m_pSiteManager;
+    IRMACommonClassFactory* m_pCCF;
+    IUnknown* m_pUnkPlayer;
+    FiveMinuteMap m_CreatedSites;
+
+	PNxWindow m_PNxWindow;
+	BOOL m_showInNewWnd;
+
     public:
     /****** Public Class Methods ******************************************/
     ExampleSiteSupplier(IUnknown* pUnkPlayer);
     
-	void SetPyVideoSurface(PyObject *obj);
-	PyObject *m_pyVideoSurface;
+
+    /************************************************************************
+     *  Custom Interface Methods                     
+	 */
+	void SetOsWindow(void* p){m_PNxWindow.window=p;}
+	void ShowInNewWindow(BOOL f){m_showInNewWnd=f;}
+
 
     /************************************************************************
      *  IRMASiteSupplier Interface Methods                     ref:  rmawin.h
@@ -52,18 +53,7 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
     STDMETHOD_(UINT32, AddRef ) (THIS);
     STDMETHOD_(UINT32, Release) (THIS);
 
- 
-    // our windowless site
-    ExampleWindowlessSite*  m_pWindowlessSite;
-
-	private:
-    /****** Private Class Variables ****************************************/
-    INT32		    m_lRefCount;
-    IRMASiteManager*	    m_pSiteManager;
-    IRMACommonClassFactory* m_pCCF;
-    IUnknown*		    m_pUnkPlayer;
-    FiveMinuteMap	    m_CreatedSites;
-
+    private:
     /****** Private Class Methods ******************************************/
     ~ExampleSiteSupplier();
     
