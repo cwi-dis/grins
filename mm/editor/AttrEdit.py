@@ -67,6 +67,9 @@ class Wrapper: # Base class -- common operations
 		self.editmgr = context.geteditmgr()
 	def __repr__(self):
 		return '<Wrapper instance>'
+	def close(self):
+		del self.context
+		del self.editmgr
 	def getcontext(self):
 		return self.context
 	def register(self, object):
@@ -95,6 +98,12 @@ class NodeWrapper(Wrapper):
 
 	def __repr__(self):
 		return '<NodeWrapper instance, node=' + `self.node` + '>'
+
+	def close(self):
+		del self.node.attreditor
+		del self.node
+		del self.root
+		Wrapper.close(self)
 
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
@@ -162,6 +171,11 @@ class ChannelWrapper(Wrapper):
 
 	def __repr__(self):
 		return '<ChannelWrapper, name=' + `self.channel.name` + '>'
+
+	def close(self):
+		del self.channel.attreditor
+		del self.channel
+		Wrapper.close(self)
 
 	def stillvalid(self):
 		return self.channel.stillvalid()
@@ -344,6 +358,9 @@ class AttrEditor:
 			list.append(b)
 		self.dialog.show()
 
+	def pop(self):
+		self.dialog.pop()
+
 	def settitle(self, title):
 		self.dialog.settitle(title)
 
@@ -366,6 +383,7 @@ class AttrEditor:
 		self.wrapper.unregister(self)
 		if self.new:
 			self.wrapper.delete()
+		self.wrapper.close()
 		del self.dialog
 		del self.list
 		del self.wrapper
