@@ -19,9 +19,6 @@ import win32window
 # ddraw.error
 import ddraw
 
-import wmwriter
-import time
-
 class _PlayerView(DisplayListView, win32window.DDWndLayer):
 	def __init__(self,doc,bgcolor=None):
 		DisplayListView.__init__(self,doc)
@@ -34,8 +31,6 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		win32window.DDWndLayer.__init__(self, self, bgcolor)
 
 		self._viewport = None
-		self._writer = None	
-		self.__timer_id = 0
 
 	def init(self, rc, title='View', units= UNIT_MM, adornments=None, canvassize=None, commandlist=None, bgcolor=None):
 		DisplayListView.init(self, rc, title=title, units=units, adornments=adornments, canvassize=canvassize,
