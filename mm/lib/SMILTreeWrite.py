@@ -114,6 +114,8 @@ def WriteFile(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evalli
 		fss = macfs.FSSpec(filename)
 		if features.compatibility == features.G2 and cleanSMIL:
 			fss.SetCreatorType('PNst', 'PNRA')
+		elif features.compatibility == features.QT and not grinsExt:
+			fss.SetCreatorType('TVOD', '.SMI')
 		else:
 			fss.SetCreatorType('GRIN', 'TEXT')
 		macostools.touched(fss)
