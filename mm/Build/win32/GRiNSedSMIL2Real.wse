@@ -2191,6 +2191,11 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Build\products\smil2real\TDG.pdf
+  Destination=%MAINDIR%\TDG.pdf
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\DocCommon\QSG-T1.data\Pict-3.jpg
   Destination=%MAINDIR%\DocCommon\QSG-T1.data\Pict-3.jpg
   Flags=0000000010000010
@@ -2263,11 +2268,6 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\Build\products\smil2real\tutorials.pdf
   Destination=%MAINDIR%\tutorials.pdf
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil2real\TDG.html
-  Destination=%MAINDIR%\TDG.html
   Flags=0000000010000010
 end
 item: Install File

@@ -64,7 +64,7 @@ class MainDialog:
 			tutorial = MMurl.pathname2url(tutorial)
 			self.commandlist.append(
 				GRINS_TUTORIAL(callback = (self.grins_web_callback, (tutorial,))))
-		tdg = cmif.findfile('TDG.html')
+		tdg = cmif.findfile('TDG.pdf')
 		if os.path.exists(tdg):
 			tdg = MMurl.pathname2url(tdg)
 			self.commandlist.append(
