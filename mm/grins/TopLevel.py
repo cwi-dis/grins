@@ -348,6 +348,7 @@ class TopLevel(TopLevelDialog):
 			u_state = 'RENDERED'
 		self.context.usergroups[name] = title, u_state, override, uid
 		self.setusergroups()
+		self.root.ResetPlayability()
 
 	def setusergroups(self):
 		menu = []
