@@ -23,8 +23,8 @@ CFG=cmif - Win32 Debug
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
-# PROP Scc_ProjName ""
-# PROP Scc_LocalPath ""
+# PROP Scc_ProjName ""$/cmif", TRAAAAAA"
+# PROP Scc_LocalPath "."
 MTL=midl.exe
 
 !IF  "$(CFG)" == "cmif - Win32 Release"
@@ -67,19 +67,15 @@ MTL=midl.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\common\win32\Help.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\common\win32\HtmlChannel.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\common\win32\NTVideoChannel.py
+SOURCE=.\common\win32\MidiChannel.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\common\win32\PlayerDialogBase.py
+SOURCE=.\common\win32\NTVideoChannel.py
 # End Source File
 # Begin Source File
 
@@ -208,10 +204,6 @@ SOURCE=.\common\MACVideoChannel.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\common\Makefile
-# End Source File
-# Begin Source File
-
 SOURCE=.\common\MidiChannel.py
 # End Source File
 # Begin Source File
@@ -229,10 +221,6 @@ SOURCE=.\common\NullChannel.py
 # Begin Source File
 
 SOURCE=.\common\parsehtml.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\common\PlayerDialog.py
 # End Source File
 # Begin Source File
 
@@ -303,10 +291,6 @@ SOURCE=.\common\WordChannel.py
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\editor\win32\adornpref.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\editor\win32\AnchorEditDialog.py
 # End Source File
 # Begin Source File
@@ -351,6 +335,10 @@ SOURCE=.\editor\win32\NodeInfoDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\win32\patchlevel.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\win32\PlayerDialog.py
 # End Source File
 # Begin Source File
@@ -360,6 +348,10 @@ SOURCE=.\editor\win32\TopLevelDialog.py
 # Begin Source File
 
 SOURCE=.\editor\win32\usercmdui.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\win32\UsergroupViewDialog.py
 # End Source File
 # Begin Source File
 
@@ -477,18 +469,14 @@ SOURCE=.\editor\motif\PlayerDialog.py
 
 SOURCE=.\editor\motif\TopLevelDialog.py
 # End Source File
+# Begin Source File
+
+SOURCE=.\editor\motif\UsergroupViewDialog.py
+# End Source File
 # End Group
 # Begin Source File
 
 SOURCE=.\editor\.cmif_editors
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\.cvsignore
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\.win32_cmif_editors
 # End Source File
 # Begin Source File
 
@@ -508,11 +496,11 @@ SOURCE=.\editor\ChannelView.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\editor\ChannelViewDialog.py
+SOURCE=.\editor\cmif.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\editor\cmif.py
+SOURCE=.\editor\cmif_editors.ini
 # End Source File
 # Begin Source File
 
@@ -521,10 +509,6 @@ SOURCE=.\editor\cmifed.py
 # Begin Source File
 
 SOURCE=.\editor\HierarchyView.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\HierarchyViewDialog.py
 # End Source File
 # Begin Source File
 
@@ -564,6 +548,10 @@ SOURCE=.\editor\usercmd.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\UsergroupView.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\ViewDialog.py
 # End Source File
 # End Group
@@ -595,15 +583,15 @@ SOURCE=.\lib\win32\_SourceView.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\win32\_UsergroupView.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\win32\AnchorEditForm.py
 # End Source File
 # Begin Source File
 
 SOURCE=.\lib\win32\appcon.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\win32\AppGlobals.py
 # End Source File
 # Begin Source File
 
@@ -659,6 +647,10 @@ SOURCE=.\lib\win32\rbtk.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\win32\splash.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\win32\sysmetrics.py
 # End Source File
 # Begin Source File
@@ -671,11 +663,11 @@ SOURCE=.\lib\win32\wc.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\win32\win32menu.py
+SOURCE=.\lib\win32\win32ig.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\win32\win32modules.py
+SOURCE=.\lib\win32\win32menu.py
 # End Source File
 # Begin Source File
 
@@ -916,10 +908,6 @@ SOURCE=.\lib\MMNode.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\MMNodeBase.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\MMParser.py
 # End Source File
 # Begin Source File
@@ -1035,36 +1023,12 @@ SOURCE=.\lib\windowinterface.doc
 SOURCE=.\lib\WMEVENTS.py
 # End Source File
 # End Group
-# Begin Group "bin"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\bin\dlg.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\bin\iGRiNS.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\bin\lab.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\bin\ReleaseNotes.txt
-# End Source File
-# End Group
 # Begin Group "grins"
 
 # PROP Default_Filter ""
 # Begin Group "grins/win32"
 
 # PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\grins\win32\adornpref.py
-# End Source File
 # Begin Source File
 
 SOURCE=.\grins\win32\MainDialog.py
@@ -1159,16 +1123,24 @@ SOURCE=.\grins\TopLevel.py
 SOURCE=.\grins\usercmd.py
 # End Source File
 # End Group
-# Begin Group "smil"
+# Begin Group "pylib"
 
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\SMIL\flash\flash.smi
+SOURCE=.\pylib\urllib.py
 # End Source File
 # Begin Source File
 
-SOURCE=..\SMIL\flash\popup.smi
+SOURCE=.\pylib\xmllib.py
+# End Source File
+# End Group
+# Begin Group "bin"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\bin\iGRiNS.py
 # End Source File
 # End Group
 # End Target
