@@ -614,9 +614,6 @@ class LayoutView2(LayoutViewDialog2):
 			return
 		self.myfocus = None
 
-		# remove media node from previous selection		
-		self.previousWidget.removeTempMediaNodeList()
-
 		self.currentNodeRefSelected = focusobject
 		self.updateFocus()
 		
@@ -1416,27 +1413,19 @@ class TreeWidget(Widget):
 class PreviousWidget(Widget):
 	def __init__(self, context):
 		self._viewports = {}
-		self._refToRegionNode = {}
+		self._nodeRefToNodeTree = {}
 		self._context = context
 
 		# current state
 		self.currentViewport = None		
 
-		# deal with graphic selecter controls
-		self.currentRegionRefListSel = []
-		self.currentMediaRefListSel = []
-
+		self.localSelect = 0
+		
 		# media list currently showed whichever the node which are the focus
 		self.currentMediaRefListM = []
-		# media list currently showed which are removed when an external focus change
-		self.currentMediaRefListT = []
-		# media list (tuple of media node, parent node) which are showing
-		self.currentMediaNodeListShowed = []
 
 		# region list currently showed whichever the node which are the focus
 		self.currentRegionRefListM = []
-		# region list currently showed which are removed when an external focus change
-		self.currentRegionRefListT = []
 		# region list which are showing
 		self.currentRegionNodeListShowed = []
 
@@ -1453,17 +1442,27 @@ class PreviousWidget(Widget):
 		self.displayViewport(viewport)
 
 	def selectNodeList(self, nodeRefList):
+		if not self.localSelect:
+		# remove previous medias which are not selected anymore
+			mediaToRemove = []
+			for nodeRef in self.currentMediaRefListM:
+				if not nodeRef in nodeRefList:
+					mediaToRemove.append(nodeRef)
+			for nodeRef in mediaToRemove:
+				self.removeMedia(nodeRef)
+		self.localSelect = 0
+			
 		if len(nodeRefList) == 0:
 			self.unselect()
 			return
-		nodeRef = nodeRefList[0]
-		nodeType = self._context.getNodeType(nodeRef)
-		if nodeType == TYPE_VIEWPORT:
-			self.selectViewport(nodeRef)
-		elif nodeType == TYPE_REGION:
-			self.selectRegion(nodeRef)
-		elif nodeType == TYPE_MEDIA:
-			self.selectMedia(nodeRef)
+		for nodeRef in nodeRefList:			
+			nodeType = self._context.getNodeType(nodeRef)
+			if nodeType == TYPE_VIEWPORT:
+				self.selectViewport(nodeRef)
+			elif nodeType == TYPE_REGION:
+				self.selectRegion(nodeRef)
+			elif nodeType == TYPE_MEDIA:
+				self.selectMedia(nodeRef)
 
 	#
 	#
@@ -1474,51 +1473,47 @@ class PreviousWidget(Widget):
 		# We assume here that no region has been added or supressed
 		viewportRefList = self._context.getViewportRefList()
 		for viewportRef in viewportRefList:
-			viewportNode = self.getViewportNode(viewportRef)
+			viewportNode = self.getNode(viewportRef)
 			if debug: print 'LayoutView.updateRegionTree: update viewport',viewportNode.getName()
 			viewportNode.updateAllAttrdict()
 		if debug: print 'LayoutView.updateRegionTree end'
 
 	def addRegion(self, parentRef, regionRef):
 		pNode = self.getNode(parentRef)
-		self._refToRegionNode[regionRef] = regionNode = Region(regionRef.name, regionRef, self)
+		self._nodeRefToNodeTree[regionRef] = regionNode = Region(regionRef.name, regionRef, self)
 		pNode.addNode(regionNode)
 
 		if self._context.showAllRegions:
 			if regionRef not in self.currentRegionRefListM:
 				self.currentRegionRefListM.append(regionRef)
-			if regionRef in self.currentRegionRefListT:
-				self.currentRegionRefListT.remove(regionRef)
 
 			# append and update region node list
 			self.appendRegionNodeList([regionRef])
 
 	def addViewport(self, viewportRef):
 		viewportNode = Viewport(viewportRef.name, viewportRef, self)
-		self._viewports[viewportRef] = viewportNode
+		self._nodeRefToNodeTree[viewportRef] = viewportNode
 
 	def removeRegion(self, regionRef):
 		self.removeRegionNode(regionRef)
-		regionNode = self.getRegionNode(regionRef)
+		regionNode = self.getNode(regionRef)
 		parentNode = regionNode.getParent()
 		parentNode.removeNode(regionNode)
 		viewportRef = parentNode.getViewport().getNodeRef()
 
 		if regionRef in self.currentRegionRefListM:
 			self.currentRegionRefListM.remove(regionRef)
-		if regionRef in self.currentRegionRefListT:
-			self.currentRegionRefListT.remove(regionRef)
 			
-		del self._refToRegionNode[regionRef]
+		del self._nodeRefToNodeTree[regionRef]
 		
 	def removeViewport(self, viewportRef):		
-		del self._viewports[viewportRef]
+		del self._nodeRefToNodeTree[viewportRef]
 
 	def selectRegion(self, regionRef):		
 		appendList = []
-		if regionRef not in self.currentRegionRefListT and regionRef not in self.currentRegionRefListM:
+		if regionRef not in self.currentRegionRefListM: 
 			appendList.append(regionRef)
-			self.currentRegionRefListT.append(regionRef)
+			self.currentRegionRefListM.append(regionRef)
 
 		# append and update region node list
 		self.appendRegionNodeList(appendList)
@@ -1532,63 +1527,48 @@ class PreviousWidget(Widget):
 									
 	def selectMedia(self, mediaRef):
 		appendList = []
-		if mediaRef not in self.currentMediaRefListT and mediaRef not in self.currentMediaRefListM:
+		if mediaRef not in self.currentMediaRefListM:
 			appendList.append(mediaRef)
-			self.currentMediaRefListT.append(mediaRef)
+			self.currentMediaRefListM.append(mediaRef)
 
 		# append and update media node list
 		self.appendMediaNodeList(appendList)
 		
 		self.__select(mediaRef)
 
-	def removeAllMediaNodeList(self):
-		if len(self.currentMediaNodeListShowed) > 0:
-			for mediaRegion, parentRegion in self.currentMediaNodeListShowed:
-				# remove from region tree
-				parentRegion.removeNode(mediaRegion)
-		self.currentMediaNodeListShowed = []
-		self.lastMediaRefSelected = None
-
+	def removeAllMedias(self):
+		for mediaRef in self.currentMediaRefListM:
+			node = self.getNode(mediaRef)
+			parentNode = node.getParent()
+			# remove from region tree
+			if parentNode != None:
+				parentNode.removeNode(node)
+			del self._nodeRefToNodeTree[mediaRef]
+		self.currentMediaRefListM = []
+					
 	def removeMedia(self, mediaRef):
-		if len(self.currentMediaNodeListShowed) > 0:
-			i = 0
-			mediaNode = self.getMediaNode(mediaRef)
-			for mediaRegion, parentRegion in self.currentMediaNodeListShowed:
-				if mediaRegion is mediaNode:
-					parentRegion.removeNode(mediaRegion)
-					if self.lastMediaRefSelected == mediaRegion.getNodeRef():					
-						self.lastMediaRefSelected = None
-					del self.currentMediaNodeListShowed[i]
-					break
-				i = i+1
+		node = self.getNode(mediaRef)
+		parentNode = node.getParent()
+		# remove from region tree
+		if parentNode != None:
+			parentNode.removeNode(node)
+		if mediaRef in self.currentMediaRefListM:
+			self.currentMediaRefListM.remove(mediaRef)
+			del self._nodeRefToNodeTree[mediaRef]
 
 	def removeRegionNode(self, regionRef):
 		if regionRef in	self.currentRegionNodeListShowed:
 			self.currentRegionNodeListShowed.remove(regionRef)
-			regionNode = self.getRegionNode(regionRef)
+			regionNode = self.getNode(regionRef)
 			regionNode.toHiddenState()
 							 
-	def removeTempMediaNodeList(self):
-		removeList = []
-		ind = 0
-		for mediaRegion, parentRegion in self.currentMediaNodeListShowed:
-			if mediaRegion.getNodeRef() in self.currentMediaRefListT:
-				removeList.append(ind)
-				parentRegion.removeNode(mediaRegion)
-			ind = ind+1
-		removeList.reverse()
-		for ind in removeList:
-			del self.currentMediaNodeListShowed[ind]
-
-		self.currentMediaRefListT = []
-
 	def appendAllRegionNodeList(self):
 		self.appendRegionNodeList(self.currentRegionRefListM)
 	
 	def appendRegionNodeList(self, nodeList):
 		# change to show state each region node
 		for nodeRef in nodeList:
-			regionNode = self.getRegionNode(nodeRef)
+			regionNode = self.getNode(nodeRef)
 			if regionNode != None:
 				regionNode.toShowedState()
 			self.currentRegionNodeListShowed.append(nodeRef)
@@ -1597,27 +1577,20 @@ class PreviousWidget(Widget):
 		# create the media region nodes according to nodeList
 		appendMediaRegionList = []
 		for nodeRef in nodeList:
-			channel = nodeRef.GetChannel()
-			if channel == None: continue
-			layoutChannel = channel.GetLayoutChannel()
-			if layoutChannel == None: continue
-			regionNode = self.getRegionNode(layoutChannel)
-			if regionNode == None: continue
 			name = nodeRef.attrdict.get("name")
+			newNode = MediaRegion(name, nodeRef, self)
+			parentRef = self._context.getParentNodeRef(nodeRef)
+			parentNode = self.getNode(parentRef)
+			if parentNode != None:
+				self._nodeRefToNodeTree[nodeRef] = newNode
+				parentNode.addNode(newNode)
+				newNode.importAttrdict()
+				newNode.show()
 
-			newRegionNode = MediaRegion(name, nodeRef, self)
-
-			# add the new media region
-			appendMediaRegionList.append((newRegionNode, regionNode))
-
-
-		# add the list of new media regions
-		for mediaRegion, parentRegion in appendMediaRegionList:
-			self.currentMediaNodeListShowed.append((mediaRegion, parentRegion))
-			parentRegion.addNode(mediaRegion)
-			mediaRegion.importAttrdict()
-			mediaRegion.show()
-
+	def onSelect(self, nodeList):
+		self.localSelect = 1
+		self._context.onSelect(nodeList)
+		
 	def __unselect(self):
 		# XXX for now re-show the viewport
 		if self.currentViewport == None:
@@ -1646,39 +1619,15 @@ class PreviousWidget(Widget):
 			node.toShowedState()
 			node.select()
 
-	def getRegionNode(self, regionRef):
-		return self._refToRegionNode.get(regionRef)
-
-	def getMediaNode(self, mediaRef):
-		for mediaRegion, parentRegion in self.currentMediaNodeListShowed:
-			nodeRef = mediaRegion.getNodeRef()
-			if nodeRef is mediaRef:
-				return mediaRegion
-		return None
-
-	def getViewportNode(self, viewportRef):
-		return self._viewports.get(viewportRef)
-		
 	def getNode(self, nodeRef):
-		node = self.getViewportNode(nodeRef)
-		if node != None:
-			return node
-		
-		node = self.getRegionNode(nodeRef)
-		if node != None:
-			return node
-
-		node = self.getMediaNode(nodeRef)
-		if node != None:
-			return node
-
-		return None			
+		node = self._nodeRefToNodeTree.get(nodeRef)
+		return node
 
 	def displayViewport(self, viewportRef):
 		if debug: print 'LayoutView.displayViewport: change viewport =',viewportRef
 		if self.currentViewport != None:
 			self.currentViewport.hide()
-		self.currentViewport = self.getViewportNode(viewportRef)
+		self.currentViewport = self.getNode(viewportRef)
 		self.currentViewport.showAllNodes()
 								
 class Node:
@@ -1830,7 +1779,7 @@ class Node:
 	def onSelected(self):
 		if not self._selecting:
 			if debug: print 'PreviousWidget.Node.onSelected : ',self.getName()
-			self._ctx._context.onSelect([self._nodeRef])
+			self._ctx.onSelect([self._nodeRef])
 		
 class Region(Node):
 	def __init__(self, name, nodeRef, ctx):
@@ -1907,9 +1856,11 @@ class Region(Node):
 		
 	def onGeomChanged(self, geom):
 		# apply the new value
+		self._ctx.localSelect = 1 # temporare
 		self._ctx._context.applyGeomOnRegion(self.getNodeRef(), geom)
 
 	def onProperties(self):
+		self._ctx.localSelect = 1 # temporare
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self._ctx._context.editProperties(self.getNodeRef())
 		else:
@@ -2019,10 +1970,12 @@ class MediaRegion(Region):
 		
 	def onGeomChanged(self, geom):
 		# apply the new value
+		self._ctx.localSelect = 1 # temporare
 		self._ctx._context.applyGeomOnMedia(self.getNodeRef(), geom)
 
 	def onProperties(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
+			self._ctx.localSelect = 1 # temporare
 			self._ctx._context.editProperties(self.getNodeRef())
 	
 class Viewport(Node):
@@ -2099,12 +2052,14 @@ class Viewport(Node):
 		self._ctx._context.onFastGeomUpdate(self._nodeRef, geom[2:])
 
 	def onGeomChanged(self, geom):
+		self._ctx.localSelect = 1 # temporare
 		# apply the new value
 		self.currentX = geom[0]
 		self.currentY = geom[1]
 		self._ctx._context.applyGeomOnViewport(self._nodeRef, geom[2:])
 
 	def onProperties(self):
+		self._ctx.localSelect = 1 # temporare
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self._ctx._context.editProperties(self.getNodeRef())
 		else:
