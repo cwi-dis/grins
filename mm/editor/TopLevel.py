@@ -1,23 +1,26 @@
-# Top level control window.
-# Read the file and create a control panel that accesses the other functions.
+# Top level menu.
+# Read the file and create a menu that accesses the basic functions.
 
 import MMExc
 import MMAttrdefs
 import MMTree
 from EditMgr import EditMgr
-
-import Timing
+from Dialog import BasicDialog
 import AttrEdit
+import Timing
 
 import gl, GL, DEVICE
 import fl
 from FL import *
-import glwindow
 
-WIDTH, HEIGHT = 120, 280
-BHEIGHT = 30
 
-class TopLevel() = (glwindow.glwindow)():
+# Parametrizations
+WIDTH, HEIGHT = 120, 280		# Menu dimensions
+BHEIGHT = 30				# Button height
+HELPDIR = '/ufs/guido/mm/demo/help'	# Where to find the help files
+
+
+class TopLevel() = BasicDialog():
 	#
 	# Initialization.
 	#
@@ -32,23 +35,25 @@ class TopLevel() = (glwindow.glwindow)():
 		self.editmgr.register(self)
 		self.help = None
 		Timing.calctimes(self.root)
-		self.makecpanel()
-		self.makeviews()	# Must be called after makecpanel!
+		BasicDialog.init(self, (WIDTH, HEIGHT, 'CMIF'))
+		self.makeviews()	# References the form just made
 		return self
 	#
-	# Show/hide interface.
+	# Extend inherited show/hide/destroy interface.
 	#
 	def show(self):
-		self.showcpanel()
+		if self.showing: return
+		BasicDialog.show(self)
+		fl.qdevice(DIALOG.WINQUIT)
 	#
 	def hide(self):
 		self.hideviews()
-		self.hidecpanel()
+		BasicDialog.hide(self)
 	#
 	def destroy(self):
 		AttrEdit.closeall(self.root)
 		self.destroyviews()
-		self.destroycpanel()
+		BasicDialog.destroy(self)
 	#
 	# Main interface.
 	#
@@ -71,78 +76,51 @@ class TopLevel() = (glwindow.glwindow)():
 		# Nothing has happened.
 		pass
 	#
-	# Control panel handling.
+	# Make the menu form (called from BasicDialog.init).
 	#
-	def makecpanel(self):
-		self.cpanel = cp = fl.make_form(FLAT_BOX, WIDTH, HEIGHT)
-		self.cpshown = 0
+	def make_form(self):
+		self.form = form = fl.make_form(FLAT_BOX, WIDTH, HEIGHT)
 		#
 		x, y, w, h = 0, HEIGHT, WIDTH, BHEIGHT
 		#
 		y = y - h
 		self.bvbutton = \
-			cp.add_button(PUSH_BUTTON,x,y,w,h, 'Hierarchy')
+			form.add_button(PUSH_BUTTON,x,y,w,h, 'Hierarchy')
 		#
 		y = y - h
 		self.cvbutton = \
-			cp.add_button(PUSH_BUTTON,x,y,w,h, 'Time chart')
+			form.add_button(PUSH_BUTTON,x,y,w,h, 'Time chart')
 		#
 		y = y - h
 		self.pvbutton = \
-			cp.add_button(PUSH_BUTTON,x,y,w,h, 'Presentation')
+			form.add_button(PUSH_BUTTON,x,y,w,h, 'Presentation')
 		#
 		y = y - h
 		self.svbutton = \
-			cp.add_button(PUSH_BUTTON,x,y,w,h, 'Styles')
+			form.add_button(PUSH_BUTTON,x,y,w,h, 'Styles')
 		#
 		y = 120
 		#
 		y = y - h
 		self.savebutton = \
-			cp.add_button(INOUT_BUTTON,x,y,w,h, 'Save')
+			form.add_button(INOUT_BUTTON,x,y,w,h, 'Save')
 		self.savebutton.set_call_back(self.save_callback, None)
 		#
 		y = y - h
 		self.restorebutton = \
-			cp.add_button(INOUT_BUTTON,x,y,w,h, 'Restore')
+			form.add_button(INOUT_BUTTON,x,y,w,h, 'Restore')
 		self.restorebutton.set_call_back(self.restore_callback, None)
 		#
 		y = y - h
 		self.helpbutton = \
-			cp.add_button(NORMAL_BUTTON,x,y,w,h, 'Help')
+			form.add_button(NORMAL_BUTTON,x,y,w,h, 'Help')
 		self.helpbutton.set_call_back(self.help_callback, None)
 		#
 		y = y - h
 		self.quitbutton = \
-			cp.add_button(INOUT_BUTTON,x,y,w,h, 'Quit')
+			form.add_button(INOUT_BUTTON,x,y,w,h, 'Quit')
 		self.quitbutton.set_call_back(self.quit_callback, None)
 		#
-	#
-	def showcpanel(self):
-		if self.cpshown: return
-		#
-		# Use the winpos attribute of the root to place the panel
-		#
-		h, v = MMAttrdefs.getattr(self.root, 'toplevel_winpos')
-		width, height = WIDTH, HEIGHT
-		glwindow.setgeometry(h, v, width, height)
-		#
-		self.cpanel.show_form(PLACE_SIZE, TRUE, 'CMIF')
-		gl.winset(self.cpanel.window)
-		gl.winconstraints() # Allow resize
-		fl.qdevice(DEVICE.WINSHUT)
-		fl.qdevice(DEVICE.WINQUIT)
-		glwindow.register(self, self.cpanel.window)
-		self.cpshown = 1
-	#
-	def hidecpanel(self):
-		if not self.cpshown: return
-		glwindow.unregister(self)
-		self.cpanel.hide_form()
-		self.cpshown = 0
-	#
-	def destroycpanel(self):
-		self.hidecpanel()
 	#
 	# View manipulation.
 	#
@@ -222,15 +200,13 @@ class TopLevel() = (glwindow.glwindow)():
 	def help_callback(self, (obj, arg)):
 		if self.help = None:
 			import help
-			self.help = help.HelpWindow().init(HELPFILE)
+			self.help = help.HelpWindow().init(HELPDIR)
 		self.help.show()
 	#
-	# GL event callback for WINSHUT (called from glwindow)
+	# GL event callback for WINSHUT and WINQUIT (called from glwindow)
 	#
 	def winshut(self):
 		self.quitbutton.set_button(1)
 		self.destroy()
 		raise MMExc.ExitException, 0
 	#
-
-HELPFILE = '/ufs/guido/mm/demo/help'
