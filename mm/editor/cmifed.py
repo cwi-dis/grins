@@ -288,7 +288,7 @@ class Main(MainDialog):
 
 	def crash_callback(self):
 		raise 'Crash requested by user'
-
+		
 	def debug_callback(self):
 		import pdb
 		pdb.set_trace()

@@ -49,6 +49,8 @@ class TRACE(_CommandBase):
 	help = 'DEBUG: toggle trace flag'
 class DEBUG(_CommandBase):
 	help = 'DEBUG: enter Python debugger'
+class DUMPWINDOWS(_CommandBase):
+	help = 'DEBUG: dump window hierarchy'
 class CONSOLE(_CommandBase): pass
 class EXIT(_CommandBase):
 	help = 'Exit GRiNS'

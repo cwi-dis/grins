@@ -51,6 +51,7 @@ MENUBAR=(
 			(FLAG_DBG, ENTRY, 'Enter debugger', None, DEBUG),
 			(FLAG_DBG, ENTRY, 'Abort', None, CRASH),
 			(FLAG_DBG, ENTRY, 'Show log/debug window', None, CONSOLE),
+			(FLAG_DBG, ENTRY, 'Dump Window Hierarchy', None, DUMPWINDOWS),
 			)),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Check for GRiNS update...', None, CHECKVERSION),
@@ -80,6 +81,7 @@ MENUBAR=(
 		(FLAG_PRO, SEP, ),
 		(FLAG_ALL, ENTRY, 'Properties...', 'A', ATTRIBUTES),
 		(FLAG_ALL, ENTRY, 'Edit Content', 'E', CONTENT),
+		(FLAG_PRO, ENTRY, 'Convert to SMIL 2.0', None, RPCONVERT),
 		(FLAG_ALL, SEP, ),
 		(FLAG_ALL, ENTRY, 'Preferences...', None, PREFERENCES),
 		)),
@@ -221,6 +223,7 @@ MENUBAR=(
 POPUP_HVIEW_LEAF = (
 		(FLAG_PRO, ENTRY, 'New Node Before', None, NEW_BEFORE),
 		(FLAG_PRO, ENTRY, 'New Node After', 'K', NEW_AFTER),
+		(FLAG_PRO, ENTRY, 'Convert to SMIL 2.0', None, RPCONVERT),
 		(FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, 'Cut', 'X', CUT),
 		(FLAG_ALL, ENTRY, 'Copy', 'C', COPY),
