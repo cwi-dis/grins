@@ -2798,7 +2798,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def __fixskin(self):
 		dict = self.__skin
-		if not dict or not dict.has_key('image'):
+		if not dict or not dict.has_key('image'): # presence of image implies presence of display
 			return
 		skin = settings.get('skin')
 		ctx = self.__context
@@ -2841,6 +2841,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				lcd['transparent'] = 0
 				settings.setScreenSize(coords[2], coords[3])
 				ctx.cssResolver.setRawAttrs(lcd.getCssId(), [('left', coords[0]), ('top', coords[1]), ('width', coords[2]), ('height', coords[3])])
+				if settings.get('centerskin') and (vp.has_key('width') or vp.has_key('height')):
+					lcd2 = ctx.newchannel('Display Area', -1, 'layout')
+					lcd._addchild(lcd2)
+					cssattrs = []
+					if vp.has_key('width'):
+						lcd2['width'] = vp['width']
+						lcd2['left'] = (coords[2] - vp['width']) / 2
+						cssattrs.append(('width', vp['width']))
+						cssattrs.append(('left', (coords[2] - vp['width']) / 2))
+					if vp.has_key('height'):
+						lcd2['height'] = vp['height']
+						lcd2['top'] = (coords[3] - vp['height']) / 2
+						cssattrs.append(('height', vp['height']))
+						cssattrs.append(('top', (coords[3] - vp['height']) / 2))
+					lcd2['transparent'] = 1
+					ctx.cssResolver.setRawAttrs(lcd2.getCssId(), cssattrs)
+					lcd = lcd2
 				continue
 			# key in ['open','play','pause','stop','exit','skin','tab','key']
 			for val in val:
@@ -3371,29 +3388,30 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		cssAttrs = []
 
-		scrw, scrh = settings.get('system_screen_size')
-		changed = 0
-		try:
-			width = int(attributes.get('width'))
-		except:
-			width = None
-		if width is not None and width > scrw:
-			attributes['width'] = `scrw`
-			changed = 1
-		try:
-			height = int(attributes.get('height'))
-		except:
-			height = None
-		if height is not None and height > scrh:
-			attributes['height'] = `scrh`
-			changed = 1
-		if width is not None and height is not None and changed:
-			xsc = float(width) / scrw
-			ysc = float(height) / scrh
-			if xsc < ysc:
-				attributes['height'] = `int(height * xsc + .5)`
-			elif xsc > ysc:
-				attributes['width'] = `int(width * ysc + .5)`
+		if not settings.get('centerskin'):
+			scrw, scrh = settings.get('system_screen_size')
+			changed = 0
+			try:
+				width = int(attributes.get('width'))
+			except:
+				width = None
+			if width is not None and width > scrw:
+				attributes['width'] = `scrw`
+				changed = 1
+			try:
+				height = int(attributes.get('height'))
+			except:
+				height = None
+			if height is not None and height > scrh:
+				attributes['height'] = `scrh`
+				changed = 1
+			if width is not None and height is not None and changed:
+				xsc = float(width) / scrw
+				ysc = float(height) / scrh
+				if xsc > ysc:
+					attributes['height'] = `int(height / xsc + .5)`
+				elif xsc < ysc:
+					attributes['width'] = `int(width / ysc + .5)`
 
 		for attr,val in attributes.items():
 			if attr in ('open', 'close'):

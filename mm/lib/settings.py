@@ -228,6 +228,7 @@ default_settings = {
 	'baselicense': '',
 	'skin': '',			# URL for skin definition file
 	'askskin': 0,			# Ask for skin file when opening file in player
+	'centerskin': 1,		# center in skin
 
 	'default_sync_behavior_locked' : 0,
 	'default_sync_tolerance' : 0.1,
