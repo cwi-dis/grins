@@ -7,7 +7,7 @@ __version__ = "$Id$"
 # To test fullscreen mode set PlayerDialog.__show = 'fullscreen' and then play as usual.
 # The player will work in full sceen mode untill PlayerDialog.__show  is set again to 'normal'.
 # When in full screen mode press F1 to start playing
-# When in full screen modepress ESC to return to normal mode
+# When in full screen mode press ESC to return to normal mode
 
 
 # direct draw infrastructure module
@@ -26,6 +26,9 @@ import usercmd
 # generic wnd class
 from pywin.mfc import window
 
+# cursors
+import grinsRC
+
 import win32window
 
 # meta smil class
@@ -38,6 +41,7 @@ class _FSPlayerView(window.Wnd, win32window.DDWndLayer):
 		window.Wnd.__init__(self,win32ui.CreateWnd())
 		win32window.DDWndLayer.__init__(self, self)
 		self._viewports = []
+		self._curcursor = ''
 
 	def create(self, title, x, y, w, h):
 		clstyle = win32con.CS_HREDRAW | win32con.CS_VREDRAW | win32con.CS_DBLCLKS
@@ -67,6 +71,34 @@ class _FSPlayerView(window.Wnd, win32window.DDWndLayer):
 	def OnDestroy(self, params):
 		self.destroyDDLayer()
 		self._frame.delFSPlayer()				
+	
+	# Set the cursor given its string id		
+	def setcursor(self, strid):
+		if self._curcursor==strid:
+			return
+		if strid=='hand':
+			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_POINT_HAND)
+		elif strid=='channel':
+			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGMOVE)
+		elif strid=='stop':
+			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_STOP)
+		elif strid=='link':
+			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGLINK)
+		elif strid=='' or strid=='arrow':
+			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
+			strid='arrow'
+		elif strid=='draghand':
+			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAG_HAND)
+		else:
+			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
+			strid='arrow'
+
+		self.SetWndCursor(cursor)
+		self._curcursor = strid
+	
+	def SetWndCursor(self,cursor):
+		if cursor!=Sdk.GetCursor():
+			Sdk.SetClassLong(self.GetSafeHwnd(),win32con.GCL_HCURSOR,cursor)
 						
 	#
 	#
@@ -188,7 +220,7 @@ class ViewportWnd:
 		self._z = 0
 		self.insertAt(self._z)
 
-		self._rect =  0, 0, w+dw, h+dh
+		self._rect = self._canvas = 0, 0, w+dw, h+dh
 		self._rectb = x, y, w+dw, h+dh
 		self._bgcolor = bgcolor
 				
@@ -197,7 +229,6 @@ class ViewportWnd:
 		r, g, b = bgcolor
 		self._convbgcolor = self.__drawBuffer.GetColorMatch((r, g, b))
 		self.__drawBuffer.BltFill((0, dh, w+dw, dh+h), self._convbgcolor)
-	
 		self.__metaPaintOnDDS()
 		
 		self.draw3dRect(self.__drawBuffer, self._rect, (255,255,255), (200,200,200))
@@ -206,16 +237,21 @@ class ViewportWnd:
 		self._offset = 0, 0
 		self._tragged = 0 
 
-	def pointInCaption(self, point):
+	def getCaptionPos(self):
 		x, y, w, h = self._rectb
-		h = self._dh
+		return x, y, w, self._dh
+
+	def getClientPos(self):
+		x, y, w, h = self._rectb
+		return x+self._dw/2, y+self._dh, w-self._dw, h-self._dh
+		
+	def pointInCaption(self, point):
+		x, y, w, h = self.getCaptionPos()
 		xp, yp = point
 		return x<=xp and xp<=x+w and y<=yp and yp<=y+h
 
 	def pointInClient(self, point):
-		x, y, w, h = self._rectb
-		y = y + self._dh
-		h = h - self._dh
+		x, y, w, h = self.getClientPos()
 		xp, yp = point
 		return x<=xp and xp<=x+w and y<=yp and yp<=y+h
 
@@ -242,8 +278,14 @@ class ViewportWnd:
 	def updateMouseCursor(self):
 		pass
 
+	def setcursor(self, strid):
+		self._ctx.setcursor(strid)
+
 	def getContextOsWnd(self):
 		return self._ctx.getContextOsWnd()
+
+	def getwindowpos(self, rel=None):
+		return self.getClientPos()
 
 	def getDrawBuffer(self):
 		if self.__drawBuffer.IsLost():
@@ -304,7 +346,7 @@ class ViewportWnd:
 		if self.pointInClient(point):
 			x, y, w, h = self._rectb
 			xp, yp = point
-			self._viewport.onMouseEvent((xp-x,yp-y-self._dh),Mouse0Press)
+			self._viewport.onMouseEvent((xp-x-self._dw/2,yp-y-self._dh),Mouse0Press)
 
 		return isTarget
 
@@ -314,7 +356,7 @@ class ViewportWnd:
 		if self.pointInClient(point):
 			x, y, w, h = self._rectb
 			xp, yp = point
-			self._viewport.onMouseEvent((xp-x,yp-y-self._dh),Mouse0Release)
+			self._viewport.onMouseEvent((xp-x-self._dw/2,yp-y-self._dh),Mouse0Release)
 
 	def onMouseMove(self, flags, point):
 		if self._tragged:
@@ -325,7 +367,7 @@ class ViewportWnd:
 		if self.pointInClient(point):
 			x, y, w, h = self._rectb
 			xp, yp = point
-			#self._viewport.setcursor_from_point((xp-x,yp-y-self._dh),self)
+			self._viewport.onMouseMove(flags, (xp-x-self._dw/2,yp-y-self._dh))
 
 	def __getPaintRects(self):
 		W, H = self._ctx.getSize()
