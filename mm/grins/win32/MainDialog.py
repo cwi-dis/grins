@@ -60,6 +60,7 @@ class MainDialog:
 		# register events for all frame wnds
 		import windowinterface
 		windowinterface.register_event(WMEVENTS.DropFile, self.dropfile, None)
+		windowinterface.register_event(WMEVENTS.DragFile, self.dropeffect, None)
 		windowinterface.register_event(WMEVENTS.PasteFile, self.dropfile, None)
 		import windowinterface
 		windowinterface.createmainwnd(title,
@@ -87,6 +88,16 @@ class MainDialog:
 			self.openURL_callback(url)
 		else:
 			windowinterface.showmessage('Incorrect filetype for drop/paste')
+
+	def dropeffect(self, dummy, window, event, params):
+		x,y,filename=params
+		url=self.__path2url(filename)
+		import MMmimetypes, windowinterface
+		mimetype = MMmimetypes.guess_type(url)[0]
+		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
+			return windowinterface.DROPEFFECT_COPY
+		else:
+			return windowinterface.DROPEFFECT_NONE
 
 	def openfile_callback(self):
 		"""Callback for OPENFILE menu command"""
