@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
-  Version=7.04
-  Title=Oratrix GRiNS 1.0.1alpha Installation
+  Version=7.041
+  Title=Oratrix GRiNS Player for SMIL 1.0 v1.5 Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
   Japanese Font Name=MS Gothic
@@ -10,7 +10,7 @@ item: Global
   Start Gradient=0 0 128
   End Gradient=255 128 64
   Windows Flags=00000100000000110010110000001000
-  Log Pathname=%WIN%\INSTALL.LOG
+  Log Pathname=%MAINDIR%\INSTALL.LOG
   Message Font=MS Sans Serif
   Font Size=8
   Pages Modified=00110000111101100000011100000111
@@ -19,25 +19,25 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins-win-play-101alpha.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_play_win_1.5.EXE
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=jack
   Upload Directory=/ufs/jack/tmp
   Per-User Version ID=1
   Dialogs Version=7
-  Version File=1.0.1alpha
-  Version Description=Oratrix GRiNS for SMIL
-  Version Copyright=Copyright 1999 Oratrix Development BV
+  Version File=1.5
+  Version Description=GRiNS/SMIL 1.0
+  Version Copyright=Copyright 2000 Oratrix Development BV
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=3584323238
+  File Checksum=4095474663
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=D:\Program Files\Wise InstallMaker
+  Variable Default2=E:\PROGRA~1\WISEIN~1
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -50,7 +50,7 @@ item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\common\lllicense.txt
+  Source=D:\ufs\mm\cmif\Build\products\player\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
 end
@@ -91,12 +91,12 @@ item: End Block
 end
 item: Set Variable
   Variable=APPTITLE
-  Value=Oratrix GRiNS 1.0.1alpha
+  Value=Oratrix GRiNS Player for SMIL 1.0 v1.5
   Flags=10000000
 end
 item: Set Variable
   Variable=GROUP
-  Value=Oratrix GRiNS 1.0.1alpha
+  Value=Oratrix GRiNS\GRiNS Player for SMIL 1.0 v1.5
   Flags=10000000
 end
 item: Set Variable
@@ -105,7 +105,7 @@ item: Set Variable
 end
 item: Set Variable
   Variable=MAINDIR
-  Value=Oratrix\GRiNS 1.0.1alpha
+  Value=Oratrix\GRiNS_PV1
   Flags=10000000
 end
 item: Check Configuration
@@ -1121,7 +1121,7 @@ item: Check Disk Space
   Component=COMPONENTS
 end
 item: Display Graphic
-  Pathname=D:\ufs\mm\cmif\Build\common\splash\player8bit.bmp
+  Pathname=D:\ufs\mm\cmif\Build\products\player\splash8bit.bmp
   X Position=32784
   Y Position=16
 end
@@ -1129,7 +1129,7 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\common\license.txt
+  Source=D:\ufs\mm\cmif\Build\products\player\license.txt
   Destination=%MAINDIR%\license.txt
   Flags=0000000010000010
 end
@@ -1144,17 +1144,12 @@ item: Install File
   Flags=0000001010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\rma.pyd
-  Destination=%MAINDIR%\rma.pyd
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\win32\relnotes.html
+  Source=D:\ufs\mm\cmif\Build\products\player\win32\relnotes.html
   Destination=%MAINDIR%\relnotes.html
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\win32\readme.txt
+  Source=D:\ufs\mm\cmif\Build\products\player\win32\readme.txt
   Destination=%MAINDIR%\readme.txt
   Flags=0000000010000010
 end
@@ -1176,11 +1171,6 @@ end
 item: Install File
   Source=c:\Winnt\system32\Mfc42.dll
   Destination=%SYS32%\Mfc42.dll
-  Flags=0001001010000011
-end
-item: Install File
-  Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
-  Destination=%MAINDIR%\WebPro32.ocx
   Flags=0001001010000011
 end
 item: If/While Statement
@@ -1368,15 +1358,10 @@ item: Install File
   Destination=%MAINDIR%\Examples\stroll1c.smil
   Flags=0000000010000010
 end
-item: Install File
-  Source=d:\ufs\mm\cmif\Build\common\QuickStart.pdf
-  Destination=%MAINDIR%\QuickStart.pdf
-  Flags=0000000010000010
-end
 item: End Block
 end
 item: Install File
-  Source=d:\Program Files\Wise InstallMaker\Unwise.exe
+  Source=e:\Program Files\Wise InstallMaker\Unwise.exe
   Destination=%MAINDIR%\Unwise.exe
   Flags=0000000010000010
 end
@@ -1386,36 +1371,56 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNS.exe
-  Destination=%MAINDIR%\GRiNS.exe
-  Flags=0000000010000010
-end
-item: End Block
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
-  Destination=%MAINDIR%\Gear32sd.dll
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNSRes.dll
-  Destination=%MAINDIR%\GRiNSRes.dll
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\python15.dll
-  Destination=%MAINDIR%\python15.dll
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\PyWinTypes15.dll
-  Destination=%MAINDIR%\PyWinTypes15.dll
-  Flags=0000000010000010
+  Source=e:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
+  Destination=%MAINDIR%\WebPro32.ocx
+  Flags=0001001010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\win32ui.pyd
   Destination=%MAINDIR%\win32ui.pyd
   Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\GRiNSRes.dll
+  Destination=%MAINDIR%\GRiNSRes.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\gear32sd.pyd
+  Destination=%MAINDIR%\gear32sd.pyd
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\PyWinTypes.dll
+  Destination=%MAINDIR%\PyWinTypes.dll
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\python16.dll
+  Destination=%MAINDIR%\python16.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
+  Destination=%MAINDIR%\Gear32sd.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\dshow.pyd
+  Destination=%MAINDIR%\dshow.pyd
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\_socket.pyd
+  Destination=%MAINDIR%\_socket.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\GRiNS.exe
+  Destination=%MAINDIR%\GRiNS.exe
+  Flags=0000000010000010
+end
+item: End Block
 end
 item: Set Variable
   Variable=COMMON
@@ -1501,7 +1506,7 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\GRiNS.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Player for SMIL.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Player for SMIL 1.0 v1.5.lnk
   Icon Number=0
 end
 item: End Block
@@ -1513,31 +1518,19 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\GRiNS.exe
-  Destination=%CDESKTOPDIR%\GRiNS Player for SMIL.lnk
+  Destination=%CDESKTOPDIR%\GRiNS Player for SMIL 1.0 v1.5.lnk
   Icon Number=0
 end
 item: End Block
 end
 item: Create Shortcut
   Source=%MAINDIR%\Unwise.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS Player for SMIL 1.0 v1.5.lnk
   Icon Number=0
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Create Shortcut
-  Source=%MAINDIR%\QuickStart.pdf
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS QuickStart Guide.lnk
-  Icon Number=0
-end
-item: End Block
 end
 item: Create Shortcut
   Source=%MAINDIR%\readme.txt
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\readme.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Readme.lnk
   Icon Number=0
 end
 item: Else Statement
@@ -1549,7 +1542,7 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5
   Command Line=%MAINDIR%\GRiNS.exe
 end
 item: End Block
@@ -1561,7 +1554,7 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5
   Command Line=%MAINDIR%\GRiNS.exe
 end
 item: End Block
@@ -1573,91 +1566,127 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5
   Command Line=%MAINDIR%\GRiNS.exe
 end
 item: End Block
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=readme
+  Icon Name=Readme
   Command Line=%MAINDIR%\readme.txt
 end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=B
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS QuickStart Guide
-  Command Line=%MAINDIR%\QuickStart.pdf
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=Uninstall GRiNS
+  Icon Name=Uninstall GRiNS Player for SMIL 1.0 v1.5
   Command Line=%MAINDIR%\Unwise.exe
 end
 item: If/While Statement
@@ -1667,43 +1696,7 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL
+  Icon Name=GRiNS Player for SMIL 1.0 v1.5
   Command Line=%MAINDIR%\GRiNS.exe
 end
 item: End Block
@@ -1711,16 +1704,7 @@ end
 item: End Block
 end
 item: Edit Registry
-  Total Keys=10
-  item: Key
-    Key=.cmif
-    New Value=CMIFfile
-  end
-  item: Key
-    Key=.cmif
-    New Value=application/x-grins-cmif
-    Value Name=Content Type
-  end
+  Total Keys=6
   item: Key
     Key=.smi
     New Value=SMILfile
@@ -1738,14 +1722,6 @@ item: Edit Registry
     Key=.smil
     New Value=application/smil
     Value Name=Content Type
-  end
-  item: Key
-    Key=CMIFfile
-    New Value=GRiNS CMIF File
-  end
-  item: Key
-    Key=CMIFfile\DefaultIcon
-    New Value=%MAINDIR%\GRiNSed.exe,1
   end
   item: Key
     Key=SMILfile
@@ -1753,7 +1729,7 @@ item: Edit Registry
   end
   item: Key
     Key=SMILfile\DefaultIcon
-    New Value=%MAINDIR%\GRiNSed.exe,2
+    New Value=%MAINDIR%\GRiNS.exe,2
   end
 end
 item: Edit Registry
@@ -1768,95 +1744,25 @@ item: Edit Registry
 end
 item: Edit Registry
   Total Keys=1
-  Key=CMIFfile\shell\open\command
-  New Value=%MAINDIR%\GRiNS.exe "%%1"
+  Key=MIME\Database\Content Type\applicaiton/smil
+  New Value=.smil
+  Value Name=Extension
+end
+item: Edit Registry
+  Total Keys=1
+  Key=SMILfile\shell\open
+  New Value=Open with GRiNS
 end
 item: Edit Registry
   Total Keys=1
   Key=SMILfile\shell\open\command
   New Value=%MAINDIR%\GRiNS.exe "%%1"
 end
-item: Edit Registry
-  Total Keys=1
-  Key=MIME\Database\Content Type\application/x-grins-cmif
-  New Value=.cmif
-  Value Name=Extension
-end
-item: Edit Registry
-  Total Keys=1
-  Key=MIME\Database\Content Type\applicaiton/smil
-  New Value=.smil
-  Value Name=Extension
-end
-item: Edit Registry
-  Total Keys=4
-  item: Key
-    Key=CMIFfile\shell\open
-    New Value=Open with GRiNS
-  end
-  item: Key
-    Key=CMIFfile\shell\open\command
-    New Value=%MAINDIR%\GRiNS.exe "%%1"
-  end
-  item: Key
-    Key=SMILfile\shell\open
-    New Value=Open with GRiNS
-  end
-  item: Key
-    Key=SMILfile\shell\open\command
-    New Value=%MAINDIR%\GRiNS.exe "%%1"
-  end
-end
 item: Self-Register OCXs/DLLs
   Description=Updating System Configuration, Please Wait...
 end
 item: Add Text to INSTALL.LOG
   Text=Delete in-use files: On
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: .cmc
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: .cmif
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: CMIFCacheFile
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: CMIFfile
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: MIME\Database\Content Type\application/x-grins-cmif
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: SMILfile
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
-end
-item: Add Text to INSTALL.LOG
-  Text=File Tree: %MAINDIR%\
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Tree: MIME\Database\Content Type\applicaiton/smil
-end
-item: Add Text to INSTALL.LOG
-  Text=RegDB Root: 0
 end
 item: Wizard Block
   Direction Variable=DIRECTION
