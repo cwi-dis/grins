@@ -7,3 +7,4 @@ from compatibility import *
 #
 compatibility = G2
 lightweight = 0
+editor = 1
