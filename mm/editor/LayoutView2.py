@@ -332,33 +332,6 @@ class TreeHelper:
 		else:
 			parentNode = self.__nodeList.get(parentRef)
 		self.__onDelNode(parentNode, node)
-
-#
-# Experimental code to manage a default region
-#
-	
-class FakeMMChannel:
-	def __init__(self, name):
-		self._parent = None
-		self.attrdict = {}
-		self.name = name
-		self.collapsed = 0
-
-	def GetAttrDef(self, attr, default=None):
-		return default
-		
-	def getClassName(self):
-		return 'FakeMMChannel'
-	
-	def GetParent(self):
-		return self._parent
-
-	def setParent(self, parent):
-		self._parent = parent
-
-	#
-	# End experimental code to manage a default region
-	#
 	
 class TreeNodeHelper:
 	def __init__(self, nodeRef, type):
@@ -610,12 +583,10 @@ class LayoutView2(LayoutViewDialog2):
 	def onNewNodeRef(self, parentRef, nodeRef):
 		nodeType = self.getNodeType(nodeRef)
 		if nodeType == TYPE_VIEWPORT:
-			if nodeRef.getClassName() != 'FakeMMChannel':
-				self.previousWidget.addViewport(nodeRef)			
+			self.previousWidget.addViewport(nodeRef)			
 			self.treeWidget.appendViewport(nodeRef)
 		elif nodeType == TYPE_REGION:
-			if nodeRef.getClassName() != 'FakeMMChannel':
-				self.previousWidget.addRegion(parentRef, nodeRef)
+			self.previousWidget.addRegion(parentRef, nodeRef)
 			self.treeWidget.appendRegion(parentRef, nodeRef)
 		elif nodeType == TYPE_MEDIA:
 			self.treeWidget.appendMedia(parentRef, nodeRef)
@@ -623,12 +594,10 @@ class LayoutView2(LayoutViewDialog2):
 	def onDelNodeRef(self, parentRef, nodeRef):
 		nodeType = self.getNodeType(nodeRef)
 		if nodeType == TYPE_VIEWPORT:
-			if nodeRef.getClassName() != 'FakeMMChannel':
-				self.previousWidget.removeViewport(nodeRef)
+			self.previousWidget.removeViewport(nodeRef)
 			self.treeWidget.removeNode(nodeRef)
 		elif nodeType == TYPE_REGION:
-			if nodeRef.getClassName() != 'FakeMMChannel':
-				self.previousWidget.removeRegion(nodeRef)
+			self.previousWidget.removeRegion(nodeRef)
 			self.treeWidget.removeNode(nodeRef)
 		elif nodeType == TYPE_MEDIA:
 			self.treeWidget.removeNode(nodeRef)
@@ -1755,9 +1724,6 @@ class LayoutView2(LayoutViewDialog2):
 		if sourceNodeRef == None or targetNodeRef == None:
 			return 0
 
-		if targetNodeRef.getClassName() == 'FakeMMChannel':
-			return 0
-		
 		if sourceNodeRef.IsAncestorOf(targetNodeRef) or sourceNodeRef is targetNodeRef:
 			return 0
 				
@@ -2550,8 +2516,6 @@ class PreviousWidget(Widget):
 		# We assume here that no region has been added or supressed
 		viewportRefList = self._context.getViewportRefList()
 		for viewportRef in viewportRefList:
-			if viewportRef.getClassName() == 'FakeMMChannel':
-				continue
 			viewportNode = self.getNode(viewportRef)
 			if debug: print 'LayoutView.updateRegionTree: update viewport',viewportNode.getName()
 			viewportNode.updateAllAttrdict()
