@@ -435,137 +435,95 @@ class EffValueAnimator(Animator):
 
 
 ###########################
-class TupleAnimator(Animator):
-	def __init__(self, attr, domval, values, dur, mode='linear', 
+class RNPath:
+	def __init__(self, coords):
+		self.coords = coords
+		self.params = [0,]
+		n = len(coords)
+		assert n, 'empty values'
+		self.length = 0.0
+		for i in range(1,n):
+			self.length = self.length + self.dist(coords[i-1], coords[i])		
+			self.params.append(self.length)
+			
+	def getLength(self):
+		return self.length
+
+	def getLengthValues(self):
+		return tuple(self.params)
+
+	def getPointAtLength(self, s):
+		n = len(self.coords)
+		if n==1: return self.coords[0]
+		if s<=0: return self.coords[0]
+		elif s>= self.length: 
+			return self.coords[n-1]
+		d = 0.0
+		ptp = self.coords[0] 
+		for i in range(1,n):
+			pt = self.coords[i]
+			ds = self.dist(pt, ptp)
+			if s>=d and s <= (d + ds):
+				f = (s-d)/ds
+				pt = self.line(ptp, pt, f)	
+				break
+			d = d + ds
+			ptp=pt
+		return pt
+
+	def line(self, pt1, pt2, t):
+		n = len(pt1)
+		r = []
+		for i in range(n):
+			r.append(pt1[i] + t*(pt2[i]-pt1[i]))
+		return tuple(r)
+		
+	def dist(self, pt1, pt2):
+		n = len(pt1)
+		d2 = 0.0
+		for i in range(n):
+			dq = pt2[i]-pt1[i]
+			d2 = d2 + dq*dq
+		return math.sqrt(d2)
+
+class FloatTupleAnimator(Animator):
+	def __init__(self, attr, domval, values, dur, mode='paced', 
 			times=None, splines=None, accumulate='none', additive='replace'):
+		self._path = RNPath(values)
+
+		# pass to base the length parameters of values or path
+		values = self._path.getLengthValues()
+
 		Animator.__init__(self, attr, domval, values, dur, mode, 
-			None, None, accumulate, additive)
-		self._animators = ()
+			times, splines, accumulate, additive)
+		
+		# time to paced interval convertion factor
+		if dur>0:
+			self._time2length = self._path.getLength()/dur
+		else:
+			self._time2length = 1
 
-	def setComponentAnimators(self, animators):
-		self._animators = animators
+	def _paced(self, t):
+		return self._path.getPointAtLength(t*self._time2length)
 
-	def getValue(self, t):
-		v = []
-		for a in self._animators:
-			v.append(a.getValue(t))
-		self._curvalue = tuple(v)
-		return self._curvalue
+	def _linear(self, t):
+		lv = Animator._linear(self, t)
+		return self._path.getPointAtLength(lv)
 
-	def _setAutoReverse(self,f=0):
-		Animator._setAutoReverse(self,f)
-		for a in self._animators:
-			a._setAutoReverse(f)
+	def _spline(self, t):
+		lv = Animator._spline(self, t)
+		return self._path.getPointAtLength(lv)
 
-	def _setAccelerateDecelerate(self, a, b):
-		Animator._setAccelerateDecelerate(self, a, b)
-		for a in self._animators:
-			a._setAccelerateDecelerate(a, b)
-
-	def _setSpeed(self,s):
-		Animator._setSpeed(self,s)
-		for a in self._animators:
-			a._setSpeed(s)
-
-	def setRetunedValuesConverter(self, cvt):
-		Animator.setRetunedValuesConverter(self,cvt)
-		for a in self._animators:
-			a.setRetunedValuesConverter(cvt)
-
-	def setRange(self, range):
-		Animator.setRange(self,range)
-		for a in self._animators:
-			a.setRange(range)
-
+	def _discrete(self, t):
+		lv = Animator._discrete(self, t)
+		return self._path.getPointAtLength(lv)
+		
 	def addValues(self, v1, v2):
-		if len(v1)!=len(v2):
-			raise AssertionError
-		nv = []
-		for i in range(len(v1)):
-			a = self._animators[i]
-			nv.append(a.addValues(v1[i],v2[i]))
-		return tuple(nv)
-
-	def distValues(self, v1, v2):
-		if len(v1)!=len(v2):
-			raise AssertionError
-		ss = 0.0
-		for i in range(len(v1)):
-			a = self._animators[i]
-			dl = a.distValues(v1[i],v2[i])
-			ss = ss + dl*dl
-		return math.sqrt(ss)
-
-	def clamp(self, v):
-		nv = []
-		for i in range(len(self._animators)):
-			a = self._animators[i]
-			nv.append(a.clamp(v[i]))
-		return tuple(nv)
-
-###########################
-# 'animateColor'  element animator
-class ColorAnimator(TupleAnimator):
-	def __init__(self, attr, domval, values, dur, mode='linear', 
-			times=None, splines=None, accumulate='none', additive='replace'):
-		TupleAnimator.__init__(self, attr, domval, values, dur, mode, 
-			None, None, accumulate, additive)
-		rvalues = []
-		gvalues = []
-		bvalues = []
-		for r, g, b in values:
-			rvalues.append(r)
-			gvalues.append(g)
-			bvalues.append(b)
-		rdomval, gdomval, bdomval = domval
-		ranim = Animator(attr, rdomval, rvalues, dur, mode, 
-			times, splines, accumulate, additive)
-		ganim = Animator(attr, gdomval, gvalues, dur, mode, 
-			times, splines, accumulate, additive)
-		banim = Animator(attr, bdomval, bvalues, dur, mode, 
-			times, splines, accumulate, additive)
-		self.setComponentAnimators((ranim, ganim, banim))
-		self.setRange((0, 255))
-
-	# the following method will be called by the EffectiveAnimator
-	# to convert final value
-	def convert(self, v):
-		r, g, b = v
-		return _round(r), _round(g), _round(b)
-
-class EffColorAnimator(ColorAnimator):
-	def __init__(self, attr, domval, value, dur, mode='linear',
-			times=None, splines=None, accumulate='none', additive='replace'):
-		ColorAnimator.__init__(self, attr, domval, (domval, value,), dur, mode,
-			times, splines, accumulate, additive)
-	def getValue(self, t):
-		if not self._effectiveAnimator:
-			return ColorAnimator.getValue(self, t)
-		vl = self._effectiveAnimator.getcurrentbasevalue(self)
-		for i in range(len(self._animators)):
-			u, v = self._animators[i]._values[:2]
-			u = vl[i]
-			self._animators[i]._values = (u, v)
-		return ColorAnimator.getValue(self, t)
-
-class FloatTupleAnimator(TupleAnimator):
-	def __init__(self, attr, domval, values, dur, mode='linear', 
-			times=None, splines=None, accumulate='none', additive='replace'):
-		TupleAnimator.__init__(self, attr, domval, values, dur, mode, 
-			times, splines, accumulate, additive)
-		tvalues = []
-		n = len(domval)
+		n = len(v1)
+		r = []
 		for i in range(n):
-			tvalues.append([])
-		for t in values:
-			for i in range(n):
-				tvalues[i].append(t[i])
-		animators = []
-		for i in range(n):
-			anim = Animator(attr, domval[i], tvalues[i], dur, mode, 
-				times, splines, accumulate, additive)
-			animators.append(anim)
-		self.setComponentAnimators(animators)
+			r.append(v1[i]+v2[i])
+		return tuple(r)
 
 class IntTupleAnimator(FloatTupleAnimator):
 	def convert(self, v):
@@ -582,13 +540,42 @@ class EffIntTupleAnimator(IntTupleAnimator):
 	def getValue(self, t):
 		if not self._effectiveAnimator:
 			return IntTupleAnimator.getValue(self, t)
-		vl = self._effectiveAnimator.getcurrentbasevalue(self)
-		for i in range(len(self._animators)):
-			u, v = self._animators[i]._values[:2]
-			u = vl[i]
-			self._animators[i]._values = (u, v)
+		u, v = self._values[:2]
+		u = self._effectiveAnimator.getcurrentbasevalue(self)
+		self._values = u, v
 		return IntTupleAnimator.getValue(self, t)
-	
+
+###########################
+# 'animateColor'  element animator
+class ColorAnimator(IntTupleAnimator):
+	def __init__(self, attr, domval, values, dur, mode='linear', 
+			times=None, splines=None, accumulate='none', additive='replace'):
+		IntTupleAnimator.__init__(self, attr, domval, values, dur, mode, 
+			None, None, accumulate, additive)
+		
+	def clamp(self, v):
+		n = len(v)
+		r = []
+		for i in range(n):
+			if v[i]<0: r.append(0)
+			elif v[i]>255: r.append(255)
+			else: r.append(v[i])
+		return tuple(r)
+
+
+class EffColorAnimator(ColorAnimator):
+	def __init__(self, attr, domval, value, dur, mode='linear',
+			times=None, splines=None, accumulate='none', additive='replace'):
+		ColorAnimator.__init__(self, attr, domval, (domval, value,), dur, mode,
+			times, splines, accumulate, additive)
+	def getValue(self, t):
+		if not self._effectiveAnimator:
+			return ColorAnimator.getValue(self, t)
+		u, v = self._values[:2]
+		u = self._effectiveAnimator.getcurrentbasevalue(self)
+		self._values = u, v
+		return ColorAnimator.getValue(self, t)
+
 ###########################
 # 'animateMotion' element animator
 class MotionAnimator(Animator):
