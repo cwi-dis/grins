@@ -170,10 +170,6 @@ class HierarchyView(HierarchyViewDialog):
 				ANCHORS(callback = (self.anchorcall, ())),
 				]
 
-		self.slidecommands = self._getmediacommands(self.toplevel.root.context, slide = 1) + self.notatrootcommands[4:6]
-
-		self.rpcommands = self._getmediaundercommands(self.toplevel.root.context, slide = 1)
-
 		self.finishlinkcommands = [
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 			]
@@ -205,75 +201,61 @@ class HierarchyView(HierarchyViewDialog):
 				return 0
 		return 1
 		
-	def _getmediaundercommands(self, ctx, slide = 0):
+	def _getmediaundercommands(self, ctx):
 		heavy = not features.lightweight
 		rv = [
 			NEW_UNDER(callback = (self.createundercall, ())),
 			]
-		if not slide:
-			rv.append(NEW_UNDER_SEQ(callback = (self.createunderintcall, ('seq',))))
-			rv.append(NEW_UNDER_PAR(callback = (self.createunderintcall, ('par',))))
-			#rv.append(NEW_UNDER_CHOICE(callback = (self.createunderintcall, ('bag',))))
-			rv.append(NEW_UNDER_ALT(callback = (self.createunderintcall, ('alt',))))
-			if ctx.attributes.get('project_boston', 0):
-				rv.append(NEW_UNDER_EXCL(callback = (self.createunderintcall, ('excl',))))
+		rv.append(NEW_UNDER_SEQ(callback = (self.createunderintcall, ('seq',))))
+		rv.append(NEW_UNDER_PAR(callback = (self.createunderintcall, ('par',))))
+		rv.append(NEW_UNDER_ALT(callback = (self.createunderintcall, ('alt',))))
+		if ctx.attributes.get('project_boston', 0):
+			rv.append(NEW_UNDER_EXCL(callback = (self.createunderintcall, ('excl',))))
 		if heavy or ctx.compatchannels(chtype='image'):
 			rv.append(NEW_UNDER_IMAGE(callback = (self.createundercall, ('image',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='sound')):
+		if  heavy or ctx.compatchannels(chtype='sound'):
 			rv.append(NEW_UNDER_SOUND(callback = (self.createundercall, ('sound',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='video')):
+		if heavy or ctx.compatchannels(chtype='video'):
 			rv.append(NEW_UNDER_VIDEO(callback = (self.createundercall, ('video',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='text')):
+		if heavy or ctx.compatchannels(chtype='text'):
 			rv.append(NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='html')):
+		if heavy or ctx.compatchannels(chtype='html'):
 			rv.append(NEW_UNDER_HTML(callback = (self.createundercall, ('html',))))
-		if not slide:
-			rv.append(NEW_UNDER_ANIMATION(callback = (self.createundercall, ('animate',))))
-		if compatibility.G2 == features.compatibility:
-			if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
-				rv.append(NEW_UNDER_SLIDESHOW(callback = (self.createundercall, ('RealPix',))))
+		rv.append(NEW_UNDER_ANIMATION(callback = (self.createundercall, ('animate',))))
 		return rv
 
 
-	def _getmediacommands(self, ctx, slide = 0):
+	def _getmediacommands(self, ctx):
 		# Enable commands to edit the media
-		# If slide is 0, include commands. Else, not.
 
 		heavy = not features.lightweight
 
 		rv = []
-		if slide or heavy or ctx.compatchannels(chtype='image'):
+		if heavy or ctx.compatchannels(chtype='image'):
 			rv.append(NEW_BEFORE_IMAGE(callback = (self.createbeforecall, ('image',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='sound')):
+		if heavy or ctx.compatchannels(chtype='sound'):
 			rv.append(NEW_BEFORE_SOUND(callback = (self.createbeforecall, ('sound',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='video')):
+		if heavy or ctx.compatchannels(chtype='video'):
 			rv.append(NEW_BEFORE_VIDEO(callback = (self.createbeforecall, ('video',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='text')):
+		if heavy or ctx.compatchannels(chtype='text'):
 			rv.append(NEW_BEFORE_TEXT(callback = (self.createbeforecall, ('text',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='html')):
+		if heavy or ctx.compatchannels(chtype='html'):
 			rv.append(NEW_BEFORE_HTML(callback = (self.createbeforecall, ('html',))))
-		if compatibility.G2 == features.compatibility:
-			if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
-				rv.append(NEW_BEFORE_SLIDESHOW(callback = (self.createbeforecall, ('RealPix',))))
-		if slide or heavy or ctx.compatchannels(chtype='image'):
+		if heavy or ctx.compatchannels(chtype='image'):
 			rv.append(NEW_AFTER_IMAGE(callback = (self.createaftercall, ('image',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='sound')):
+		if heavy or ctx.compatchannels(chtype='sound'):
 			rv.append(NEW_AFTER_SOUND(callback = (self.createaftercall, ('sound',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='video')):
+		if heavy or ctx.compatchannels(chtype='video'):
 			rv.append(NEW_AFTER_VIDEO(callback = (self.createaftercall, ('video',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='text')):
+		if heavy or ctx.compatchannels(chtype='text'):
 			rv.append(NEW_AFTER_TEXT(callback = (self.createaftercall, ('text',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='html')):
+		if heavy or ctx.compatchannels(chtype='html'):
 			rv.append(NEW_AFTER_HTML(callback = (self.createaftercall, ('html',))))
-		if compatibility.G2 == features.compatibility:
-			if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
-				rv.append(NEW_AFTER_SLIDESHOW(callback = (self.createaftercall, ('RealPix',))))
-		if not slide:
-			rv.append(NEW_BEFORE_ANIMATION(callback = (self.createbeforecall, ('animate',))))
-			rv.append(NEW_AFTER_ANIMATION(callback = (self.createaftercall, ('animate',))))
+		rv.append(NEW_BEFORE_ANIMATION(callback = (self.createbeforecall, ('animate',))))
+		rv.append(NEW_AFTER_ANIMATION(callback = (self.createaftercall, ('animate',))))
 		return rv
 
-	def _getanimatecommands(self, ctx, slide = 0):
+	def _getanimatecommands(self, ctx):
 		rv = []
 		rv.append(NEW_BEFORE_ANIMATION(callback = (self.createbeforecall, ('animate',))))
 		rv.append(NEW_AFTER_ANIMATION(callback = (self.createaftercall, ('animate',))))
@@ -285,17 +267,11 @@ class HierarchyView(HierarchyViewDialog):
 		# TODO: Make context menu setting within the StructureWidgets menu instead.
 		fnode = self.focusnode
 		fntype = fnode.GetType()	
-		is_realpix = fntype == 'ext' and fnode.GetChannelType() == 'RealPix'
-
-		# Add realpix commands
-		if is_realpix:
-			commands = commands + self.rpcommands
 
 		commands = commands + self.noslidecommands
 		if self.toplevel.links and self.toplevel.links.has_interesting(): # ??!! -mjvdg
 			commands = commands + self.finishlinkcommands
-		if fntype in MMNode.interiortypes or \
-		   (is_realpix and MMAttrdefs.getattr(fnode, 'file')):
+		if fntype in MMNode.interiortypes:
 			commands = commands + self.interiorcommands # Add interior structure modifying commands.
 		if fntype not in MMNode.interiortypes and \
 		   fnode.GetChannelType() != 'sound' and \
@@ -325,7 +301,7 @@ class HierarchyView(HierarchyViewDialog):
 			if fntype in MMNode.interiortypes:
 				# can only paste inside interior nodes
 				commands = commands + self.pasteinteriorcommands
-			if fnode is not self.root and fntype != 'slide':
+			if fnode is not self.root:
 				# can't paste before/after root node
 				commands = commands + self.pastenotatrootcommands
 		# commands is not mutable here.
@@ -345,15 +321,13 @@ class HierarchyView(HierarchyViewDialog):
 
 		commands = self.commands # Use a copy.. the original is a template.
 		fntype = self.focusnode.GetType()
-		is_realpix = fntype == 'ext' and fnode.GetChannelType() == 'RealPix'
 		
 		# Choose the pop-up menu.
-		if fntype in MMNode.interiortypes or is_realpix: # for all internal nodes.
+		if fntype in MMNode.interiortypes: # for all internal nodes.
 			popupmenu = self.interior_popupmenu
-			# if node has children, or if we don't know that the
-			# node has children (collapsed RealPix node), enable
+			# if node has children enable
 			# the TOCHILD command
-			if fnode.children or (is_realpix and not hasattr(fnode, 'expanded')):
+			if fnode.children:
 				commands = commands + self.navigatecommands[1:2]
 		elif isinstance(self.selected_widget, TransitionWidget):
 			popupmenu = self.transition_popupmenu
@@ -599,10 +573,6 @@ class HierarchyView(HierarchyViewDialog):
 			self.render()
 			windowinterface.showmessage('destination node is an immediate node, change to external?', mtype = 'question', callback = (self.cvdrop, (obj.node, window, event, params)), parent = self.window)
 			return
-		if t == 'ext' and \
-		   obj.node.GetChannelType() == 'RealPix':
-			mtype = MMmimetypes.guess_type(url)[0]
-			interior = (mtype != 'image/vnd.rn-realpix')
 		else:
 			interior = (obj.node.GetType() in MMNode.interiortypes)
 		# make URL relative to document
@@ -624,17 +594,10 @@ class HierarchyView(HierarchyViewDialog):
 			self.create(0, url, i)
 		else:
 			# check that URL compatible with node's channel
-			if t != 'slide' and features.lightweight and \
+			if features.lightweight and \
 			   obj.node.GetChannelName() not in ctx.compatchannels(url):
 					self.render()
 					windowinterface.showmessage("file not compatible with channel type `%s'" % obj.node.GetChannelType(), mtype = 'error', parent = self.window)
-					return
-			if t == 'slide':
-				ftype = MMmimetypes.guess_type(url)[0] or ''
-				if ftype[:5] != 'image' or \
-				   string.find(ftype, 'real') >= 0:
-					self.render()
-					windowinterface.showmessage("only images allowed in RealPix node", mtype = 'error', parent = self.window)
 					return
 			em = self.editmgr
 			if not em.transaction():
@@ -775,10 +738,6 @@ class HierarchyView(HierarchyViewDialog):
 		type = node.GetType()
 		if ntype is not None:
 			type = ntype
-		elif (where == 0 and type == 'ext' and
-		      node.GetChannelType() == 'RealPix') or \
-		      (where != 0 and type == 'slide'):
-			type = 'slide'
 		elif url is None and chtype is None:
 			type = node.GetType()
 			if where == 0:
@@ -858,31 +817,7 @@ class HierarchyView(HierarchyViewDialog):
 			layout = MMAttrdefs.getattr(parent, 'layout')
 		else:
 			layout = MMAttrdefs.getattr(node, 'layout')
-		if type == 'slide':
-			assert 0
-			node = SlideMMNode('slide', ctx, ctx.newuid())
-			ctx.knownode(node.GetUID(), node)
-			# provide a default for tag attribute
-			if url is not None:
-				node.SetAttr('tag', 'fadein')
-				if where:
-					pnode = self.focusnode.GetParent()
-				else:
-					pnode = self.focusnode
-				furl = ctx.findurl(url)
-				w,h = Sizes.GetSize(furl)
-				if w != 0 and h != 0:
-					node.SetAttr('subregionwh', (w,h))
-					node.SetAttr('imgcropwh', (w,h))
-				start, minstart = slidestart(pnode, furl, index)
-				if minstart > start:
-					node.SetAttr('start', minstart - start)
-			else:
-				node.SetAttr('tag', 'fill')
-			# and provide a default caption
-			node.SetAttr('caption', '<clear/>')
-		else:
-			node = ctx.newnode(type) # Create a new node
+		node = ctx.newnode(type) # Create a new node
 		# experimental SMIL Boston layout code
 		node._internalchtype = internalchtype
 		# end experimental			
@@ -890,7 +825,7 @@ class HierarchyView(HierarchyViewDialog):
 			node.SetAttr('file', url)
 		if chname:
 			node.SetAttr('channel', chname)
-		if type != 'slide' and layout == 'undefined' and \
+		if layout == 'undefined' and \
 		   self.toplevel.layoutview is not None and \
 		   self.toplevel.layoutview.curlayout is not None:
 			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
@@ -971,9 +906,7 @@ class HierarchyView(HierarchyViewDialog):
 			ntype = self.focusnode.GetType()
 			if ntype not in MMNode.interiortypes and \
 			   (ntype != 'ext' or
-			    self.focusnode.GetChannelType() != 'RealPix' or
-			    node.GetChannelType() != 'animate'): # or
-			    #node.__class__ is not SlideMMNode):
+			    node.GetChannelType() != 'animate'): 
 				windowinterface.showmessage('Selection is a leaf node!',
 							    mtype = 'error', parent = self.window)
 				node.Destroy()
@@ -1118,8 +1051,7 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return
 		ntype = node.GetType()
-		if ntype not in MMNode.interiortypes and \
-		   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
+		if ntype not in MMNode.interiortypes:
 			windowinterface.beep()
 			return
 		expandnode(node)
