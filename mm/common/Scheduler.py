@@ -701,10 +701,10 @@ class SchedulerContext:
 		arc.qid = None
 		deparcs = arc.deparcs
 		arc.deparcs = []
-		if arc.isstart:
-			ev = (SR.SCHED_DONE, arc.dstnode)
-			if self.srdict.has_key(ev):
-				self.parent.event(self, ev, timestamp)
+##		if arc.isstart:
+##			ev = (SR.SCHED_DONE, arc.dstnode)
+##			if self.srdict.has_key(ev):
+##				self.parent.event(self, ev, timestamp)
 		for a in deparcs:
 			self.cancelarc(arc, timestamp)
 			a.depends = None
