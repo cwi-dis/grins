@@ -899,6 +899,11 @@ BEGIN
     IDR_GRINSED             "GRiNSed"
 END
 
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDUC_OPENURL            "Open URL\nOpen URL"
+END
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
