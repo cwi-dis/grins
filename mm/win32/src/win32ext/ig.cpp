@@ -3,6 +3,9 @@
 // kk@epsilon.com.gr
 //
 
+// Define this for GIF support
+#define INCLUDE_GIF
+
 #include "stdafx.h"
 
 
