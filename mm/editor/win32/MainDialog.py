@@ -57,7 +57,7 @@ class MainDialog:
 			qsg = MMurl.pathname2url(cmif.findfile('QuickStart.pdf'))
 			self.commandlist.append(
 				GRINS_QSG(callback = (self.grins_web_callback, (qsg,))))
-			tutorial = MMurl.pathname2url(cmif.findfile('Tutorial.pdf'))
+			tutorial = MMurl.pathname2url(cmif.findfile('tutorials.pdf'))
 			self.commandlist.append(
 				GRINS_TUTORIAL(callback = (self.grins_web_callback, (tutorial,))))
 		import windowinterface
