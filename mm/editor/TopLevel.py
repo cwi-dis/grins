@@ -28,6 +28,9 @@ from FL import *
 BHEIGHT = 30				# Button height
 HELPDIR = '/ufs/guido/mm/demo/help'	# Where to find the help files
 
+def sethelpdir(helpdir):
+	global HELPDIR
+	HELPDIR = helpdir
 
 class TopLevel(ViewDialog, BasicDialog):
 	#
@@ -166,8 +169,6 @@ class TopLevel(ViewDialog, BasicDialog):
 		#
 		import Player
 		self.player = Player.Player().init(self)
-		setcurrenttime = self.channelview.setcurrenttime
-		self.player.set_setcurrenttime_callback(setcurrenttime)
 		#
 		import StyleSheet
 		self.styleview = StyleSheet.StyleSheet().init(self)
@@ -175,9 +176,9 @@ class TopLevel(ViewDialog, BasicDialog):
 		import Help
 		self.help = Help.HelpWindow().init(HELPDIR, self)
 		#
-		# Views that are destroyed by restore
+		# Views that are destroyed by restore (currently all)
 		self.views = [self.blockview, self.channelview, \
-				self.player, self.styleview]
+				self.player, self.styleview, self.help]
 		#
 		self.bvbutton.set_call_back(self.view_callback, self.blockview)
 		self.cvbutton.set_call_back(self.view_callback, \
