@@ -254,6 +254,8 @@ class SchedulerContext:
 				arc.dstnode.depends['begin'].append(arc)
 			else:
 				arc.dstnode.depends['end'].append(arc)
+				if arc.ismin:
+					arc.dstnode.has_min = arc.delay
 			if node.deparcs.has_key(event) and arc not in node.deparcs[event]:
 				node.deparcs[event].append(arc)
 				arc.depends.append((node, event))
@@ -416,6 +418,9 @@ class SchedulerContext:
 				node.scheduled_children = node.scheduled_children - 1
 				if node.delayed_end:
 					self.sched_arcs(node, 'end', timestamp = timestamp)
+				if node.delayed_play_done:
+					self.play_done(node, timestamp = timestamp)
+				node.delayed_play_done = node.delayed_end = 0
 ##				while node.delayed_arcs:
 ##					arc = node.delayed_arcs[0]
 ##					del node.delayed_arcs[0]
@@ -832,7 +837,6 @@ class SchedulerContext:
 ##				if debugevents: print 'scheduled_children-1 i',`arc.dstnode`,arc.dstnode.scheduled_children,parent.timefunc()
 ##				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
 ##			node.delayed_arcs = []
-			node.delayed_end = 0
 			getchannelfunc = node.context.getchannelbynode
 			if node.type in leaftypes and getchannelfunc:
 				xnode = node
@@ -849,6 +853,7 @@ class SchedulerContext:
 					 node.GetSchedChildren():
 					if c is None:
 						continue
+					c.has_min = 0 # just to be sure
 					self.do_terminate(c, timestamp, fill=fill, cancelarcs=cancelarcs)
 					if not parent.playing:
 						return
@@ -1056,8 +1061,12 @@ class SchedulerContext:
 		if node.GetTerminator() == 'MEDIA' and \
 		   not node.attrdict.has_key('duration') and \
 		   not node.FilterArcList(node.GetEndList()):
-			self.parent.event(self, (SR.SCHED_STOPPING, node.looping_body_self or node), timestamp)
-			self.parent.updatetimer() # ???
+			if node.has_min:
+				if debugevents: print 'play_done: delaying',node,timestamp
+				node.delayed_play_done = 1
+			else:
+				self.parent.event(self, (SR.SCHED_STOPPING, node.looping_body_self or node), timestamp)
+				self.parent.updatetimer() # ???
 
 	#
 	def anchorfired(self, node, anchorlist, arg):
