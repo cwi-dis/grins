@@ -222,11 +222,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		if tp == None:
 			windowinterface.showmessage('Unknown CMIF anchor: '+aname)
 			return
-		if tp == ATYPE_PAUSE:
-			f = self.pause_triggered
-		else:
-			f = self.anchor_triggered
-		f(self.play_node, [(aname, tp)], list)
+		self.onclick(self.play_node, [(aname, tp)], list)
 
 	def findanchortype(self, name):
 		for a in MMAttrdefs.getattr(self.play_node, 'anchorlist'):
