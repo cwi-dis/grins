@@ -1190,13 +1190,8 @@ def centerstring(left, top, right, bottom, str):
 	width = right - left
 	# Get font parameters:
 	w = f_font.getstrwidth(str)	# Width of string
-	flip = 0
 	while str and w > width:
-		flip = (not flip)
-		if flip:
-			str = str[:-1]
-		else:
-			str = str[1:]
+		str = str[:-1]
 		w = f_font.getstrwidth(str)
 	x = x - 0.5*w
 	y = y + 0.5*(f_fontheight - f_leading) - f_yorig
