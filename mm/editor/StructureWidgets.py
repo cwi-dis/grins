@@ -1439,7 +1439,7 @@ class MediaWidget(MMNodeWidget):
 			try:
 				f = MMurl.urlretrieve(url)[0]
 			except IOError, arg:
-				self.set_infoicon('error', 'Cannot load image: %s'%`arg`)
+				self.set_infoicon('error', 'Cannot load image: %s'%`url`)
 		else:
 			f = os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
 		return f
