@@ -144,8 +144,6 @@ static void
 mpeg_dealloc(self)
 	mmobject *self;
 {
-	int i;
-
 	denter(mpeg_dealloc);
 	mpeg_free_old(&PRIV->m_play, 0);
 	mpeg_free_old(&PRIV->m_arm, 0);
@@ -270,7 +268,7 @@ mpeg_armer(self)
 {
 	int cbufsize;
 	int framesize;
-	int fd, i;
+	int fd;
 	CL_Handle decHandle;
 	CL_BufferHdl bufHandle, frameHandle;
 	char *inbuf;
@@ -330,10 +328,11 @@ mpeg_armer(self)
 	PRIV->m_arm.m_decHdl = decHandle;
 	
 	PRIV->m_arm.m_feof = mpeg_fill_inbuffer(bufHandle, fd);
-	if( (i=clDecompress(decHandle, 1, 0, NULL, NULL)) != 1) {
-	    printf("mpeg_armer: clDecompress failed, %d\n", i);
-	    mpeg_free_old(&PRIV->m_arm, 0);
-	    return;
+	if ( !PRIV->m_arm.m_feof ) {
+	    if ( clDecompress(decHandle, 1, 0, NULL, NULL) == FAILURE ) {
+		printf("mpeg_armer: clDecompress failed\n");
+		mpeg_free_old(&PRIV->m_arm, 0);
+	    }
 	}
 }
 
@@ -342,7 +341,6 @@ mpeg_play(self)
 	mmobject *self;
 {
 	char c;
-	int i;
 
 	denter(mpeg_play);
 	mpeg_free_old(&PRIV->m_play, 0);
@@ -408,7 +406,6 @@ mpeg_player(self)
 	long timediff_actual, timediff_wanted;
 	int fd;
 	struct pollfd pollfd;
-	int i;
 	int size, wrap;
 	char *curdataptr;
 
@@ -455,8 +452,9 @@ mpeg_player(self)
 		    PRIV->m_play.m_feof =
 		      mpeg_fill_inbuffer(PRIV->m_play.m_inbufHdl, fd);
 		}
-		if( clDecompress(PRIV->m_play.m_decHdl, 1, 0, NULL, NULL) != 1) {
-		    dprintf(("mpeg_player: end of movie\n"));
+		if ( clDecompress(PRIV->m_play.m_decHdl, 1, 0, NULL, NULL) ==
+		     FAILURE ) {
+		    printf("mpeg_player: clDecompress failed\n");
 		    break;
 		}
 
@@ -758,7 +756,7 @@ static struct methodlist mpegchannel_methods[] = {
 void
 initmpegchannel()
 {
-	int i, nbr, nbg, nbb;
+	int nbr, nbg, nbb;
 	char graphics_version[12]; /* gversion() output */
 	int is_entry_indigo;
 
