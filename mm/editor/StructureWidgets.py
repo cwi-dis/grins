@@ -678,7 +678,17 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if ntype not in ('ext', 'imm'):
 			return os.path.join(self.mother.datadir, '%s.tiff' % ntype)
 
-		channel_type = node.GetChannelType()
+		mime = node.GetComputedMimeType()
+		if mime == 'image/vnd.rn-realpix':
+			channel_type = 'RealPix'
+		elif mime == 'text/vnd.rn-realtext':
+			channel_type = 'RealText'
+		elif mime == 'video/vnd.rn-realvideo':
+			channel_type = 'RealVideo'
+		elif mime == 'audio/vnd.rn-realaudio':
+			channel_type = 'RealAudio'
+		else:
+			channel_type = node.GetChannelType()
 		if self.mother.thumbnails and channel_type == 'image':
 			if not image:
 				return None
