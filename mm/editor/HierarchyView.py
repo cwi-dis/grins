@@ -141,6 +141,7 @@ class HierarchyView(HierarchyViewDialog):
 			DRAG_MEDIA(),
 			DRAG_ANIMATE(),
 			DRAG_BRUSH(),
+			TOGGLE_BWSTRIP(callback = (self.timescalecall, ('bwstrip',))),
 			]
 
 		self.interiorcommands = self._getmediaundercommands(self.toplevel.root.context) + [
@@ -2009,6 +2010,9 @@ class HierarchyView(HierarchyViewDialog):
 		if which == 'global':
 			which = 'focus'
 			node = self.root
+		elif which == 'bwstrip':
+			which = 'bwstrip'
+			node = self.root
 		elif which == 'focus':
 			node = self.get_selected_node()
 		else:
@@ -2019,7 +2023,7 @@ class HierarchyView(HierarchyViewDialog):
 			node.showtime = which
 		self.need_resize = 1
 		self.draw()
-
+		
 	def clear_showtime(self, node):
 		node.showtime = 0
 		for c in node.children:
@@ -2036,8 +2040,9 @@ class HierarchyView(HierarchyViewDialog):
 			bwname = "%dbps"%bandwidth
 		msg = 'Computing bandwidth usage at %s...'%bwname
 		dialog = windowinterface.BandwidthComputeDialog(msg, parent=self.getparentwindow())
-		bandwidth, prerolltime, delaycount, errorseconds, errorcount = \
+		bandwidth, prerolltime, delaycount, errorseconds, errorcount, stalls = \
 			BandwidthCompute.compute_bandwidth(self.root)
+		print 'DBG: stalls:', stalls
 		dialog.setinfo(prerolltime, errorseconds, delaycount, errorcount)
 		dialog.done()
 		self.need_redraw = 1
