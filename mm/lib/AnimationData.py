@@ -587,7 +587,7 @@ class AnimationData:
 				strValue1 = self._colorListToStr([value1])
 				strValue2 = self._colorListToStr([value2])
 				
-			em.setnodeattr(node, 'fill', 'freeze')
+#			em.setnodeattr(node, 'fill', 'freeze')
 			em.setnodeattr(node, 'from', strValue1)
 			em.setnodeattr(node, 'to', strValue2)
 #			node.attrdict['duration'] = dur
