@@ -125,7 +125,6 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		if height>h:h=height	
 		self._canvas = (x,y,w,h)
 		self._scroll(-1)
-		self._destroy_displists_tree()
 		self._create_displists_tree()
 		
 	# Adjusts the scroll sizes of the scroll view. Part of the set canvas sequence. 
@@ -316,7 +315,16 @@ class _CmifPlayerView(_CmifView):
 	# Class contructor. initializes base classes
 	def __init__(self,doc):
 		_CmifView.__init__(self,doc)
+		self._canclose=1
 
+	def OnInitialUpdate(self):
+		_CmifView.OnInitialUpdate(self)
+		self.HookMessage(self.onPostResize,win32con.WM_USER)
+
+	def close(self):
+		if self._canclose:
+			_CmifView.close(self)
+					
 	# The response of the view for the WM_SIZE (Resize) message						
 	def onSize(self,params):
 		msg=win32mu.Win32Msg(params)
@@ -325,6 +333,7 @@ class _CmifPlayerView(_CmifView):
 		# after _do_resize because it uses old self._rect
 		self._rect=0,0,msg.width(),msg.height()
 		self.fitCanvas(msg.width(),msg.height())
+		self.PostMessage(win32con.WM_USER)
 
 	def fitCanvas(self,width,height):		
 		x,y,w,h=self._canvas
@@ -333,8 +342,10 @@ class _CmifPlayerView(_CmifView):
 		self._canvas = (x,y,w,h)
 		self._scroll(-1)
 
-	def onAfterResize(self,params):
-		self.onEvent(ResizeWindow)
+	def onPostResize(self,params):
+		self._canclose=0
+		self._create_displists_tree()
+		self._canclose=1
 
 #################################################
 # Specialization of _CmifView for smooth drawing		
