@@ -36,6 +36,9 @@ class ExternalChannel(Channel):
 			self.errormsg(node, 'Node must be external')
 			return
 		argument = self.getfileurl(node)
+		if not argument:
+			self.errormsg('No URL set on node')
+			return 1
 		wanturl = MMAttrdefs.getattr(node, 'wanturl')
 		if not wanturl:
 			try:
