@@ -291,10 +291,18 @@ class SchedulerContext:
 			       ((event != 'begin' or arc.dstnode not in node.GetSchedChildren()) and
 			       (event != 'end' or arc.dstnode in node.GetSchedChildren()))):
 				continue
-			if arc.qid is not None and arc.timestamp < timestamp:
-				# loop in syncarcs
-				if debugevents: print 'break syncarc loop',arc
-				continue
+			do_continue = 0
+			try:
+				if arc.__in_sched_arcs:
+					# loop in syncarcs
+					if debugevents: print 'break syncarc loop',arc
+					do_continue = 1
+			except AttributeError:
+				pass
+			else:
+				if do_continue:
+					continue
+			arc.__in_sched_arcs = 1
 			atime = 0
 			if arc.srcanchor is not None:
 				for a in node.attrdict.get('anchorlist', []):
@@ -305,6 +313,7 @@ class SchedulerContext:
 							atime = a.atimes[0]
 						break
 			self.sched_arc(node, arc, event, marker, timestamp+atime)
+			arc.__in_sched_arcs = 0
 		if debugevents: print 'sched_arcs return',`node`,event,marker,timestamp,self.parent.timefunc()
 
 	def trigger(self, arc, node = None, path = None, timestamp = None):
