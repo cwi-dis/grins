@@ -17,6 +17,7 @@ import mw_globals
 from mw_globals import FALSE, TRUE
 from mw_resources import *
 from mw_windows import DialogWindow
+import mw_widgets
 
 def _string2dialog(text):
 	"""Prepare a Python string for use in a dialog"""
@@ -330,12 +331,24 @@ class SelectionDialog(DialogWindow):
 			self.OkCallback(rv)
 			self.close()
 		return 1
+		
+class _GrabbedDialog:
+	def __init__(self):
+		self.__done = 0
+		
+	def grabdone(self):
+		self.__done = 1
+
+	def rungrabbed(self):
+		mw_globals.toplevel.grab(self)
+		while not self.__done:
+			mw_globals.toplevel._eventloop(100)
+		mw_globals.toplevel.grab(None)
 			
-class SingleSelectionDialog(SelectionDialog):
+class SingleSelectionDialog(SelectionDialog, _GrabbedDialog):
 	def __init__(self, list, title, prompt):
 		# XXXX ignore title for now
 		self.__dict = {}
-		self.__done = 0
 		hascancel = 0
 		keylist = []
 		for item in list:
@@ -347,6 +360,7 @@ class SingleSelectionDialog(SelectionDialog):
 				k, v = item
 				self.__dict[k] = v
 				keylist.append(k)
+		_GrabbedDialog.__init__(self)
 		SelectionDialog.__init__(self, prompt, '', keylist, keylist[0], 
 				fixed=1, hascancel=hascancel)
 
@@ -357,25 +371,15 @@ class SingleSelectionDialog(SelectionDialog):
 		else:
 			rtn, args = self.__dict[key]
 			apply(rtn, args)
-			self.__done = 1
-			
-	def rungrabbed(self):
-		mw_globals.toplevel.grab(self)
-		while not self.__done:
-			mw_globals.toplevel._eventloop(100)
-		mw_globals.toplevel.grab(None)
+			self.grabdone()
 			
 class InputDialog(DialogWindow):
 	DIALOG_ID= ID_INPUT_DIALOG
 	
 	def __init__(self, prompt, default, cb, cancelCallback = None):
 		# First create dialogwindow and set static items
-		print 'prompt=', prompt
 		DialogWindow.__init__(self, self.DIALOG_ID, title=prompt,
 				default=ITEM_INPUT_OK, cancel=ITEM_INPUT_CANCEL)
-##		# XXXX Use title here?
-##		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_PROMPT)
-##		Dlg.SetDialogItemText(h, prompt)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
 		Dlg.SetDialogItemText(h, _string2dialog(default))
 		self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
@@ -423,6 +427,57 @@ class InputURLDialog(InputDialog):
 				self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
 			return 1
 		return InputDialog.do_itemhit(self, item, event)
+
+class NewChannelDialog(DialogWindow, _GrabbedDialog):
+	DIALOG_ID= ID_NEWCHANNEL_DIALOG
+	
+	def __init__(self, prompt, default, types, cb, cancelCallback = None):
+		# First create dialogwindow and set static items
+		_GrabbedDialog.__init__(self)
+		DialogWindow.__init__(self, self.DIALOG_ID, title=prompt,
+				default=ITEM_INPUT_OK, cancel=ITEM_INPUT_CANCEL)
+##		# XXXX Use title here?
+##		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_PROMPT)
+##		Dlg.SetDialogItemText(h, prompt)
+		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
+		Dlg.SetDialogItemText(h, _string2dialog(default))
+		self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
+		self.type_select=mw_widgets.SelectWidget(self._wid, ITEM_NEWCHANNEL_TYPE, types)
+		self._cb = cb
+		self._cancel = cancelCallback
+		
+	def close(self):
+		self.grabdone()
+		self.type_select.delete()
+		del self.type_select
+		DialogWindow.close(self)
+		
+	def do_itemhit(self, item, event):
+		if item == ITEM_INPUT_CANCEL:
+			if self._cancel:
+				self._cancel()
+			self.close()
+		elif item == ITEM_INPUT_OK:
+			self.done()
+		elif item == ITEM_INPUT_TEXT:
+			pass
+		elif item == ITEM_NEWCHANNEL_TYPE:
+			pass
+		else:
+			print 'Unknown item', self, item, event
+		return 1
+			
+	def done(self):
+		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
+		name = Dlg.GetDialogItemText(h)
+		type = self.type_select.getselect()
+		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_OK)
+		ctl = h.as_Control()
+		ctl.HiliteControl(10)
+		self._cb(name, type)
+		ctl.HiliteControl(0)
+		self.close()
+		
 
 [TOP, CENTER, BOTTOM] = range(3)
 
