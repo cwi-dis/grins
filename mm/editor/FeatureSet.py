@@ -41,7 +41,8 @@ __version__ = "$Id$";
 	CUSTOM_REGIONS,			# Allow to create/delete its own region
 
 	CREATE_TEMPLATES,		# Enable template creation features
-	ADVANCED_PROPERTIES,	# Enable advanced property editing
+	ADVANCED_PROPERTIES,		# Enable advanced property editing
+	NEVER_AGAIN_CHECK,		# enable never again check mark in initial dialog
 
 	# Different capabilities within the hierarchy view
 	H_TRANSITIONS,
@@ -49,4 +50,4 @@ __version__ = "$Id$";
 	H_DROPBOX,			# Show an empty drop box at the end of a sequence.
 	H_COLLAPSE,			# Enable internal node collapsing.
 	H_TIMESTRIP,			# Show snap!-like documents with correct toplevel par/seq
-] = range(29)				# don't forget to update this range!
+] = range(30)				# don't forget to update this range!

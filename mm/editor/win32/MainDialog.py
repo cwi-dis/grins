@@ -30,6 +30,7 @@ __version__ = "$Id$"
 from usercmd import *
 from wndusercmd import *
 import WMEVENTS
+import features
 
 class MainDialog:
 	adornments = {}
@@ -73,8 +74,12 @@ class MainDialog:
 		if not hasarguments and settings.get('initial_dialog'):
 			f = windowinterface.getmainwnd()
 			doclist = self.get_recent_files()
+			if features.NEVER_AGAIN_CHECK in features.feature_set:
+				never_again = self.never_again
+			else:
+				never_again = None
 			windowinterface.OpenAppDialog(self.new_callback, 
-				self.openfile_callback, self.never_again,
+				self.openfile_callback, never_again,
 				doclist, self.openURL_callback, parent=f)
 		
 	def getparentwindow(self):
