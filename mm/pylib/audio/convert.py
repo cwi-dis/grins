@@ -293,9 +293,14 @@ class looper(audio_filter):
 		if nframes < 0:
 			return omarkers
 		markers = []
-		for i in range(self.__count):
-			for id, pos, name in omarkers:
-				markers.append((id, pos + i*nframes, name))
+		if self.__count == None:
+			if omarkers:
+				# XXX How should we handle this??
+				print "Warning: skipping markers on indefinitely repeating audio"
+		else:
+			for i in range(self.__count):
+				for id, pos, name in omarkers:
+					markers.append((id, pos + i*nframes, name))
 		return markers
 
 ## This one is incorrect, really:
@@ -439,6 +444,16 @@ _converters = [
 
 	(linear_8_mono_signed,
 	 linear_8_mono_excess,
+	 unsigned2linear8,
+	 SHUFFLE),
+
+	(linear_8_stereo_excess,
+	 linear_8_stereo_signed,
+	 unsigned2linear8,
+	 SHUFFLE),
+
+	(linear_8_stereo_signed,
+	 linear_8_stereo_excess,
 	 unsigned2linear8,
 	 SHUFFLE),
 
