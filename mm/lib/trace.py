@@ -3,6 +3,7 @@ __version__ = "$Id$"
 import sys
 import pprint
 import time
+import os
 
 class Trace:
 	def __init__(self):
@@ -11,9 +12,13 @@ class Trace:
 			'return': self.trace_dispatch_return,
 			'exception': self.trace_dispatch_exception,
 			}
+		self.modules = None	# restrict to these modules
 		self.curframe = None
 		self.depth = 0
 		self.__printargs = 1
+		self.outputfile = open("trace.txt", 'w'); # This is never actually closed.
+		sys.debugfile = self.outputfile	# so other modules can use it.
+		print "Sending trace output to trace.txt in working directory.";
 
 	def run(self, cmd, globals = None, locals = None):
 		if globals is None:
@@ -34,7 +39,7 @@ class Trace:
 		finally:
 			sys.setprofile(None)
 
-	def trace_dispatch(self, frame, event, arg, None = None):
+	def trace_dispatch(self, frame, event, arg, None = None, split = os.path.split, splitext = os.path.splitext):
 		curframe = self.curframe
 		if curframe is not frame:
 			if frame.f_back is curframe:
@@ -44,6 +49,12 @@ class Trace:
 ##			elif curframe is not None and curframe.f_back is frame.f_back:
 ##				pass
 		self.curframe = frame
+		if self.modules is not None:
+			if not self.modules.has_key(splitext(split(frame.f_code.co_filename)[1])[0]):
+				if event == 'return':
+					self.curframe = frame.f_back
+					self.depth = self.depth - 1
+				return
 		self.dispatch[event](frame, arg)
 
 	def trace_dispatch_call(self, frame, arg, None = None, time = time.time):
@@ -66,7 +77,10 @@ class Trace:
 			plineno = ' (%d)' % pframe.f_lineno
 		else:
 			plineno = ''
-		print '%s> %s:%d %s(%s)%s' % (' '*self.depth,filename,lineno,funcname,args,plineno)
+		#print '%s> %s:%d %s(%s)%s' % (' '*self.depth,os.path.split(filename)[1],lineno,funcname,args,plineno)
+		self.outputfile.write('%s> %s:%d %s(%s)%s\n' % (' '*self.depth,os.path.split(filename)[1],lineno,funcname,args,plineno))
+		self.outputfile.flush()	# Incase the program crashes.
+		
 		frame.f_locals['__start_time'] = time()
 
 	def trace_dispatch_return(self, frame, arg, time = time.time):
@@ -78,7 +92,9 @@ class Trace:
 		if not funcname:
 			funcname = '<lambda>'
 		filename = code.co_filename
-		print '%s< %s:%d %s%s' % (' '*self.depth,filename,frame.f_lineno,funcname,t)
+		#print '%s< %s:%d %s%s' % (' '*self.depth,filename,frame.f_lineno,funcname,t)
+		self.outputfile.write('%s< %s:%d %s%s\n' % (' '*self.depth,filename,frame.f_lineno,funcname,t))
+		self.outputfile.flush()
 		self.curframe = frame.f_back
 		self.depth = self.depth - 1
 
@@ -91,13 +107,21 @@ class Trace:
 		if not funcname:
 			funcname = '<lambda>'
 		filename = code.co_filename
-		print '%sE %s:%d %s%s' % (' '*self.depth,filename,frame.f_lineno,funcname,t)
+		#print '%sE %s:%d %s%s' % (' '*self.depth,filename,frame.f_lineno,funcname,t)
+		self.outputfile.write('%sE %s:%d %s%s\n' % (' '*self.depth,filename,frame.f_lineno,funcname,t))
+		self.outputfile.flush()
 
-	def set_trace(self):
+	def set_trace(self, *modules):
 		try:
 			raise 'xyzzy'
 		except:
 			frame = sys.exc_traceback.tb_frame
+		if modules:
+			self.modules = {}
+			for m in modules:
+				self.modules[m] = 1
+		else:
+			self.modules = None
 		while frame.f_code.co_name != 'set_trace':
 			frame = frame.f_back
 		d = 0
@@ -223,8 +247,8 @@ def run(cmd, globals = None, locals = None):
 def runcall(*func_args):
 	apply(TraceClass().runcall, funcargs)
 
-def set_trace():
-	TraceClass().set_trace()
+def set_trace(*modules):
+	apply(TraceClass().set_trace, modules)
 
 def unset_trace():
 	sys.setprofile(None)
