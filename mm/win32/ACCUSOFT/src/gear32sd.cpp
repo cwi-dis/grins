@@ -195,6 +195,31 @@ static PyObject* ig_palette_entry_get(PyObject *self,PyObject *args)
 	}
 
 
+static char ig_display_adjust_aspect__doc__[] =
+""
+;
+static PyObject* ig_display_adjust_aspect(PyObject *self, PyObject *args)
+	{
+	HIGEAR img;
+	AT_RECT rect;
+	int aspect = IG_ASPECT_DEFAULT;
+	if (!PyArg_ParseTuple(args,"l(iiii)|i",&img,
+						&rect.left, &rect.top,
+						&rect.right, &rect.bottom, &aspect))
+		return NULL;
+
+	if(!IG_image_is_valid(img))
+		{
+		seterror("ig_display_adjust_aspect","Invalid image");
+		return NULL;
+		}
+
+	IG_display_adjust_aspect(img,&rect,aspect);
+
+	return Py_BuildValue("iiii",rect.left,rect.top,rect.right,rect.bottom);
+	}
+
+
 static char ig_device_rect_set__doc__[] =
 ""
 ;
@@ -213,13 +238,11 @@ static PyObject* ig_device_rect_set(PyObject *self, PyObject *args)
 		return NULL;
 		}
 
-	IG_display_adjust_aspect(img,&rect,IG_ASPECT_DEFAULT);
 	IG_device_rect_set(img,&rect);
 
 	Py_INCREF(Py_None);
 	return Py_None;	
 	}
-
 
 static char ig_display_desktop_pattern_set__doc__[] =
 ""
@@ -416,7 +439,6 @@ static PyObject *ig_image_create_ddb(PyObject *self, PyObject *args)
 }
 
 
-
 static struct PyMethodDef gear32sd_methods[] = {
 	{"load_file", (PyCFunction)ig_load_file, METH_VARARGS, ig_load_file__doc__},
 #ifdef INCLUDE_GIF
@@ -427,6 +449,7 @@ static struct PyMethodDef gear32sd_methods[] = {
 	{ "area_get", ig_area_get, METH_VARARGS,ig_area_get__doc__},
 	{ "image_dimensions_get",ig_image_dimensions_get, METH_VARARGS,ig_image_dimensions_get__doc__},
 	{ "display_transparent_set",ig_display_transparent_set,METH_VARARGS,ig_display_transparent_set__doc__},
+	{ "display_adjust_aspect",ig_display_adjust_aspect,METH_VARARGS,ig_display_adjust_aspect__doc__},
 	{ "device_rect_set",ig_device_rect_set,METH_VARARGS,ig_device_rect_set__doc__},
 	{ "display_desktop_pattern_set",ig_display_desktop_pattern_set,METH_VARARGS,ig_display_desktop_pattern_set__doc__},
 	{ "ip_crop", ig_ip_crop,METH_VARARGS,ig_ip_crop__doc__},
@@ -441,6 +464,35 @@ static struct PyMethodDef gear32sd_methods[] = {
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
+
+
+struct constentry {char* s;int n;};
+
+static struct constentry _ig_aspect[] ={
+	{"IG_ASPECT_NONE",IG_ASPECT_NONE},
+	{"IG_ASPECT_DEFAULT",IG_ASPECT_DEFAULT},
+	{"IG_ASPECT_HORIZONTAL",IG_ASPECT_HORIZONTAL},
+	{"IG_ASPECT_VERTICAL",IG_ASPECT_VERTICAL},
+	{"IG_ASPECT_MAXDIMENSION",IG_ASPECT_MAXDIMENSION},
+	{"IG_ASPECT_MINDIMENSION",IG_ASPECT_MINDIMENSION},
+	{NULL,0}
+	};
+
+// add symbolic constants of enum
+static int 
+SetItemEnum(PyObject *d,constentry e[])
+	{
+	PyObject *x;
+	for(int i=0;e[i].s;i++)
+		{
+		x = PyInt_FromLong((long) e[i].n);
+		if (x == NULL || PyDict_SetItemString(d, e[i].s, x) < 0)
+			return -1;
+		Py_DECREF(x);
+		}
+	return 0;
+	}
+#define FATAL_ERROR_IF(exp) if(exp){Py_FatalError("can't initialize module gear32sd");return;}	
 
 static char gear32sd_module_documentation[] =
 ""
@@ -461,6 +513,8 @@ void initgear32sd()
 	ErrorObject = PyString_FromString("gear32sd.error");
 	PyDict_SetItemString(d, "error", ErrorObject);
 
+	// add symbolic constants
+	FATAL_ERROR_IF(SetItemEnum(d,_ig_aspect)<0)
 
 	/* Check for errors */
 	if (PyErr_Occurred())
