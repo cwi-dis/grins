@@ -418,7 +418,7 @@ class SMIL:
 			attributes[__el].update(__Test)
 		attributes[__el].update(__I18n)
 
-	for __el in ('animate','set','animateMotion','animateColor','area','anchor','transition','transitionFilter'):
+	for __el in ('animate','set','animateMotion','animateColor','area','anchor','transition','transitionFilter', 'prefetch'):
 		attributes[__el].update(__basicTiming)
 	for __el in ('text','img','audio','animation','video','ref','textstream','brush','body','par','seq','excl',__choice):
 		if ' ' in __el:
