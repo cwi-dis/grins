@@ -2030,8 +2030,9 @@ class TimelistAttrEditorField(AttrEditorField):
 		# converts listofsyncarcs into a list of eventstructs
 		#return ['hello', 'world']
 		return_me = []
+		n = self.wrapper.node
 		for i in listofsyncarcs:
-			return_me.append(EventEditor.EventStruct(i))
+			return_me.append(EventEditor.EventStruct(i, n))
 		return return_me
 		
 ##		print "DEBUG: TimelistAttrEditorField.valuerepr: received: ", value
