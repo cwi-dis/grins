@@ -1080,6 +1080,10 @@ SOURCE=.\lib\realconvert.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\realnode.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\realsupport.py
 # End Source File
 # Begin Source File
