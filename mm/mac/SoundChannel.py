@@ -55,6 +55,7 @@ class SoundChannel(ChannelAsync):
 		self.arm_framerate = self.arm_fp.getframerate()
 		self.arm_sampwidth = self.arm_fp.getsampwidth()
 		self.arm_nchannels = self.arm_fp.getnchannels()
+		self.arm_bps = self.arm_nchannels*self.arm_sampwidth
 		self.arm_readsize = self.arm_framerate	# XXXX 1 second, tied to timer!!
 		self.arm_data = self.arm_fp.readframes(self.arm_readsize)
 		return 1
@@ -63,13 +64,22 @@ class SoundChannel(ChannelAsync):
 		if debug: print 'SoundChannel: playsome'
 		if not self.play_fp or not self.port:
 			return
-		while self.port.getfillable() >= self.play_readsize and self.play_data:
+		in_buffer = len(self.play_data)/self.play_bps
+		while self.port.getfillable() >= in_buffer and self.play_data:
 			self.port.writeframes(self.play_data)
 			self.play_data = self.play_fp.readframes(self.play_readsize)
 		if self.play_data:
 			windowinterface.settimer(0.5, (self._playsome, ()))
+			print 'MORE IN 0.5'
 		else:
-			self.playdone(0)
+			samples_left = self.port.getfilled()
+			time_left = samples_left/float(self.play_framerate)
+			print 'DONE IN', time_left
+			windowinterface.settimer(time_left, (self.xplaydone, (0,)))
+			
+	def xplaydone(self, arg):
+		print 'PLAY DONE'
+		self.playdone(arg)
 			
 	def do_play(self, node):
 		if not self.arm_fp or not self.port:
@@ -80,6 +90,8 @@ class SoundChannel(ChannelAsync):
 		if debug: print 'SoundChannel: play', node
 		self.play_fp = self.arm_fp
 		self.play_readsize = self.arm_readsize
+		self.play_framerate = self.arm_framerate
+		self.play_bps = self.arm_bps
 		self.play_data = self.arm_data
 		self.arm_fp = None
 		self.arm_data = None
