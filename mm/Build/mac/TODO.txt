@@ -16,3 +16,6 @@ DONE	Player control panel in editor should be replaced
 15-10	Attribute help messages should contain SMIL-compatability
 15-10	Change temp license code to be less obnoxious
 15-10	Change splash code to contain license info
+16-10	Video doesn't loop
+16-10	Focus->Tools
+16-10	Rename canvas size naar iets anders.
