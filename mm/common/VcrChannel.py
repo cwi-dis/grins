@@ -21,7 +21,7 @@ class VcrChannel(Channel):
 		if VCR == None or VcrIndex == None:
 			print 'ERROR: VCR or VcrIndex module not found. Expect a crash soon'
 			return
-		self.vcr = VCR.VCR().init()
+		self.vcr = VCR.VCR()
 		self.vcr.setcallback(self.vcr_ready, None)
 		toplevel = self._player.toplevel
 		toplevel.select_setcallback(self.vcr, self.vcr.poll, ())
@@ -211,7 +211,7 @@ class VcrChannel(Channel):
 		except:
 			print 'vcrchannel: ill-formatted filename:', nms
 			return None, None
-		index = VcrIndex.VcrIndex().init(name)
+		index = VcrIndex.VcrIndex(name)
 		try:
 			index.movie_select(movie)
 		except VcrIndex.error:

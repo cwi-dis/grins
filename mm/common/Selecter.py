@@ -13,11 +13,10 @@ import SR
 [RS_NODE, RS_SCTX, RS_BAG, RS_PARENT] = range(4)
 
 class Selecter:
-	def init(self):
+	def __init__(self):
 		self.scheduler = Scheduler(self)
 		self.runslots = []
 		self.bags_needing_done_ev = []
-		return self
 
 	#
 	# State transitions.

@@ -18,14 +18,14 @@ def showarcinfo(root, snode, sside, delay, dnode, dside):
 		arcinfos = context.arcinfos = {}
 	key = snode.GetUID() + `sside, delay, dside` + dnode.GetUID()
 	if not arcinfos.has_key(key):
-		arcinfos[key] = ArcInfo().init(root, \
-			snode, sside, delay, dnode, dside)
+		arcinfos[key] = ArcInfo(root,
+					snode, sside, delay, dnode, dside)
 	arcinfos[key].open()
 
 
 class ArcInfo:
 
-	def init(self, root, snode, sside, delay, dnode, dside):
+	def __init__(self, root, snode, sside, delay, dnode, dside):
 		self.root = root
 		self.context = root.context
 		self.snode = snode
@@ -59,8 +59,6 @@ class ArcInfo:
 			left = None, top = self.delay_slider, vertical = 0)
 
 		self.window.fix()
-
-		return self
 
 	def __repr__(self):
 		return '<ArcInfo instance for ' + \

@@ -82,7 +82,7 @@ class ChannelView(ViewDialog):
 	# Initialization.
 	# (Actually, most things are initialized by show().)
 
-	def init(self, toplevel):
+	def __init__(self, toplevel):
 		self.window = None
 		self.displist = self.new_displist = None
 		self.waiting = 0
@@ -97,8 +97,7 @@ class ChannelView(ViewDialog):
 		self.showall = 0
 		self.placing_channel = 0
 		title = 'Channel View (' + self.toplevel.basename + ')'
-		self = ViewDialog.init(self, 'cview_')
-		return self
+		ViewDialog.__init__(self, 'cview_')
 
 	def __repr__(self):
 		return '<ChannelView instance, root=' + `self.root` + '>'
@@ -579,11 +578,13 @@ class ChannelView(ViewDialog):
 			windowinterface.showmessage(
 				  "You can't create a new channel\n" +
 				  "unless you are showing unused channels\n" +
-				  "(use shortcut 'T')")
+				  "(use shortcut 'T')",
+				  type = 'warning')
 			return
 	        if self.placing_channel:
 		        windowinterface.showmessage(
-				'Please place the other channel first!',)
+				'Please place the other channel first!',
+				type = 'error')
 			return
 		#
 		# Slightly hacky code: we try to check here whether
@@ -594,36 +595,51 @@ class ChannelView(ViewDialog):
 		editmgr.rollback()
 		from ChannelMap import commonchanneltypes, otherchanneltypes
 		prompt = 'Select channel type, then place channel:'
-		list = commonchanneltypes[:]
-		list.append('Other...')
+##		list = commonchanneltypes[:]
+##		list.append('Other...')
+##		list.append('Cancel')
+##		olist = otherchanneltypes[:]
+##		olist.append('Other...')
+##		olist.append('Cancel')
+##		while 1:
+##			default = len(list)-1
+##			i = windowinterface.multchoice(prompt, list, default)
+##			if i+1 >= len(list):
+##				return		# User doesn't want to choose
+##			elif list[i] == 'Other...':
+##				list, olist = olist, list
+##				continue
+##			type = list[i]
+##			break
+##		windowinterface.setcursor('channel')
+##		self.placing_channel = PLACING_NEW
+##		self.placing_type = type
+
+		list = []
+		for name in commonchanneltypes + otherchanneltypes:
+			list.append(name, (self.select_cb, (name,)))
+		list.append(None)
 		list.append('Cancel')
-		olist = otherchanneltypes[:]
-		olist.append('Other...')
-		olist.append('Cancel')
-		while 1:
-			default = len(list)-1
-			i = windowinterface.multchoice(prompt, list, default)
-			if i+1 >= len(list):
-				return		# User doesn't want to choose
-			elif list[i] == 'Other...':
-				list, olist = olist, list
-				continue
-			type = list[i]
-			break
-		windowinterface.setcursor('channel')
+		windowinterface.Dialog('Select', prompt, 1, 1, list)
+
+	def select_cb(self, name):
 		self.placing_channel = PLACING_NEW
-		self.placing_type = type
+		self.placing_type = name
+		windowinterface.setcursor('stop')
+		self.window.setcursor('channel')
 
 	def copychannel(self, name):
 		if self.visiblechannels() <> self.context.channels:
 			windowinterface.showmessage(
-				  'You can\'t create a new channel\n' +
-				  'unless you are showing unused channels\n' +
-				  '(use shortcut \'T\')')
+				  "You can't create a new channel\n" +
+				  "unless you are showing unused channels\n" +
+				  "(use shortcut 'T')",
+				  type = 'warning')
 			return
 	        if self.placing_channel:
 		        windowinterface.showmessage(
-				'Please place the other channel first!')
+				'Please place the other channel first!',
+				type = 'error')
 			return
 		#
 		# Slightly hacky code: we try to check here whether
@@ -639,13 +655,15 @@ class ChannelView(ViewDialog):
 	def movechannel(self, name):
 		if self.visiblechannels() <> self.context.channels:
 			windowinterface.showmessage(
-				  'You can\'t move a channel\n' +
-				  'unless you are showing unused channels\n' +
-				  '(use shortcut \'T\')')
+				  "You can't move a channel\n" +
+				  "unless you are showing unused channels\n" +
+				  "(use shortcut 'T')",
+				  type = 'warning')
 			return
 	        if self.placing_channel:
 		        windowinterface.showmessage(
-				'Please place the other channel first!')
+				'Please place the other channel first!',
+				type = 'error')
 			return
 		#
 		# Slightly hacky code: we try to check here whether
@@ -1024,7 +1042,8 @@ class ChannelBox(GO):
 		if self.channel in self.mother.usedchannels:
 			windowinterface.showmessage(
 				  "You can't delete a channel\n" +
-				  'that is still in use')
+				  'that is still in use',
+				  type = 'error')
 			return
 		editmgr = self.mother.editmgr
 		if not editmgr.transaction():

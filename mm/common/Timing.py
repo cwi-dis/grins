@@ -103,7 +103,7 @@ def do_times(node):
 	print 'and', round(t2-t1, 3), 'sec. in propdown)'
 
 def _do_times_work(node):
-	pt = pseudotime().init(0.0)
+	pt = pseudotime(0.0)
 	q = sched.scheduler(pt.timefunc, pt.delayfunc)
 	node.counter[HD] = 1
 	decrement(q, 0, node, HD)
@@ -303,9 +303,8 @@ def decrement(q, delay, node, side):
 
 
 class pseudotime:
-	def init(self, t):
+	def __init__(self, t):
 		self.t = t
-		return self
 	def __repr__(self):
 		return '<pseudotime instance, t=' + `self.t` + '>'
 	def timefunc(self):

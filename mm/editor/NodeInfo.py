@@ -14,7 +14,7 @@ def shownodeinfo(toplevel, node):
 	try:
 		nodeinfo = node.nodeinfo
 	except AttributeError:
-		nodeinfo = NodeInfo().init(toplevel, node)
+		nodeinfo = NodeInfo(toplevel, node)
 		node.nodeinfo = nodeinfo
 	nodeinfo.open()
 
@@ -29,7 +29,7 @@ def hidenodeinfo(node):
 
 class NodeInfo:
 
-	def init(self, toplevel,  node):
+	def __init__(self, toplevel,  node):
 		self.toplevel = toplevel
 		self.node = node
 		self.context = node.GetContext()
@@ -109,8 +109,6 @@ class NodeInfo:
 					right = None, bottom = None)
 
 		w.fix()
-
-		return self
 
 	def __repr__(self):
 		return '<NodeInfo instance, node=' + `self.node` + '>'

@@ -51,7 +51,7 @@ class HierarchyView(ViewDialog):
 	# Outside interface                             #
 	#################################################
 
-	def init(self, toplevel):
+	def __init__(self, toplevel):
 		self.window = None
 		self.displist = None
 		self.new_displist = None
@@ -62,8 +62,7 @@ class HierarchyView(ViewDialog):
 		self.viewroot = self.root
 		self.focusnode = self.root
 		self.editmgr = self.root.context.editmgr
-		self = ViewDialog.init(self, 'hview_')
-		return self
+		ViewDialog.__init__(self, 'hview_')
 
 	def __repr__(self):
 		return '<HierarchyView instance, root=' + `self.root` + '>'

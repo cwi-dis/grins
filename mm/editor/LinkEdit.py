@@ -27,8 +27,8 @@ M_EXTERNAL = 8
 M_KEEP = 9
 
 class LinkEdit(ViewDialog):
-	def init(self, toplevel):
-		self = ViewDialog.init(self, 'links_')
+	def __init__(self, toplevel):
+		ViewDialog.__init__(self, 'links_')
 		self.last_geometry = None
 		self.toplevel = toplevel
 		self.root = self.toplevel.root
@@ -144,7 +144,6 @@ class LinkEdit(ViewDialog):
 		self.linkedit = 0
 		self.linkfocus = None
 		self.interesting = []
-		return self
 
 	def fixtitle(self):
 		if self.is_showing():

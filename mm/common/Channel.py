@@ -57,7 +57,7 @@ class Channel:
 		self.syncplay = 0
 		self.is_layout_channel = 0
 		if debug:
-			print 'Channel.init() -> '+`self`
+			print 'Channel() -> '+`self`
 		channels.append(self)
 
 	def __repr__(self):
