@@ -93,6 +93,7 @@ class _DisplayList:
 		self._xpos = 0
 		self._win32rgn = None
 		self.__mediaBox = None
+		self._alphaSensitivity = None
 
 		#cloning support
 		self._cloneof = None
@@ -545,7 +546,12 @@ class _DisplayList:
 			return 1
 			
 		return 0
-	
+
+	# set the media sensitivity
+	# value can be either 'opaque', 'transparent' or 'alpha' (see SMIL2 specification for more detail)
+	def setAlphaSensitivity(self, value):
+		self._alphaSensitivity = value
+		
 	def createDDSImage(self, image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep):
 		if not self._directdraw: return image
 		tw = self._window._topwindow

@@ -564,6 +564,10 @@ class _DisplayList:
 			self._list.append(('fg', color))
 			self._fgcolor = color
 
+	# set the media sensitivity
+	# value can be either 'opaque', 'transparent' or 'alpha' (see SMIL2 specification for more detail)
+	def setAlphaSensitivity(self, value):
+		self._alphaSensitivity = value
 
 	# Define a new button. Coordinates are in window relatives
 	def newbutton(self, coordinates, z = 0, times = None, sensitive = 1):

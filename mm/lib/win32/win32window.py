@@ -273,8 +273,16 @@ class Window:
 				# Currently, only win32displaylist give this information (it's at least the
 				# case for images).
 				if disp._insideMedia(x,y):
-					# event inside the media, we have to stop
-					return stop
+					# event inside the media, the behavior depend of the sensitibity attribute on the media (see SMIL2 specification for more details)
+					if disp._alphaSensitivity == 'transparent':
+						return cont
+					elif disp._alphaSensitivity == 'alpha':
+						# xxx to do: check if the point is transparent.
+						# if yes, return true
+						return stop
+					else: 
+						# default value (opaque)
+						return stop						
 				else:
 					# outside the media, and transparent window. So check the next window
 					return cont
@@ -314,9 +322,18 @@ class Window:
 				# Currently, only win32displaylist give this information (it's at least the
 				# case for image).
 				if self._active_displist._insideMedia(x,y):
-					# event inside the media, we have to stop
-					self.setcursor(self._cursor)
-					return stop
+					# event inside the media, the behavior depend of the sensitibity attribute on the media (see SMIL2 specification for more details)
+					if self._active_displist._alphaSensitivity == 'transparent':
+						return cont
+					elif self._active_displist._alphaSensitivity == 'alpha':
+						# xxx to do: check if the point is transparent.
+						# if yes, return true
+						self.setcursor(self._cursor)
+						return stop
+					else: 
+						# default value (opaque)
+						self.setcursor(self._cursor)
+						return stop						
 				else:
 					# outside the media, and transparent window. So check the next window
 					return cont
