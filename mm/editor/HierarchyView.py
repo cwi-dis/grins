@@ -130,7 +130,7 @@ class HierarchyView(ViewDialog):
 
 	def init_display(self):
 		if self.new_displist:
-			print 'init_display: new_displist alread exists'
+			print 'init_display: new_displist already exists'
 			self.new_displist.close()
 		self.new_displist = self.displist.clone()
 
