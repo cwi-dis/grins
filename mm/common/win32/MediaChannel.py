@@ -43,7 +43,6 @@ WM_REDRAW=win32con.WM_USER+102
 
 error = 'MediaChannel.error'
 
-
 class MediaChannel:
 	def __init__(self, channel):
 
@@ -106,7 +105,8 @@ class MediaChannel:
 		if not self.__armBuilder.RenderFile(url, self.__channel._exporter):
 			self.__armFileHasBeenRendered=0
 			raise error, 'Cannot render: '+url
-		
+
+		self.__sync = node.GetSyncBehavior(), node.GetSyncTolerance(), MMAttrdefs.getattr(node, 'syncMaster')
 		self.__armFileHasBeenRendered=1
 		return 1
 
@@ -227,8 +227,21 @@ class MediaChannel:
 		
 	def onIdle(self):
 		if self.__playBuilder and not self.__playdone:
-			t_sec=self.__playBuilder.GetPosition()
-			if t_sec>=self.__playEnd:self.OnMediaEnd()
+			t_sec = self.__playBuilder.GetPosition()
+			t = self.__channel._scheduler.timefunc() - self.__start_time + self.__playBegin
+			syncBehavior, syncTolerance, syncMaster = self.__sync
+			if t_sec >= self.__playEnd:
+				self.OnMediaEnd()
+			elif syncBehavior == 'locked' and not (t_sec - syncTolerance < t < t_sec + syncTolerance):
+				# we're out of sync
+				if syncMaster:
+					# we're the master: adjust the system clock
+					self.__channel._scheduler.settime(t_sec + self.__start_time - self.__playBegin)
+				else:
+					# we're a slave: reposition ourselves
+					self.__playBuilder.Pause()
+					self.__playBuilder.SetPosition(t)
+					self.__playBuilder.Run()
 			self.paint()
 	
 	def __register_for_timeslices(self):
@@ -276,6 +289,8 @@ class VideoStream:
 
 		if not self.__mmstream.open(url, self.__channel._exporter):
 			raise error, 'Cannot render: %s'% url
+
+		self.__sync = node.GetSyncBehavior(), node.GetSyncTolerance(), MMAttrdefs.getattr(node, 'syncMaster')
 
 		return 1
 
@@ -381,9 +396,21 @@ class VideoStream:
 			t_sec = self.__mmstream.getTime()
 			if self.__window:
 				self.__window.update(self.__window.getwindowpos())
+			t = self.__channel._scheduler.timefunc() - self.__start_time + self.__playBegin
+			syncBehavior, syncTolerance, syncMaster = self.__sync
 			if not running or t_sec >= self.__playEnd:
 				self.onMediaEnd()
-	
+			elif syncBehavior == 'locked' and not (t_sec - syncTolerance < t < t_sec + syncTolerance):
+				# we're out of sync
+				if syncMaster:
+					# we're the master: adjust the system clock
+					self.__channel._scheduler.settime(t_sec + self.__start_time - self.__playBegin)
+				else:
+					# we're a slave: reposition ourselves
+					self.__mmstream.stop()
+					self.__mmstream.seek(t)
+					self.__mmstream.run()
+
 	def __register_for_timeslices(self):
 		if self.__fiber_id is None:
 			self.__fiber_id = windowinterface.setidleproc(self.onIdle)
@@ -436,6 +463,7 @@ class QtChannel:
 		if window:
 			ddobj = window._topwindow.getDirectDraw()
 			self.__qtplayer.createVideoDDS(ddobj)
+		self.__sync = node.GetSyncBehavior(), node.GetSyncTolerance(), MMAttrdefs.getattr(node, 'syncMaster')
 		return 1
 
 	def playit(self, node, curtime, window = None, start_time = 0):
@@ -542,8 +570,19 @@ class QtChannel:
 			t_sec = self.__qtplayer.getTime()
 			if self.__window:
 				self.__window.update(self.__window.getwindowpos())
+			syncBehavior, syncTolerance, syncMaster = self.__sync
 			if not running or t_sec >= self.__playEnd:
 				self.onMediaEnd()
+			elif syncBehavior == 'locked' and not (t_sec - syncTolerance < t < t_sec + syncTolerance):
+				# we're out of sync
+				if syncMaster:
+					# we're the master: adjust the system clock
+					self.__channel._scheduler.settime(t_sec + self.__start_time - self.__playBegin)
+				else:
+					# we're a slave: reposition ourselves
+					self.__qtplayer.stop()
+					self.__qtplayer.seek(t)
+					self.__qtplayer.run()
 	
 	def __register_for_timeslices(self):
 		if self.__fiber_id is None:
