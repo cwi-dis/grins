@@ -154,14 +154,17 @@ def convertimagefile(u, srcurl, dstdir, file, node):
 	if hdr.subtype == 'jpeg':
 		# special-case code for JPEG images so that we don't loose info
 		rdr = imgjpeg.reader(f)
-		wt.copy(rdr)
-		if os.name == 'mac':
-			import macfs
-			import macostools
-			fss = macfs.FSSpec(fullpath)
-			fss.SetCreatorType('ogle', 'JPEG')
-			macostools.touched(fss)
-		return file
+		if rdr.X_density == rdr.Y_density == 72 and rdr.density_unit == 1:
+			wt.copy(rdr)
+			if os.name == 'mac':
+				import macfs
+				import macostools
+				fss = macfs.FSSpec(fullpath)
+				fss.SetCreatorType('ogle', 'JPEG')
+				macostools.touched(fss)
+			return file
+		import windowinterface
+		windowinterface.showmessage("Warning: re-encoding JPEG image: only 72x72 dpi supported by G2")
 	if sys.platform == 'win32':
 		import __main__
 		import imgformat
@@ -442,6 +445,11 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	audiopin = None
 	has_video = reader.HasVideo()
 	has_audio = reader.HasAudio()
+	# XXXX Temporary
+	if has_audio:
+		import windowinterface
+		windowinterface.showmessage("Warning: this beta release does not convert the audio from quicktime movies yet.")
+		has_audio = 0
 	for pin in engine.GetPins():
 		if pin.GetOutputMimeType() == producer.MIME_REALVIDEO:
 			videopin = pin
@@ -547,6 +555,7 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	audio_flags = video_flags = 0
 	audio_time = video_time = 0
 	audio_data = video_data = None
+	xxxaudiotime = xxxvideotime = -1
 	if has_audio:
 		xxxaudiotime, audio_data = reader.ReadAudio(audio_inputsize_frames)
 	if not audio_data:
@@ -556,6 +565,7 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	if not video_data:
 		video_done = 1
 	while not audio_done or not video_done:
+		print 'audio', audio_done, xxxaudiotime, 'video', video_done, xxxvideotime
 		if not audio_done:
 			xxxaudiotime, next_audio_data = reader.ReadAudio(audio_inputsize_frames)
 			if not next_audio_data:
