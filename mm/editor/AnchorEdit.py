@@ -75,11 +75,11 @@ class AnchorEditor:
 		self.anchor_browser = w.Selection(None, 'Id:', [],
 						  (self.anchor_callback, ()),
 						  {'top': None, 'left': None})
-		self.buttons = w.ButtonRow(1,
-			[('', 'New', (self.add_callback, ())),
-			 ('', 'Edit...', (self.edit_callback, ())),
-			 ('', 'Delete', (self.delete_callback, ())),
-			 ('', 'Export...', (self.export_callback, ()))],
+		self.buttons = w.ButtonRow(
+			[('New', (self.add_callback, ())),
+			 ('Edit...', (self.edit_callback, ())),
+			 ('Delete', (self.delete_callback, ())),
+			 ('Export...', (self.export_callback, ()))],
 			{'top': None, 'left': self.anchor_browser,
 			 'right': None})
 		self.type_choice = w.OptionMenu('Type:', TypeLabels, 0,
@@ -89,13 +89,13 @@ class AnchorEditor:
 		self.composite = w.Label('Composite:',
 				{'top': self.type_choice,
 				 'left': None, 'right': None})
-		buttons = w.ButtonRow(0,
-				[('', 'Cancel', (self.cancel_callback, ())),
-				 ('', 'Restore', (self.restore_callback, ())),
-				 ('', 'Apply', (self.apply_callback, ())),
-				 ('', 'OK', (self.ok_callback, ()))],
+		buttons = w.ButtonRow(
+				[('Cancel', (self.cancel_callback, ())),
+				 ('Restore', (self.restore_callback, ())),
+				 ('Apply', (self.apply_callback, ())),
+				 ('OK', (self.ok_callback, ()))],
 				{'top': self.composite,
-				 'left': None, 'right': None})
+				 'left': None, 'right': None, 'vertical': 0})
 		w.fix()
 		return self
 
@@ -434,7 +434,8 @@ def test():
 
 	print 'quit button ...'
 	quitform = windowinterface.Window('Quit')
-	b = quitform.ButtonRow(0, [('', 'QUIT', (sys.exit, (0,)))], {})
+	b = quitform.ButtonRow([('QUIT', (sys.exit, (0,)))],
+			       {'vertical': 0})
 
 	print 'showanchoreditor ...'
 	showanchoreditor(root)

@@ -38,7 +38,7 @@ class _Convert:
 			dummy = windowinterface.Dialog(
 				'Error', 'File already exists. Overwrite?',
 				1, 0,
-				[('', 'Overwrite', (self.convert, (file,))),
+				[('Overwrite', (self.convert, (file,))),
 				 'Cancel'])
 			return 1	# don't remove dialog
 		self.convert(file)

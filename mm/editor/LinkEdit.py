@@ -63,14 +63,14 @@ class LinkEdit(ViewDialog):
 				 (self.anchor_browser_callback, (self.left,)),
 				 {'top': menu, 'left': None, 'right': None})
 		self.left.browser = list
-		self.left.node_show = win1.ButtonRow(1, [
-			('', 'Push focus', (self.show_callback, (self.left,)))
-			],
+		self.left.node_show = win1.ButtonRow(
+			[('Push focus', (self.show_callback, (self.left,)))
+			 ],
 			{'top': list, 'left': None, 'right': None})
-		self.left.anchoredit_show = win1.ButtonRow(1,
-				[('', 'Anchor editor...', (self.anchoredit_callback, (self.left,)))],
-				{'top': self.left.node_show,
-				 'left': None, 'right': None})
+		self.left.anchoredit_show = win1.ButtonRow(
+			[('Anchor editor...', (self.anchoredit_callback, (self.left,)))],
+			{'top': self.left.node_show,
+			 'left': None, 'right': None})
 
 		win2 = self.window.SubWindow({'top': None, 'left': win1})
 		dummymenu = win2.PulldownMenu([('placeholder', [])],
@@ -79,15 +79,15 @@ class LinkEdit(ViewDialog):
 				(self.link_browser_callback, ()),
 				{'top': dummymenu,
 				 'left': None, 'right': None})
-		self.link_new = win2.ButtonRow(1,
-				[('', 'Add...', (self.link_new_callback, ()))],
-				{'top': self.link_browser,
-				 'left': None, 'right': None})
-		self.link_edit = win2.ButtonRow(0,
-				[('', 'Edit...', (self.link_edit_callback, ())),
-				 ('', 'Delete', (self.link_delete_callback, ()))],
-				{'top': self.link_new,
-				 'left': None, 'right': None})
+		self.link_new = win2.ButtonRow(
+			[('Add...', (self.link_new_callback, ()))],
+			{'top': self.link_browser,
+			 'left': None, 'right': None})
+		self.link_edit = win2.ButtonRow(
+			[('Edit...', (self.link_edit_callback, ())),
+			 ('Delete', (self.link_delete_callback, ()))],
+			{'top': self.link_new, 'left': None, 'right': None,
+			 'vertical': 0})
 
 		win3 = self.window.SubWindow({'top': None, 'left': win2, 'right': None})
 		menu = win3.PulldownMenu([
@@ -111,23 +111,24 @@ class LinkEdit(ViewDialog):
 				 (self.anchor_browser_callback, (self.right,)),
 				 {'top': menu, 'left': None, 'right': None})
 		self.right.browser = list
-		self.right.node_show = win3.ButtonRow(1, [
-			('', 'Push focus', (self.show_callback, (self.right,)))
-			],
+		self.right.node_show = win3.ButtonRow(
+			[('Push focus', (self.show_callback, (self.right,)))
+			 ],
 			{'top': list, 'left': None, 'right': None})
-		self.right.anchoredit_show = win3.ButtonRow(1,
-				[('', 'Anchor editor...', (self.anchoredit_callback, (self.right,)))],
-				{'top': self.right.node_show,
-				 'left': None, 'right': None})
+		self.right.anchoredit_show = win3.ButtonRow(
+			[('Anchor editor...', (self.anchoredit_callback, (self.right,)))],
+			{'top': self.right.node_show,
+			 'left': None, 'right': None})
 
 		self.link_dir = self.window.OptionMenu('Link direction:',
 				dirstr, 0, (self.linkdir_callback, ()),
 				{'top': win1, 'left': None})
 
-		self.ok_group = self.window.ButtonRow(0,
-				[('', 'OK', (self.ok_callback, ())),
-				 ('', 'Cancel', (self.cancel_callback, ()))],
-				{'top': win1, 'left': self.link_dir, 'right': None})
+		self.ok_group = self.window.ButtonRow(
+			[('OK', (self.ok_callback, ())),
+			 ('Cancel', (self.cancel_callback, ()))],
+			{'top': win1, 'left': self.link_dir, 'right': None,
+			 'vertical': 0})
 
 		self.window.fix()
 

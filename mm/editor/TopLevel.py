@@ -37,25 +37,24 @@ class TopLevel(ViewDialog):
 			return
 		self.load_geometry()
 		self.window = windowinterface.Dialog(self.basename, None, 0, 1,
-			[('', 'Play', (self.play_callback, ())),
+			[('Play', (self.play_callback, ())),
 			 # The numbers below correspond with the
 			 # positions in the `self.views' list (see
 			 # `makeviews' below).
-			 ('', 'Player', (self.view_callback, (2,))),
-			 ('', 'Hierarchy view', (self.view_callback, (0,))),
-			 ('', 'Channel view', (self.view_callback, (1,))),
-##			 ('', 'Style sheet', (self.view_callback, (4,))),
-			 ('', 'Hyperlinks', (self.view_callback, (3,))),
+			 ('Player', (self.view_callback, (2,))),
+			 ('Hierarchy view', (self.view_callback, (0,))),
+			 ('Channel view', (self.view_callback, (1,))),
+##			 ('Style sheet', (self.view_callback, (4,))),
+			 ('Hyperlinks', (self.view_callback, (3,))),
 			 None,
-			 ('', 'Open...', (self.open_callback, ())),
-			 ('', 'Save', (self.save_callback, ())),
-			 ('', 'Save as...', (self.saveas_callback, ())),
-			 ('', 'Restore', (self.restore_callback, ())),
-			 ('', 'Close', (self.close_callback, ())),
+			 ('Open...', (self.open_callback, ())),
+			 ('Save', (self.save_callback, ())),
+			 ('Save as...', (self.saveas_callback, ())),
+			 ('Restore', (self.restore_callback, ())),
+			 ('Close', (self.close_callback, ())),
 			 None,
-			 ('', 'Debug', (self.debug_callback, ()))],
-##			 ('', 'Help', (self.help_callback, ()))],
-			self.last_geometry)
+			 ('Debug', (self.debug_callback, ()))])
+##			 ('Help', (self.help_callback, ()))])
 		self.showing = 1
 
 	def hide(self):

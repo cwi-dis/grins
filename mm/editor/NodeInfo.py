@@ -63,11 +63,12 @@ class NodeInfo:
 					['No styles'], 0, None,
 					{'left': None, 'bottom': None,
 					 'top': self.styles_browser})
-		self.styles_buttons = self.style_group.ButtonRow(0,
-			[('', 'Delete', (self.styles_delete_callback, ())),
-			 ('', 'Add', (self.styles_add_callback, ()))],
+		self.styles_buttons = self.style_group.ButtonRow(
+			[('Delete', (self.styles_delete_callback, ())),
+			 ('Add', (self.styles_add_callback, ()))],
 			{'top': self.styles_browser, 'right': None,
-			 'left': self.styles_select, 'bottom': None})
+			 'left': self.styles_select, 'bottom': None,
+			 'vertical': 0})
 		self.imm_group = alter.SubWindow()
 		self.ext_group = alter.SubWindow()
 		self.int_group = alter.SubWindow()
@@ -75,30 +76,30 @@ class NodeInfo:
 		self.file_input = self.ext_group.TextInput('File:', '',
 				(self.file_callback, ()),
 				{'top': None, 'left': None, 'right': None})
-		butt = self.ext_group.ButtonRow(0,
-				[('', 'Edit contents...',
-				  (self.conteditor_callback, ())),
-				 ('', 'Browser...',
-				  (self.browser_callback, ()))],
-				{'top': self.file_input,
-				 'left': None, 'right': None})
+		butt = self.ext_group.ButtonRow(
+			[('Edit contents...', (self.conteditor_callback, ())),
+			 ('Browser...', (self.browser_callback, ()))],
+			{'top': self.file_input, 'left': None, 'right': None,
+			 'vertical': 0})
 		self.children_browser = self.int_group.List('Children:', [],
 				None,
 				{'top': None, 'left': None, 'right': None})
-		butt = self.int_group.ButtonRow(0,
-				[('', 'Open...', (self.openchild_callback, ()))],
-				{'top': self.children_browser, 'left': None,
-				 'right': None, 'bottom': None})
+		butt = self.int_group.ButtonRow(
+			[('Open...', (self.openchild_callback, ()))],
+			{'top': self.children_browser, 'left': None,
+			 'right': None, 'bottom': None,
+			 'vertical': 0})
 
-		butt = w.ButtonRow(0,
-				[('', 'Cancel', (self.close, ())),
-				 ('', 'Restore', (self.restore_callback, ())),
-				 ('', 'Node attr...', (self.attributes_callback, ())),
-				 ('', 'Anchors...', (self.anchors_callback, ())),
-				 ('', 'Apply', (self.apply_callback, ())),
-				 ('', 'OK', (self.ok_callback, ()))],
-				{'bottom': None, 'left': None,
-				 'right': None, 'top': midd})
+		butt = w.ButtonRow(
+			[('Cancel', (self.close, ())),
+			 ('Restore', (self.restore_callback, ())),
+			 ('Node attr...', (self.attributes_callback, ())),
+			 ('Anchors...', (self.anchors_callback, ())),
+			 ('Apply', (self.apply_callback, ())),
+			 ('OK', (self.ok_callback, ()))],
+			{'bottom': None, 'left': None,
+			 'right': None, 'top': midd,
+			 'vertical': 0})
 
 		label = self.imm_group.Label('Contents:',
 				{'top': None, 'left': None, 'right': None})
