@@ -1242,30 +1242,40 @@ class ChannelWindow(Channel):
 				pchan._subchannels.remove(self)
 				pchan = None
 			else:
-				pchan.window.create_box(
-					'Draw a subwindow for %s in %s' %
-						(self._name, pchan._name),
-					self._box_callback,
-					units = units)
-				return None
+##				pchan.window.create_box(
+##					'Draw a subwindow for %s in %s' %
+##						(self._name, pchan._name),
+##					self._box_callback,
+##					units = units)
+##				return None
+				#
+				# Window without position/size. Set to whole parent, and remember
+				# in the attributes. (Note: technically wrong, changing the attrdict
+				# without using the edit mgr).
+				# Or should I skip the curvals stuff below, to do this correctly?
+				#
+				self.winoff = pgeom = (0.0, 0.0, 1.0, 1.0)
+				units = windowinterface.UNIT_SCREEN
+				self._attrdict['base_winoff'] = pgeom
+				self._attrdict['units'] = units
 			self._curvals['base_winoff'] = pgeom, None
 		self.create_window(pchan, pgeom, units)
 		return 1
 
-	def _box_callback(self, *pgeom):
-		if not pgeom:
-			# subwindow was not drawn, so hide it
-			self._is_shown = 0
-			self._want_shown = 0
-			return
-		pname = self._attrdict['base_window']
-		pchan = self._player.ChannelWinDict[pname]
-		self._attrdict['base_winoff'] = pgeom
-		self.create_window(pchan, pgeom,
-				   units = self._attrdict.get('units',
-						windowinterface.UNIT_SCREEN))
-		self._is_shown = 1
-		self.after_show()
+##	def _box_callback(self, *pgeom):
+##		if not pgeom:
+##			# subwindow was not drawn, so hide it
+##			self._is_shown = 0
+##			self._want_shown = 0
+##			return
+##		pname = self._attrdict['base_window']
+##		pchan = self._player.ChannelWinDict[pname]
+##		self._attrdict['base_winoff'] = pgeom
+##		self.create_window(pchan, pgeom,
+##				   units = self._attrdict.get('units',
+##						windowinterface.UNIT_SCREEN))
+##		self._is_shown = 1
+##		self.after_show()
 
 	def do_hide(self):
 		if debug:
