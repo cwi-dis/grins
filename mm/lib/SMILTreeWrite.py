@@ -387,11 +387,11 @@ class SMILWriter:
 			self.fp.pop()
 			self.fp.write('</%s>\n'%mtype)
 		elif type in ('imm', 'ext'):
-			self.writemedianode(x, attrlist)
+			self.writemedianode(x, attrlist, mtype)
 		else:
 			raise CheckError, 'bad node type in writenode'
 
-	def writemedianode(self, x, attrlist):
+	def writemedianode(self, x, attrlist, mtype):
 		# XXXX Not correct for imm
 		pushed = 0		# 1 if has whole-node source anchor
 		hassrc = 0		# 1 if has other source anchors
