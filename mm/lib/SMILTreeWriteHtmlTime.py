@@ -514,7 +514,14 @@ class SMILHtmlTimeWriter(SMIL):
 			name = self.ch2name[lch]
 			divlist = []
 			divlist.append(('id', name))
-			divlist.append(('class', 'reg'+regionName))
+			if node.GetParent().GetType() == 'seq' and not moveAnimationOutside:
+				divlist.append(('timeContainer', 'par'))
+				divlist.append(('class', 'time'))
+				regstyle = self.ch2style.get(lch)
+				if regstyle is not None:
+					divlist.append(('style', regstyle))
+			else:	
+				divlist.append(('class', 'reg'+regionName))
 			self.writetag('div', divlist)
 			self.push()
 			self.ids_written[name] = 1
@@ -587,7 +594,7 @@ class SMILHtmlTimeWriter(SMIL):
 				style = style + ';'
 
 			if transIn:
-				style = style + 'visibility=hidden;'
+				#style = style + 'visibility=hidden;'
 				trans = 'transIn(%s, \'%s\')' % (nodeid, transInName)
 				attrlist.append( ('onbegin', trans) )
 
@@ -598,7 +605,7 @@ class SMILHtmlTimeWriter(SMIL):
 				l = []
 				for a, v in attrlist:
 					if a == 'color':
-						style = style + 'background-color=%s;' % v
+						style = style + 'background-color:%s;' % v
 					else:
 						l.append((a, v))
 				attrlist = l
@@ -796,7 +803,7 @@ class SMILHtmlTimeWriter(SMIL):
 				bgcolor = colors.rcolors[bgcolor]
 			else:
 				bgcolor = '#%02x%02x%02x' % bgcolor
-			style = 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;background-color=%s;' % (x, y, w, h, bgcolor)
+			style = 'position:absolute;overflow:hidden;left:%d;top:%d;width:%d;height:%d;background-color:%s;' % (x, y, w, h, bgcolor)
 			self.ch2style[ch] = style
 			self.fp.write('.reg'+name + ' {' + style + '}\n')
 
@@ -812,7 +819,7 @@ class SMILHtmlTimeWriter(SMIL):
 			dx=dy=0
 
 		x, y, w, h = ch.getPxGeom()
-		style = 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;' % (dx+x, dy+y, w, h)
+		style = 'position:absolute;overflow:hidden;left:%d;top:%d;width:%d;height:%d;' % (dx+x, dy+y, w, h)
 		
 		transparent = ch.get('transparent', None)
 		bgcolor = ch.get('bgcolor', None)
@@ -821,11 +828,11 @@ class SMILHtmlTimeWriter(SMIL):
 				bgcolor = colors.rcolors[bgcolor]
 			else:
 				bgcolor = '#%02x%02x%02x' % bgcolor
-			style = style + 'background-color=%s;' % bgcolor
+			style = style + 'background-color:%s;' % bgcolor
 			
 		z = ch.get('z', 0)
 		if z > 0:
-			style = style + 'z-index=%d;' % z
+			style = style + 'z-index:%d;' % z
 
 		self.ch2style[ch] = style
 
@@ -837,7 +844,7 @@ class SMILHtmlTimeWriter(SMIL):
 		
 	def rc2style(self, rc):
 		x, y, w, h = rc
-		return 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;' % (x, y, w, h)
+		return 'position:absolute;overflow:hidden;left:%d;top:%d;width:%d;height:%d;' % (x, y, w, h)
 
 	def linkattrs(self, a2, ltype, stype, dtype):
 		attrs = []
