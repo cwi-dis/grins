@@ -16,7 +16,7 @@ else:
 
 engine=None
 
-def convertaudiofilex(u, dstdir, file, node):
+def convertaudiofilex(url, dstdir, file, node):
 	global engine
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.ra'
@@ -64,9 +64,11 @@ def convertaudiofilex(u, dstdir, file, node):
 	cp.SetDoOutputFile(1)
 	cp.SetOutputFilename(fullpath)
 
-	import dshow
+	import dshow, MMurl
 	b = dshow.CreateGraphBuilder()
-	b.RenderFile(u)
+	url = MMurl.canonURL(url)
+	url = MMurl.unquote(url)
+	b.RenderFile(url)
 	# find renderer
 	try:
 		aurenderer=b.FindFilterByName('Default DirectSound Device')

@@ -9,6 +9,8 @@ import ddraw
 # we need const WM_USER
 import win32con
 
+import MMurl
+
 # private graph notification message
 WM_GRPAPHNOTIFY=win32con.WM_USER+101
 
@@ -42,6 +44,8 @@ class GraphBuilder:
 		pass
 
 	def RenderFile(self, url, exporter=None):
+		url = MMurl.canonURL(url)
+		url = MMurl.unquote(url)
 		try:
 			self._builder.RenderFile(url)
 		except dshow.error, arg:

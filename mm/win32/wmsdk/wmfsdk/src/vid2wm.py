@@ -99,9 +99,12 @@ class WMVideoConverter:
 				self._videopinprops = pinprop
 				print 'video', i
 
-	def createFilterGraph(self, filename):
+	def createFilterGraph(self, url):
 		fg = dshow.CreateGraphBuilder()
-		fg.RenderFile(filename)
+		import MMurl
+		url = MMurl.canonURL(url)
+		url = MMurl.unquote(url)
+		fg.RenderFile(url)
 		
 		# find video renderer filter and remove it
 		renderer=fg.FindFilterByName('Video Renderer')

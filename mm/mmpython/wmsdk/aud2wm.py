@@ -10,7 +10,7 @@ import dshow
 wmfapi.CoInitialize()
 
 # convert any audio file to windows media format (asf or wma)
-def convertaudiofile(infile, dstdir, file, node):
+def convertaudiofile(url, dstdir, file, node):
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.wma'
 	fullpath = os.path.join(dstdir, file)
@@ -45,7 +45,10 @@ def convertaudiofile(infile, dstdir, file, node):
 	writer.SetOutputFilename(fullpath);
 
 	b = dshow.CreateGraphBuilder()
-	b.RenderFile(infile)
+	import MMurl
+	url = MMurl.canonURL(url)
+	url = MMurl.unquote(url)
+	b.RenderFile(url)
 	# find renderer
 	try:
 		aurenderer=b.FindFilterByName('Default DirectSound Device')

@@ -28,6 +28,7 @@ __version__ = "$Id$"
 # 23 Audio for CD-quality transparency (128 Kbps stereo)
 
 import dshow
+import MMurl
 
 try:
 	import wmfapi
@@ -118,8 +119,8 @@ class WMWriter:
 	#
 
 	# set the audio format to that of the audio/video file
-	def setAudioFormatFromFile(self, filename):
-		dummy  = AudioFormatSetter(self._writer, filename)
+	def setAudioFormatFromFile(self, url):
+		dummy  = AudioFormatSetter(self._writer, url)
 
 	# alter filter graph so that audio samples are feeded to the writer
 	def redirectAudioFilter(self, fg, hint=None):
@@ -170,16 +171,18 @@ class WMWriter:
 
 #######################
 class AudioFormatSetter:
-	def __init__(self, writer, filename):
+	def __init__(self, writer, url):
 		self._audiopeer = dshow.CreatePyRenderingListener(self)
 		self._writer = writer
 		# this call will set indirectly self._writer format
-		fg = self.__createFilterGraph(filename)
+		fg = self.__createFilterGraph(url)
 
-	def __createFilterGraph(self, filename):
+	def __createFilterGraph(self, url):
 		fg = dshow.CreateGraphBuilder()
+		url = MMurl.canonURL(url)
+		url = MMurl.unquote(url)
 		try:
-			fg.RenderFile(filename)
+			fg.RenderFile(url)
 		except:
 			return None
 		# find renderer
@@ -283,9 +286,11 @@ class WMVideoConverter:
 				self._videopinprops = pinprop
 				print 'video', i
 
-	def createFilterGraph(self, filename):
+	def createFilterGraph(self, url):
 		fg = dshow.CreateGraphBuilder()
-		fg.RenderFile(filename)
+		url = MMurl.canonURL(url)
+		url = MMurl.unquote(url)
+		fg.RenderFile(url)
 		
 		# find video renderer filter and remove it
 		renderer=fg.FindFilterByName('Video Renderer')
@@ -423,9 +428,11 @@ class WMAudioConverter:
 				break
 		return audiopinix, audiopinprops
 
-	def createFilterGraph(self, filename):
+	def createFilterGraph(self, url):
 		fg = dshow.CreateGraphBuilder()
-		fg.RenderFile(filename)
+		url = MMurl.canonURL(url)
+		url = MMurl.unquote(url)
+		fg.RenderFile(url)
 		
 		# find renderer
 		try:
