@@ -89,7 +89,7 @@ class Preferences(PreferencesDialog):
 		for name in self.float_names:
 			try:
 				value = self.getfloatitem(name)
-			except PreferenceDialogError, arg:
+			except PreferencesDialogError, arg:
 				windowinterface.showmessage(arg)
 				return None
 			values[name] = value

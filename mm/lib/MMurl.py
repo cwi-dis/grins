@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
 import string
+import os
 from urllib import *
 # Grr, 2.1 __all__ compatibility:
 from urllib import unwrap, pathname2url, url2pathname, splittype, splithost, splitquery, splitattr
@@ -22,7 +23,7 @@ class FancyURLopener(_OriginalFancyURLopener):
 		fp.close()
 		raise IOError, (errcode, 'http error: ' + errmsg, headers)
 
-	def http_error_302(self, url, fp, errcode, errmsg, headers):
+	def http_error_302(self, url, fp, errcode, errmsg, headers, data=None):
 		# XXX The server can force infinite recursion here!
 		if headers.has_key('location'):
 			newurl = headers['location']

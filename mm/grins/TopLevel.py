@@ -241,11 +241,9 @@ class TopLevel(TopLevelDialog):
 		try:
 			top = TopLevel(self.main, self.url)
 		except IOError:
-			import windowinterface
 			windowinterface.showmessage('error opening document %s' % self.url)
 			return
 		except MSyntaxError:
-			import windowinterface
 			windowinterface.showmessage('parsing document %s failed' % self.url)
 			return
 
@@ -288,7 +286,6 @@ class TopLevel(TopLevelDialog):
 		# XXXX Should check that document isn't active already,
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
-		import MMurl
 		url, aid = MMurl.splittag(anchor)
 		url = MMurl.basejoin(self.filename, url)
 		
@@ -304,7 +301,7 @@ class TopLevel(TopLevelDialog):
 			try:
 				# if the destination document is not a smil/grins document,
 				# it's handle by an external application
-				import MMmimetypes, MMurl
+				import MMmimetypes
 				utype, url2 = MMurl.splittype(url)
 				mtype = MMmimetypes.guess_type(url)[0]
 				if mtype in ('application/smil',

@@ -13,7 +13,6 @@ def getsize(filename, bufsiz = 10240):
 	filename = MMurl.urlretrieve(filename)[0]
 	fp = open(filename, 'rb')
 	nframes = 0
-	rate = 0
 
 	# for efficiency, cache attribute lookups
 	find = string.find

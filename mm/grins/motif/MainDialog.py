@@ -89,7 +89,8 @@ class MainDialog:
 					   parent = self.__owindow)
 
 	def __filecvt(self, filename):
-		import os, MMurl
+		import MMurl
+##		import os
 ##		if os.path.isabs(filename):
 ##			cwd = os.getcwd()
 ##			if os.path.isdir(filename):
