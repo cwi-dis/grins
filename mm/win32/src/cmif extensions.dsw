@@ -72,6 +72,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "GRiNS SMIL"="..\..\Build\win32\GRiNS Editor for SMIL 1.0\GRiNS Editor for SMIL 1.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "GRiNSRes"=.\GRiNSRes\GRiNSRes.dsp - Package Owner=<4>
 
 Package=<5>
