@@ -441,14 +441,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			t2 = t0 + 10
 		return t0, t1, t2, downloadlag, begindelay
 
-	def get_minpos(self):
-		# Returns the leftmost position where this node can be placed
-		pnode = self.node.GetParent()
-		if pnode is None:
-			return 0
-		pwidget = pnode.views['struct_view']
-		return pwidget.get_minpos() + pwidget.get_child_relminpos(self)
-
 	def moveto(self, newpos):
 		self.old_pos = self.pos_abs
 		Widgets.Widget.moveto(self, newpos)
@@ -1021,7 +1013,6 @@ class StructureObjWidget(MMNodeWidget):
 
 	def __init__(self, node, mother, parent):
 		MMNodeWidget.__init__(self, node, mother, parent)
-		assert self is not None
 		# Create more nodes under me if there are any.
 		self.children = []
 		if self.HAS_COLLAPSE_BUTTON and not self.mother.usetimestripview:
@@ -1657,14 +1648,6 @@ class HorizontalWidget(StructureObjWidget):
 		self.fix_timemapper(timemapper)
 		return self.boxsize
 
-	def get_child_relminpos(self, child):
-		minpos = HEDGSIZE
-		for ch in self.children:
-			if ch is child:
-				return minpos
-			minpos = minpos + ch.get_minsize()[0] + GAPSIZE
-		raise 'Unknown child node'
-
 	def addcollisions(self, mastert0, mastertend, timemapper, mytimes = None):
 		if not self.children or self.iscollapsed() or not self.node.WillPlay():
 			return MMNodeWidget.addcollisions(self, mastert0, mastertend, timemapper, mytimes)
@@ -1819,9 +1802,6 @@ class VerticalWidget(StructureObjWidget):
 		self.fix_timemapper(timemapper)
 		return self.boxsize
 
-	def get_child_relminpos(self, child):
-		return HEDGSIZE
-
 	def get_nearest_node_index(self, pos):
 		# Return the index of the node at the specific drop position.
 		if self.iscollapsed():
@@ -1941,9 +1921,6 @@ class UnseenVerticalWidget(StructureObjWidget):
 		self.boxsize = mw, mh
 		self.fix_timemapper(timemapper)
 		return self.boxsize
-
-	def get_child_relminpos(self, child):
-		return 0
 
 	def get_nearest_node_index(self, pos):
 		# Return the index of the node at the specific drop position.
