@@ -1,6 +1,7 @@
 import Qd
 import Dlg
 import Controls
+import ControlAccessor
 import MacOS
 import string
 import sys
@@ -407,23 +408,44 @@ class SingleSelectionDialog(SelectionDialog):
 		self.grabdone()
 			
 class InputDialog(DialogWindow):
-	DIALOG_ID= ID_INPUT_DIALOG
+	DIALOG_ID=ID_INPUT_DIALOG
 	
 	def __init__(self, prompt, default, cb, cancelCallback = None,
 			passwd=0, parent=None):
 		# XXXX passwd parameter to be implemted
 		self._is_passwd_dialog = passwd
 		# First create dialogwindow and set static items
-		DialogWindow.__init__(self, self.DIALOG_ID, title=prompt,
+		if passwd:
+			dialog_id = ID_PASSWD_DIALOG
+		else:
+			dialog_id = self.DIALOG_ID
+		DialogWindow.__init__(self, dialog_id, title=prompt,
 				default=ITEM_INPUT_OK, cancel=ITEM_INPUT_CANCEL)
-		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
-		Dlg.SetDialogItemText(h, _string2dialog(default))
-		self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
+		self._settext(default)
 		self._cb = cb
 		self._cancel = cancelCallback
 		
 		self.show()
 
+	def _settext(self, text):
+		text = _string2dialog(text)
+		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
+		if self._is_passwd_dialog:
+			ControlAccessor.SetControlData(h, Controls.kControlEditTextPart, 
+				Controls.kControlEditTextPasswordTag, text)
+		else:
+			Dlg.SetDialogItemText(h, text)
+			self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
+		
+	def _gettext(self):
+		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
+		if self._is_passwd_dialog:
+			rv = ControlAccessor.GetControlData(h, Controls.kControlEditTextPart, 
+					Controls.kControlEditTextPasswordTag)
+		else:
+			rv = Dlg.GetDialogItemText(h)
+		return rv
+		
 	def do_itemhit(self, item, event):
 		if item == ITEM_INPUT_CANCEL:
 			if self._cancel:
@@ -439,8 +461,7 @@ class InputDialog(DialogWindow):
 			
 	def done(self):
 		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
-		rv = Dlg.GetDialogItemText(h)
-		ctl = self._wid.GetDialogItemAsControl(ITEM_INPUT_OK)
+		rv = self._gettext()
 		if self._is_passwd_dialog:
 			# For password dialogs make it disappear quickly
 			ctl.HiliteControl(10)
@@ -688,3 +709,7 @@ class BandwidthComputeDialog:
 			rv = showquestion(self.msg+'\nDo you want to continue?')
 		if rv and callback:
 			callback()
+
+	def do_Help(self):
+		import Help
+		Help.givehelp('bandwidth')
