@@ -5,6 +5,10 @@
 
 ------------------------------ BUGS -------------------------------
 
+Cut-or-copy followed by Restore followed by Paste crashes with "wrong
+context".  (The copy buffer should be erased by Restore until this can
+be fixed.)
+
 Auto-firing anchors on interior nodes don't work
 
 TextChannel init() doesn't set arm_node to None.

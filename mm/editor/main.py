@@ -4,14 +4,17 @@ def main():
 	import sys
 	import getopt
 	#
-	usage = '[-psnTHPSL] [-h helpdir] [file.cmif]'
+	usage = '[-pqsnTHPSL] [-h helpdir] [file.cmif]'
 	#
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'psnh:THPSL')
+		opts, args = getopt.getopt(sys.argv[1:], 'qpsnh:THPSL')
 	except getopt.error, msg:
 		sys.stderr.write(msg + '\n')
 		sys.stderr.write('usage: cmifed ' + usage + '\n')
 		sys.exit(2)
+	#
+	if ('-q', '') in opts:
+		sys.stdout = open('/dev/null', 'w')
 	#
 	if args:
 		if len(args) > 1:
@@ -92,6 +95,7 @@ def main():
 			sys.exc_traceback = None
 			sys.exit(sts)
 		except:
+			sys.stdout = sys.stderr
 			print
 			print '\t-------------------------------------------'
 			print '\t| Entering debugger -- call Guido or Jack |'
