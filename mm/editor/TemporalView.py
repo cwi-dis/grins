@@ -35,6 +35,7 @@ class TemporalView(TemporalViewDialog):
 		self.zoomfactorx = 1.0	# Scale everything to this! Done in the Widgets for this
 					# node rather than the geometric primitives!
 		self.destroynode = None	# This is the node to destroy (has been cut or deleleted.)
+		self.minimal_channels = 0 # Whether to show all or just a few channels.
 
 
 	def destroy(self):
@@ -147,9 +148,10 @@ class TemporalView(TemporalViewDialog):
 		return self.showing
 
 	def init_scene(self):
+		print "DEBUG: Initting channel view.", self.minimal_channels
 		if self.scene is not None:
 			self.scene.destroy()
-		self.scene = TimeCanvas(self.root, self)
+		self.scene = TimeCanvas(self.root, self, minimal_channels = self.minimal_channels)
 		self.scene.setup()
 		self.scene.set_display(self.geodl)
 
@@ -161,7 +163,10 @@ class TemporalView(TemporalViewDialog):
 			print "DEBUG: temporal view could not jump to a non-MMNode."
 			return -1
 		self.root = node
+		self.minimal_channels = 1
+		self.init_scene()
 		self.redraw()
+		self.minimal_channels = 0
 
 	def draw(self):
 		self.geodl.redraw()

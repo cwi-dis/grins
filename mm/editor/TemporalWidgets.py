@@ -72,7 +72,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 
 	# Note that this class is tightly coupled to the TemporalView.
 
-	def __init__(self, node, mother):
+	def __init__(self, node, mother, minimal_channels = 0):
 		MMNodeWidget.__init__(self, node, mother)
 		self.root_mm_node = node
 		self._factory = global_factory
@@ -89,7 +89,11 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		global_factory.timecanvas = self
 		self.node_channel_mapping = {} # A dictionary of channel names -> lists of nodes in that channel.
 		self.mainnode = self.__init_create_widgets(self.node)
-		self.channeltree = global_factory.createchanneltree(node)
+		if minimal_channels:
+			self.channeltree = global_factory.createminimalchanneltree(node)
+		else:
+			self.channeltree = global_factory.createchanneltree(node)
+		print "DEBUG: channeltree is: ", self.channeltree
 		self.editmgr = node.context.editmgr
 		self.timescale = TIMESCALE
 
@@ -99,8 +103,12 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		pass
 
 	def destroy(self):
-		print "Warning: this destroy method not implemented yet."
 		self.mainnode.destroy()
+		self.channeltree.destroy()
+		self.structnodes = None
+		self.start_breaks = None
+		self._factory = None
+		self.root_mm_node = None
 
 	def set_maxtime(self, time):
 		# Sets the maximum time for this presentation.
@@ -240,6 +248,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		if isinstance(w_channel, ChannelWidget):
 			w_channel.select()
 			self.mother.select_channel(w_channel)
+			self.channeltree.recalc()
 
 	def select_mmchannel(self, mmchannel):
 		if isinstance(mmchannel, MMNode.MMChannel):
@@ -291,6 +300,16 @@ class TemporalWidgetFactory:
 		bob = ChannelTree(self.mother)
 		bob.cpos = (0,2,CHANNELWIDTH,CHANNELHEIGHT)
 		bob.set_rootmmnode(node)
+		graph = self.mother.get_geodl()
+		bob.set_display(graph)
+		bob.setup()
+		return bob
+
+	def createminimalchanneltree(self, node):
+		bob = MinimalChannelTree(self.mother)
+		bob.cpos = (0,2,CHANNELWIDTH,CHANNELHEIGHT)
+		bob.set_rootmmnode(node)
+		bob.timecanvas = self.timecanvas
 		graph = self.mother.get_geodl()
 		bob.set_display(graph)
 		bob.setup()
@@ -363,18 +382,27 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 		for i in self.viewports: # Adds all the channels to this tree.
 			self.add_channel_to_bottom(i, 0) # recursively add the viewport and it's children.
 
+	def __repr__(self):
+		return "ChannelTree " + repr(self.channeltree)
+
 	def set_rootmmnode(self, node):
 		self.node = node
 
 	def destroy(self):
 		for i in self.widgets:
 			self.graph.DelWidget(i)
+		self.viewports = None
+		for i in self.channeltree:
+			i.destroy()
 
 	def get_viewports(self):
 		return self.viewports
 
 	def get_LRiter(self):
 		return LRChannelTreeIter(self.channeltree)
+
+	def minimise(self):
+		self.minimal_channels = 1
 
 	def recalc(self):
 		# Add lines to show where the tree is.
@@ -383,6 +411,10 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 		x,y,w,h = self.get_box()
 		top = y
 		levels = []		# A stack for iterative recursion
+
+		for i in self.widgets:
+			self.graph.DelWidget(i)
+		self.widgets = []
 		for chan in self.channeltree:
 			tx, ty, tw, th = chan.get_box()
 			indent = chan.get_depth()
@@ -408,6 +440,7 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 				# Every parent has a vertical line on it.
 				# WORKING HERE
 				currentvline = self.graph.AddWidget(Line(self.mother))
+				self.widgets.append(currentvline)
 				currentvline.moveto((
 					leftpos,
 					ty + CHANNELHEIGHT/2,
@@ -423,7 +456,10 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 				currentindent = indent
 
 	def add_channel_to_bottom(self, channel, treedepth):
+		# This is a recursive function that adds not only this channel ,but
+		# also all of it's children.
 		# treedepth is the depth into the channel tree, thus it is proportional to the x coordinate.
+		print "DEBUG: adding channel: ", channel
 		bob = global_factory.createchannel(channel)
 		self.channeltree.append(bob)
 		bob.set_depth(treedepth)
@@ -441,6 +477,40 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 			cx,cy,cw,ch = chan.get_box()
 			if cy < y <= cy+ch:
 				return chan
+
+
+class MinimalChannelTree(ChannelTree):
+	def setup(self):
+		print "Minimal channel tree is chosen."
+		self.mapping = self.timecanvas.node_channel_mapping
+		ChannelTree.setup(self)
+
+	def recalc(self):
+		# No, I /don't/ want a tree.
+		for i in self.widgets:
+			self.graph.DelWidget(i)
+		self.widgets = []
+
+	def __repr__(self):
+		return "Minimal channel tree " + repr(self.channeltree)
+
+	def add_channel_to_bottom(self, channel, treedepth):
+		# ignore the treedepth
+		try:
+			if len(self.mapping[channel.name]) > 0:
+				# Then add this channel to the bottom.
+				bob = global_factory.createchannel(channel)
+				self.channeltree.append(bob)
+				bob.set_depth(0)
+				x,y,w,h = self.cpos
+				cheight = bob.get_height()
+				bob.moveto((x,y,x+w,y+CHANNELHEIGHT*cheight))
+				self.cpos = (x,y+CHANNELHEIGHT*cheight+2,w,CHANNELHEIGHT)
+		except KeyError:
+			pass
+		for i in self.channelhelper.getsubregions(channel):
+			self.add_channel_to_bottom(i, 0)
+
 
 
 class LRChannelTreeIter:
