@@ -665,8 +665,12 @@ class SMILWriter(SMIL):
 			if aid2:
 				href = '%s#%s' % a2
 			else:
-				lastslash = string.rfind('/', uid2)
-				href = '%s#%s' % (uid2[:lastslash], uid2[lastslash+1:])
+				lastslash = string.rfind(uid2, '/')
+				base, tag = uid2[:lastslash], uid2[lastslash+1:]
+				if tag == '1':
+					href = base
+				else:
+					href = '%s#%s' % (base, tag)
 		else:
 			href = '#' + self.uid2name[uid2]
 		attrs.append('href=%s' % nameencode(href))
