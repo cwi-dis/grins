@@ -300,7 +300,7 @@ class NodeWrapper(Wrapper):
 			]
 		ntype = self.node.GetType()
 		ctype = self.node.GetChannelType()
-		if ntype in ('ext', 'imm') or not settings.get('lightweight'):
+		if ntype in ('ext', 'imm'):	# or not settings.get('lightweight')
 			namelist[1:1] = ['channel']
 		if ntype == 'bag':
 			namelist.append('bag_index')
