@@ -1,0 +1,64 @@
+#!/bin/sh
+
+case `uname -sr` in
+IRIX\ 6.3)	ARCH=irix6;;
+IRIX\ [56].*)	ARCH=irix5;;
+SunOS\ 5.*)	ARCH=sunos5;;
+*)		echo "$0: unknown architecture" >&2; exit 1;;
+esac
+
+prog="$0"
+case "$prog" in
+*/*)	dir=`dirname "$prog"`;;
+*)	IFS=:
+	for dir in $PATH
+	do
+		[ -x "${dir:-.}/$prog" ] && break
+	done
+	dir="${dir:-.}"
+	;;
+esac
+IFS=' 	
+'
+case "$dir" in
+/*)	;;
+*)	dir=`pwd`/$dir;;
+esac
+
+while :
+do
+	case "$dir" in
+	*/.)	dir=`dirname "$dir"`;;
+	*)	break;;
+	esac
+done
+
+case "$dir" in
+*/bin)	dir=`dirname "$dir"`;;
+esac
+
+for sub in python
+do
+	if [ ! -d "$dir/$sub" ]
+	then
+		echo "$0: cannot find proper directory" >&2
+		exit 1
+	fi
+done
+
+python="$dir/mmpython/$ARCH/python"
+pythonsrc="$dir/python"
+pythonlib="$pythonsrc/Lib"
+
+PYTHONPATH=$pythonlib
+PYTHONPATH=$PYTHONPATH:$pythonlib/test
+PYTHONPATH=$PYTHONPATH:$pythonlib/$ARCH
+PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/X11/Lib
+PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/img/Lib
+PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/midi/Lib
+
+export PYTHONPATH
+
+# Is this still needed?
+
+exec $python ${1+"$@"}
