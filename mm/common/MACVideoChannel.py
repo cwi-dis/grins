@@ -186,6 +186,7 @@ class VideoChannel(ChannelWindowAsync):
 			self.place_movie(None, self.arm_movie)
 		if self.play_movie:
 			self.place_movie(None, self.play_movie)
+			self.window._mac_setredrawguarantee(self.play_movie.GetMovieBox())
 
 	def redraw(self):
 		print 'redraw'
@@ -210,6 +211,7 @@ class VideoChannel(ChannelWindowAsync):
 			self.play_movie = None
 			if self.window:
 				self.window.setredrawfunc(None)
+				self.window._mac_setredrawguarantee(None)
 			self.fixidleproc()
 			self.playdone(0)
 			
@@ -241,6 +243,7 @@ class VideoChannel(ChannelWindowAsync):
 		self.play_movie.MoviesTask(0)
 		self.play_movie.StartMovie()
 		self.window.setredrawfunc(self.redraw)
+		self.window._mac_setredrawguarantee(self.play_movie.GetMovieBox())
 		
 		self.fixidleproc()
 		
@@ -326,6 +329,7 @@ class VideoChannel(ChannelWindowAsync):
 	def do_hide(self):
 		if self.window:
 			self.window.setredrawfunc(None)
+			self.window._mac_setredrawguarantee(None)
 		self.arm_movie = None
 		if self.play_movie:
 			self.play_movie.StopMovie()
@@ -335,6 +339,7 @@ class VideoChannel(ChannelWindowAsync):
 			self.__rc.stopit()
 			self.__rc.destroy()
 			self.__rc = None
+		ChannelWindowAsync.do_hide(self)
 
 	def playstop(self):
 		if debug: print 'VideoChannel: playstop'
@@ -345,14 +350,13 @@ class VideoChannel(ChannelWindowAsync):
 			self.play_movie.StopMovie()
 			self.play_movie = None
 			self.fixidleproc()
-		#
-		# There is a race here: the stopit() call above may have resulted in
-		# a playdone() call (as happens on the Mac) and it may not.
-		# We only call playdone if we see it hasn't happened yet.
-		if self._playstate == PLAYING:
-			self.playdone(1)
+		ChannelWindowAsync.playstop(self)
+		
+	def stopplay(self, node):
 		if self.window:
 			self.window.setredrawfunc(None)
+			self.window._mac_setredrawguarantee(None)
+		ChannelWindowAsync.stopplay(self, node)
 
 	def fixidleproc(self):
 		if self.window:
