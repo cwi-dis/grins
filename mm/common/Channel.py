@@ -1160,7 +1160,8 @@ class _ChannelThread:
 		if self.threads.armed:
 			self.threads.play()
 			thread_play_called = 1
-		self.do_play(node)
+		if self._is_shown:
+			self.do_play(node)
 		self.armdone()
 		if not thread_play_called:
 			self.playdone(0)
@@ -1323,7 +1324,8 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 				pass
 			self.threads.play()
 			thread_play_called = 1
-		self.do_play(node)
+		if self._is_shown:
+			self.do_play(node)
 		self.armdone()
 		if not thread_play_called:
 			self.playdone(0)
@@ -1343,7 +1345,8 @@ class ChannelAsync(Channel):
 		if not self._is_shown or self.syncplay:
 			self.play_1()
 			return
-		self.do_play(node)
+		if self._is_shown:
+			self.do_play(node)
 		self.armdone()
 
 def dummy_callback(arg):

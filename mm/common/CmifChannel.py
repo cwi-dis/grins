@@ -59,7 +59,8 @@ class CmifChannel(Channel):
 			print 'CmifChannel.play('+`self`+','+`node`+')'
 		self.stopped = 0
 		self.play_0(node)
-		self.do_play(node)
+		if self._is_shown:
+			self.do_play(node)
 		if not self.stopped:
 			self.armdone()
 			self.playdone(0)
