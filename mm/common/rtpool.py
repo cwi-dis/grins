@@ -9,6 +9,9 @@ class rtpool:
 		self.pool = []
 		return self
 
+	def flush(self):
+		self.pool = []
+
 	def enter(self, ev):
 		duration = ev[1]
 		for i in range(len(self.pool)):
