@@ -41,6 +41,14 @@ class HELP(_CommandBase):
 class PREFERENCES(_CommandBase):
 	help = 'Display application preferences'
 
+# Find/Replace commands
+class FIND(_CommandBase):
+	help = 'Find a object'
+class FINDNEXT(_CommandBase):
+	help = 'Find the next object'
+class REPLACE(_CommandBase):
+	help = 'Replace an object'
+
 # Alignment commands	
 class ALIGN_LEFT(_CommandBase):
 	help = 'Align the left borders'
