@@ -1293,7 +1293,7 @@ class MMSyncArc:
 			return 'begin'
 		return self.event
 
-	def isresolved(self, timefunc):
+	def isresolved(self, sctx):
 		if self.timestamp is not None:
 			return 1
 		if self.delay is None:
@@ -1301,9 +1301,8 @@ class MMSyncArc:
 		if self.accesskey is not None:
 			return 0	# event hasn't happened
 		if self.wallclock is not None:
-			if timefunc is not None:
-				return 1
-			return 0
+			# if there is a schedule context it's resolved
+			return sctx is not None
 		if self.channel is not None:
 			return self.dstnode.GetRoot().eventhappened((self.channel._name, self.getevent()))
 		if self.dstnode.GetSchedParent() is None:
@@ -1330,7 +1329,7 @@ class MMSyncArc:
 				else:
 					event = 'end'
 		if event is not None:
-			t = refnode.isresolved()
+			t = refnode.isresolved(sctx)
 			if t is None:
 				self.__isresolvedcalled = 0
 				return 0
@@ -1341,7 +1340,7 @@ class MMSyncArc:
 				if refnode.playing == MMStates.PLAYED:
 					self.__isresolvedcalled = 0
 					return 1
-				d = refnode.calcfullduration()
+				d = refnode.calcfullduration(sctx)
 				self.__isresolvedcalled = 0
 				if d is None or d < 0:
 					return 0
@@ -1353,13 +1352,13 @@ class MMSyncArc:
 			return 1
 		return 0
 
-	def resolvedtime(self, timefunc):
+	def resolvedtime(self, sctx):
 		if self.timestamp is not None:
 			return self.timestamp
 		if self.wallclock is not None:
 			import time, calendar
 			t0 = time.time()
-			t1 = timefunc()
+			t1 = sctx.parent.timefunc()
 			localtime = time.localtime(t0)
 			yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = self.wallclock
 			if tzhr is not None:
@@ -1419,7 +1418,7 @@ class MMSyncArc:
 			else:
 				event = 'begin'
 		if event is not None:
-			t = refnode.isresolved()
+			t = refnode.isresolved(sctx)
 			if event == 'begin':
 				if refnode.start_time is not None:
 					self.timestamp = t + atimes[0] + self.delay
@@ -1431,7 +1430,7 @@ class MMSyncArc:
 					return t + atimes[1] + self.delay
 				if refnode.playing == MMStates.PLAYED:
 					return refnode.happenings[('event', event)] + atimes[1] + self.delay
-				d = refnode.calcfullduration()
+				d = refnode.calcfullduration(stcx)
 				if refnode.start_time is not None and \
 				   refnode.fullduration is not None:
 					self.timestamp = t + d + self.delay
@@ -1475,13 +1474,12 @@ class MMNode_body:
 	def cleanup_sched(self, sched):
 		self.parent.cleanup_sched(sched, self)
 
-	def add_arc(self, arc):
-		self.parent.add_arc(arc, self)
+	def add_arc(self, arc, sctx):
+		self.parent.add_arc(arc, sctx, self)
 
-	def startplay(self, sctx, timestamp):
+	def startplay(self, timestamp):
 		if debug: print 'startplay',`self`,timestamp,self.fullduration
 		self.playing = MMStates.PLAYING
-		self.sctx = sctx
 		if self.GetFill() == 'remove' and \
 		   self.fullduration is not None and \
 		   self.fullduration >= 0:
@@ -1490,7 +1488,7 @@ class MMNode_body:
 			endtime = None
 		self.time_list.append((timestamp, endtime))
 		if self.parent and self.parent.type == 'alt':
-			self.parent.startplay(sctx, timestamp)
+			self.parent.startplay(timestamp)
 
 	def stopplay(self, timestamp):
 		if debug: print 'stopplay',`self`,timestamp
@@ -1683,7 +1681,6 @@ class MMNode:
 		self.happenings = {}
 		if full_reset:
 			self.playing = MMStates.IDLE
-		self.sctx = None
 		self.start_time = None
 		if debug: print 'MMNode.reset', `self`
 		if self.parent and self.parent.type == 'alt':
@@ -1867,10 +1864,9 @@ class MMNode:
 		self.context.cssResolver.changePxValue(self._subRegCssId, 'height', height)
 		self.__unlinkCssId()
 
-	def startplay(self, sctx, timestamp):
+	def startplay(self, timestamp):
 		if debug: print 'startplay',`self`,timestamp,self.fullduration
 		self.playing = MMStates.PLAYING
-		self.sctx = sctx
 		if self.GetFill() == 'remove' and \
 		   self.fullduration is not None and \
 		   self.fullduration >= 0:
@@ -1879,7 +1875,7 @@ class MMNode:
 			endtime = None
 		self.time_list.append((timestamp, endtime))
 		if self.parent and self.parent.type == 'alt':
-			self.parent.startplay(sctx, timestamp)
+			self.parent.startplay(timestamp)
 
 	def stopplay(self, timestamp):
 		if debug: print 'stopplay',`self`,timestamp
@@ -1893,7 +1889,7 @@ class MMNode:
 ##		for c in self.GetSchedChildren():
 ##			c.resetall(self.sctx.parent)
 
-	def add_arc(self, arc, body = None):
+	def add_arc(self, arc, sctx, body = None):
 		if body is None:
 			body = self
 		if arc in body.sched_children:
@@ -1911,14 +1907,14 @@ class MMNode:
 		if self.playing != MMStates.IDLE and arc.delay is not None:
 			# if arc's event has already occurred, trigger it
 			if arc.wallclock is not None:
-				if arc.resolvedtime(self.sctx.parent.timefunc) <= self.sctx.parent.timefunc():
+				if arc.resolvedtime(sctx) <= sctx.parent.timefunc():
 					if arc.dstnode is not None:
 						pdstnode = arc.dstnode.GetSchedParent()
 						if pdstnode is not None and pdstnode.playing != MMStates.PLAYING:
 							pdstnode.sched_children.append(arc)
 							return
 					arc.qid = 0
-					self.sctx.trigger(arc)
+					sctx.trigger(arc)
 				return
 			event = arc.getevent()
 			if event in ('begin', 'end'):
@@ -1939,7 +1935,7 @@ class MMNode:
 				key = 'event', 'begin'
 			if debug: print 'add_arc: key =',`key`,self.happenings.get(key)
 			if self.happenings.has_key(key):
-				self.sctx.sched_arc(self, arc, event=event, marker=arc.marker, timestamp=self.happenings[key])
+				sctx.sched_arc(self, arc, event=event, marker=arc.marker, timestamp=self.happenings[key])
 
 	def event(self, time, event, anchorname = None):
 		if anchorname is None:
@@ -2987,18 +2983,18 @@ class MMNode:
 ##				c.EndPruneTree()
 ##			del self.wtd_children
 
-	def isresolved(self):
+	def isresolved(self, sctx):
 		if self.start_time is not None:
 			return self.start_time
 		if self.type == 'alt':
 			child = self.ChosenSwitchChild()
 			if child:
-				return child.isresolved()
+				return child.isresolved(sctx)
 		pnode = self.GetSchedParent()
 		if pnode is None:
 			presolved = 0
 		else:
-			presolved = pnode.isresolved()
+			presolved = pnode.isresolved(sctx)
 			if presolved is None:
 				# if parent not resolved, we're not resolved
 				return None
@@ -3031,7 +3027,7 @@ class MMNode:
 								parent.start_time = val
 								parent = parent.parent
 						return val
-					e, MBcached = c.__calcendtime(val)
+					e, MBcached = c.__calcendtime(val, sctx)
 					if e is None or e < 0:
 						return None
 					if maybecached and not MBcached:
@@ -3046,14 +3042,10 @@ class MMNode:
 					parent = parent.parent
 			return presolved
 		min = None
-		if self.sctx is not None:
-			timefunc = self.sctx.parent.timefunc
-		else:
-			timefunc = None
 		maybecached = 1
 		for arc in beginlist:
-			if arc.isresolved(timefunc):
-				v = arc.resolvedtime(timefunc)
+			if arc.isresolved(sctx):
+				v = arc.resolvedtime(sctx)
 				if min is None or v < min:
 					min = v
 			if arc.timestamp is None:
@@ -3075,14 +3067,14 @@ class MMNode:
 	# The looping parmeter is only for pseudo-par-nodes implementing RealPix with
 	# captions.
 	#
-	def gensr_leaf(self, looping=0, overrideself=None, path=None, curtime=None):
+	def gensr_leaf(self, looping=0, overrideself=None, path=None, sctx=None, curtime=None):
 		if overrideself:
 			# overrideself is passed for the interior
 			self = overrideself
 		elif self._is_realpix_with_captions():
 			self.realpix_body = MMNode_realpix_body(self)
 			self.caption_body = MMNode_caption_body(self)
-			return self.gensr_interior(looping, curtime=curtime)
+			return self.gensr_interior(looping, sctx=sctx, curtime=curtime)
 
 		# Clean up realpix stuff: the node may have been a realpix node in the past
 		self.realpix_body = None
@@ -3158,7 +3150,7 @@ class MMNode:
 	# - actions to be taken upon SCHED_STOP
 	# - a list of all (event, action) tuples to be generated
 	#
-	def gensr_interior(self, looping=0, path=None, curtime=None):
+	def gensr_interior(self, looping=0, path=None, sctx=None, curtime=None):
 		#
 		# If the node is empty there is very little to do.
 		#
@@ -3217,7 +3209,7 @@ class MMNode:
 			       srdict = gensr_envelope(gensr_body, repeatCount,
 						       sched_actions_arg,
 						       scheddone_actions_arg,
-						       path,
+						       path, sctx,
 						       curtime)
 		if not looping:
 			#
@@ -3250,20 +3242,20 @@ class MMNode:
 		return srdict
 
 	def gensr_envelope_nonloop(self, gensr_body, repeatCount, sched_actions,
-				   scheddone_actions, path, curtime):
+				   scheddone_actions, path, sctx, curtime):
 		if repeatCount != 1:
 			raise 'Looping nonlooping node!'
 		self.curloopcount = 0
 
 		sched_actions, schedstop_actions, srdict = \
-			       gensr_body(sched_actions, scheddone_actions, path=path, curtime=curtime)
+			       gensr_body(sched_actions, scheddone_actions, path=path, sctx=sctx, curtime=curtime)
 		if debuggensr:
 			self.__dump_srdict('gensr_envelope_nonloop', srdict)
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_envelope_firstloop(self, gensr_body, repeatCount,
 				     sched_actions, scheddone_actions,
-				     path, curtime):
+				     path, sctx, curtime):
 		srlist = []
 		terminate_actions = []
 		#
@@ -3298,6 +3290,7 @@ class MMNode:
 					       body_scheddone_actions,
 					       self.looping_body_self,
 					       path=path,
+					       sctx=sctx,
 					       curtime=curtime)
 
 		# When the loop has started we start the body
@@ -3331,7 +3324,7 @@ class MMNode:
 
 	def gensr_envelope_laterloop(self, gensr_body, repeatCount,
 				     sched_actions, scheddone_actions,
-				     path, curtime):
+				     path, sctx, curtime):
 		srlist = []
 
 		body_sched_actions = []
@@ -3341,6 +3334,7 @@ class MMNode:
 					       body_scheddone_actions,
 					       self.looping_body_self,
 					       path=path,
+					       sctx=sctx,
 					       curtime=curtime)
 
 		# When the loop has started we start the body
@@ -3425,7 +3419,7 @@ class MMNode:
 ##				arc.timestamp = None
 
 	def gensr_body_interior(self, sched_actions, scheddone_actions,
-				self_body=None, path=None, curtime=None):
+				self_body=None, path=None, sctx=None, curtime=None):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -3491,7 +3485,7 @@ class MMNode:
 			arc = MMSyncArc(self_body, 'end', srcnode=self_body, event='begin', delay=delay)
 			self_body.durarcs.append(arc)
 ##			self_body.arcs.append((self_body, arc))
-			self_body.add_arc(arc)
+			self_body.add_arc(arc, sctx)
 
 ##		if curtime is not None and self.type == 'seq':
 ##			# don't bother with children that finish before curtime
@@ -3513,7 +3507,7 @@ class MMNode:
 						defbegin = None
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin)
 				self_body.arcs.append((srcnode, arc))
-				srcnode.add_arc(arc)
+				srcnode.add_arc(arc, sctx)
 				schedule = defbegin is not None
 				if path and path[0] is child:
 					arc.path = path[1:]
@@ -3521,7 +3515,7 @@ class MMNode:
 				schedule = 0
 				for arc in beginlist:
 					refnode = arc.refnode()
-					refnode.add_arc(arc)
+					refnode.add_arc(arc, sctx)
 					if arc.getevent() == 'begin' and \
 					   refnode is self_body and \
 					   arc.marker is None and \
@@ -3536,7 +3530,7 @@ class MMNode:
 ##			    (schedule or termtype == 'ALL')):
 				arc = MMSyncArc(self_body, 'end', srcnode=child, event='end', delay=0)
 				self_body.arcs.append((child, arc))
-				child.add_arc(arc)
+				child.add_arc(arc, sctx)
 				# we need this in case all children
 				# (or the relevant child) has an
 				# unresolved end and we have a min
@@ -3547,8 +3541,8 @@ class MMNode:
 				scheddone_events.append((SCHED_DONE, child))
 			for arc in self.FilterArcList(MMAttrdefs.getattr(child, 'endlist')):
 				refnode = arc.refnode()
-				refnode.add_arc(arc)
-			cdur = child.calcfullduration(ignoremin = 1)
+				refnode.add_arc(arc, sctx)
+			cdur = child.calcfullduration(sctx, ignoremin = 1)
 			if cdur is not None: # and child.fullduration is not None:
 				if cdur < 0:
 					delay = None
@@ -3557,19 +3551,19 @@ class MMNode:
 				arc = MMSyncArc(child, 'end', srcnode=child, event='begin', delay=delay)
 				child.durarcs.append(arc)
 ##				self_body.arcs.append((child, arc))
-				child.add_arc(arc)
+				child.add_arc(arc, sctx)
 			min, max = child.GetMinMax()
 			if min > 0:
 				arc = MMSyncArc(child, 'min', srcnode=child, event='begin', delay=min)
 				child.has_min = 1
 				child.durarcs.append(arc)
-				child.add_arc(arc)
+				child.add_arc(arc, sctx)
 			else:
 				child.has_min = 0
 			if max >= 0:
 				arc = MMSyncArc(child, 'end', srcnode=child, event='begin', delay=max)
 				child.durarcs.append(arc)
-				child.add_arc(arc)
+				child.add_arc(arc, sctx)
 			if self.type == 'seq':
 				srcnode = child
 				event = 'end'
@@ -3579,7 +3573,7 @@ class MMNode:
 			# if no children, this would connects seq's begin to end
 			arc = MMSyncArc(self_body, 'end', srcnode=srcnode, event=event, delay=0)
 			self_body.arcs.append((srcnode, arc))
-			srcnode.add_arc(arc)
+			srcnode.add_arc(arc, sctx)
 		#
 		# Trickery to handle dur and end correctly:
 		#
@@ -3606,7 +3600,7 @@ class MMNode:
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_body_realpix(self, sched_actions, scheddone_actions,
-			       self_body=None, path=None, curtime=None):
+			       self_body=None, path=None, sctx=None, curtime=None):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -3619,7 +3613,7 @@ class MMNode:
 ##			print 'gensr for', child
 ##			print 'func is', child._is_realpix_with_captions(), child._is_realpix_with_captions
 
-			srdict.update(child.gensr(overrideself=child, curtime=curtime))
+			srdict.update(child.gensr(overrideself=child, sctx=sctx, curtime=curtime))
 
 			sched_actions.append( (SCHED, child) )
 			schedstop_actions.append( (SCHED_STOP, child) )
@@ -3645,10 +3639,10 @@ class MMNode:
 			self.__dump_srdict('gensr_body_realpix', srdict)
 		return sched_actions, schedstop_actions, srdict
 
-	def gensr_child(self, child, runchild = 1, path = None, curtime = None):
+	def gensr_child(self, child, runchild = 1, path = None, sctx = None, curtime = None):
 		if debug: print 'gensr_child',`self`,`child`,runchild
 		if runchild:
-			srdict = child.gensr(path=path, curtime=curtime)
+			srdict = child.gensr(path=path, sctx=sctx, curtime=curtime)
 		else:
 			srdict = {}
 		body = self.looping_body_self or self
@@ -3692,29 +3686,29 @@ class MMNode:
 			self.__dump_srdict('gensr_child', srdict)
 		return srdict
 
-	def calcendfreezetime(self):
+	def calcendfreezetime(self, sctx):
 		# calculate end of freeze period
 		# can only be called when start time is resolved
 		# XXX should we do something special for fill="transition"?
 		# currently it is handled like fill="freeze"
 		fill = self.GetFill()
 		if fill == 'remove':
-			resolved = self.isresolved()
-			return resolved+self.__calcendtime(resolved)[0]
+			resolved = self.isresolved(sctx)
+			return resolved+self.__calcendtime(resolved, sctx)[0]
 		pnode = self.GetSchedParent()
 		if not pnode:
-			resolved = self.isresolved()
-			return resolved+self.__calcendtime(resolved)[0]
+			resolved = self.isresolved(sctx)
+			return resolved+self.__calcendtime(resolved, sctx)[0]
 		if fill == 'hold':
-			return pnode.calcendfreezetime()
+			return pnode.calcendfreezetime(sctx)
 		if pnode.type == 'seq':
 			siblings = pnode.GetSchedChildren()
 			i = siblings.index(self)
 			if i < len(siblings) - 1:
-				return siblings[i+1].isresolved()
-		return pnode.calcendfreezetime()
+				return siblings[i+1].isresolved(sctx)
+		return pnode.calcendfreezetime(sctx)
 
-	def __calcendtime(self, syncbase, t0 = None):
+	def __calcendtime(self, syncbase, sctx, t0 = None):
 		# returns:
 		#	None - no resolved begin
 		#	-1 - resolved begin, no resolved end
@@ -3735,24 +3729,20 @@ class MMNode:
 		else:
 			self.__calcendtimecalled = 1
 			maybecached = 1
-			if self.sctx is not None:
-				timefunc = self.sctx.parent.timefunc
-			else:
-				timefunc = None
 			for a in beginlist:
 				t = None
 				aevent = a.getevent()
 				if aevent is not None or a.marker is not None or a.wallclock is not None or a.accesskey is not None:
 					maybecached = 0
-				if a.isresolved(timefunc) and syncbase is not None:
-					t = a.resolvedtime(timefunc) - syncbase
+				if a.isresolved(sctx) and syncbase is not None:
+					t = a.resolvedtime(sctx) - syncbase
 				elif aevent == 'begin' or aevent == 'end':
 					n = a.refnode()
-					t0 = n.isresolved()
+					t0 = n.isresolved(sctx)
 					if t0 is None:
 						continue
 					if aevent == 'end':
-						d = n.calcfullduration()
+						d = n.calcfullduration(sctx)
 						if d is None or d < 0:
 							continue
 						t = t0 + d
@@ -3777,7 +3767,7 @@ class MMNode:
 			# no resolved begin time
 			return None, maybecached
 		self.__calcendtimecalled = 1
-		d = self.calcfullduration()
+		d = self.calcfullduration(sctx)
 		self.__calcendtimecalled = 0
 		if self.fullduration is None:
 			maybecached = 0
@@ -3787,10 +3777,10 @@ class MMNode:
 		end = start + d
 		if end < 0:
 			# find next one
-			return self.__calcendtime(syncbase, end)
+			return self.__calcendtime(syncbase, sctx, end)
 		return end, maybecached
 
-	def __calcduration(self):
+	def __calcduration(self, sctx):
 		# internal method to calculate the duration of a node
 		# not taking into account the duration/end/repeat* attrs
 		maybecached = 1
@@ -3801,18 +3791,18 @@ class MMNode:
 			# this pause stuff in priorityClasses
 			return None, 0
 		else:
-			syncbase = self.isresolved()
+			syncbase = self.isresolved(sctx)
 			if self.type in ('par', 'excl'):
 				termtype = MMAttrdefs.getattr(self, 'terminator')
 				if termtype not in ('LAST', 'FIRST', 'ALL'):
 					for c in self.GetSchedChildren():
 						if MMAttrdefs.getattr(c, 'name') == termtype:
-							return c.__calcendtime(syncbase)
+							return c.__calcendtime(syncbase, sctx)
 					termtype = 'LAST' # fallback
 				val = -1
 				scheduled_children = 0
 				for c in self.GetSchedChildren():
-					e, mc = c.__calcendtime(syncbase)
+					e, mc = c.__calcendtime(syncbase, sctx)
 					if e is not None:
 						scheduled_children = 1
 					if not mc:
@@ -3843,7 +3833,7 @@ class MMNode:
 			if self.type == 'seq':
 				val = 0
 				for c in self.GetSchedChildren():
-					e, mc = c.__calcendtime(syncbase)
+					e, mc = c.__calcendtime(syncbase, sctx)
 					if not mc:
 						maybecached = 0
 					if e is None or e < 0:
@@ -3856,9 +3846,9 @@ class MMNode:
 				c = self.ChosenSwitchChild()
 				if c is None:
 					return 0, maybecached
-				return c.__calcduration()
+				return c.__calcduration(sctx)
 
-	def calcfullduration(self, ignoremin = 0):
+	def calcfullduration(self, sctx, ignoremin = 0):
 		if self.fullduration is not None:
 			duration = self.fullduration
 		else:
@@ -3887,7 +3877,7 @@ class MMNode:
 			if repeatDur is not None and \
 			   repeatCount is not None:
 				if duration is None:
-					duration, mb = self.__calcduration()
+					duration, mb = self.__calcduration(sctx)
 					if not mb:
 						maybecached = 0
 				if duration is not None and duration > 0 and \
@@ -3905,7 +3895,7 @@ class MMNode:
 				duration = repeatDur
 			elif repeatCount is not None: # repeatDur is None
 				if duration is None:
-					duration, mb = self.__calcduration()
+					duration, mb = self.__calcduration(sctx)
 					if not mb:
 						maybecached = 0
 				if duration is not None and duration > 0:
@@ -3914,7 +3904,7 @@ class MMNode:
 					else:
 						duration = -1
 			elif duration is None:
-				duration, mb = self.__calcduration()
+				duration, mb = self.__calcduration(sctx)
 				if not mb:
 					maybecached = 0
 
@@ -3980,7 +3970,7 @@ class MMNode:
 				return 1
 		return 0
 
-	def GenAllSR(self, seeknode, curtime=None):
+	def GenAllSR(self, seeknode, sctx = None, curtime=None):
 		self.cleanup()
 ##		self.SetPlayability()
 		if not seeknode:
@@ -3993,7 +3983,7 @@ class MMNode:
 		#
 		# Now run through the tree
 		#
-		srdict = self.gensr(curtime=curtime)
+		srdict = self.gensr(sctx=sctx, curtime=curtime)
 		event, actions = (SCHED_DONE, self), [(SCHED_STOP, self)]
 		self.srdict[event] = [1, actions]
 		srdict[event] = self.srdict # or just self?
@@ -4038,10 +4028,10 @@ class MMNode:
 	# Re-generate SR actions/events for a loop. Called for the
 	# second and subsequent times through the loop.
 	#
-	def GenLoopSR(self, curtime):
+	def GenLoopSR(self, sctx, curtime):
 		# XXXX Try by Jack:
 		self.PruneTree(None, 0)
-		return self.gensr(looping=1, curtime=curtime)
+		return self.gensr(looping=1, sctx=sctx, curtime=curtime)
 	#
 	# Check whether the current loop has reached completion.
 	#
