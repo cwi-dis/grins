@@ -49,7 +49,7 @@ class BlockView(ViewDialog, BasicDialog):
 		self.editmgr = self.root.context.editmgr
 		width, height = \
 			MMAttrdefs.getattr(self.root, 'blockview_winsize')
-		self = BasicDialog.init(self, (width, height, 'Hierarchy'))
+		self = BasicDialog.init(self, width, height, 'Hierarchy')
 		self.changing_node = None
 		return self.new(width, height, self.root)
 	def show(self):
@@ -140,8 +140,8 @@ class BlockView(ViewDialog, BasicDialog):
 		cmdmap = 'MNUDC'
 		clipboard_menu.set_call_back(self._menu_callback,cmdmap);
 		operation_menu = f.add_menu(PUSH_MENU,x+2*w/3,y,w/3,h,'Operation')
-		operation_menu.set_menu('h Help...|p Play node...|Z Zoom in|z Zoom out%l|i Node info...|a Node attr...|e Edit contents...')
-		cmdmap = 'hpZziae'
+		operation_menu.set_menu('h Help...|p Play node...|Z Zoom in|z Zoom out%l|i Node info...|a Node attr...|e Edit contents...|t Edit anchors...')
+		cmdmap = 'hpZziaet'
 		operation_menu.set_call_back(self._menu_callback,cmdmap);
 	#
 	# submit a number to default commands.
@@ -168,6 +168,7 @@ class BlockView(ViewDialog, BasicDialog):
 		self.addtocommand('i', infofunc)
 		self.addtocommand('a', attreditfunc)
 		self.addtocommand('e', conteditfunc)
+		self.addtocommand('t', anchorfunc)
 	#
 
 	# blockview gets a region in the form where it recursively
@@ -250,6 +251,9 @@ class BlockView(ViewDialog, BasicDialog):
 		    pass
 		for child in node.GetChildren () :
 		    self.rmBlockview (child)
+	# getfocus - Called by other modules to get our focus
+	def getfocus(self):
+		return self.focus
 	#
 	# fixfocus: called to move focus up if it becomes invisible.
 	#
@@ -284,18 +288,27 @@ class BlockView(ViewDialog, BasicDialog):
 	# the argument is the class 'blockview' itself.
 	#
 	def _change_focus_callback (self, (obj, args)) :
-		self.form.freeze_form()
-		self.focus.bv_obj.boxtype = FRAME_BOX
-
-		gl.winset(self.form.window)
-		mx, my = fl.get_mouse ()
-
+		gl.winset(self.form.window) # XXX Funny, but seem to need this
+		mx, my = fl.get_mouse ()   # XXXX Too late, wrong mouse pos...
 		node = self._find_node (self.rootview, (mx, my))
 		if node == None :
 			print 'no node'
 			raise 'block view'
-
-		self.setfocus (node)
+		self.globalsetfocus(node)
+	#
+	def globalsetfocus(self, node):
+		# XXX Quick hack: don't set focus if it is invisible.
+		try:
+			void = node.bv_obj.boxtype
+		except:
+			gl.ringbell()
+			print 'BlockView: sorry, cannot set focus'
+			return
+		self.form.freeze_form()
+		gl.winset(self.form.window)
+		self.focus.bv_obj.boxtype = FRAME_BOX
+		self.focus = node
+		self.fixfocus()
 		self.form.unfreeze_form ()
 	#
 	# setfocus
@@ -599,8 +612,14 @@ def zoomfunc (bv) :
 def infofunc(bv):
 	node = bv.focus
 	import NodeInfo
-	NodeInfo.shownodeinfo(node)
+	NodeInfo.shownodeinfo(bv.toplevel, node)
 
 def playfunc(bv):
 	node = bv.focus
 	bv.toplevel.player.playsubtree(node)
+
+def anchorfunc(bv):
+	node = bv.focus
+	import AnchorEdit
+	AnchorEdit.showanchoreditor(bv.toplevel, node)
+
