@@ -363,9 +363,9 @@ class SMILWriter:
 	def writelink(self, a1, a2, type):
 		items = ["<hlink"]
 		if type == Hlinks.TYPE_CALL:
-			items.append('replace="pause"')
+			items.append('show="pause"')
 		elif type == Hlinks.TYPE_FORK:
-			items.append('replace="new"')
+			items.append('show="new"')
 		self.fp.write(string.join(items, ' ') + '>\n')
 		self.fp.push()
 		self.writeanchor(a1, "src")
