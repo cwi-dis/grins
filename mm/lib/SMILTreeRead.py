@@ -1948,7 +1948,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			targetnode = self.__node
 		else:
 			self.syntax_error('the target element of "%s" is unspecified' % tagname)
-
+		
 		if tagname != 'animateMotion' and tagname != 'transitionFilter' and\
 			not attributes.has_key('attributeName'):
 			self.syntax_error('required attribute attributeName missing in %s element' % tagname)
@@ -1996,7 +1996,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						break
 			elif attrtype == 'int':
 				for v in vals:
-					try: v = string.atoi(v)
+					try: if v: v = string.atoi(v)
 					except string.atoi_error: self.syntax_error('invalid %s values' % attributeName)
 					break
 		else:
@@ -2107,7 +2107,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# add this node to the tree if it is possible
 		# else keep it for later fix
 		node.targetnode = None
-		if targetnode:
+		if targetnode:	
 			node.targetnode = targetnode
 		elif targetid:
 			node.__targetid = targetid
