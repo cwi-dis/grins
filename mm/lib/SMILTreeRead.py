@@ -994,18 +994,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('node in layout')
 			return
 		
-		# find target node
+		# find target node (explicit or implicit)
 		targetnode = None
-		targetid = None
-		if self.__node:
-			targetnode = self.__node
-		else:
-			targetid = attributes.get('targetElement')
-			if not targetid:
-				self.syntax_error('the target element of "%s" is unspecified' % tagname)
-				return
+		targetid = attributes.get('targetElement')
+		if not targetid:
+			targetid = attributes.get('href')
+		if targetid:
 			if self.__nodemap.has_key(targetid):
 				targetnode = self.__nodemap[targetid]
+		elif self.__node:
+			targetnode = self.__node
+		else:
+			self.syntax_error('the target element of "%s" is unspecified' % tagname)
+			return
 			
 		# keep most common attr version
 		aname = attributes.get('attribute')
