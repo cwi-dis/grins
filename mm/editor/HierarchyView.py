@@ -291,7 +291,8 @@ class HierarchyView(HierarchyViewDialog):
 			url = MMurl.pathname2url(filename)
 		else:
 			url = filename
-		if obj.node.GetType() == 'ext' and \
+		t = obj.node.GetType()
+		if t == 'ext' and \
 		   obj.node.GetChannelType() == 'RealPix':
 			from mimetypes import guess_type
 			mtype = guess_type(url)[0]
@@ -299,7 +300,24 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			interior = (obj.node.GetType() in MMNode.interiortypes)
 		if interior:
-			self.create(0, url)
+			horizontal = (t in ('par', 'alt')) == DISPLAY_VERTICAL
+			i = -1
+			# if node is expanded, determine where in the node
+			# the file is dropped, else create at end
+			if hasattr(obj.node, 'expanded'):
+				# find the index of the first child where the
+				# appropriate drop coordinate is after the
+				# center of the child
+				# if no such child, return -1 (which means
+				# at the end)
+				children = obj.node.children
+				for i in range(len(children)):
+					box = children[i].box
+					if (x,y)[not horizontal] <= (box[not horizontal] + box[(not horizontal) + 2]) / 2:
+						break
+				else:
+					i = -1
+			self.create(0, url, i)
 		else:
 			em = self.editmgr
 			if not em.transaction():
@@ -385,7 +403,7 @@ class HierarchyView(HierarchyViewDialog):
 		Clipboard.setclip('node', node.DeepCopy())
 		self.aftersetfocus()
 
-	def create(self, where, url = None):
+	def create(self, where, url = None, index = -1):
 		node = self.focusnode
 		if node is None:
 			windowinterface.showmessage(
@@ -432,7 +450,7 @@ class HierarchyView(HierarchyViewDialog):
 		if type != 'slide' and layout == 'undefined' and \
 		   self.toplevel.layoutview.curlayout is not None:
 			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
-		if self.insertnode(node, where):
+		if self.insertnode(node, where, index):
 			if type == 'slide':
 				import AttrEdit
 				AttrEdit.showattreditor(self.toplevel, node)
@@ -490,7 +508,7 @@ class HierarchyView(HierarchyViewDialog):
 			Clipboard.setclip(type, node.DeepCopy())
 		dummy = self.insertnode(node, where)
 
-	def insertnode(self, node, where):
+	def insertnode(self, node, where, index = -1):
 		# 'where' is coded as follows: -1: before; 0: under; 1: after
 		if where <> 0:
 			parent = self.focusnode.GetParent()
@@ -515,7 +533,7 @@ class HierarchyView(HierarchyViewDialog):
 			node.Destroy()
 			return 0
 		if where == 0:
-			em.addnode(self.focusnode, len(self.focusnode.GetChildren()), node)
+			em.addnode(self.focusnode, index, node)
 			expandnode(self.focusnode)
 		else:
 			children = parent.GetChildren()
@@ -780,8 +798,8 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Menu handling functions
 
-##  	def helpcall(self):
-## 		if self.focusobj: self.focusobj.helpcall()
+##	def helpcall(self):
+##		if self.focusobj: self.focusobj.helpcall()
 
 	def expandcall(self):
 		if self.focusobj: self.focusobj.expandcall()
@@ -952,6 +970,7 @@ class Object:
 	def __init__(self, mother, item):
 		self.mother = mother
 		node, self.boxtype, self.box = item
+		node.box = self.box
 		self.node = node
 		if self.node.__class__ is SlideMMNode:
 			self.name = MMAttrdefs.getattr(node, 'tag')
@@ -989,6 +1008,7 @@ class Object:
 	def cleanup(self):
 		self.mother = None
 		node = self.node
+		del node.box
 
 	def draw(self):
 		d = self.mother.new_displist
@@ -1155,9 +1175,9 @@ class Object:
 
 	# Menu handling functions
 
-## 	def helpcall(self):
-## 		import Help
-## 		Help.givehelp('Hierarchy_view')
+##	def helpcall(self):
+##		import Help
+##		Help.givehelp('Hierarchy_view')
 
 	def expandcall(self):
 		self.mother.toplevel.setwaiting()
