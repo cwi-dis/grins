@@ -3,7 +3,36 @@ __version__ = "$Id$"
 #
 # WIN32 HTML channel.
 #
-from Channel import *
+
+""" @win32doc|HtmlChannel
+The HtmlChannel extends the ChannelWindow
+
+For this channel to work the window
+must support beyond the standard interface
+the following interface:
+
+interface IHtmlWnd:
+	def RetrieveUrl(self,url):pass
+	def DestroyHtmlCtrl(self):pass
+	def setanchorcallback(self,cbanchor):pass
+
+The window or an agent of the window is supposed
+to call back the HtmlChannel's callback set by
+the setanchorcallback method when a cmif: anchor
+is fired.
+
+The _SubWindow defined in lib/win32/_CmifView.py
+supports this interface
+
+Note:
+For not local files we get the url by calling
+the channel's method getfileurl(node) and pass
+it directly through RetrieveUrl.
+For local files we follow the Internet Explorer
+convention of passing the absolute local filename
+through RetrieveUrl.
+"""
+import Channel
 
 # node attributes
 import MMAttrdefs
@@ -22,14 +51,15 @@ error = 'HtmlChannel.error'
 # channel types
 [SINGLE, HTM, TEXT, MPEG] = range(4)
 
-class HtmlChannel(ChannelWindow):
-	node_attrs = ChannelWindow.node_attrs + ['fgcolor', 'font']
+class HtmlChannel(Channel.ChannelWindow):
+	node_attrs = Channel.ChannelWindow.node_attrs + ['fgcolor', 'font']
 	_window_type = HTM
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.played_str = ()
 		self.__errors=[]
-		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
+		self._tempmap={}
+		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
 		return '<HtmlChannel instance, name=' + `self._name` + '>'
@@ -37,7 +67,14 @@ class HtmlChannel(ChannelWindow):
 	def do_hide(self):
 		if self.window and hasattr(self.window,'DestroyHtmlCtrl'):
 			self.window.DestroyHtmlCtrl()
-		ChannelWindow.do_hide(self)
+		Channel.ChannelWindow.do_hide(self)
+
+	def destroy(self):
+		if self.window and hasattr(self.window,'DestroyHtmlCtrl'):
+			self.window.DestroyHtmlCtrl()
+			self.window.setredrawfunc(None)
+		self.cleartemp()
+		Channel.ChannelWindow.destroy(self)
 
 	def do_arm(self, node, same=0):
 		if not same:
@@ -52,7 +89,9 @@ class HtmlChannel(ChannelWindow):
 		if node.type == 'ext':
 			url=self.getfileurl(node)
 			url=self.toabs(url)
-		else: url='about:'+ self.armed_str
+		else: 
+			url=self.totemp(node,self.armed_str)
+
 		if node in self.__errors:
 			url='about:'+ self.armed_str
 
@@ -64,11 +103,16 @@ class HtmlChannel(ChannelWindow):
 		
 		self.window.setanchorcallback(self.cbanchor)
 		self.window.RetrieveUrl(url)
+		self.window.setredrawfunc(self.redraw)
+
+	def redraw(self):
+		self.window.Refresh()
 
 	def stopplay(self, node):
 		if self.window and hasattr(self.window,'DestroyHtmlCtrl'):
 			self.window.DestroyHtmlCtrl()
-		ChannelWindow.stopplay(self, node)
+			self.window.setredrawfunc(None)
+		Channel.ChannelWindow.stopplay(self, node)
 
 #################################
 	# helpers			
@@ -86,7 +130,24 @@ class HtmlChannel(ChannelWindow):
 				filename=os.path.join(os.getcwd(),filename)
 				filename=ntpath.normpath(filename)	
 		return filename
+	
+################################# imm node support with temp files
+	def totemp(self,node,str):
+		if node in self._tempmap.keys():
+			filename=self._tempmap[node]
+		else:
+			import tempfile
+			filename = tempfile.mktemp('.html')
+			fp=open(filename,'wb')
+			fp.write(str)
+			fp.close()
+			self._tempmap[node]=filename
+		return filename
 
+	def cleartemp(self):
+		import win32api
+		for f in self._tempmap.values():
+			win32api.DeleteFile(f)
 
 #################################
 	def updatefixedanchors(self, node):
