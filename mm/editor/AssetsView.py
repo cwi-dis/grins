@@ -94,7 +94,10 @@ class AssetsView(AssetsViewDialog, ViewDialog):
 		else:
 			self.listdata = self.getclipboard()
 			cmdlist = []
-		# XXX Sort
+		# Sort
+		list = map(lambda x: (x[2],) + x, self.listdata)
+		list.sort()
+		self.listdata = map(lambda x:x[1:], list)
 		# Remove first field
 		listdata = map(lambda x:x[1:], self.listdata)
 		self.setlistdata(listdata)
@@ -182,12 +185,12 @@ class AssetsView(AssetsViewDialog, ViewDialog):
 			else:
 				windowinterface.beep()
 				return 0
-			print 'AssetsView.dodragdrop', tp, value
+##			print 'AssetsView.dodragdrop', tp, value
 			action = self.dodragdrop(tp, value)
-			print 'AssetsView.dodragdrop ->', action
+##			print 'AssetsView.dodragdrop ->', action
 			if action == 'move':
 				# We should remove the item
-				print 'AssetView: Removing item', index
+##				print 'AssetView: Removing item', index
 				item = self.listdata[index][0]
 				if not self.editmgr.transaction():
 					print "No transaction"
@@ -195,7 +198,7 @@ class AssetsView(AssetsViewDialog, ViewDialog):
 				self.editmgr.delasset(item)
 				self.editmgr.commit()
 			elif action == 'copy' and tp == 'NodeUID':
-				print 'AssetView: duplicasting item', index
+##				print 'AssetView: duplicating item', index
 				item = self.listdata[index][0]
 				newitem = item.DeepCopy()
 				if not self.editmgr.transaction():
