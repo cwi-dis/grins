@@ -53,6 +53,26 @@ def haschannelattreditor(channel):
 		return 0
 	return 1
 
+# A similar interface for documents (note different arguments!).
+# The administration is kept in toplevel.attreditor,
+# which is created here if necessary.
+
+def showdocumentattreditor(toplevel):
+	try:
+		attreditor = toplevel.attreditor
+	except AttributeError:
+		attreditor = AttrEditor(DocumentWrapper(toplevel))
+		toplevel.attreditor = attreditor
+	else:
+		attreditor.pop()
+
+def hasdocumentattreditor(toplevel):
+	try:
+		attreditor = toplevel.attreditor
+	except AttributeError:
+		return 0
+	return 1
+
 # These routine checks whether we are in CMIF or SMIL mode, and
 # whether the given attribute should be shown in the editor.
 def cmifmode():
@@ -87,6 +107,7 @@ class Wrapper: # Base class -- common operations
 	def close(self):
 		del self.context
 		del self.editmgr
+		del self.toplevel
 	def getcontext(self):
 		return self.context
 	def register(self, object):
@@ -328,6 +349,59 @@ class ChannelWrapper(Wrapper):
 		return MMAttrdefs.parsevalue(name, str, self.context)
 
 
+
+class DocumentWrapper(Wrapper):
+	def __init__(self, toplevel):
+		Wrapper.__init__(self, toplevel, toplevel.context)
+
+	def __repr__(self):
+		return '<DocumentWrapper instance, file=%s>' % self.toplevel.filename
+
+	def close(self):
+		del self.toplevel.attreditor
+		Wrapper.close(self)
+
+	def stillvalid(self):
+		return self.toplevel in self.toplevel.main.tops
+
+	def maketitle(self):
+		return 'Properties of dcument %s' % self.toplevel.filename
+
+	def getattr(self, name):	# Return the attribute or a default
+		return self.getvalue() or ''
+
+	def getvalue(self, name):	# Return the raw attribute or None
+		if name == 'title':
+			return self.context.title or None
+		if self.context.attributes.has_key(name):
+			return self.context.attributes[name]
+		return None		# unrecognized
+
+	def getdefault(self, name):
+		return ''
+
+	def setattr(self, name, value):
+		if name == 'title':
+			self.context.title = value
+		else:
+			self.context.attributes[name] = value
+
+	def delattr(self, name):
+		if name == 'title':
+			self.context.title = None
+		elif self.context.attributes.has_key(name):
+			del self.context.attributes[name]
+
+	def delete(self):
+		# shouldn't be called...
+		pass
+
+	def attrnames(self):
+		names = self.context.attributes.keys()
+		names.sort()
+		return ['title'] + names
+
+	
 
 # Attribute editor class.
 

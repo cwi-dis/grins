@@ -13,6 +13,7 @@ class TopLevelDialog:
 			('Layout view', LAYOUTVIEW, 't'),
 			('Hyperlinks', LINKVIEW, 't'),
 			('User groups', USERGROUPVIEW, 't'),
+			('Properties...', PROPERTIES),
 			('Source...', SOURCE),
 			('Save', SAVE),
 			('Save as...', SAVE_AS),

@@ -58,6 +58,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			USERGROUPVIEW(callback = (self.view_callback, (5,))),
 			RESTORE(callback = (self.restore_callback, ())),
 			CLOSE(callback = (self.close_callback, ())),
+			PROPERTIES(callback = (self.prop_callback, ())),
 			]
 		#self.__save = None
 		if self.main.cansave():
@@ -242,6 +243,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			cwd = os.getcwd()
 		windowinterface.FileDialog('Save SMIL file:', cwd, '*.smil',
 					   '', self.export_okcallback, None)
+
+	def prop_callback(self):
+		import AttrEdit
+		AttrEdit.showdocumentattreditor(self)
 
 	def fixtitle(self):
 		utype, host, path, params, query, fragment = urlparse(self.filename)
