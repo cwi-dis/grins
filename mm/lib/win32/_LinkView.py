@@ -168,6 +168,10 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		self.EnableCmd('RightMenu',1)
 		self.EnableCmd('LeftLabel',1)
 		self.EnableCmd('RightLabel',1)
+		
+		self._iconplay = win32ui.GetApp().LoadIcon(grinsRC.IDI_PLAY)
+		self['LeftMenu'].seticon(self._iconplay)
+		self['RightMenu'].seticon(self._iconplay)
 
 		# temp patch
 		#closecmd=usercmd.CLOSE_WINDOW(callback = (self.close_window_callback,()))
