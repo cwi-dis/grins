@@ -80,6 +80,7 @@ implements SMILDocument, SMILController, SMILRenderer
                 }
             //viewportSize = ngetTopLayoutDimensions(hgrins, 0);
             dur = ngetDuration(hgrins);
+            frameRate = ngetFrameRate(hgrins);
             monitor = new GRiNSPlayerMonitor(this, 100);
             monitor.start();
             }
@@ -135,23 +136,20 @@ implements SMILDocument, SMILController, SMILRenderer
         if(hgrins!=0) npause(hgrins);
         } 
                
-    public int getState()
-    {
-        if(hgrins!=0) return ngetState(hgrins);
-        return -1;
+    public int getState(){
+        return curstate;
     }
              
     public double getDuration() {return dur;}
+    public int getFrameRate() {return frameRate;}
     
     public void setTime(double t)
         {
         if(hgrins!=0) nsetTime(hgrins, t);   
         }
     
-    public double getTime() 
-        {
-        if(hgrins!=0) return ngetTime(hgrins);
-        return 0;
+    public double getTime() {
+        return curpos;
         }
     
     public void setSpeed(double v) {}
@@ -168,11 +166,13 @@ implements SMILDocument, SMILController, SMILRenderer
         
     void updatePosition(double pos)
         {
+        curpos = pos;
         if(listener!=null) listener.setPos(pos);
         }
         
     void updateState(int state)
         {
+        curstate = state;
         if(listener!=null) listener.setState(state);
         }
      
@@ -182,6 +182,9 @@ implements SMILDocument, SMILController, SMILRenderer
     
     private Dimension viewportSize;
     private double dur;
+    private double curpos;
+    private int curstate;
+    private int frameRate;
     private SMILListener listener;
     private GRiNSPlayerMonitor monitor;
 	private Canvas canvas; 
@@ -215,6 +218,7 @@ implements SMILDocument, SMILController, SMILRenderer
     private native void nsetSpeed(int hgrins, double v);
     private native double ngetSpeed(int hgrins);
     private native int ngetCookie(int hgrins);
+    private native int ngetFrameRate(int hgrins);
     static {
          System.loadLibrary("grinsp");
      }

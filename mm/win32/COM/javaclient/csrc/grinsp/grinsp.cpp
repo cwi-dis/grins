@@ -473,8 +473,25 @@ JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetCookie(JNIEnv *env, jobject pl
 		if(FAILED(hr))
 			ThrowCOMException(env, "getCookie", hr);
 		}
-	return jint(cookie);
-	
+	return jint(cookie);	
+	}
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetFrameRate
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetFrameRate(JNIEnv *env, jobject player, jint hgrins)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	long fr = 10;
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->getFrameRate(&fr);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "getFrameRate", hr);
+		}
+	return jint(fr);	
 	}
 
 /////////////////////////////////////////////////////////////////

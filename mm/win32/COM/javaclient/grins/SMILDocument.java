@@ -54,6 +54,14 @@ public interface SMILDocument {
    double getDuration();
     
     /**
+    *  Return the number of frames per second for this document.
+    *  The number returned is the rate of the [first] video component if there is one, 
+    *  or else of the [first] audio component if there's no video.  
+    *  If there's neither one an ad hoc 20 frames per second is returned.
+    */
+    int getFrameRate();
+   
+    /**
     *  After using a SMILDocument you should <em>always</em> call this method 
     *  to dispose resources allocated for this document. 
     */
