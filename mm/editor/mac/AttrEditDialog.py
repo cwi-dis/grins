@@ -31,6 +31,13 @@ import WMEVENTS
 def ITEMrange(fr, to): return range(fr, to+1)
 # Dialog info
 from mw_resources import ID_DIALOG_NODEATTR
+if 0:
+	# Use the old dialog with the list on the left
+	DIALOG_USES_LIST=1
+else:
+	# Use the alternate dialog with the popup group
+	ID_DIALOG_NODEATTR = ID_DIALOG_NODEATTR + 1
+	DIALOG_USES_LIST=0
 
 ITEM_SELECT=1
 ITEM_INFO_DEFAULT_LABEL=2
@@ -94,8 +101,16 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		for a in self._attrfields:
 			label = a._createwidget(self)
 			browser_values.append(label)
-		self._attrbrowser = self._window.ListWidget(ITEM_SELECT, browser_values)
-		self._selectattr(0)
+		if DIALOG_USES_LIST:
+			self._attrbrowser = self._window.ListWidget(ITEM_SELECT, browser_values)
+		else:
+			self._attrbrowser = windowinterface.SelectWidget(self._dialog,
+				ITEM_SELECT, browser_values)
+		if initattr:
+			num = self._attrfields.index(initattr)
+			self._selectattr(num)
+		else:
+			self._selectattr(0)
 
 		self.show()
 ##		w = windowinterface.Window(title, resizable = 1,
@@ -185,6 +200,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		if item != None:
 			self._cur_attrfield = self._attrfields[item] # XXXX?
 			self._cur_attrfield._show()
+			self._attrbrowser.select(item)
 
 	def _is_current(self, attrfield):
 		return (attrfield is self._cur_attrfield)
@@ -271,7 +287,7 @@ class AttrEditorDialogField:
 	def _save(self):
 		t = self.__type
 		if t == 'option':
-			self.__value = self.__parent._option.getselect()
+			self.__value = self.__parent._option.getselectvalue()
 		else:
 			self.__value =  self.__parent._getlabel(ITEM_STRING)
 
