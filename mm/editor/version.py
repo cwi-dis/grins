@@ -1,11 +1,8 @@
 __version__ = "$Id$"
-import sys
+import sys, string
 from patchlevel import patchlevel
 import features
 
-if features.lightweight:
-	shortversion = 'grinslite-%s-1.5'%sys.platform
-	version = 'Lite for %s, v1.5 %s' % (features.compatibility, patchlevel)
-else:
-	shortversion = 'grinspro-%s-2.0'%sys.platform
-	version = 'Pro for %s, v2.0 %s' % (features.compatibility, patchlevel)
+shortversion = 'grins%s-%s-%s-1.5.1'%(features.level, features.compatibility_short, sys.platform)
+version = '%sfor %s, v1.5.1 %s' % (features.level and (string.capitalize(features.level) + ' '), features.compatibility, patchlevel)
+macpreffilename = 'GRiNS-%s%s%s-1.5 Prefs' % (features.level, (features.level and '-'), features.compatibility_short)
