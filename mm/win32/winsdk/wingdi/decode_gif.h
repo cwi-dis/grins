@@ -227,14 +227,14 @@ inline void GifDecoder::parse_image()
 	//else cout << "uses global color table" << endl;
 	//cout << "ImageDescription: " << imageWidth << "x" << imageHeight << endl;
 
-	le::trible *pBits = NULL;
-	BITMAPINFO *pbmpi = GetBmpInfo24(imageWidth, imageHeight);
+	color_repr_t *pBits = NULL;
+	BITMAPINFO *pbmpi = GetBmpInfo(imageWidth, imageHeight, color_repr_t::get_bits_size());
 	HBITMAP hBmp = CreateDIBSection(NULL, pbmpi, DIB_RGB_COLORS, (void**)&pBits, NULL, 0);
 	if(hBmp==NULL || pBits==NULL)
 		{
 		return;
 		}
-	surface<le::trible> *psurf = new surface<le::trible>(imageWidth, imageHeight, 24, pBits);
+	surface<color_repr_t> *psurf = new surface<color_repr_t>(imageWidth, imageHeight, color_repr_t::get_bits_size(), pBits);
 	m_pdibsurf = new DIBSurf(hBmp, psurf);
 	parse_image_pixels(imageWidth, imageHeight, interlaceFlag);
 	uchar_t img_terminator = m_mf.get_byte(); // read ';'
@@ -424,7 +424,7 @@ inline int GifDecoder::next_lzwbyte(bool flag, int input_code_size)
 
 inline bool GifDecoder::parse_image_pixels(int width, int height, int interlace)
 	{
-	surface<le::trible> *psurf = m_pdibsurf->get_pixmap();
+	surface<color_repr_t> *psurf = m_pdibsurf->get_pixmap();
 	UCHAR c = m_mf.get_byte();
 	int color;
 	int xpos=0, ypos=0, pass=0;
@@ -436,7 +436,7 @@ inline bool GifDecoder::parse_image_pixels(int width, int height, int interlace)
 	
 	while( (color = next_lzwbyte(false, c)) >= 0) 
 		{
-		le::trible rgb(m_palette[color]);
+		color_repr_t rgb(m_palette[color]);
 		psurf->set_pixel(xpos, ypos, rgb);
 		++xpos;
 		if(xpos==width) 

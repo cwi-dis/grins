@@ -71,7 +71,7 @@ inline DIBSurf* BmpDecoder::decode()
 		(*m_ef)("CreateDIBSurfaceFromFile", "unsupported compressed BMP format");
 		return NULL;
 		}
-	if(bmi.biBitCount != 24 && bmi.biBitCount != 8 && bmi.biBitCount != 4 && bmi.biBitCount != 1)
+	if(bmi.biBitCount != 24 && bmi.biBitCount != 16 && bmi.biBitCount != 8)
 		{
 		(*m_ef)("CreateDIBSurfaceFromFile", "unsupported bits per pixel BMP");
 		return NULL;
@@ -81,21 +81,27 @@ inline DIBSurf* BmpDecoder::decode()
 	int height = bmi.biHeight;
 	int depth = bmi.biBitCount;
 	if (bmi.biSizeImage == 0) 
-		bmi.biSizeImage = get_pitch<le::trible>(width)*height;
+		bmi.biSizeImage = get_pitch_from_bpp(depth, width)*height;
 
-	le::trible *pBits = NULL;
-	BITMAPINFO *pbmpi = GetBmpInfo24(width, height);
+	color_repr_t *pBits = NULL;
+	BITMAPINFO *pbmpi = GetBmpInfo(width, height, color_repr_t::get_bits_size());
 	HBITMAP hBmp = CreateDIBSection(m_hDC, pbmpi, DIB_RGB_COLORS, (void**)&pBits, NULL, 0);
 	if(hBmp==NULL || pBits==NULL)
 		{
-		//(*m_ef)("CreateDIBSection", GetLastError());
 		(*m_ef)("CreateDIBSection", "");
 		return NULL;
 		}
-	surface<le::trible> *psurf = new surface<le::trible>(width, height, 24, pBits);
+	surface<color_repr_t> *psurf = new surface<color_repr_t>(width, height, color_repr_t::get_bits_size(), pBits);
 
 	m_mf.seekg(sizeof(bfh) + bmi.biSize);
-	if(depth == 8 || depth == 4 || depth == 1)
+	if(depth == 24 && color_repr_t::get_bits_size() == 24)
+		{
+		memcpy(psurf->get_buffer(), m_mf.rdata(), bmi.biSizeImage);
+		}
+	else if(depth == 24 && color_repr_t::get_bits_size() == 16)
+		{
+		}
+	else if(depth == 8)
 		{
 		if(bmi.biClrUsed == 0) bmi.biClrUsed = 1 << depth;
 		le::rgbquad *pquad = new le::rgbquad[bmi.biClrUsed];
@@ -104,8 +110,6 @@ inline DIBSurf* BmpDecoder::decode()
 		psurf->fill(surf8, pquad, bmi.biClrUsed);
 		delete[] pquad;
 		}
-	else if(depth == 24)
-		memcpy(psurf->get_buffer(), m_mf.rdata(), bmi.biSizeImage);
 	return new DIBSurf(hBmp, psurf);
 	}
 

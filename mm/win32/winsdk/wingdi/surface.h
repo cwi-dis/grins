@@ -9,6 +9,18 @@ typedef unsigned long uint32_t;
 
 typedef uint32_t color_t;
 
+// color_encoding classification
+struct color_encoding
+	{
+	size_t size;
+	size_t red_shift;
+	size_t red_mask;
+	size_t green_shift;
+	size_t green_mask;
+	size_t blue_shift;
+	size_t blue_mask;
+	};
+
 // little-endian color representation
 namespace le {
 
@@ -45,12 +57,75 @@ struct trible
 	BYTE blue() { return b;}
 	BYTE green() { return g;}
 	BYTE red() { return r;}
+
+	// traits
+	static color_encoding& get_encoding() 
+		{ 
+		static color_encoding e = {24, 0, 8, 8, 8, 16, 8};
+		return e;
+		}
+	static size_t get_bits_size() { return 24;} 
 	};
 
 inline bool operator==(const trible &lhs, const trible &rhs)
 	{return lhs.r == rhs.r && lhs.g == rhs.g && lhs.b == rhs.g;}
 inline bool operator!=(const trible &lhs, const trible &rhs)
 	{return lhs.r != rhs.r || lhs.g != rhs.g || lhs.b != rhs.b;}
+
+//////////////
+struct trible565
+	{
+	uint16_t v;
+
+	trible565() : v(0) {}
+	trible565(int _r, int _g, int _b) 
+		{
+		color_t rgb = (_b << 16) | (_g << 8) | _r ;
+        v = (uint16_t)((rgb & 0xf80000)>> 8); 
+        v |= (uint16_t)(rgb & 0xfc00) >> 5; 
+        v |= (uint16_t)(rgb & 0xf8) >> 3;  
+		}
+	trible565(uchar_t _r, uchar_t _g, uchar_t _b)
+		{
+		color_t rgb = (_b << 16) | (_g << 8) | _r ;
+        v = (uint16_t)((rgb & 0xf80000)>> 8); // red
+        v |= (uint16_t)(rgb & 0xfc00) >> 5; // green
+        v |= (uint16_t)(rgb & 0xf8) >> 3; // blue 
+		}
+	
+	trible565(color_t rgb) 
+		{
+        v = (uint16_t)((rgb & 0xf80000) >> 8); 
+        v |= (uint16_t)(rgb & 0xfc00) >> 5; 
+        v |= (uint16_t)(rgb & 0xf8) >> 3;  
+		}
+	
+	trible565(const rgbquad& q) 
+		{
+		color_t rgb = (q.b << 16)| (q.g << 8) | q.r ;
+        v = (uint16_t)((rgb & 0xf80000) >> 8); 
+        v |= (uint16_t)(rgb & 0xfc00) >> 5; 
+        v |= (uint16_t)(rgb & 0xf8) >> 3;  
+		}
+	
+	BYTE blue() { return (v & 0xf800) >> 8;}
+	BYTE green() { return (v & 0x7e0) >> 2;}
+	BYTE red() { return (v & 0x1f) << 3;}
+
+	// traits
+	static color_encoding& get_encoding() 
+		{ 
+		static color_encoding e = {16, 0, 5, 5, 6, 11, 5};
+		return e;
+		}
+	static size_t get_bits_size() { return 16;} 
+	};
+
+inline bool operator==(const trible565 &lhs, const trible565 &rhs)
+	{return lhs.v == rhs.v;}
+inline bool operator!=(const trible565 &lhs, const trible565 &rhs)
+	{return lhs.v != rhs.v;}
+
 
 } // namespace le (little-endian color representation)
 
@@ -102,34 +177,32 @@ struct rgbbf
 	BYTE red() { return BYTE(((rgb & red_mask) >> 10)*rgbbf_scale);}
 	};
 
-// surface classification (see imgformat python module)
+
+// surface classification (see imgformat python module for concept)
 struct surf_format
 	{
-	uint32_t compression;
-	bool bottom2top;
-	size_t size;
+	color_encoding encoding;
 	size_t align;
-	size_t rshift;
-	size_t rmask;
-	size_t gshift;
-	size_t gmask;
-	size_t bshift;
-	size_t bmask;
-
-	enum {SF_RGB, SF_RGB_PALETTE, SF_BITFIELDS};
+	bool bottom2top;
 	};
 
-const surf_format rgb32 = {surf_format::SF_RGB, true, 32, 32, 16, 8, 8, 8, 0, 8};
-const surf_format rgb24 = {surf_format::SF_RGB, true, 24, 32, 16, 8, 8, 8, 0, 8};
-const surf_format rgb16 = {surf_format::SF_BITFIELDS, true, 16, 32, 10, 5, 5, 5, 0, 5};
-const surf_format rgb8 =  {surf_format::SF_RGB_PALETTE, true, 8,  32, 16, 8, 8, 8, 0, 8};
-const surf_format rgb4 =  {surf_format::SF_RGB_PALETTE, true, 4,  32, 16, 8, 8, 8, 0, 8};
-const surf_format rgb1 =  {surf_format::SF_RGB_PALETTE, true, 1,  32, 16, 8, 8, 8, 0, 8};
-
+// windows bitmaps default pitch
 template <class T>
 size_t get_pitch(size_t width) { return (width*sizeof(T)+3) & ~3;}
 
-inline size_t get_pitch_from_bpp(size_t bpp) { return (((bpp + 31) / 32) * 4);}
+inline size_t get_pitch_from_bpp(size_t bpp, size_t width) { return (width*(bpp/8)+3) & ~3;}
+
+
+
+// default color representation
+typedef le::trible color_repr_t;
+
+
+// type T properties
+// operator=(const& T)
+// operator=(const& rgbquadT)
+// T(int r, int g, int b) family
+// operator==(const trible &lhs, const trible &rhs)
 
 template<class T>
 class surface
@@ -142,7 +215,6 @@ class surface
 
 	typedef T& reference;
 	typedef const T& const_reference;
-
 
 	surface(size_t width, size_t height, size_t depth, pointer data)
 		: m_width(width), m_height(height), m_depth(depth), m_pitch((width*sizeof(T)+3) & ~3), m_data(data) 
@@ -225,9 +297,9 @@ class surface
 			surface<T>::pointer pto = to.get_row(y);
 			for(size_t x=0;x<m_width;x++)
 				{
-				le::trible& tfrom = pfrom[x];
-				le::trible& tto = pto[x];
-				ptr[x] = le::trible(
+				value_type& tfrom = pfrom[x];
+				value_type& tto = pto[x];
+				ptr[x] = value_type(
 					blend(weight, tfrom.red(), tto.red()),
 					blend(weight, tfrom.green(), tto.green()),
 					blend(weight, tfrom.blue(), tto.blue()));
@@ -237,7 +309,7 @@ class surface
 
 	void copy_transparent(surface<T> *from, uchar_ptr rgb, int from_dx = 0, int from_dy = 0)
 		{
-		le::trible transp(rgb[0], rgb[1], rgb[2]);
+		value_type transp(rgb[0], rgb[1], rgb[2]);
 		for (int y=m_height-1;y>=0;y--)
 			{
 			pointer ptr = get_row(y);
@@ -245,7 +317,7 @@ class surface
 			if(pfrom == 0) break;
 			for(size_t x=0;x<m_width;x++)
 				{
-				le::trible& tfrom = pfrom[from_dx + x];
+				value_type& tfrom = pfrom[from_dx + x];
 				if(tfrom != transp)
 					ptr[x] = tfrom;
 				}
