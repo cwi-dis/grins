@@ -28,42 +28,41 @@ import WMEVENTS
 
 def ITEMrange(fr, to): return range(fr, to+1)
 # Dialog info
-from mw_resources import ID_DIALOG_NODEATTR
-ID_DIALOG_EXTRAS=635
+import mw_resources
 
 # Common items:
 ITEM_OK=1
 ITEM_CANCEL=2
 ITEM_APPLY=3
 ITEM_SELECT=4
+ITEM_LAST_COMMON=4
 
 # Main group on righthandside
-ITEM_TABGROUP=5
-ITEM_HELPGROUP=6
-ITEM_HELP=7
-ITEM_DEFAULTGROUP=8
-ITEM_DEFAULT=9
+##ITEM_TABGROUP=5
+##ITEM_HELPGROUP=6
+##ITEM_HELP=7
+##ITEM_DEFAULTGROUP=8
+##ITEM_DEFAULT=9
+##
+### Per-type items
+##ITEM_1_GROUP=10			# String
+##ITEM_1_STRING=11
+##
+##ITEM_2_GROUP=12			# Filename
+##ITEM_2_STRING=13
+##ITEM_2_BROWSE=14
+##
+##ITEM_3_GROUP=15			# Color
+##ITEM_3_STRING=16
+##ITEM_3_PICK=17
+##
+##ITEM_4_GROUP=18			# Option
+##ITEM_4_MENU=19
 
-# Per-type items
-ITEM_1_GROUP=10			# String
-ITEM_1_STRING=11
-
-ITEM_2_GROUP=12			# Filename
-ITEM_2_STRING=13
-ITEM_2_BROWSE=14
-
-ITEM_3_GROUP=15			# Color
-ITEM_3_STRING=16
-ITEM_3_PICK=17
-
-ITEM_4_GROUP=18			# Option
-ITEM_4_MENU=19
-
-ALL_GROUPS=[ITEM_1_GROUP, ITEM_2_GROUP, ITEM_3_GROUP, ITEM_4_GROUP]
+##ALL_GROUPS=[ITEM_1_GROUP, ITEM_2_GROUP, ITEM_3_GROUP, ITEM_4_GROUP]
 
 # ITEM_BALLOONHELP=15
 
-ITEMLIST_ALL=ITEMrange(ITEM_OK, ITEM_4_MENU)
 
 class AttrEditorDialog(windowinterface.MACDialog):
 	def __init__(self, title, attriblist, toplevel=None, initattr=None):
@@ -78,28 +77,34 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		attriblist -- list of instances of subclasses of
 			AttrEditorDialogField
 		"""
-		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_NODEATTR,
-				ITEMLIST_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
-		self._dialog.AppendDialogItemList(ID_DIALOG_EXTRAS, 0)
+		windowinterface.MACDialog.__init__(self, title, mw_resources.ID_DIALOG_ATTREDIT,
+				default=ITEM_OK, cancel=ITEM_CANCEL)
 ## This doesn't work for (a) tabbing to a field and (b) popup menus
 		self._ok_enabled = 0
 ##		self._setsensitive([ITEM_APPLY, ITEM_OK], 0)
 
 		#
 		# Create the pages with the attributes, and the datastructures linking
-		# attributes and pages together
+		# attributes and pages together.
+		# Each page starts with a grouping item encompassing all the others.
 		#
 		initpagenum = 0
 		self._attr_to_pageindex = {}
 		self._pages = []
+		item0 = ITEM_LAST_COMMON
+		all_groups = []
 		for a in attriblist:
-			pageclass = tabpage_singleattr(a)
+			pageclass = tabpage_multiattr(a)
+			if not pageclass:
+				pageclass = tabpage_singleattr(a)
 			page = pageclass(self, [a])
+			all_groups.append(item0+1)
+			item0 = page.init_controls(item0)
 			if a is initattr:
 				initpagenum = len(self._pages)
 			self._attr_to_pageindex[a] = len(self._pages)
 			self._pages.append(page)
-		self._hideitemcontrols(ALL_GROUPS)
+		self._hideitemcontrols(all_groups)
 		self._cur_page = None
 		#
 		# Create the page browser data and select the initial page
@@ -180,11 +185,10 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self._pagebrowser.select(item)
 		for i in range(1,1000):
 			try:
-				print '%d:%d',i, self._dialog.GetDialogItemAsControl(i).IsControlVisible()
+				print '%d:%d'%(i, self._dialog.GetDialogItemAsControl(i).IsControlVisible()),
 			except:
 				break
 		print
-
 
 	def _is_shown(self, attrfield):
 		"""Return true if this attr is currently being displayed"""
@@ -212,11 +216,21 @@ class TabPage:
 	def __init__(self, dialog, fieldlist):
 		self.fieldlist = fieldlist
 		self.attreditor = dialog
-		self.init_controls()
 
-	def init_controls(self):
-		"""Initialize optional controls, overriden by subclasses that need it"""
-		pass
+	def init_controls(self, item0):
+		"""Initialize controls. Base item number is passed, and we return the
+		base item number for the next tabpage"""
+		self.item0 = item0
+		if __debug__:
+			if self.attreditor._dialog.CountDITL() != self.item0:
+				raise 'CountDITL != item0', (self._dialog.CountDITL(), self.item0)
+		self.attreditor._dialog.AppendDialogItemList(self.ID_DITL, 0)
+		# Sanity check
+		if __debug__:
+			if self.attreditor._dialog.CountDITL() != self.item0+self.N_ITEMS:
+				raise 'CountDITL != N_ITEMS', (self._dialog.CountDITL(), self.item0+self.N_ITEMS)
+			print self, self.item0, self.N_ITEMS
+		return self.item0 + self.N_ITEMS
 		
 	def close(self):
 		del self.fieldlist
@@ -231,13 +245,13 @@ class TabPage:
 		"""Called by the dialog when the page is shown. Show all
 		controls and update their values"""
 		self.update()
-		self.attreditor._showitemcontrols([self.GROUP])
+		self.attreditor._showitemcontrols([self.item0+self.ITEM_GROUP])
 			
 	def hide(self):
 		"""Called by the dialog when the page is hidden. Save values
 		and hide controls"""
 		self.save()
-		self.attreditor._hideitemcontrols([self.GROUP])
+		self.attreditor._hideitemcontrols([self.item0+self.ITEM_GROUP])
 	
 	def save(self):
 		"""Save all values from the dialogpage to the attrfields"""
@@ -255,88 +269,121 @@ class TabPage:
 		return 0	# To be overridden
 		
 class SingleTabPage(TabPage):
+	"""A tab-page with a single item plus its description"""
 
 	def show(self):
 		# For single-attribute pages we do the help and default work
 		attrname, default, help = self.fieldlist[0].gethelpdata()
-		self.attreditor._setlabel(ITEM_TABGROUP, attrname)
-		self.attreditor._setlabel(ITEM_HELP, help)
-		if default:
-			self.attreditor._setlabel(ITEM_DEFAULT, default)
-			self.attreditor._showitemcontrols([ITEM_DEFAULTGROUP])
-		else:
-			self.attreditor._hideitemcontrols([ITEM_DEFAULTGROUP])
+		label = self.fieldlist[0].getlabel()
+		self.attreditor._settitle(self.item0+self.ITEM_GROUP, label)
+		self.attreditor._setlabel(self.item0+self.ITEM_HELP, help)
 		TabPage.show(self)
+		
+class SingleDefaultTabPage(SingleTabPage):
+	"""A tabpage with a single item, a description and a default"""
 
-class StringTabPage(SingleTabPage):
+	def show(self):
+		# For single-attribute pages we do the help and default work
+		attrname, default, help = self.fieldlist[0].gethelpdata()
+		if default:
+			self.attreditor._setlabel(self.item0+self.ITEM_DEFAULT, default)
+		else:
+			self.attreditor._hideitemcontrols([self.item0+self.ITEM_DEFAULTGROUP])
+		SingleTabPage.show(self)
+
+class StringTabPage(SingleDefaultTabPage):
 	attrs_on_page=None
 	type_supported=None
-	GROUP=ITEM_1_GROUP
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_STRING
+	ITEM_GROUP=1
+	ITEM_HELPGROUP=2
+	ITEM_HELP=3
+	ITEM_DEFAULTGROUP=4
+	ITEM_DEFAULT=5
+	ITEM_STRING=6
+	N_ITEMS=6
 
 	def do_itemhit(self, item, event):
-		if item == ITEM_1_STRING:
+		if item == self.item0+self.ITEM_STRING:
 			self.attreditor._enable_ok()
 			return 1
 		return 0
 
 	def save(self):
-		value = self.attreditor._getlabel(ITEM_1_STRING)
+		value = self.attreditor._getlabel(self.item0+self.ITEM_STRING)
 		self.fieldlist[0]._savevaluefrompage(value)
 		
 	def update(self):
 		"""Update controls to self.__value"""
 		value = self.fieldlist[0]._getvalueforpage()
-		self.attreditor._setlabel(ITEM_1_STRING, value)
+		self.attreditor._setlabel(self.item0+self.ITEM_STRING, value)
 
 class FileTabPage(SingleTabPage):
 	attrs_on_page=None
 	type_supported='file'
-	GROUP=ITEM_2_GROUP
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_FILE
+	ITEM_GROUP=1
+	ITEM_HELPGROUP=2
+	ITEM_HELP=3
+	ITEM_STRING=4
+	ITEM_BROWSE=5
+	N_ITEMS=5
 
 	def do_itemhit(self, item, event):
-		if item == ITEM_2_STRING:
+		if item == self.item0+self.ITEM_STRING:
 			self.attreditor._enable_ok()
 			return 1
-		elif item == ITEM_2_BROWSE:
+		elif item == self.item0+self.ITEM_BROWSE:
 			self.fieldlist[0].browser_callback()
 			return 1
 		return 0
 
 	def save(self):
-		value =  self.attreditor._getlabel(ITEM_2_STRING)
+		value =  self.attreditor._getlabel(self.item0+self.ITEM_STRING)
 		self.fieldlist[0]._savevaluefrompage(value)
 
 	def update(self):
 		"""Update controls to self.__value"""
 		value = self.fieldlist[0]._getvalueforpage()
-		self.attreditor._setlabel(ITEM_2_STRING, value)
+		self.attreditor._setlabel(self.item0+self.ITEM_STRING, value)
 
-class ColorTabPage(SingleTabPage):
+class ColorTabPage(SingleDefaultTabPage):
 	attrs_on_page=None
 	type_supported='color'
-	GROUP=ITEM_3_GROUP
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_COLOR
+	ITEM_GROUP=1
+	ITEM_HELPGROUP=2
+	ITEM_HELP=3
+	ITEM_DEFAULTGROUP=4
+	ITEM_DEFAULT=5
+	ITEM_STRING=6
+	ITEM_PICK=7
+	N_ITEMS=7
 
 	def do_itemhit(self, item, event):
-		if item == ITEM_3_STRING:
+		if item == self.item0+self.ITEM_STRING:
 			self.attreditor._enable_ok()
 			return 1
-		elif item == ITEM_3_PICK:
+		elif item == self.item0+self.ITEM_PICK:
 			self._select_color()
 			return 1
 		return 0
 
 	def save(self):
-		value =  self.attreditor._getlabel(ITEM_3_STRING)
+		value =  self.attreditor._getlabel(self.item0+self.ITEM_STRING)
 		self.fieldlist[0]._savevaluefrompage(value)
 
 	def update(self):
 		"""Update controls to self.__value"""
 		value = self.fieldlist[0]._getvalueforpage()
-		self.attreditor._setlabel(ITEM_3_STRING, value)
+		self.attreditor._setlabel(self.item0+self.ITEM_STRING, value)
 
 	def _select_color(self):
 		import ColorPicker
-		value = self.attreditor._getlabel(ITEM_3_STRING)
+		value = self.attreditor._getlabel(self.item0+self.ITEM_STRING)
 		import string
 		rgb = string.split(string.strip(value))
 		if len(rgb) == 3:
@@ -359,25 +406,32 @@ class ColorTabPage(SingleTabPage):
 		if ok:
 			r, g, b = color
 			value = "%d %d %d"%((r>>8), (g>>8), (b>>8))
-			self.attreditor._setlabel(ITEM_3_STRING, value)
-			self.attreditor._selectinputfield(ITEM_3_STRING)
+			self.attreditor._setlabel(self.item0+self.ITEM_STRING, value)
+			self.attreditor._selectinputfield(self.item0+self.ITEM_STRING)
 		
 class OptionTabPage(SingleTabPage):
 	attrs_on_page=None
 	type_supported='option'
-	GROUP=ITEM_4_GROUP
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_OPTION
+	ITEM_GROUP=1
+	ITEM_HELPGROUP=2
+	ITEM_HELP=3
+	ITEM_MENU=4
+	N_ITEMS=4
 
-	def init_controls(self):
-		self._option = windowinterface.SelectWidget(self.attreditor._dialog, ITEM_4_MENU,
+	def init_controls(self, item0):
+		rv = SingleTabPage.init_controls(self, item0)
+		self._option = windowinterface.SelectWidget(self.attreditor._dialog, self.item0+self.ITEM_MENU,
 				[], None)
-		pass
+		return rv
 
 	def close(self):
 		self._option.delete()
 		TabPage.close(self)
 		
 	def do_itemhit(self, item, event):
-		if item == ITEM_4_MENU:
+		if item == self.item0+self.ITEM_MENU:
 			self._option_click()
 			return 1
 		return 0
@@ -394,8 +448,30 @@ class OptionTabPage(SingleTabPage):
 
 	def _option_click(self):
 		pass
+
+class ChannelTabPage(OptionTabPage):
+	attrs_on_page=['channel']
+##	type_supported='channel' # XXXX does not work
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_CHANNEL
+	ITEM_GROUP=1
+	ITEM_HELPGROUP=2
+	ITEM_HELP=3
+	ITEM_MENU=4
+	ITEM_CHATTRS=5
+	N_ITEMS=5
+
+	def do_itemhit(self, item, event):
+		if item == self.item0+self.ITEM_CHATTRS:
+			self.fieldlist[0].channelprops()
+			return 1
+		return OptionTabPage.do_itemhit(self, item, event)
 		
+class CaptionChannelTabPage(ChannelTabPage):
+	attrs_on_page=['captionchannel']
+	
 SINGLE_ATTR_CLASSES = [ FileTabPage, ColorTabPage, OptionTabPage, StringTabPage ]
+MULTI_ATTR_CLASSES = [ ChannelTabPage, CaptionChannelTabPage ]
 
 def tabpage_singleattr(attrfield):
 	for cl in SINGLE_ATTR_CLASSES:
@@ -404,6 +480,15 @@ def tabpage_singleattr(attrfield):
 		if cl.type_supported is None:
 			return cl
 	raise 'Unsupported attrclass' # Cannot happen
+	
+def tabpage_multiattr(attrfield):
+	# XXXX WRonfg
+	name = attrfield.getname()
+	for cl in MULTI_ATTR_CLASSES:
+		if attrfield.getname() in cl.attrs_on_page:
+			return cl
+	print 'no special case for', name
+	return None
 
 class AttrEditorDialogField:
 	
