@@ -13,7 +13,6 @@ DECLARE_PYMODULECLASS(DS);
 DECLARE_PYMODULECLASS(Util);
 
 #define DEF_EXT_PY_METHODS \
-	{"Getig",Mig::create,1},\
 	{"CreateHtmlWnd",py_create_html_wnd,1},\
 	{"GetDS",MDS::create,1},\
 	{"CreateAsyncMonikerFile",PyAsyncMonikerFile::Create,1},\
