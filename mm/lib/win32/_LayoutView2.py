@@ -77,6 +77,18 @@ class _LayoutView2(GenFormView):
 	def getPreviousComponent(self):
 		return self
 
+	# for now avoid to have one handler by dialog ctrl
+	def getDialogComponent(self):
+		return self
+
+	# define a handler for callbacks fnc
+	def setDialogHandler(self, handler):
+		self._dialogHandler = handler
+
+	# define a handler for callbacks fnc
+	def setPreviousHandler(self, handler):
+		self._previousHandler = handler
+		
 	#
 	# interface implementation  of 'external class' --> previous control
 	#
@@ -86,6 +98,7 @@ class _LayoutView2(GenFormView):
 		print 'newViewport: not implemented yet'
 
 	def selectViewport(self):
+#		self._selectViewport()
 		print 'selectViewport: not implemented yet'
 
 	def unselectViewport(self):
@@ -95,35 +108,31 @@ class _LayoutView2(GenFormView):
 		print 'setViewportGeom: not implemented yet'
 
 	# regions management	
-	def addRegion(parentHandle, geom):
+	def addRegion(self, parentHandle, geom):
 		print 'addRegion: not implemented yet'
 
-	def removeRegion(handle):
+	def removeRegion(self, handle):
 		print 'removeRegion: not implemented yet'
 
-	def selectRegion(handle):
-		print 'selectRegion: not implemented yet'
+	def selectRegion(self, handle):
+		self._selectRegion(handle)
 
-	def unselectRegion(handle):
+	def unselectRegion(self,handle):
 		print 'unselectRegion: not implemented yet'
 
-	def setRegionGeom(handle, geom):
+	def setRegionGeom(self, handle, geom):
 		print 'setRegionGeom: not implemented yet'
 
-	def setZIndex(handle, geom):
+	def setZIndex(self, handle, geom):
 		print 'setZIndex: not implemented yet'
 
 	# bg management
-	def setBgColor(handle, bgColor):
+	def setBgColor(self, handle, bgColor):
 		print 'setBgColor: not implemented yet'
 
 	# image management
-	def setImage(handle, image, fit):
+	def setImage(self, handle, image, fit):
 		print 'setImage: not implemented yet'
-
-	# define a handler for callbacks fnc
-	def setHandler(self, handler):
-		self._previousHandler = handler
 
 	#
 	# end implementation of interface 'external class' --> previous control
@@ -154,8 +163,8 @@ class _LayoutView2(GenFormView):
 			self['ViewportSel'].addstring(vpname)
 		if vpList:
 			self['ViewportSel'].setcursel(0)
-			self.selectViewport(vpList[0])
-			self['ViewportSel'].callcb()
+			self._selectViewport(vpList[0])
+#			self['ViewportSel'].callcb()
 
 		# update show names check box 
 		self['ShowNames'].setcheck(self._showRegionNames)
@@ -245,12 +254,12 @@ class _LayoutView2(GenFormView):
 	def onViewportSelChange(self):
 		self['ViewportSel'].callcb()
 		vpname = self['ViewportSel'].getvalue()
-		self.selectViewport(vpname)
+		self._dialogHandler.onViewportSelCtrl(vpname)
 			
 	def onRegionSelChange(self):
 		self['RegionSel'].callcb()
 		rgnname = self['RegionSel'].getvalue()
-		self.selectRegion(rgnname)
+		self._dialogHandler.onRegionSelCtrl(rgnname)
 
 	def onShowRegionNames(self):
 		self._showRegionNames = self['ShowNames'].getcheck()
@@ -309,7 +318,7 @@ class _LayoutView2(GenFormView):
 	#
 	# Helpers for user input responses
 	# 
-	def selectViewport(self, name):
+	def _selectViewport(self, name):
 		self._layout.setViewport(name)
 		rgnList = self._layout.getRegions(name)
 		self['RegionSel'].resetcontent()
@@ -320,10 +329,10 @@ class _LayoutView2(GenFormView):
 			i = i + 1
 		if rgnList:
 			self['RegionSel'].setcursel(0)
-			self.selectRegion(rgnList[0])
-			self['RegionSel'].callcb()
+			self._selectRegion(rgnList[0])
+#			self['RegionSel'].callcb()
 				
-	def selectRegion(self, name):
+	def _selectRegion(self, name):
 		region = self._layout.getRegion(name)
 		if region:
 			self._layout.selectRegion(name)

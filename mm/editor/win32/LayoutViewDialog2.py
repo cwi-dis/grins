@@ -16,14 +16,18 @@ class LayoutViewDialog2:
 
 		# get a handle for each control created from _LayoutView class and associate a callback 
 		# note: if you modify the key names, you also have to modify them in _LayoutView class
-		self.__viewportSelCtrl=w['ViewportSel']
-		self.__viewportSelCtrl.setcb((self.__viewportSelCb, ()))
+#		self.__viewportSelCtrl=w['ViewportSel']
+#		self.__viewportSelCtrl.setcb((self._viewportSelCb, ()))
 
-		self.__regionSelCtrl=w['RegionSel']
-		self.__regionSelCtrl.setcb((self.__regionSelCb, ()))
+#		self.__regionSelCtrl=w['RegionSel']
+#		self.__regionSelCtrl.setcb((self._regionSelCb, ()))
 
-		self.__previousCtrl=w.getPreviousComponent()
-		self.__previousCtrl.setHandler(self)
+		self.previousCtrl=w.getPreviousComponent()
+		self.previousCtrl.setPreviousHandler(self)
+
+		# for now, avoid to define one handler by ctrl	
+		self.dialogCtrl=w.getDialogComponent()
+		self.dialogCtrl.setDialogHandler(self)
 		
 		w.setContext(self.context)
 
@@ -67,12 +71,6 @@ class LayoutViewDialog2:
 				self.__window.create(f)
 				f.set_toggle(LAYOUTVIEW,1)
 
-	def __viewportSelCb(self):
-		print 'viewport select callback not implemented yet'
-		
-	def __regionSelCb(self):
-		print 'viewport select callback not implemented yet'
-		
 	def setwaiting(self):
 		windowinterface.setwaiting()
 

@@ -50,16 +50,26 @@ class LayoutView2(LayoutViewDialog2):
 		self.destroy()
 
 	#
+	# interface implementation of 'viewport select control callback' 
+	#
+
+	def onViewportSelCtrl(self, name):
+		print 'onViewportSelCtrl callback : not implemented'
+
+	def onRegionSelCtrl(self, name):
+		self.previousCtrl.selectRegion(name)		
+
+	#
 	# interface implementation of 'previous control callback' 
 	#
 
-	def onRegionSelected(self):
+	def onRegionSelected(self, handle):
 		print 'onRegionSelected callback : not implemented'
-
-	def onRegionMoved(self):
+		
+	def onRegionMoved(self, handle):
 		print 'onRegionMoved callback : not implemented'
 
-	def onRegionResized(self):
+	def onRegionResized(self, handle):
 		print 'onRegionResized callback : not implemented'
 				
 	#
