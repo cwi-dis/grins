@@ -78,17 +78,20 @@ class wnds_mpeg_input_stream : public mpeg_input_stream
 	virtual size_t read(unsigned char *buffer, size_t bytes)
 		{
 		unsigned long nread = 0;
-		if(!ReadFile(m_hf, buffer, bytes, &nread, NULL)) 
-			return 0;
-		m_current_byte += nread;
-		return nread;
+		if(ReadFile(m_hf, buffer, bytes, &nread, NULL) != 0)
+			{
+			//printf("read %ld bytes\n", nread);
+			m_current_byte += nread;
+			return nread;
+			}
+		return 0;
 		}
 
 	virtual unsigned int read_char()
 		{
 		unsigned char buffer[4];
 		unsigned long nread = 0;
-		if(!ReadFile(m_hf, buffer, 1, &nread, NULL) || nread == 0)
+		if(ReadFile(m_hf, buffer, 1, &nread, NULL) == 0 || nread == 0)
 			return EOF;
 		m_current_byte++;
 		return buffer[0];
@@ -98,7 +101,7 @@ class wnds_mpeg_input_stream : public mpeg_input_stream
 		{
 		unsigned char buffer[4];
 		unsigned long nread = 0;
-		if(!ReadFile(m_hf, buffer, 1, &nread, NULL) || nread < 4)
+		if(ReadFile(m_hf, buffer, 1, &nread, NULL) == 0 || nread < 4)
 			return EOF;
 		unsigned int result = ((int)buffer[0] << 24) |
 						((int)buffer[1] << 16) |
