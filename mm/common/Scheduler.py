@@ -475,7 +475,7 @@ class SchedulerContext:
 						else:
 							x = p1[1]
 						pd = None
-						while pd is None and x.type == 'prio':
+						while (pd is None or pd == 'inherited') and x.type == 'prio':
 							pd = x.attrdict.get('pauseDisplay')
 							x = x.parent
 						if pd is None:

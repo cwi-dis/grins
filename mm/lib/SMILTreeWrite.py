@@ -834,6 +834,13 @@ def getrestart(writer, node):
 			return restart
 	return None
 
+def getpausedisplay(writer, node):
+	if writer.smilboston:
+		pd = getcmifattr(writer, node, 'pauseDisplay')
+		if pd != 'inherited':
+			return pd
+	return None
+
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
@@ -926,7 +933,7 @@ prio_attrs = [
 	('lower', lambda writer, node: getcmifattr(writer, node, 'lower')),
 	('peers', lambda writer, node: getcmifattr(writer, node, 'peers')),
 	('higher', lambda writer, node: getcmifattr(writer, node, 'higher')),
-	('pauseDisplay', lambda writer, node: getcmifattr(writer, node, 'pauseDisplay')),
+	('pauseDisplay', getpausedisplay),
 	]
 
 # attributes that we know about and so don't write into the SMIL file using
