@@ -100,6 +100,10 @@ class GenView:
 	def hide(self):
 		self.close()
 
+	def close(self):
+		if hasattr(self,'_obj_') and self._obj_:
+			self.GetParent().DestroyWindow()
+
 	# Bring window in front of peers
 	def pop(self):
 		if not hasattr(self,'GetParent'):return
