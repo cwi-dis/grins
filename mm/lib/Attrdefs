@@ -164,8 +164,8 @@
 (visible (int) 1 'Channel visibility' default
 	'Determines visibility of channel (1=visible)' raw)
 
-(wait_for_close (bool) 0 'Wait for close' default
-	'Wait for "close window" action to proceed' channel)
+##(wait_for_close (bool) 0 'Wait for close' default
+##	'Wait for "close window" action to proceed' channel)
 
 (winpos (tuple (int) (int)) (-1 -1) 'Window position' default
 	'Initial window position (x, y) (x axis pointing down!)' raw)
