@@ -1,0 +1,47 @@
+<imfl>
+    <head title="RealPix(tm) Fade-in Examples"
+		author="Jay Slagle"
+		copyright="(c)1998 RealNetworks, Inc."
+		timeformat="dd:hh:mm:ss.xyz"
+		duration="33"
+		bitrate="12000"
+		width="256"
+		height="256"
+		url="http://www.real.com"
+		aspect="true"/>
+
+	<!-- Assign handle numbers to images -->
+	
+	<image handle="1" name="jbeans.jpg"/>
+	<image handle="2" name="peppers.jpg"/>
+
+	<!-- Fade in large images -->
+
+	<fill start="0" color="black"/>
+	<fadein start="1" duration="3" target="1"/>
+	<fadein start="4" duration="3" target="2"/>
+
+	<!-- Fade in checkerboard images -->
+	
+	<fill start="7.5" color="black"/>
+	<fadein start="8" duration="3" target="1"
+		dstx="0" dsty="0" dstw="128" dsth="128"/>
+	<fadein start="11" duration="3" target="2"
+		dstx="128" dsty="0" dstw="128" dsth="128"/>
+	<fadein start="14" duration="3" target="1"
+		dstx="128" dsty="128" dstw="128" dsth="128"/>
+	<fadein start="17" duration="3" target="2"
+		dstx="0" dsty="128" dstw="128" dsth="128"/>
+
+	<!-- Fade in overlays -->
+	
+	<fadein start="20" duration="3" target="1"
+		dstx="32" dsty="32" dstw="192" dsth="192"/>
+	<fadein start="23" duration="3" target="2"
+		dstx="48" dsty="48" dstw="160" dsth="160"/>
+	<fadein start="26" duration="3" target="1"
+		dstx="64" dsty="64" dstw="128" dsth="128"/>
+	<fadein start="29" duration="3" target="2"
+		dstx="80" dsty="80" dstw="96" dsth="96"/>
+
+</imfl>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content=" pictures "/>
+    <meta name="generator" content="GRiNS editor 0.5 Unix/motif patchlevel 1"/>
+    <layout>
+      <root-layout id="pictures-" title=" pictures " width="493" height="431"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="Bot-R" title="Bot-R" left="193" top="135" width="300" height="300" z-index="3" GRiNS:type="text"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="Mid" title="Mid" left="148" top="36" width="134" height="300" z-index="2" GRiNS:type="text"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="Top-L" title="Top-L" width="300" height="300" GRiNS:type="text"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="audio" title="audio" GRiNS:type="sound"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="spring" title="spring" left="14" top="354" width="154" height="62" GRiNS:type="text"/>
+    </layout>
+  </head>
+  <body>
+    <seq id="Extended-Slideshow">
+      <par id="Audio-and-Images">
+        <a href="#picture_2-0">
+          <text id="picture_2" region="spring" src="data:,SPRING%21" type="text/plain"/>
+        </a>
+        <seq id="Image-Sequence" repeat="3">
+          <text id="picture_1" region="Top-L" src="data:,Een" type="text/plain" dur="5s"/>
+          <text id="picture_2-0" region="Mid" src="data:,Twee" type="text/plain" dur="5s"/>
+          <text id="picture_3" region="Bot-R" src="data:,Drie" type="text/plain" dur="5s"/>
+        </seq>
+      </par>
+    </seq>
+  </body>
+</smil>
