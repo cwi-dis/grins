@@ -46,6 +46,9 @@ class MainDialog:
 		windowinterface.installaehandler('aevt', 'quit', self._ae_quit)
 		windowinterface.installaehandler('aevt', 'odoc', self._ae_opendoc)
 
+	def set_recent_list(self, list):
+		self.__window.set_dynamiclist(usercmd.OPEN_RECENT, list)
+		
 	def open_callback(self):
 		import windowinterface
 		windowinterface.InputURLDialog('Open location', self.last_location,

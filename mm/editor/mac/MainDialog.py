@@ -50,7 +50,10 @@ class MainDialog:
 
 	def setbutton(self, button, value):
 		pass			# for now...
-
+		
+	def set_recent_list(self, list):
+		self.__window.set_dynamiclist(usercmd.OPEN_RECENT, list)
+		
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
 	# this class).

@@ -21,6 +21,7 @@ MENUBAR=(
 	(CASCADE, 'File', (
 		(ENTRY, 'New', 'N', NEW_DOCUMENT),
 		(ENTRY, 'Open...', 'O', OPEN),
+		(DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
 		(ENTRY, 'Close window', 'W', CLOSE_WINDOW),
 		(ENTRY, 'Close document', None, CLOSE),
 		(SEP,),
