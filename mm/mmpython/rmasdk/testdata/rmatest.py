@@ -1,4 +1,6 @@
-
+import sys, os, urllib
+# Add our parent directory to the search path (rma may live there)
+sys.path.append(os.pardir)
 
 # An example of a RM listener class.
 # An instance can be set to receive RM status notifications
@@ -30,25 +32,33 @@ class PrintRMListener:
 	def OnContacting(self,hostname):
 		print hostname
 
-
 # real audio
-url1="file://D|/ufs/mm/cmif/mmpython/rmasdk/testdata/thanks3.ra"
+cwd = os.getcwd()
+url1="file://" + urllib.pathname2url(os.path.join(cwd, "thanks3.ra"))
 
 # real video
-url2="file://D|/ufs/mm/cmif/mmpython/rmasdk/testdata/test.rv"
+url2="file://" + urllib.pathname2url(os.path.join(cwd,"test.rv"))
 
 # real text
-url3="file://D|/ufs/mm/cmif/mmpython/rmasdk/testdata/news.rt"
+url3="file://" + urllib.pathname2url(os.path.join(cwd,"news.rt"))
 
 # real pixel
-url4="file://D|/ufs/mm/cmif/mmpython/rmasdk/testdata/fadein.rp"
+url4="file://" + urllib.pathname2url(os.path.join(cwd,"fadein.rp"))
+
+url = url2
 
 import rma
 player=rma.CreatePlayer()
-player.SetStatusListener(PrintRMListener())
-player.OpenURL(url2)
-player.Begin()
+x1 = player.SetStatusListener(PrintRMListener())
+print 'SetStatusListener returned', x1
+x2 = player.OpenURL(url)
+print 'OpenURL(%s) returned'%url, hex(x2)
+x3 = player.Begin()
+print 'Begin returned', hex(x3)
 
+if os.name == 'mac':
+	print 'press return to exit-'
+	sys.stdin.readline()
 # for console apps, enter message loop
 #import sys
 #if sys.platform=='win32':
