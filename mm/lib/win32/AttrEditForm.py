@@ -34,6 +34,9 @@ import afxres,commctrl
 # GRiNS resource ids
 import grinsRC
 
+# App constants
+import appcon
+
 error = 'lib.win32.AttrEditForm.error'
 
 # Base dialog bar
@@ -656,19 +659,41 @@ class AttrCtrl:
 			return '%d' % t[0],'%d' % t[1],'%d' % t[2],'%d' % t[3]
 		return self.emptytuple(n)
 
-	def fttoat(self,t,n):
+	def rs(self,f):
+		cf=int(100.0*f+0.5)
+		cfr=cf%100
+		if cfr==0:
+			s='%.0f' % f
+		else:
+			s='%.2f' % f
+		return s
+			
+	def fttoat(self,t,n):	
 		if not t:
 			return self.emptytuple(n)
 		if len(t)==1 and n==1:
-			return '%f' % t[0]
+			return self.rs(t[0])
 		elif len(t)==2 and n==2:
-			return '%f' % t[0],'%s' % t[1]
+			return self.rs(t[0]),self.rs(t[1])
 		elif len(t)==3 and n==3:
-			return '%f' % t[0],'%f' % t[1],'%f' % t[2]
+			return self.rs(t[0]),self.rs(t[1]),self.rs(t[2])
 		elif len(t)==4 and n==4:
-			return '%f' % t[0],'%f' % t[1],'%f' % t[2],'%f' % t[3]
+			return self.rs(t[0]),self.rs(t[1]),self.rs(t[2]),self.rs(t[3])
 		return self.emptytuple(n)
 
+	def fttoa(self,t,n):
+		if not t:
+			return ''
+		if len(t)==1 and n==1:
+			return self.rs(t[0])
+		elif len(t)==2 and n==2:
+			return self.rs(t[0])+ ' ' + self.rs(t[1])
+		elif len(t)==3 and n==3:
+			return self.rs(t[0])+ ' ' +self.rs(t[1])+ ' ' +self.rs(t[2])
+		elif len(t)==4 and n==4:
+			return self.rs(t[0])+ ' ' +self.rs(t[1])+ ' ' +self.rs(t[2])+ ' ' +self.rs(t[3])
+		return ''
+		
 ##################################
 class OptionsCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -1090,15 +1115,59 @@ class SingleAttrPage(AttrPage):
 		'color':grinsRC.IDD_EDITATTR_C1,
 		'string':grinsRC.IDD_EDITATTR_S1}
 
+
 ##################################
+# LayoutPage
+import cmifwnd, _CmifView
+import appcon, sysmetrics
+import string
+import DrawTk
 
-import sysmetrics
+class LayoutPage(AttrPage,cmifwnd._CmifWnd):
+	def __init__(self,form):
+		AttrPage.__init__(self,form)
+		cmifwnd._CmifWnd.__init__(self)
+		self.createLayoutContext(self._form._winsize)
+		self._units=self._form._units
 
-# Layout context class (helper)
-class ScreenLayoutContext:
-	def __init__(self,winsize=None):
-		self._units=appcon.UNIT_PXL
+	def OnInitDialog(self):
+		AttrPage.OnInitDialog(self)
+		self._layoutctrl=self.createLayoutCtrl()
+		self.create_box(self.getcurrentbox())
 
+	def createLayoutCtrl(self):
+		v=_CmifView._CmifPlayerView(docview.Document(docview.DocTemplate()))
+		v.createWindow(self)
+		x,y,w,h=self.getboundingbox()
+		rc=(20,20,w,h)
+		v.SetWindowPos(self.GetSafeHwnd(),rc,
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
+		v.init(rc)
+		v.OnInitialUpdate()
+		v.ShowWindow(win32con.SW_SHOW)
+		v.UpdateWindow()	
+		self.init_tk(v)
+		return v
+	
+	def init_tk(self,v):
+		v.drawTk.SetLayoutMode(0)
+
+		if self._units==appcon.UNIT_SCREEN:
+			return
+
+		v.drawTk.SetScale(self._xscale,self._yscale)
+
+		(x,y,w,h),units=self._form.GetBBox()
+		rc=(x,y,x+w,y+h)
+		rc=self.tolayout(rc)
+		v.drawTk.SetBRect(rc)
+
+		(x,y,w,h),units=self._form.GetCBox()
+		rc=(x,y,x+w,y+h)
+		rc=self.tolayout(rc)
+		v.drawTk.SetCRect(rc)
+	
+	def createLayoutContext(self,winsize=None,units=appcon.UNIT_PXL):
 		if winsize:
 			sw,sh=winsize
 		else:
@@ -1116,111 +1185,40 @@ class ScreenLayoutContext:
 				
 		self._xmax=int(self._xscale*sw+0.5)+2
 		self._ymax=int(self._yscale*sh+0.5)+2
-
+		
 	def getboundingbox(self):
 		return (0,0,self._xmax,self._ymax)
 
-	def getunits(self):
-		return self._units
-
-	def getxscale(self):
-		return self._xscale
-	def getyscale(self):
-		return self._yscale
-
 	def fromlayout(self,box):
 		if not box: return box
-		x=self._xscale
-		y=self._yscale
-		return int(box[0]/x+0.5),int(box[1]/y+0.5),int(box[2]/x+0.5),int(box[3]/y+0.5)
+		if self._units==appcon.UNIT_SCREEN:
+			return box
+		else:
+			x=self._xscale
+			y=self._yscale
+			return int(box[0]/x+0.5),int(box[1]/y+0.5),int(box[2]/x+0.5),int(box[3]/y+0.5)
 
 	def tolayout(self,box):
 		if not box: return box
-		x=self._xscale
-		y=self._yscale
-		return (int(0.5+box[0]*x),int(0.5+box[1]*y),int(0.5+box[2]*x),int(0.5+box[3]*y))
+		if self._units==appcon.UNIT_SCREEN:
+			return box
+		else:
+			x=self._xscale
+			y=self._yscale
+			return (int(0.5+box[0]*x),int(0.5+box[1]*y),int(0.5+box[2]*x),int(0.5+box[3]*y))
 
-##################################
-# LayoutPage
-import cmifwnd, _CmifView
-import appcon, sysmetrics
-import string
-import DrawTk
-
-# for now: 
-#	works only with pixels
-#   works with reference the full screen instead of the parent layout
-
-class LayoutPage(AttrPage,cmifwnd._CmifWnd):
-	def __init__(self,form):
-		AttrPage.__init__(self,form)
-		cmifwnd._CmifWnd.__init__(self)
-		self._layoutcontext=ScreenLayoutContext(self._form._winsize)
-
-		DrawTk.drawTk.SetLayoutMode(0)
-		lc=self._layoutcontext
-		DrawTk.drawTk.SetScale(lc.getxscale(),lc.getyscale())
-		#w,h=self._form._winsize
-		# rc=(0,0,w,h)
-
-		x,y,w,h=self._form.GetBBox()
-		rc=(x,y,x+w,y+h)
-		rc=self._layoutcontext.tolayout(rc)
-		DrawTk.drawTk.SetBRect(rc)
-
-		x,y,w,h=self._form.GetCBox()
-		rc=(x,y,x+w,y+h)
-		rc=self._layoutcontext.tolayout(rc)
-		DrawTk.drawTk.SetCRect(rc)
-
-	def OnInitDialog(self):
-		AttrPage.OnInitDialog(self)
-		self._layoutctrl=self.createLayoutCtrl()
-		self.create_box(self.getcurrentbox())
-
-	def createLayoutCtrl(self):
-		v=_CmifView._CmifPlayerView(docview.Document(docview.DocTemplate()))
-		v.createWindow(self)
-		x,y,w,h=self._layoutcontext.getboundingbox()
-		rc=(20,20,w,h)
-		v.init(rc)
-		v.SetWindowPos(self.GetSafeHwnd(),rc,
-			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
-		v.OnInitialUpdate()
-		v.ShowWindow(win32con.SW_SHOW)
-		v.UpdateWindow()	
-		return v
-		
 	def create_box(self,box):
 		# call create box against layout control but be modeless and cool!
 		self._layoutctrl.assert_not_in_create_box()
 		if box and (box[2]==0 or box[3]==0):box=None	
 		modeless=1;cool=1
-		self._layoutctrl.create_box('',self.update,box,self._layoutcontext.getunits(),modeless,cool)
-		
-	def fromlayout(self,box):
-		return self._layoutcontext.fromlayout(box)
-
-	def tolayout(self,box):
-		return self._layoutcontext.tolayout(box)
-	
+		self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
+			
 	def setvalue(self, attr, val):
 		if not self._initdialog: return
 		self._cd[attr].setvalue(val)
 		if self.islayoutattr(attr):
 			self.setvalue2layout(val)
-
-	# not validating
-	def atoi_tuple(self,str):
-		if not str: return ()
-		l=string.split(str, ' ')
-		n=[]
-		for e in l:
-			if e: n.append(string.atoi(e))
-		return (n[0],n[1],n[2],n[3])
-
-	def OnDestroy(self,params):
-		DrawTk.drawTk.RestoreState()
 
 
 	######################
@@ -1232,7 +1230,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		if not val:
 			box=None
 		else:
-			box=self.atoi_tuple(val)
+			box=lc.atoft(val)
 			box=self.tolayout(box)		
 		return box
 	
@@ -1240,7 +1238,8 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		if not val:
 			box=()
 		else:
-			box=self.atoi_tuple(val)
+			lc=self.getctrl('base_winoff')
+			box=lc.atoft(val)
 			box=self.tolayout(box)
 		self.create_box(box)
 	
@@ -1256,7 +1255,8 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		if self._initdialog and box:
 			box=self.fromlayout(box)
 			lc=self.getctrl('base_winoff')
-			lc.setvalue('%d %d %d %d' % box)
+			a=lc.fttoa(box,4)
+			lc.setvalue(a)
 
 
 class PosSizeLayoutPage(LayoutPage):
@@ -1273,7 +1273,7 @@ class PosSizeLayoutPage(LayoutPage):
 		swh=self._wh.getcurrent()
 		if not swh:swh='0 0'
 		val = sxy + ' ' + swh
-		box=self.atoi_tuple(val)
+		box=self._xy.atoft(val)
 		box=self.tolayout(box)
 		return box
 
@@ -1283,7 +1283,7 @@ class PosSizeLayoutPage(LayoutPage):
 		swh=self._wh.getvalue()
 		if not swh:swh='0 0'
 		val= sxy + ' ' + swh
-		box=self.atoi_tuple(val)
+		box=self._xy.atoft(val)
 		box=self.tolayout(box)
 		self.create_box(box)
 
@@ -1422,7 +1422,7 @@ class LayoutGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd={}
 		a=self.getattr('base_winoff')
-		cd[a]=IntTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_16))
+		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_16))
 		return cd
 
 	def getpageclass(self):
@@ -1442,7 +1442,7 @@ class LayoutGroupWithUnits(LayoutGroup):
 	def createctrls(self,wnd):
 		cd={}
 		a=self.getattr('base_winoff')
-		cd[a]=IntTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_16))
+		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_16))
 		a=self.getattr('units')
 		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))
 		return cd
@@ -1458,9 +1458,9 @@ class SubregionGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd={}
 		a=self.getattr('subregionxy')
-		cd[a]=IntTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_16))
+		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_16))
 		a=self.getattr('subregionwh')
-		cd[a]=IntTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_17))
+		cd[a]=FloatTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_17))
 		a=self.getattr('displayfull')
 		cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24,grinsRC.IDC_25))		
 		a=self.getattr('subregionanchor')
@@ -1654,23 +1654,29 @@ class AttrEditFormNew(GenFormView):
 		return grattrl
 
 	def buildcontext(self):
-		a=self._attriblist[0]
-		channels = a.wrapper.toplevel.root.context.channels
-
-		# channels sizes 
 		self._channels={}
 		self._channels_rc={}
+
+		self._winsize=None
+		self._layoutch=None
+		self._units=0
+
+		a=self._attriblist[0]
+		channels = a.wrapper.toplevel.root.context.channels
 		for ch in channels:
 			self._channels[ch.name]=ch
 			units=ch.attrdict.get('units',0)
-			if ch.attrdict.has_key('winsize'):
+			t=ch.attrdict['type']
+			if t=='layout' and ch.attrdict.has_key('winsize'):
 				w,h=ch.attrdict['winsize']
 				self._winsize=(w,h)
 				self._channels_rc[ch.name]=((0,0,w,h),units)
 				self._layoutch=ch
 			elif ch.attrdict.has_key('base_winoff'):
 				self._channels_rc[ch.name]=(ch.attrdict['base_winoff'],units)
-
+			else:
+				self._channels_rc[ch.name]=((0,0,0,0),appcon.UNIT_SCREEN)
+			
 		if hasattr(a.wrapper,'node'):
 			self._node=a.wrapper.node
 			chname=self.getchannel(self._node)
@@ -1680,6 +1686,8 @@ class AttrEditFormNew(GenFormView):
 
 		if hasattr(a.wrapper,'channel'):
 			self._channel=a.wrapper.channel
+
+		self._units=self._channel.attrdict.get('units',0)
 	
 	def getchannel(self,node):
 		if node.attrdict.has_key('channel'):
@@ -1691,21 +1699,15 @@ class AttrEditFormNew(GenFormView):
 		return self._layoutch.name
 
 	def GetBBox(self):
-		if not self._channel:
-			w,h=self._winsize
-			return (0,0,w,h)
+		if self._node:
+			return self._channels_rc[self._channel.name]
 		else:
-			if self._node:
-				return self._channels_rc[self._channel.name][0]
-			else:
-				return self._channels_rc[self._channel.attrdict['base_window']][0]
+			bw=self._channel.attrdict['base_window']
+			return self._channels_rc[bw]
 
 	def GetCBox(self):
-		if not self._channel:
-			w,h=self._winsize
-			return (0,0,w,h)
-		else:
-			return self._channels_rc[self._channel.attrdict['base_window']][0]
+		bw=self._channel.attrdict['base_window']
+		return self._channels_rc[bw]
 					
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
