@@ -26,13 +26,20 @@ class VideoChannel(ChannelWindow):
 		self.idleprocactive = 0
 		self._paused = 0
 		Qt.EnterMovies()
+		self.DBGcolor = (0xffff, 0, 0)
 		
-	def __del__(self):
-		pass ## Don't do this: Qt.ExitMovies()
+	def do_hide(self):
+		if self.play_movie:
+			self.play_movie.StopMovie()
+			self.play_movie = None
+			if self.window:
+				self.window.setredrawfunc(None)
+			self.fixidleproc()
+		ChannelWindow.do_hide(self)
 
 	def redraw(self):
 		if self.play_movie:
-			self.play_movie.MoviesTask(0)
+			self.play_movie.UpdateMovie()
 
 	def do_arm(self, node, same=0):
 		if node.type != 'ext':
@@ -58,24 +65,38 @@ class VideoChannel(ChannelWindow):
 			return 1
 		try:
 			self.arm_movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0,
-					QuickTime.newMovieActive)
+					0)
+##					QuickTime.newMovieActive)
 		except (ValueError, Qt.Error), arg:
 			Qt.CloseMovieFile(movieResRef)
 			if type(arg) == type(()):
 				arg = arg[-1]
 			self.errormsg(node, 'QuickTime cannot parse %s: %s'%(fn, arg))
 			return 1
-		Qt.CloseMovieFile(movieResRef)
-		rate = self.arm_movie.GetMoviePreferredRate()
-		self.arm_movie.PrerollMovie(0, rate)
+		self.place_movie(self.arm_movie)
+		self.make_ready(self.arm_movie)
 		return 1
+		
+	def make_ready(self, movie):
+		movie.GoToBeginningOfMovie()
+		rate = movie.GetMoviePreferredRate()
+		movie.PrerollMovie(0, rate)
+##		movie.MoviesTask(0)  
+	
+	def place_movie(self, movie):
+		# XXXX This always scales or positions, but it should look at the scale
+		# attribute
+		self.window._macsetwin()
+		screenBox = self.window.qdrect()
+		movieBox = movie.GetMovieBox()
+		nMovieBox = self._scalerect(screenBox, movieBox)
+		if nMovieBox != screenBox:
+			movie.SetMovieBox(nMovieBox)
 		
 	def _playsome(self, *dummy):
 		if debug: print 'VideoChannel: playsome'
 		if not self.play_movie:
 			return
-		
-		self.play_movie.MoviesTask(0)
 		
 		if self.play_movie.IsMovieDone():
 			self.play_movie.StopMovie()
@@ -97,16 +118,8 @@ class VideoChannel(ChannelWindow):
 		self.play_movie = self.arm_movie
 		self.arm_movie = None
 
-		# XXXX Some of these should go to arm...
-		self.window._macsetwin()
-		screenBox = self.window.qdrect()
-		movieBox = self.play_movie.GetMovieBox()
-##		print 'SCREEN', screenBox, 'MOVIE', movieBox
-		movieBox = self._scalerect(screenBox, movieBox)
-##		print 'SET', movieBox
-		self.play_movie.SetMovieBox(movieBox)
-		self.play_movie.GoToBeginningOfMovie()
-##		self.play_movie.MoviesTask(0) # This appears to be a bad idea...
+		self.play_movie.SetMovieActive(1)
+		self.play_movie.MoviesTask(0)
 		self.play_movie.StartMovie()
 		self.window.setredrawfunc(self.redraw)
 		
@@ -152,8 +165,11 @@ class VideoChannel(ChannelWindow):
 		self.armdone()
 
 	def resize(self, arg, window, event, value):
-		print 'VideoChannel: Resized, this will go wrong....'
 		ChannelWindow.resize(self, arg, window, event, value)
+		if self.arm_movie:
+			self.place_movie(self.arm_movie)
+		if self.play_movie:
+			self.place_movie(self.play_movie)
 
 	def do_hide(self):
 		if self.window:
@@ -175,6 +191,8 @@ class VideoChannel(ChannelWindow):
 			self.window.setredrawfunc(None)
 
 	def fixidleproc(self):
+		if self.window:
+			self.window._set_movie_active(not not self.play_movie)
 		wantone = not not ((not self._paused) and self.play_movie)
 		if wantone == self.idleprocactive:
 			return
@@ -186,4 +204,9 @@ class VideoChannel(ChannelWindow):
 		
 	def setpaused(self, paused):
 		self._paused = paused
+		if self.play_movie:
+			if self._paused:
+				self.play_movie.StopMovie()
+			else:
+				self.play_movie.StartMovie()
 		self.fixidleproc()
