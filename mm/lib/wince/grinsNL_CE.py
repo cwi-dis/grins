@@ -61,7 +61,7 @@ class Main(MainDialog):
 		import settings
 		MainDialog.__init__(self, 'GRiNS')
 		if settings.get('skin'):
-			self.openURL_callback(EMPTYDOC)
+			self.openURL_callback(EMPTYDOC, askskin = 0)
 
 	def __skin_done(self, filename):
 		if filename:
