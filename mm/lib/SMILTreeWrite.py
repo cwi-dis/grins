@@ -2163,7 +2163,10 @@ class SMILWriter(SMIL):
 							coords = coords+'%d' % c
 						# relative coordinates
 						else:
-							coords = coords+'%d%%' % int(c*100 + .5)
+							if int(c*10000) != int(c*100)*100:
+								coords = coords+fmtfloat(c*100, '%', 0, 2)
+							else:
+								coords = coords+'%d%%'%int(c*100)
 						n = n + 1
 						if n < l:
 							coords = coords+','
