@@ -30,6 +30,9 @@ def showattreditor(node):
 	except NameError:
 		attreditor = AttrEditor().init(NodeWrapper().init(node))
 		node.attreditor = attreditor
+	except AttributeError: # new style exceptions
+		attreditor = AttrEditor().init(NodeWrapper().init(node))
+		node.attreditor = attreditor
 	attreditor.open()
 
 
@@ -38,6 +41,8 @@ def hideattreditor(node):
 		attreditor = node.attreditor
 	except NameError:
 		return # No attribute editor active
+	except AttributeError:
+		return # No attribute editor active (new style exceptions)
 	attreditor.hide()
 
 
@@ -50,6 +55,8 @@ def hasattreditor(node):
 		attreditor = node.attreditor
 	except NameError:
 		return 0 # No attribute editor active
+	except AttributeError:
+		return 0 # No attribute editor active (new style exceptions)
 	return attreditor.is_showing()
 
 
@@ -62,6 +69,8 @@ def showchannelattreditor(context, name):
 		dict = context.channelattreditors
 	except NameError:
 		dict = context.channelattreditors = {}
+	except AttributeError: # new style exceptions
+		dict = context.channelattreditors = {}
 	if not dict.has_key(name):
 		dict[name] = \
 			AttrEditor().init(ChannelWrapper().init(context, name))
@@ -72,6 +81,8 @@ def hidechannelattreditor(context, name):
 		dict = context.channelattreditors
 	except NameError:
 		return
+	except AttributeError: # new style exceptions
+		return
 	if not dict.has_key(name):
 		return
 	dict[name].hide()
@@ -80,6 +91,8 @@ def haschannelattreditor(context, name):
 	try:
 		dict = context.channelattreditors
 	except NameError:
+		return 0
+	except AttributeError: # new style exceptions
 		return 0
 	if not dict.has_key(name):
 		return 0
@@ -95,6 +108,8 @@ def showstyleattreditor(context, name):
 		dict = context.styleattreditors
 	except NameError:
 		dict = context.styleattreditors = {}
+	except AttributeError: # new style exceptions
+		dict = context.styleattreditors = {}
 	if not dict.has_key(name):
 		dict[name] = \
 			AttrEditor().init(StyleWrapper().init(context, name))
@@ -105,6 +120,8 @@ def hidestyleattreditor(context, name):
 		dict = context.styleattreditors
 	except NameError:
 		return
+	except AttributeError: # new style exceptions
+		return
 	if not dict.has_key(name):
 		return
 	dict[name].hide()
@@ -113,6 +130,8 @@ def hasstyleattreditor(context, name):
 	try:
 		dict = context.styleattreditors
 	except NameError:
+		return 0
+	except AttributeError: # new style exceptions
 		return 0
 	if not dict.has_key(name):
 		return 0
