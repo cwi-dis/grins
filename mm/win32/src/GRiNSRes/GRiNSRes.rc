@@ -1483,6 +1483,26 @@ BEGIN
     "Z",            IDUC_UNDO,              VIRTKEY, CONTROL, NOINVERT
 END
 
+IDR_ATTR_EDIT ACCELERATORS DISCARDABLE 
+BEGIN
+    "A",            ID_A,                   VIRTKEY, ALT, NOINVERT
+    "B",            ID_B,                   VIRTKEY, ALT, NOINVERT
+    "D",            ID_D,                   VIRTKEY, ALT, NOINVERT
+    "F",            ID_F,                   VIRTKEY, ALT, NOINVERT
+    "G",            ID_G,                   VIRTKEY, ALT, NOINVERT
+    "I",            ID_I,                   VIRTKEY, ALT, NOINVERT
+    "L",            ID_L,                   VIRTKEY, ALT, NOINVERT
+    "N",            ID_N,                   VIRTKEY, ALT, NOINVERT
+    "O",            ID_O,                   VIRTKEY, ALT, NOINVERT
+    "Q",            ID_Q,                   VIRTKEY, ALT, NOINVERT
+    "R",            ID_R,                   VIRTKEY, ALT, NOINVERT
+    "S",            ID_S,                   VIRTKEY, ALT, NOINVERT
+    "T",            ID_T,                   VIRTKEY, ALT, NOINVERT
+    "U",            ID_U,                   VIRTKEY, ALT, NOINVERT
+    "V",            ID_V,                   VIRTKEY, ALT, NOINVERT
+    "Z",            ID_Z,                   VIRTKEY, ALT, NOINVERT
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
