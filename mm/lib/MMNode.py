@@ -2792,10 +2792,10 @@ class MMNode(MMTreeElement):
 	def GetTerminator(self):
 		terminator = self.attrdict.get('terminator')
 		if terminator is None:
-			if self.type in interiortypes:
-				terminator = 'LAST'
-			else:
+			if self.type in mediatypes:
 				terminator = 'MEDIA'
+			else:
+				terminator = 'LAST'
 		return terminator
 
 	def GetFile(self, orig = 0):
@@ -4439,7 +4439,7 @@ class MMNode(MMTreeElement):
 		if self.type in mediatypes and termtype == 'MEDIA':
 			return Duration.get(self, ignoreloop=1), maybecached
 		syncbase = self.isresolved(sctx)
-		if self.type in termtypes:
+		if self.type in termtypes or self.type == 'anchor':
 			if termtype not in ('LAST', 'FIRST', 'ALL'):
 				for c in self.GetSchedChildren():
 					if MMAttrdefs.getattr(c, 'name') == termtype:
