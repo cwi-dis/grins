@@ -199,6 +199,11 @@ class _SpecialMenu(_DynamicMenu):
 
 class CommandHandler:
 	def __init__(self, menubartemplate):
+		import settings
+		self._extra_commands = {}
+		self._extra_commands[''] = 1
+		self._extra_commands['cmif'] = settings.get('cmif')
+		self._extra_commands['debug'] = settings.get('debug')
 		self.cmd_to_menu = {}
 		self.cmd_enabled = {}
 ##		self.must_update_window_menu = 1
@@ -206,10 +211,11 @@ class CommandHandler:
 		self.all_cmd_groups = [None, None, None]
 		self.menubartraversal = []
 		for menutemplate in menubartemplate:
-			entrytype, title, content = menutemplate
-			menu = mw_globals.toplevel._addmenu(title)
-			rv = self.fillmenu(menu, entrytype, content)
-			self.menubartraversal.append(rv)
+			optional, entrytype, title, content = menutemplate
+			if self._extra_commands[optional]:
+				menu = mw_globals.toplevel._addmenu(title)
+				rv = self.fillmenu(menu, entrytype, content)
+				self.menubartraversal.append(rv)
 ##		# Create special menus
 ##		menu = mw_globals.toplevel._addmenu('Documents')
 ##		self.document_menu = _SpecialMenu(menu,
@@ -242,10 +248,13 @@ class CommandHandler:
 	def makemenu(self, menu, content):
 		itemlist = []
 		for entry in content:
-			entry_type = entry[0]
+			optional = entry[0]
+			if not self._extra_commands[optional]:
+				continue
+			entry_type = entry[1]
 			if entry_type in (MenuTemplate.ENTRY,
 					  MenuTemplate.TOGGLE):
-				dummy, name, shortcut, cmd = entry
+				d1, d2, name, shortcut, cmd = entry
 				mw_globals._all_commands[cmd] = 1
 				if self.cmd_to_menu.has_key(cmd):
 					raise 'Duplicate menu command', \
@@ -267,7 +276,7 @@ class CommandHandler:
 				menu.addseparator()
 			elif entry_type in (MenuTemplate.CASCADE, MenuTemplate.DYNAMICCASCADE,
 					MenuTemplate.SPECIAL):
-				dummy, name, subcontent = entry
+				d1, d2, name, subcontent = entry
 				submenu = SubMenu(menu, name, name)
 				rv = self.fillmenu(submenu, entry_type, subcontent)
 				itemlist.append(rv)
