@@ -60,7 +60,8 @@ languages = (
 	('he', 'Hebrew'),
 	('hu', 'Hungarian'),
 	('is', 'Icelandic'),
-	('in', 'Indonesian'),
+	('id', 'Indonesian'),
+	('iu', 'Inuktitut'),
 	('it', 'Italian (Standard)'),
 	('it-ch', 'Italian (Swiss)'),
 	('ja', 'Japanese'),
@@ -99,8 +100,11 @@ languages = (
 	('sv-fi', 'Swedish (Finland)'),
 	('th', 'Thai'),
 	('tr', 'Turkish'),
+	('ug', 'Uigur'),
 	('uk', 'Ukrainian'),
 	('vi', 'Vietnamese'),
+	('yi', 'Yiddish'),
+	('za' ,'Zhuang'),
 	)
 
 a2l = {}
