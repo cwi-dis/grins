@@ -158,8 +158,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.channelview.show()
 		if 'transition' in defaultviews and self.transitionview is not None:
 			self.transitionview.show()
-		if self.layoutview is None:
-			print "Layout is None!"
 		if 'layout' in defaultviews and self.layoutview is not None:
 			self.layoutview.show()
 		if 'ugroup' in defaultviews and self.ugroupview is not None:

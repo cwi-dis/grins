@@ -76,11 +76,11 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Cu&t\tCtrl+X', 'X', CUT),
 		(FLAG_ALL, ENTRY, '&Copy\tCtrl+C', 'C', COPY),
-		(FLAG_ALL, ENTRY, '&Paste\tCtrl+V', 'V', PASTE),
+		(FLAG_ALL, ENTRY, '&Paste\tCtrl+V', 'V', PASTE_UNDER),
 		(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, CASCADE, 'P&aste special', (
 			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&Before', None, PASTE_BEFORE),
-##			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&After', None, PASTE_AFTER),
 			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&Within', None, PASTE_UNDER),
+			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&After', None, PASTE_AFTER),
 			)),
 		(FLAG_ALL, ENTRY, '&Delete\tCtrl+Del', None, DELETE),
 		(FLAG_ALL, SEP,),
@@ -246,7 +246,9 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Quick Start Guide', None, GRINS_QSG),
-		(FLAG_ALL, ENTRY, '&Tutorial', None, GRINS_TUTORIAL),
+		(FLAG_ALL, ENTRY, '&Tutorial', None, GRINS_TUTORIAL),#		(FLAG_ALL, ENTRY, 'Paste &before', None, PASTE_BEFORE),
+#		(FLAG_ALL, ENTRY, 'Paste &in
+
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 
@@ -266,8 +268,9 @@ POPUP_HVIEW_LEAF = (
 		(FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
 		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
-		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_AFTER),
+###		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_UNDER),
 		(FLAG_ALL, ENTRY, 'Paste bef&ore', None, PASTE_BEFORE),
+		(FLAG_ALL, ENTRY, 'Paste a&fter', None, PASTE_AFTER),
 		(FLAG_ALL, ENTRY, 'Pa&ste file', None, PASTE_FILE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
@@ -368,11 +371,11 @@ POPUP_HVIEW_STRUCTURE = (
 		(FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
 		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
-		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_AFTER),
-		(FLAG_ALL, CASCADE, 'Paste &special', (
-			(FLAG_ALL, ENTRY, '&Before', None, PASTE_BEFORE),
-			(FLAG_ALL, ENTRY, '&Within', None, PASTE_UNDER),
-			)),
+		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_UNDER),
+#		(FLAG_ALL, CASCADE, 'Paste &special', (
+#			(FLAG_ALL, ENTRY, '&Before', None, PASTE_BEFORE),
+#			(FLAG_ALL, ENTRY, '&Within', None, PASTE_UNDER),
+#			)),
 		(FLAG_ALL, ENTRY, 'Paste &file', None, PASTE_FILE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
