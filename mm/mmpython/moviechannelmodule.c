@@ -236,6 +236,34 @@ movie_init(self)
 static int movie_finished PROTO((mmobject *));
 
 static void
+movie_free_old(p)
+	struct movie_data *p;
+{
+	XDECREF(p->m_index);
+	XDECREF(p->m_f);
+#ifdef USE_XM
+	if (p->m_image) {
+		XDestroyImage(p->m_image);
+		p->m_bframe = NULL;
+	}
+	p->m_image = NULL;
+#endif /* USE_XM */
+	if (p->m_frame)
+		free(p->m_frame);
+	p->m_frame = NULL;
+	if (p->m_bframe)
+		free(p->m_bframe);
+	p->m_bframe = NULL;
+#ifdef USE_CL
+	if (p->m_decomp)
+		clCloseDecompressor(p->m_decomp);
+	p->m_decomp = NULL;
+	XDECREF(p->m_comphdr);
+	p->m_comphdr = NULL;
+#endif /* USE_CL */
+}
+
+static void
 movie_dealloc(self)
 	mmobject *self;
 {
@@ -243,36 +271,8 @@ movie_dealloc(self)
 
 	denter(movie_dealloc);
 	(void) movie_finished(self);
-	XDECREF(PRIV->m_play.m_index);
-	XDECREF(PRIV->m_arm.m_index);
-	XDECREF(PRIV->m_play.m_f);
-	XDECREF(PRIV->m_arm.m_f);
-#ifdef USE_XM
-	if (PRIV->m_play.m_image) {
-		XDestroyImage(PRIV->m_play.m_image);
-		PRIV->m_play.m_bframe = NULL;
-	}
-	if (PRIV->m_arm.m_image) {
-		XDestroyImage(PRIV->m_arm.m_image);
-		PRIV->m_arm.m_bframe = NULL;
-	}
-#endif /* USE_XM */
-	if (PRIV->m_play.m_frame)
-		free(PRIV->m_play.m_frame);
-	if (PRIV->m_play.m_bframe)
-		free(PRIV->m_play.m_bframe);
-	if (PRIV->m_arm.m_frame)
-		free(PRIV->m_arm.m_frame);
-	if (PRIV->m_arm.m_bframe)
-		free(PRIV->m_arm.m_bframe);
-#ifdef USE_CL
-	if (PRIV->m_play.m_decomp)
-		clCloseDecompressor(PRIV->m_play.m_decomp);
-	if (PRIV->m_arm.m_decomp)
-		clCloseDecompressor(PRIV->m_arm.m_decomp);
-	XDECREF(PRIV->m_play.m_comphdr);
-	XDECREF(PRIV->m_arm.m_comphdr);
-#endif /* USE_CL */
+	movie_free_old(&PRIV->m_play);
+	movie_free_old(&PRIV->m_arm);
 	(void) close(PRIV->m_pipefd[0]);
 	(void) close(PRIV->m_pipefd[1]);
 	free(self->mm_private);
@@ -951,7 +951,15 @@ movie_player(self)
 #endif /* USE_GL */
 #ifdef USE_XM
 		case WIN_X:
+#ifdef X_asynchronous_display
+			if (gl_lock)
+				acquire_lock(gl_lock, WAIT_LOCK);
+			movie_do_display(self);
+			if (gl_lock)
+				release_lock(gl_lock);
+#else
 			my_qenter(self->mm_ev, 3);
+#endif
 			break;
 #endif /* USE_XM */
 		default:

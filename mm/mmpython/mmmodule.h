@@ -49,3 +49,5 @@ typedef struct channelobject {
 } channelobject;
 
 #define is_channelobject(op)	(strncmp((op)->ob_type->tp_name, "channel:", 8) == 0)
+
+extern void my_qenter PROTO((long, long));
