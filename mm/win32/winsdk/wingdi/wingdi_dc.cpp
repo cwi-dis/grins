@@ -219,6 +219,36 @@ PyDC_SetViewportOrgEx(PyDC *self, PyObject *args)
 	return Py_BuildValue("ii", ptold.x, ptold.y);
 }
 
+#ifndef _WIN32_WCE
+static PyObject *
+PyDC_SetWindowOrg(PyDC *self, PyObject *args)
+{
+	int x, y;
+ 	if(!PyArg_ParseTuple(args, "(ii)", &x, &y))
+		return NULL;
+	POINT pt;
+	BOOL res = SetWindowOrgEx(self->m_hDC, x, y, &pt);
+	if(!res){
+		seterror("SetWindowExtEx", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue ("ii", pt.x, pt.y);
+}
+
+static PyObject *
+PyDC_GetWindowOrg(PyDC *self, PyObject *args)
+{ 	
+	if(!PyArg_ParseTuple(args, ""))
+		return NULL;
+	POINT pt;
+	BOOL res = GetWindowOrgEx(self->m_hDC, &pt);
+	if(!res){
+		seterror("GetWindowOrgEx", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("ii", pt.x, pt.y);
+}
+#endif //_WIN32_WCE
 
 static PyObject*
 PyDC_SetROP2(PyDC *self, PyObject *args)
@@ -915,6 +945,8 @@ PyMethodDef PyDC::methods[] = {
 	{"SetViewportExtEx", (PyCFunction)PyDC_SetViewportExtEx, METH_VARARGS, ""},
 	{"GetViewportExtEx", (PyCFunction)PyDC_GetViewportExtEx, METH_VARARGS, ""},
 	{"SetViewportOrgEx", (PyCFunction)PyDC_SetViewportOrgEx, METH_VARARGS, ""},
+	{"SetWindowOrg", (PyCFunction)PyDC_SetWindowOrg, METH_VARARGS, ""},
+	{"GetWindowOrg", (PyCFunction)PyDC_GetWindowOrg, METH_VARARGS, ""},
 	{"GetROP2", (PyCFunction)PyDC_GetROP2, METH_VARARGS, ""},
 	{"SetTextAlign", (PyCFunction)PyDC_SetTextAlign, METH_VARARGS, ""},
 	{"SetPolyFillMode", (PyCFunction)PyDC_SetPolyFillMode, METH_VARARGS, ""},

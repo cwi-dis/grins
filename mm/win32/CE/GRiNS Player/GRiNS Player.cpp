@@ -164,7 +164,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, HWND *phWnd)
 	return TRUE;
 }
 
-//
+// WM_CLOSE
 //  FUNCTION: WndProc(HWND, unsigned, WORD, LONG)
 //
 //  PURPOSE:  Processes messages for the main window.

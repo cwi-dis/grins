@@ -177,6 +177,13 @@ inline WCHAR* toTEXT(char *p)
 	MultiByteToWideChar(CP_ACP, 0, p, -1, wsz, 512);
 	return wsz;
 	}
+inline WCHAR* newTEXT(char *p)
+	{
+	int n = strlen(p)+1;
+	WCHAR *wsz = new WCHAR[n];
+	MultiByteToWideChar(CP_ACP, 0, p, -1, wsz, n);
+	return wsz;
+	}
 inline WCHAR* toTEXT(WCHAR *p)
 	{
 	return p;
