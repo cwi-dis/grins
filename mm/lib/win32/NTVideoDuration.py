@@ -14,8 +14,8 @@ import urllib
 def getduration(url):
 	url = MMurl.canonURL(url)
 	url = urllib.unquote(url)
-	import windowinterface
-	return windowinterface.GetMediaDuration(url)
+	import win32dxm
+	return win32dxm.GetMediaDuration(url)
 
 duration_cache = FileCache.FileCache(getduration)
 get = duration_cache.get

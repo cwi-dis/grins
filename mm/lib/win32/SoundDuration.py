@@ -9,8 +9,8 @@ import urllib
 def getfullinfo(url):
 	url = MMurl.canonURL(url)
 	url = urllib.unquote(url)
-	import windowinterface
-	duration = windowinterface.GetMediaDuration(url)
+	import win32dxm
+	duration = win32dxm.GetMediaDuration(url)
 	if duration < 0:
 		duration = 0
 	bandwidth = 1
