@@ -1420,7 +1420,7 @@ class Region(Window):
 
 		# implementation specific
 		self._oswnd = None
-		self._video = None
+		self._redrawdds = None
 						
 	def __repr__(self):
 		return '<Region instance at %x>' % id(self)
@@ -1444,7 +1444,7 @@ class Region(Window):
 		del self._topwindow
 		del self._convert_color
 		del self._transition
-		del self._video 
+		del self._redrawdds 
 		del self._drawsurf
 		del self._fromsurf
 
@@ -1759,9 +1759,9 @@ class Region(Window):
 				r, g, b = entry[1]
 				convbgcolor = dds.GetColorMatch((r,g,b))
 				dds.BltFill((xc, yc, xc+wc, yc+hc), convbgcolor)
-			if self._video:
-				# get video info
-				vdds, vrcDst, vrcSrc = self._video
+			if self._redrawdds:
+				# get redraw dds info
+				vdds, vrcDst, vrcSrc = self._redrawdds
 				if self._mediadisplayrect:
 					vrcDst = self._mediadisplayrect
 
@@ -2075,11 +2075,17 @@ class Region(Window):
 		return self._topwindow.CreateSurface(w,h)
 
 	def setvideo(self, dds, rcDst, rcSrc):
-		self._video = dds, rcDst, rcSrc
+		self._redrawdds = dds, rcDst, rcSrc
 	
 	def removevideo(self):
-		self._video = None
+		self._redrawdds = None
 
+	def setredrawdds(self, dds, rcDst = None, rcSrc = None):
+		if dds is None:
+			self._redrawdds = None
+		else:
+			self._redrawdds = dds, rcDst, rcSrc
+			
 	#
 	# Animations interface
 	#
