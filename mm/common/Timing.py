@@ -199,6 +199,8 @@ def prep1(node):
 			adddep(c, TL, 0, node, TL)
 		# Make sure there is *some* path from head to tail
 		adddep(node, HD, 0, node, TL)
+	elif type == 'bag':
+		adddep(node, HD, 0, node, TL)
 	else:
 		# Special case -- delay -1 means execute leaf node
 		# of leaf node when playing
@@ -266,7 +268,7 @@ def decrement(q, delay, node, side):
 	elif side == TL:
 		node.t1 = q.timefunc()
 	node.node_to_arm = None
-	if node.GetType() in real_interiortypes:
+	if node.GetType() in interiortypes:
 		node.t0t1_inherited = 1
 	elif side == HD:
 		t0 = time.time()
