@@ -250,7 +250,8 @@ static PyObject *ig_area_get(PyObject *self, PyObject *args)
 	PyObject *v;
 	int len;
 
-	if (!PyArg_ParseTuple(args, "l(llll)", &img, &rect.left, &rect.top, &rect.right, &rect.bottom))
+	rect.left = rect.top = rect.right = rect.bottom = 0;
+	if (!PyArg_ParseTuple(args, "l|(llll)", &img, &rect.left, &rect.top, &rect.right, &rect.bottom))
 		return NULL;
 	if (IG_image_dimensions_get((HIGEAR) img, &width, &height, &bpp)) {
 		PyErr_SetString(PyExc_ValueError, "bad image handle");
