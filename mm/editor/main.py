@@ -5,6 +5,7 @@ gl.foreground()
 import sys
 from MMExc import *
 import TopLevel
+import SoundChannel
 
 def main():
 	if sys.argv[1:]:
@@ -18,9 +19,13 @@ def main():
 
 try:
 	main()
+	status = 0
 except ExitException, status:
 	if status <> 0: print 'Exit status', status
-	sys.exit(status)
 except KeyboardInterrupt:
 	print 'Interrupt.'
-	sys.exit(1)
+	status = 1
+finally:
+	SoundChannel.restore()
+
+sys.exit(status)
