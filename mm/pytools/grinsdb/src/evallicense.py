@@ -1,4 +1,4 @@
-"""lostkey - Lookup someone in the database and mail them their password"""
+"""evallicense - Read a mail and send the sender their license"""
 import os
 import string
 import whrandom
@@ -72,29 +72,32 @@ def evallicense(file, filename):
 	if msg.has_key('x-generated-message'):
 		return
 	list = dbase.search('email', email)
-	if not list:
-		mailnotok(email)
-	else:
-		obj = dbase.open(list[0], 'w')
-		obj['Want-editor'] = 'yes'
-		if obj.has_key('Eval-License-Req'):
-			elr = obj['Eval-License-Req'] + ', '
+	try:
+		if not list:
+			mailnotok(email)
 		else:
-			elr = ''
-		now = time.localtime(time.time())
-		elr = elr + time.strftime("%d-%h-%Y", now)
-		obj['Eval-License-Req'] = elr
-		if not SEND_NEW_LICENSE and obj.has_key('Eval-License'):
-			# send previously sent license
-			license = obj['Eval-License']
-		else:
-			# send current license (and record it)
-			try:
-				obj['Eval-License'] = string.split(license)[1]
-			except:
-				pass
-		dbase.save(obj)
-		mailok(email, license)
+			obj = dbase.open(list[0], 'w')
+			obj['Want-editor'] = 'yes'
+			if obj.has_key('Eval-License-Req'):
+				elr = obj['Eval-License-Req'] + ', '
+			else:
+				elr = ''
+			now = time.localtime(time.time())
+			elr = elr + time.strftime("%d-%h-%Y", now)
+			obj['Eval-License-Req'] = elr
+			if not SEND_NEW_LICENSE and obj.has_key('Eval-License'):
+				# send previously sent license
+				license = obj['Eval-License']
+			else:
+				# send current license (and record it)
+				try:
+					obj['Eval-License'] = string.split(license)[1]
+				except:
+					pass
+			dbase.save(obj)
+			mailok(email, license)
+	finally:
+		dbase.close()
 	while file.read(10000):
 		pass
 
