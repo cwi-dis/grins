@@ -34,6 +34,7 @@ import afxres,commctrl
 # GRiNS resource ids
 import grinsRC
 
+error = 'lib.win32.AttrEditForm.error'
 
 # Base dialog bar
 class DlgBar(window.Wnd):
@@ -583,24 +584,27 @@ class AttrCtrl:
 		self._resid=resid
 		self._initctrl=None
 
-	def sethelp(self,namec,infoc):
+	def sethelp(self,infoc):
 		if not self._initctrl: return
 		a=self._attr
-		namec.settext(a.getlabel())
 		hd=a.gethelpdata()
 		if hd[1]:
 			infoc.settext(hd[2]+' - default: ' + hd[1])
 		else:
 			infoc.settext(hd[2])
 	
+##################################
 class OptionsCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
-		self._options=components.ComboBox(wnd,resid[0])
+		self._attrname=components.Edit(wnd,resid[0])
+		self._options=components.ComboBox(wnd,resid[1])
 
 	def OnInitCtrl(self):
 		self._initctrl=self
+		self._attrname.attach_to_parent()
 		self._options.attach_to_parent()
+		self._attrname.settext(self._attr.getlabel())
 		a=self._attr
 		list = a.getoptions()
 		val = a.getcurrent()
@@ -609,7 +613,7 @@ class OptionsCtrl(AttrCtrl):
 		ix=list.index(val)
 		self._options.setoptions(list)
 		self._options.setcursel(ix)
-		self._wnd.HookCommand(self.OnReset,self._resid[1])
+		self._wnd.HookCommand(self.OnReset,self._resid[2])
 	
 	def setoptions(self,list,val):
 		if val not in list:
@@ -631,18 +635,22 @@ class OptionsCtrl(AttrCtrl):
 		if self._attr:self._attr.reset_callback()
 
 
+##################################
 class FileCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
-		self._attrval=components.Edit(wnd,resid[0])
+		self._attrname=components.Edit(wnd,resid[0])
+		self._attrval=components.Edit(wnd,resid[1])
 
 	def OnInitCtrl(self):
 		self._initctrl=self
+		self._attrname.attach_to_parent()
 		self._attrval.attach_to_parent()
+		self._attrname.settext(self._attr.getlabel())
 		a=self._attr
 		self._attrval.settext(self._attr.getcurrent())
-		self._wnd.HookCommand(self.OnBrowse,self._resid[1])
-		self._wnd.HookCommand(self.OnReset,self._resid[2])
+		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
+		self._wnd.HookCommand(self.OnReset,self._resid[3])
 
 	def setvalue(self, val):
 		if self._initctrl:
@@ -658,18 +666,21 @@ class FileCtrl(AttrCtrl):
 	def OnReset(self,id,code):
 		if self._attr:self._attr.reset_callback()
 
-
+##################################
 class ColorCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
-		self._attrval=components.Edit(wnd,resid[0])
+		self._attrname=components.Edit(wnd,resid[0])
+		self._attrval=components.Edit(wnd,resid[1])
 
 	def OnInitCtrl(self):
 		self._initctrl=self
+		self._attrname.attach_to_parent()
 		self._attrval.attach_to_parent()
+		self._attrname.settext(self._attr.getlabel())
 		self._attrval.settext(self._attr.getcurrent())
-		self._wnd.HookCommand(self.OnBrowse,self._resid[1])
-		self._wnd.HookCommand(self.OnReset,self._resid[2])
+		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
+		self._wnd.HookCommand(self.OnReset,self._resid[3])
 
 	def setvalue(self, val):
 		if self._initctrl:
@@ -708,16 +719,20 @@ class ColorCtrl(AttrCtrl):
 			return r, g, b
 		return None
 
+##################################
 class StringCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
-		self._attrval=components.Edit(wnd,resid[0])
+		self._attrname=components.Edit(wnd,resid[0])
+		self._attrval=components.Edit(wnd,resid[1])
 
 	def OnInitCtrl(self):
 		self._initctrl=self
+		self._attrname.attach_to_parent()
 		self._attrval.attach_to_parent()
+		self._attrname.settext(self._attr.getlabel())
 		self._attrval.settext(self._attr.getcurrent())
-		self._wnd.HookCommand(self.OnReset,self._resid[1])
+		self._wnd.HookCommand(self.OnReset,self._resid[2])
 
 	def setvalue(self, val):
 		if self._initctrl:
@@ -731,22 +746,20 @@ class StringCtrl(AttrCtrl):
 	def OnReset(self,id,code):
 		if self._attr:self._attr.reset_callback()
 
-
+##################################
 class AttrPage(dialog.PropertyPage):
 	def __init__(self,form):
 		self._form=form
-		self._ctrl={}
+		self._cd={}
+		self._al=[]
+		self._tabix=-1
+		self._title='Untitled page'
 		self._initdialog=None
-		self._attrname=components.Edit(self,grinsRC.IDC_EDIT1)
 		self._attrinfo=components.Static(self,grinsRC.IDC_ATTR_INFO)
-
-	# Add attribute
-	def addattr(self, a):
-		self._ctrl[a]=None
-
+		
 	# call it after adding attributes for this page
 	def do_init(self):
-		id=self.getresid()
+		id=self.getpageresid()
 		self.createctrls()
 		import __main__
 		dll=__main__.resdll
@@ -759,13 +772,8 @@ class AttrPage(dialog.PropertyPage):
 		self.HookCommand(self.OnApply,grinsRC.IDUC_APPLY)
 		self.HookCommand(self.OnCancel,win32con.IDCANCEL)
 		self.HookCommand(self.OnOK,win32con.IDOK)
-		self._attrname.attach_to_parent()
 		self._attrinfo.attach_to_parent()
-		l=self._ctrl.values()
-		n=len(l)
-		for ctrl in l:
-			ctrl.OnInitCtrl()
-			if n==1: ctrl.sethelp(self._attrname,self._attrinfo)
+		for ctrl in self._cd.values():ctrl.OnInitCtrl()
 				
 	def OnRestore(self,id,code): self._form.call('Restore')
 	def OnApply(self,id,code): self._form.call('Apply')
@@ -773,50 +781,72 @@ class AttrPage(dialog.PropertyPage):
 	def OnOK(self,id,code): self._form.call('OK')
 
 	def setvalue(self, attr, val):
-		if self._ctrl.has_key(attr): 
-			self._ctrl[attr].setvalue(val)
+		if self._cd.has_key(attr): 
+			self._cd[attr].setvalue(val)
 	def getvalue(self, attr):
-		if self._ctrl.has_key(attr):
-			return self._ctrl[attr].getvalue()
+		if self._cd.has_key(attr):
+			return self._cd[attr].getvalue()
 	def setoptions(self,attr, list,val):
-		if self._ctrl.has_key(attr):
-			self._ctrl[attr].setoptions(list,val)
+		if self._cd.has_key(attr):
+			self._cd[attr].setoptions(list,val)
 	
-	#####################
 	# Methods that must be overridden by subclasses
+	def addattr(self, a):
+		self._al.append(a)
+
+	def createctrls(self):
+		raise error, 'you must override createctrls for page',self
+
+	def getpageresid(self):
+		raise error,'you must override getpageresid for page',self
+		return -1
+
+	def settabix(self,ix):
+		self._tabix=ix
+	def settabtext(self,tabctrl):
+		if self._tabix<0:
+			raise error,'tab index is uninitialized'
+		tabctrl.SetItemText(self._tabix,self._title)
+
+###############################	
+class SingleAttrPage(AttrPage):
+	def __init__(self,form,attr):
+		AttrPage.__init__(self,form)
+		self._attr=attr
+		self._title=self._attr.getlabel()
+
+	def OnInitDialog(self):
+		AttrPage.OnInitDialog(self)
+		l=self._cd.values()
+		for ctrl in l:
+			ctrl.OnInitCtrl()
+			ctrl.sethelp(self._attrinfo)
+
 	def createctrls(self):
 		# for each attr create a ctrl
-		for a in self._ctrl.keys():
-			self._ctrl[a]=self.getctrl(a)	
-	# stuff for single attribute pages
+		a=self._attr
+		t = a.gettype()
+		if SingleAttrPage.ctrlmap.has_key(t):
+			self._cd[a] = SingleAttrPage.ctrlmap[t][0](self,a,SingleAttrPage.ctrlmap[t][1])
+		else:
+			self._cd[a] = SingleAttrPage.ctrlmap['string'][0](self,a,SingleAttrPage.ctrlmap['string'][1])
+
+	def getpageresid(self):
+		a=self._attr
+		t = a.gettype()
+		if SingleAttrPage.ctrlmap.has_key(t):
+			return SingleAttrPage.idmap[t]
+		else:
+			return SingleAttrPage.idmap['string']
 	ctrlmap={
-		'option':(OptionsCtrl,(grinsRC.IDC_COMBO1,grinsRC.IDUC_RESET)),
-		'file':(FileCtrl,(grinsRC.IDC_EDIT2,grinsRC.IDUC_BROWSE,grinsRC.IDUC_RESET)),
-		'color':(ColorCtrl,(grinsRC.IDC_EDIT2,grinsRC.IDUC_BROWSE,grinsRC.IDUC_RESET)),
-		'string':(StringCtrl,(grinsRC.IDC_EDIT2,grinsRC.IDUC_RESET))}
+		'option':(OptionsCtrl,(grinsRC.IDC_EDIT1,grinsRC.IDC_COMBO1,grinsRC.IDUC_RESET)),
+		'file':(FileCtrl,(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_BROWSE,grinsRC.IDUC_RESET)),
+		'color':(ColorCtrl,(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_BROWSE,grinsRC.IDUC_RESET)),
+		'string':(StringCtrl,(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_RESET))}
 	idmap={'option':grinsRC.IDD_EDITOPTIONSATTR1,
 		'file':grinsRC.IDD_EDITFILEATTR1,
 		'color':grinsRC.IDD_EDITCOLORATTR1,
 		'string':grinsRC.IDD_EDITSTRINGATTR1}
-
-	def getctrl(self,a):
-		t = a.gettype()
-		if AttrPage.ctrlmap.has_key(t):
-			return AttrPage.ctrlmap[t][0](self,a,AttrPage.ctrlmap[t][1])
-		else:
-			return AttrPage.ctrlmap['string'][0](self,a,AttrPage.ctrlmap['string'][1])
-	def getresid(self):
-		l=self._ctrl.keys()
-		if not l: 
-			print 'getresid without controls'
-			return -1
-		a=l[0]
-		t = a.gettype()
-		if AttrPage.ctrlmap.has_key(t):
-			return AttrPage.idmap[t]
-		else:
-			return AttrPage.idmap['string']
-
 
 ##################################
 # LayoutPage
@@ -830,11 +860,13 @@ import DrawTk
 #   works with reference the full screen instead of the parent layout
 
 class LayoutPage(AttrPage,cmifwnd._CmifWnd):
-	def __init__(self,form):
+	def __init__(self,form,attr):
 		AttrPage.__init__(self,form)
 		cmifwnd._CmifWnd.__init__(self)
-		self._attrval=components.Edit(self,grinsRC.IDC_EDIT2)
 		self._layoutctrl=None
+		self._attr=attr
+		self._title=self._attr.getlabel()
+		self._al.append(attr)
 
 		# for now work only in pixels
 		self._units=appcon.UNIT_PXL
@@ -852,24 +884,18 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 
 		DrawTk.drawTk.SetScale(self._xscale,self._yscale)
 
-	# oberride for singleton page
-	def addattr(self, a):
-		self._attr=a 
-		self._ctrl[a]=StringCtrl(self,a,(grinsRC.IDC_EDIT2,grinsRC.IDUC_RESET))
-
 	# creation overrides
-	def getresid(self):
-		return grinsRC.IDD_EDITRECTATTR
+	def getpageresid(self):
+		return grinsRC.IDD_EDITRECTATTR1
 	def createctrls(self):
-		pass
-
+		self._cd[self._attr]=StringCtrl(self,self._attr,(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_RESET))
+		
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
-		self._attrval.attach_to_parent()
+		self._cd[self._attr].sethelp(self._attrinfo)
 
 		# get box and units from self._attr
 		val=self._attr.getcurrent()
-		self._attrval.settext(val)
 		if not val:
 			box=None
 		else:
@@ -877,6 +903,13 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			box=self.tolayout(box)		
 
 		# create layout control
+		self._layoutctrl=self.createLayoutCtrl()
+
+		# call create box against layout control but be modeless and cool!
+		modeless=1;cool=1
+		self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
+
+	def createLayoutCtrl(self):
 		v=_CmifView._CmifPlayerView(docview.Document(docview.DocTemplate()))
 		v.createWindow(self)
 		rc=(20,20,self._xmax,self._ymax)
@@ -886,22 +919,18 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		v.OnInitialUpdate()
 		v.ShowWindow(win32con.SW_SHOW)
 		v.UpdateWindow()	
-		self._layoutctrl=v
-
-		# call create box against layout control but be modeless and cool!
-		modeless=1;cool=1
-		v.create_box('',self.update,box,self._units,modeless,cool)
-
+		return v
+		
 	# called back by create_box on every change
 	# the user can press reset to cancel changes
 	def update(self,*box):
 		if self._initdialog and box:
 			box=self.fromlayout(box)
-			self._attrval.settext('%d %d %d %d' % box)
+			self._cd[self._attr].setvalue('%d %d %d %d' % box)
 
 	def setvalue(self, attr, val):
 		if self._initdialog:
-			self._attrval.settext(val)
+			self._cd[attr].setvalue(val)
 			if not val:
 				box=None
 			else:
@@ -912,9 +941,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
 
 	def getvalue(self, attr):
-		if not self._initdialog:
-			return self._attr.getcurrent()
-		return self._attrval.gettext()
+		return self._cd[attr].getvalue()
 	
 	def fromlayout(self,box):
 		if not box: return
@@ -940,10 +967,130 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	def OnDestroy(self,params):
 		DrawTk.drawTk.RestoreState()
 
+############################
+# Covers simple group pages
+
+class GroupPage(AttrPage):
+	def __init__(self,form):
+		AttrPage.__init__(self,form)
+
+	def setgroup(self,group):
+		self._group=group
+
+	def createctrls(self):
+		self._title=self._group.gettitle()
+		for a in self._group._al:
+			self._al.append(a)
+			self._cd[a]=StringCtrl(self,a,self._group.getctrlids(a))
+
+	def getpageresid(self):
+		return self._group.getpageresid() 
 
 
+############################
+#  goes in:  Attrgrs.py
 
-###########################3
+# order of groups in the file is important (first match first)
+# all attributes not in complete groups 
+# will be displayed on their own page
+
+attrgrs={
+	'infogroup':{
+	'title': 'Info',
+	'attrs':[
+		'title',
+		'abstract',
+		'alt',
+		'longdesc',
+		'author',
+		'copyright',
+		'comment',
+		]},
+
+	'infogroup2':{
+	'title': 'Info',
+	'attrs':[
+		'title',
+		'abstract',
+		'author',
+		'copyright',
+		'comment',
+		]},
+
+	'infogroup3':{
+	'title': 'Info',
+	'attrs':[
+		'title',
+		'comment',
+		]},
+	}
+
+# if the policy is not first match first and we want platform
+# independance then we must implement getmatch function:
+# return the best attr group (may be the first that is complete)
+# this must be also complete ( has all its attributes in al list)
+# not used yet
+def getmatch(al):
+	return 	None
+
+############################
+# platform and implementation dependent group
+# one per group
+class InfoGroup:
+	data=attrgrs['infogroup']
+
+	def __init__(self):
+		self._al=[]
+		self._data=InfoGroup.data
+	# section 1
+	# decision interface (may be platform independent)
+	def visit(self,al):
+		for a in al:
+			if a.getname() in InfoGroup.data['attrs']:
+				self._al.append(a)
+	def matches(self):
+		return len(self._al)==len(self._data['attrs'])
+
+
+	# section 2
+	# ui interface platform and implementation dependent
+	def getctrlids(self,a):
+		ix=self._data['attrs'].index(a.getname())
+		exec 'ids=(grinsRC.IDC_EDIT%d,grinsRC.IDC_EDIT%d,grinsRC.IDUC_RESET%d)' % (ix*2+1,ix*2+2,ix+1)
+		return ids
+
+	def gettitle(self):
+		return self._data['title']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITSTRINGATTR2
+
+class InfoGroup2(InfoGroup):
+	data=attrgrs['infogroup2']
+	def __init__(self):
+		self._al=[]
+		self._data=InfoGroup2.data
+	def getpageresid(self):
+		return grinsRC.IDD_EDITSTRINGATTR3
+
+class InfoGroup3(InfoGroup):
+	data=attrgrs['infogroup3']
+	def __init__(self):
+		self._al=[]
+		self._data=InfoGroup3.data
+	def getpageresid(self):
+		return grinsRC.IDD_EDITSTRINGATTR4
+
+############################
+# platform dependent association
+# what we have implemented, anything else goes as singleton
+groupsui={
+	'infogroup':InfoGroup,
+	'infogroup2':InfoGroup2,
+	'infogroup3':InfoGroup3,
+	}
+
+###########################
 from  GenFormView import GenFormView
 
 class AttrEditFormNew(GenFormView):
@@ -956,7 +1103,8 @@ class AttrEditFormNew(GenFormView):
 		self._attriblist=None
 		self._cbdict=None
 		self._prsht=None;
-		self._pages={}
+		self._a2p={}
+		self._pages=[]
 
 	# Creates the actual OS window
 	def createWindow(self,parent):
@@ -966,26 +1114,35 @@ class AttrEditFormNew(GenFormView):
 		prsht=dialog.PropertySheet(grinsRC.IDR_GRINSED,dll)
 		prsht.EnableStackedTabs(1)
 
-		# create pages based on groups (now one per attr)
-		# self._pages is a many to one map of attr->page pairs
+		grattrl=[] # list of attr in groups (may be all)
+		# create groups
+		grattrl=self.createGroupPages()
+		
+		# create singletons not desrciped by groups
 		for i in range(len(self._attriblist)):
 			a=self._attriblist[i]
-			page=self.getpage(a)
-			self._pages[a]=page
-		
-		# add attributes to pages
-		for i in range(len(self._attriblist)):
-			a=self._attriblist[i]
-			self._pages[a].addattr(a)
-		
+			if a not in grattrl:
+				page=self.getpage(a)
+				self._a2p[a]=page
+				self._pages.append(page)
+
 		# init pages
-		for page in self._pages.values():
+		for page in self._pages:
 			page.do_init()
 
 		# add pages to the sheet in the correct group order
+		l=self._pages[:]
+		self._pages=[]
+		ix=0
 		for i in range(len(self._attriblist)):
 			a=self._attriblist[i]
-			prsht.AddPage(self._pages[a])
+			p=self._a2p[a]
+			if p in l:
+				p.settabix(ix)
+				ix=ix+1
+				self._pages.append(p)
+				prsht.AddPage(p)
+				l.remove(p)
 
 		self.CreateWindow(parent)
 		prsht.CreateWindow(self,win32con.DS_CONTEXTHELP | win32con.DS_SETFONT | win32con.WS_CHILD | win32con.WS_VISIBLE)
@@ -994,12 +1151,29 @@ class AttrEditFormNew(GenFormView):
 		prsht.SetWindowPos(0,(0,0,0,0),
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
 		self._prsht=prsht
-		tabctrl=prsht.GetTabCtrl()
-		for i in range(len(self._attriblist)):
-			tabctrl.SetItemText(i,self._attriblist[i].getlabel())
 
-		prsht.SetActivePage(self._pages[self._attriblist[0]])
+		tabctrl=prsht.GetTabCtrl()
+		for page in self._pages:
+			page.settabtext(tabctrl)
+
+		prsht.SetActivePage(self._pages[0])
 		prsht.RedrawWindow()
+
+	def createGroupPages(self):
+		grattrl=[]	 # all attr in groups
+		l=self._attriblist[:]
+		for grkey in groupsui.keys():
+			group=groupsui[grkey]()
+			group.visit(self._attriblist)
+			if group.matches():
+				grouppage=GroupPage(self)
+				self._pages.append(grouppage)
+				grouppage.setgroup(group)
+				for a in group._al:
+					self._a2p[a]=grouppage
+					grattrl.append(a)
+					l.remove(a)
+		return grattrl
 
 	# This should be the main attributes-typesetting method
 	# based on attribute's group return a page
@@ -1007,16 +1181,16 @@ class AttrEditFormNew(GenFormView):
 	def getpage(self,a):
 		t = a.gettype()
 		if t == 'option':
-			page=AttrPage(self)
+			page=SingleAttrPage(self,a)
 		elif t == 'file':
-			page=AttrPage(self)
+			page=SingleAttrPage(self,a)
 		elif t == 'color':
-			page=AttrPage(self)
+			page=SingleAttrPage(self,a)
 		else:
 			if a.getlabel()=='Position and size':
-				page=LayoutPage(self)
+				page=LayoutPage(self,a)
 			else:
-				page=AttrPage(self)
+				page=SingleAttrPage(self,a)
 		return page
 
 	def OnInitialUpdate(self):
@@ -1031,7 +1205,7 @@ class AttrEditFormNew(GenFormView):
 		frc=self._parent.CalcWindowRect(rc)
 		mainframe=self._parent.GetMDIFrame()
 		frc=mainframe.ScreenToClient(frc)
-		frc=(30,20,frc[2]-frc[0]+30,frc[3]-frc[1]+20)
+		frc=(30,4,frc[2]-frc[0]+30,frc[3]-frc[1]+4)
 		self._parent.MoveWindow(frc)
 
 		
@@ -1089,13 +1263,13 @@ class AttrEditFormNew(GenFormView):
 			raise error, 'os window not exists'
 		if attrobj not in self._attriblist:
 			raise error, 'item not in list'
-		return self._pages[attrobj].getvalue(attrobj)
+		return self._a2p[attrobj].getvalue(attrobj)
 
 	# Called by the core system to set a value on the list
 	def setvalue(self,attrobj,newval):
 		if attrobj not in self._attriblist:
 			raise error, 'item not in list'
-		self._pages[attrobj].setvalue(attrobj,newval)
+		self._a2p[attrobj].setvalue(attrobj,newval)
 
 	# Called by the core system to set attribute options
 	def setoptions(self,attrobj,list,val):
@@ -1106,7 +1280,7 @@ class AttrEditFormNew(GenFormView):
 		t = attrobj.gettype()
 		if t != 'option':
 			raise error, 'item not an option'
-		self._pages[attrobj].setoptions(attrobj,list,val)
+		self._a2p[attrobj].setoptions(attrobj,list,val)
 
 
 import __main__
