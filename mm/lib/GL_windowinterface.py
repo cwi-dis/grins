@@ -2197,88 +2197,27 @@ class _Window:
 			retval = _image_cache[cachekey]
 			filename = retval[-1]
 			try:
-				import rgbimg
-				image = rgbimg.longimagedata(filename)
-				return retval[:-1] + (image,)
+				image = open(filename).read()
 			except:		# any error...
 				del _image_cache[cachekey]
-				import posix
-				try:
-					posix.unlink(filename)
-				except posix.error:
-					pass
-		f = open(file, 'r')
-		magic = f.read(4)
-		if magic[:2] == '\001\332':
-			f.close()
-			retval = self._prepare_RGB_image_from_file(file,
-				  top, bottom, left, right)
-		elif magic == '\377\330\377\340':
-			f.seek(0)
-			retval = self._prepare_JPEG_image_from_filep(file, f,
-				  top, bottom, left, right)
-			f.close()
-		else:
-			f.close()
-			import torgb
-			try:
-				f = torgb.torgb(file)
-			except torgb.error, msg:
-				raise error, msg
-			retval = self._prepare_RGB_image_from_file(f,
-				  top, bottom, left, right)
-			retval = retval[:-1] + (1,)
-			if f != file:
 				import os
-				os.unlink(f)
-		if not _cache_full and retval[-1]:
-			import tempfile
-			filename = tempfile.mktemp()
-			try:
-				import rgbimg
-				rgbimg.longstoimage(retval[10],
-					  retval[6], retval[7], 3,
-					  filename)
-			except:		# any error...
-				print 'Warning: caching image failed'
-				import posix
 				try:
-					posix.unlink(filename)
+					os.unlink(filename)
 				except posix.error:
 					pass
-				_cache_full = 1
-				return retval[:-1]
-			_image_cache[cachekey] = retval[:-2] + (filename,)
-		return retval[:-1]
-
-	def _image_size(self, file):
-		if _size_cache.has_key(file):
-			return _size_cache[file]
-		f = open(file, 'r')
-		header = f.read(16)
-		if header[:2] == '\001\332':
-			f.close()
-			import rgbimg
-			xsize, ysize = rgbimg.sizeofimage(file)
-			return xsize, ysize
-		elif header[:4] == '\377\330\377\340':
-			if have_cl:
-				f.seek(0)
-				scheme = cl.QueryScheme(header)
-				decomp = cl.OpenDecompressor(scheme)
-				header = f.read(cl.QueryMaxHeaderSize(scheme))
-				f.seek(0)
-				headersize = decomp.ReadHeader(header)
-				xsize = decomp.GetParam(CL.IMAGE_WIDTH)
-				ysize = decomp.GetParam(CL.IMAGE_HEIGHT)
-				decomp.CloseDecompressor()
-				f.close()
-				return xsize, ysize
-		raise error, 'cannot determine size of image'
-
-	def _prepare_RGB_image_from_file(self, file, top, bottom, left, right):
-		import rgbimg
-		xsize, ysize = rgbimg.sizeofimage(file)
+			else:
+				return retval[:-1] + (image,)
+		import img, imgformat
+		try:
+			reader = img.reader(imgformat.rgb_b2t, file)
+		except img.error, arg:
+			raise error, arg
+		xsize = reader.width
+		ysize = reader.height
+		try:
+			image = reader.read()
+		except:
+			raise error, 'Unspecified error reading image'
 		_size_cache[file] = xsize, ysize
 		top = int(top * ysize + 0.5)
 		bottom = int(bottom * ysize + 0.5)
@@ -2287,7 +2226,7 @@ class _Window:
 		width, height = self._width, self._height
 		scale = min(float(width)/(xsize - left - right), \
 			    float(height)/(ysize - top - bottom))
-		image = rgbimg.longimagedata(file)
+		width, height = xsize, ysize
 		if scale != int(scale):
 			import imageop
 			width = int(xsize * scale)
@@ -2299,82 +2238,41 @@ class _Window:
 			left = int(left * scale)
 			right = int(right * scale)
 			scale = 1.0
-		else:
-			width, height = xsize, ysize
 		x, y = (self._width-(width-left-right))/2, \
 			  (self._height-(height-top-bottom))/2
-		if xsize * ysize < width * height:
-			do_cache = 0
-		else:
-			do_cache = 1
-		return x, y, width - left - right, height - top - bottom, \
+		retval = x, y, width - left - right, height - top - bottom, \
 			  left, bottom, width, height, 4, scale, \
-			  image, do_cache
+			  image
+		if not _cache_full:
+			import tempfile
+			filename = tempfile.mktemp()
+			try:
+				f = open(filename, 'wb')
+				f.write(image)
+			except:		# any error...
+				print 'Warning: caching image failed'
+				import os
+				try:
+					os.unlink(filename)
+				except:
+					pass
+				_cache_full = 1
+			else:
+				_image_cache[cachekey] = retval[:-1] + (filename,)
+		return retval
 
-	def _prepare_JPEG_image_from_filep(self, file, filep, top, bottom, left, right):
-		if have_cl:
-			image, xsize, ysize, zsize = self._prepare_JPEG_image_from_filep_with_cl(filep)
-		elif have_jpeg:
-			image, xsize, ysize, zsize =  self._prepare_JPEG_image_from_filep_with_jpeg(filep)
-		_size_cache[file] = xsize, ysize
-
-		top = int(top * ysize + 0.5)
-		bottom = int(bottom * ysize + 0.5)
-		left = int(left * xsize + 0.5)
-		right = int(right * xsize + 0.5)
-		width, height = self._width, self._height
-		scale = min(float(width)/(xsize - left - right), \
-			  float(height)/(ysize - top - bottom))
-		if scale != int(scale):
-			import imageop
-			width = int(xsize * scale)
-			height = int(ysize * scale)
-			image = imageop.scale(image, zsize, xsize, ysize,
-					      width, height)
-			top = int(top * scale)
-			bottom = int(bottom * scale)
-			left = int(left * scale)
-			right = int(right * scale)
-			scale = 1.0
-		else:
-			width, height = xsize, ysize
-		# here width and height are the width and height in
-		# pixels of the scaled image, top, bottom, left, right
-		# are the amount to crop off the image in pixels.
-		x, y = (self._width-(width-left-right))/2, \
-			  (self._height-(height-top-bottom))/2
-		if zsize == 4:
-			zsize = 3
-		return x, y, width - left - right, height - top - bottom, \
-			  left, bottom, width, height, zsize, scale, image, 1
-
-	def _prepare_JPEG_image_from_filep_with_jpeg(self, filep):
-		return jpeg.decompress(filep.read())
-
-	def _prepare_JPEG_image_from_filep_with_cl(self, filep):
-		header = filep.read(16)
-		filep.seek(0)
-		scheme = cl.QueryScheme(header)
-		decomp = cl.OpenDecompressor(scheme)
-		header = filep.read(cl.QueryMaxHeaderSize(scheme))
-		filep.seek(0)
-		headersize = decomp.ReadHeader(header)
-		xsize = decomp.GetParam(CL.IMAGE_WIDTH)
-		ysize = decomp.GetParam(CL.IMAGE_HEIGHT)
-##		if _is_entry_indigo:		-- doesn't seem to work
-##			original_format = CL.RGB
-##			zsize = 1
-##		else:
-		original_format = CL.RGBX
-		zsize = 4
-		params = [CL.ORIGINAL_FORMAT, original_format,
-			  CL.ORIENTATION, CL.BOTTOM_UP,
-			  CL.FRAME_BUFFER_SIZE,
-				 xsize*ysize*CL.BytesPerPixel(original_format)]
-		decomp.SetParams(params)
-		image = decomp.Decompress(1, filep.read())
-		decomp.CloseDecompressor()
-		return image, xsize, ysize, zsize
+	def _image_size(self, file):
+		if _size_cache.has_key(file):
+			return _size_cache[file]
+		import img
+		try:
+			reader = img.reader(None, file)
+		except img.error, arg:
+			raise error, arg
+		width = reader.width
+		height = reader.height
+		_size_cache[file] = width, height
+		return width, height
 
 	def _convert_coordinates(self, x, y, w, h):
 		x0, y0 = x, y
@@ -2703,7 +2601,6 @@ class Dialog:
 		self.draw_window()
 		self.window.register(Mouse0Press, self._mpress, None)
 		self.window.register(Mouse0Release, self._mrelease, None)
-		self.window.register(KeyboardInput, self._kboard, None)
 		self.window.register(ResizeWindow, self.draw_window, None)
 		if grab:
 			self.window.register(None, self._ignore, None)
@@ -2736,15 +2633,13 @@ class Dialog:
 				nsep = nsep + 1
 				continue
 			if type(entry) == type(()):
-				accelerator, label, callback = entry
+				label, callback = entry
 			else:
-				accelerator, label, callback = '', entry, None
+				label, callback = '', entry, None
 			if callback and type(callback) is not type(()):
 				callback = (callback, (label,))
 			self._callbacks[label] = callback
 			self.buttons.append(label)
-			if accelerator:
-				self._accelerators[accelerator] = callback
 			butstrs = string.splitfields(label, '\n')
 			for bt in butstrs:	# loops at least once
 				txt = BUTTONFILLER + bt + BUTTONFILLER
@@ -2855,13 +2750,10 @@ class Dialog:
 				ybase = ybase + sh
 				continue
 			if type(entry) == type(()):
-				accelerator, butstr, callback = entry
+				butstr, callback = entry
 			else:
-				accelerator, butstr = '', entry
-			if accelerator == '\n':
-				d.linewidth(self.DEFLINEWIDTH)
-			else:
-				d.linewidth(1)
+				butstr = entry
+			d.linewidth(1)
 			w, h = d.strsize(butstr)
 			ypos = ybase + (mh - h) * 0.5 + bl
 			if self.CENTERLINES:
@@ -2917,16 +2809,6 @@ class Dialog:
 		if self._looping and self._finish is not None:
 			raise _break_loop
 
-	def _kboard(self, dummy, win, ev, val):
-		if self._accelerators.has_key(val):
-			if self._finish is None:
-				self._finish = 1
-			callback = self._accelerators[val]
-			if callback:
-				apply(callback[0], callback[1])
-			if self._looping:
-				raise _break_loop
-		
 	def _resize(self, *rest):
 		self.draw_window()
 
@@ -2960,7 +2842,13 @@ class Dialog:
 		return self.window.getgeometry()
 
 	def create_menu(self, title, list):
-		self.window.create_menu(title, list)
+		newlist = []
+		for entry in list:
+			if entry is None:
+				newlist.append(entry)
+			else:
+				newlist.append(('',) + entry)
+		self.window.create_menu(title, newlist)
 
 	def close(self):
 		self.window.close()
