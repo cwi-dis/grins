@@ -744,7 +744,7 @@ class Window:
 		# h -- height of scaled image
 		# left, right, top, bottom -- part to be cropped (offsets from edges)
 		if clip is not None:
-			clip = self._convert_coordinates(clip, self._canvas)
+			clip = self._convert_coordinates(clip, self._canvas, units=units)
 			if clip[0] <= x:
 				# left edge visible
 				if clip[0] + clip[2] <= x:
