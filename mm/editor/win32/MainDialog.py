@@ -69,7 +69,7 @@ class MainDialog:
 			}
 		import windowinterface
 		f=windowinterface.getmainwnd()
-		self.__owindow=windowinterface.OpenLocationDlg(callbacks,f)
+		self.__owindow=windowinterface.OpenLocationDlg(callbacks, f, self.last_location)
 		self.__text=self.__owindow._text
 		self.__owindow.show()
 
