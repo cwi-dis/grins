@@ -548,6 +548,24 @@ FlattenPath(PyObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char WidenPath__doc__[] =
+"redefines the current path as the area that would be painted if the path were stroked using the pen currently selected into the given device context."
+;
+static PyObject*
+WidenPath(PyObject *self, PyObject *args)
+{
+	HDC hdc;
+	if (!PyArg_ParseTuple(args, "i", &hdc))
+		return NULL;
+	BOOL res = WidenPath(hdc);
+	if(!res){
+		seterror("WidenPath", GetLastError());
+		return NULL;
+		}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 static char GetPath__doc__[] =
 "retrieves the coordinates defining the endpoints of lines and the control points of curves"
 ;
@@ -950,7 +968,7 @@ static char ExtCreatePen__doc__[] =
 static PyObject*
 ExtCreatePen(PyObject *self, PyObject *args)
 {
-	DWORD dwPenStyle = PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT;
+	DWORD dwPenStyle = PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT | PS_JOIN_MITER;
 	DWORD dwWidth;
 	LOGBRUSH lb = {BS_SOLID, 0, 0};
 	DWORD dwStyleCount = 0;    // length of custom style array
@@ -1151,6 +1169,7 @@ static struct PyMethodDef wingdi_methods[] = {
 	{"StrokeAndFillPath", (PyCFunction)StrokeAndFillPath, METH_VARARGS, StrokeAndFillPath__doc__},
 	{"CloseFigure", (PyCFunction)CloseFigure, METH_VARARGS, CloseFigure__doc__},
 	{"FlattenPath", (PyCFunction)FlattenPath, METH_VARARGS, FlattenPath__doc__},
+	{"WidenPath", (PyCFunction)WidenPath, METH_VARARGS, WidenPath__doc__},
 	{"GetPath", (PyCFunction)GetPath, METH_VARARGS, GetPath__doc__},
 
 	{"MoveToEx", (PyCFunction)MoveToEx, METH_VARARGS, MoveToEx__doc__},
