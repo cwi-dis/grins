@@ -470,7 +470,8 @@ class NodeWrapper(Wrapper):
 			'name', ('channel',), ('file',), # From nodeinfo window
 			('.type',),
 			('terminator',),
-			'beginlist', 'endlist', 'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
+##			'beginlist', 'endlist',
+			'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
 			('restart',), ('restartDefault',),
 			('clipbegin',), ('clipend',),	# More time stuff
 			('top',), ('height',), ('bottom',),
@@ -701,10 +702,12 @@ class AnimationWrapper(NodeWrapper):
 		NodeWrapper.__init__(self, toplevel, node)
 
 	def attrnames(self):
-		self._durattrs  = ['beginlist', 'endlist', 'duration', 'loop', 
-			'repeatdur', 'speed', 'autoReverse']
+		self._durattrs  = ['duration', 'loop',
+##				   'beginlist', 'endlist', 
+				   'repeatdur', 'speed', 'autoReverse']
 
-		namelist = ['name', 'beginlist', 'endlist', 'duration', 'loop', 'repeatdur',
+		namelist = ['name', 'duration', 'loop', 'repeatdur',
+##			    'beginlist', 'endlist',
 			    'restart', 'restartDefault', 'fill', 'fillDefault',
 			    'speed', 'accelerate', 'decelerate', 'autoReverse',
 			    ]
