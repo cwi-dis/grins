@@ -189,6 +189,8 @@ class EditMgr:
 		if c is None:
 			raise MMExc.AssertError, \
 				  'unknown channel name in delchannel'
+		i = self.context.channels.index(c)
+		attrdict = c.attrdict
 		self.addstep('delchannel', name, i, attrdict)
 		self.context.delchannel(name)
 	#
