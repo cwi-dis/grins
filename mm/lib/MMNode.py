@@ -3225,8 +3225,6 @@ class MMNode(MMTreeElement):
 		self.caption_body = None
 		self.force_switch_choice = 0
 		self.wtd_children = []
-		if self.type in playabletypes:
-			return
 		if self.type == 'seq':
 			for c in self.GetSchedChildren():
 				if seeknode is not None and \
@@ -3237,7 +3235,7 @@ class MMNode(MMTreeElement):
 				elif seeknode is None:
 					self.wtd_children.append(c)
 					c._FastPruneTree()
-		elif self.type == 'par':
+		elif self.type == 'par' or self.type in playabletypes:
 			self.wtd_children = self.GetSchedChildren()[:]
 			for c in self.GetSchedChildren():
 				if c.IsAncestorOf(seeknode):
@@ -4523,6 +4521,15 @@ class FakeRootNode(MMNode):
 
 	def GetSchedParent(self):
 		return None
+
+	def IsAncestorOf(self, x):
+		while x is not None:
+			if self is x: return 1
+			if hasattr(x, 'fakeparent'):
+				x = x.fakeparent
+			else:
+				x = x.parent
+		return 0
 
 	def resetall(self, sched):
 		if sched is not None:
