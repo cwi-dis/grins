@@ -71,7 +71,9 @@ inline bool GifDecoder::can_decode()
 
 inline DIBSurf* GifDecoder::decode()
 	{
-	if(!can_decode()) return NULL;	
+	if(!can_decode()) return NULL;
+	m_mf.readAll();
+
 	m_scr_width = m_mf.get_be_ushort();
 	m_scr_height = m_mf.get_be_ushort();
 	

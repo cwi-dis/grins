@@ -117,14 +117,13 @@ PyObject* Wingdi_CreateDIBSurfaceFromFile(PyObject *self, PyObject *args)
 	
 	memfile mf;
 	mf.open(TextPtr(filename));
-	
+	mf.read(16);
 	ImgDecoder *decoder = CreateImgDecoder(mf, hDC);
 	if(decoder == NULL)
 		{
 		seterror("CreateDIBSurfaceFromFile", "cant find a decoder for image format");
 		return NULL;
 		}
-
 	DIBSurf *pDIBSurf = decoder->decode();
 	delete decoder;
 	if(pDIBSurf == NULL)
