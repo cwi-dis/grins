@@ -1588,17 +1588,23 @@ class MMNode:
 			self._mediaCssId = self.newMediaCssId()
 
 	def destroy(self):
+		self.__unlinkCssId()
+		self._mediaCssId = None
+		self._subRegCssId = None
 		self.type = None	# see MMTypes.py
 		self.context = None	# From MMContext
 		self.uid = None		# Unique identifier for each node (starts at 1)
 		self.attrdict = None	# Attributes of this MMNode
+		self.attrcache = None
 		self.d_attrdict = None	# Dynamic (changing) attrs of this MMNode
 		self.values = None
 		self.willplay = None	# Used for colours in the editor
 		self.shouldplay = None
 		self.canplay = None
+		self.gensr = None
 		self.parent = None	# The parent of this MMNode
 		self.children = None	# The sub-nodes of this MMNode
+		self.wtd_children = None
 		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
@@ -1623,6 +1629,7 @@ class MMNode:
 					# looking at this object.
 		self.collapsed = None;	# Whether this node is collapsed in the structure view.
 		self.timing_info_dict = None
+		self.happenings = None
 		
 	#
 	# Return string representation of self
@@ -4198,7 +4205,7 @@ class FakeRootNode(MMNode):
 		MMNode.resetall(self, sched)
 		del self.__root.fakeparent
 		del self.__root
-		del self.children
+		self.destroy()
 
 # Make a "deep copy" of an arbitrary value
 #
