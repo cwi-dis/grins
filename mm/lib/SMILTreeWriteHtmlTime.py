@@ -760,6 +760,10 @@ class SMILHtmlTimeWriter(SMIL):
 					coords = string.join(coords, ',')
 					ok = 1
 				elif shapeType == A_SHAPETYPE_ALLREGION:
+					rc = x.getPxGeomMedia()[1]
+					for c in rc:
+						coords.append('%d' % c)
+					coords = string.join(coords, ',')
 					ok = 1
 			except:
 				pass						
@@ -771,13 +775,20 @@ class SMILHtmlTimeWriter(SMIL):
 				elif shapeType == A_SHAPETYPE_RECT:
 					attrlist.append(('shape', 'rect'))
 					
-				if shapeType != A_SHAPETYPE_ALLREGION:
-					attrlist.append(('coords', coords))
+				#if shapeType != A_SHAPETYPE_ALLREGION:
+				attrlist.append(('coords', coords))
 			else:
 				attrlist.append(('fragment', id))						
 		elif a.atype == ATYPE_AUTO:
 			attrlist.append(('actuate', 'onLoad'));
-			
+		else:
+			coords = []
+			rc = x.getPxGeomMedia()[1]
+			for c in rc:
+				coords.append('%d' % c)
+			coords = string.join(coords, ',')
+			attrlist.append(('coords', coords))
+				
 		begin, end = a.atimes
 		if begin:
 			attrlist.append(('begin', fmtfloat(begin, 's')))
