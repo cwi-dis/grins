@@ -41,7 +41,7 @@ class Main:
 						self._mmcallback, ())
 		new_file = 0
 		if not files:
-			files = ['NEW DOCUMENT.cmif']
+			files = ['NEW-DOCUMENT.cmif']
 			new_file = 1
 		for fn in files:
 			top = TopLevel.TopLevel(self, fn, new_file)
