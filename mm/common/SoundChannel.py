@@ -125,10 +125,12 @@ class SoundChannel(ChannelAsync):
 
 class Player:
 	def __init__(self):
+		global SECONDS_TO_BUFFER
 		# __merger, __converter, __tid, and __data are all None/'',
 		# or none of them are.
 		self.__pausing = 0	# whether we're pausing
 		self.__port = audiodev.writer(qsize = SECONDS_TO_BUFFER*48000) # Worst-case queuesize
+		SECONDS_TO_BUFFER = self.__port.getfillable() / 48000
 		self.__merger = None	# merged readers
 		self.__converter = None	# merged readers, converted to port
 		self.__tid = None	# timer id
