@@ -310,6 +310,14 @@ class ComboBox(Control):
 		self.sendmessage(win32con.CB_RESETCONTENT)
 	def deletestring(self,index):
 		self.sendmessage(win32con.CB_DELETESTRING,index)
+	# edit box like interface
+	def setedittext(self,str):
+		self.sendmessage_ls(win32con.WM_SETTEXT,0,str)
+	def getedittextlength(self):
+		return self.sendmessage(win32con.WM_GETTEXTLENGTH)
+	def getedittext(self):
+		n=self.getedittextlength()+1
+		return self.sendmessage_rs(win32con.WM_GETTEXT,n,n)	
 
 	# cmif interface
 	def __icmif(self):
