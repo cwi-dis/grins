@@ -3,6 +3,7 @@
 # std win32 modules
 import win32ui, win32con, win32api
 Sdk = win32ui.GetWin32Sdk()
+Afx=win32ui.GetAfx()
 
 # win32 lib modules
 import win32mu, components
@@ -41,7 +42,7 @@ class _LayoutView2(GenFormView):
 		# Initialize control objects
 		# save them in directory: accessible directly from LayoutViewDialog class
 		# note: if you modify the key names, you also have to modify them in LayoutViewDialog
-		self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY','RegionW','RegionH','RegionZ')
+		self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY','RegionW','RegionH','RegionZ', 'ShowNames')
 		self[n[0]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_VIEWPORT_SEL)
 		self[n[1]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_REGION_SEL)
 		self[n[2]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X)
@@ -49,11 +50,15 @@ class _LayoutView2(GenFormView):
 		self[n[4]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_W)
 		self[n[5]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H)
 		self[n[6]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z)
+		self[n[7]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_NAMES)
 
 		# Initialize control objects whose command are activable as well from menu bar
 		self[ATTRIBUTES]=components.Button(self,grinsRC.IDC_LAYOUT_PROPERTIES)
 		
 		self._activecmds={}
+
+		# set this to 0 to suppress region names
+		self._showRegionNames = 1
 
 		# region name : list index
 		self._region2ix = {}
@@ -85,6 +90,9 @@ class _LayoutView2(GenFormView):
 			self['ViewportSel'].setcursel(0)
 			self.selectViewport(vpList[0])
 
+		# update show names check box 
+		self['ShowNames'].setcheck(self._showRegionNames)
+
 	# Sets the acceptable commands. 
 	def set_commandlist(self,commandlist):
 		frame=self.GetParent()
@@ -115,6 +123,11 @@ class _LayoutView2(GenFormView):
 			elif id == self['RegionSel']._id:
 				self.onRegionSelChange()
 			return
+		
+		if id == self['ShowNames']._id:
+			if nmsg==win32con.BN_CLICKED:
+				self.onShowRegionNames()
+			return 
 
 		# process rest
 		cmd=None
@@ -133,6 +146,11 @@ class _LayoutView2(GenFormView):
 		rgnname = self['RegionSel'].getvalue()
 		self.selectRegion(rgnname)
 
+	def onShowRegionNames(self):
+		self._showRegionNames = self['ShowNames'].getcheck()
+		self._layout._viewport.showNames(self._showRegionNames)
+		self._layout.update()
+
 	def selectViewport(self, name):
 		self._layout.setViewport(name)
 		rgnList = self._layout.getRegions(name)
@@ -145,7 +163,7 @@ class _LayoutView2(GenFormView):
 		if rgnList:
 			self['RegionSel'].setcursel(0)
 			self.selectRegion(rgnList[0])
-	
+				
 	def selectRegion(self, name):
 		region = self._layout.getRegion(name)
 		if region:
@@ -184,8 +202,9 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		self.__viewports = {}
 		self._viewport = None
 		
-		Afx=win32ui.GetAfx()
-		Sdk=win32ui.GetWin32Sdk()
+		fd = {'name':'Arial','height':10,'weight':700}
+		self.__hsmallfont = Sdk.CreateFontIndirect(fd)		
+
 		brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(bgcolor),0)
 		cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
 		icon=0
@@ -203,6 +222,10 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
+
+	def OnDestroy(self, params):
+		if self.__hsmallfont:
+			Sdk.DeleteObject(self.__hsmallfont)
 
 	def onLButtonDown(self, params):
 		msg=win32mu.Win32Msg(params)
@@ -222,7 +245,11 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 	def OnPaint(self):
 		dc, paintStruct = self.BeginPaint()
 		
+		hf = dc.SelectObjectFromHandle(self.__hsmallfont)
+
 		self.paintOn(dc)
+		
+		dc.SelectObjectFromHandle(hf)
 		
 		# paint frame decoration
 		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
@@ -339,6 +366,13 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 						self.__viewports[parent].append(child)
 					parent = p
 
+	def __setSmallFont(self, dc):
+		self.__hfont_org = dc.SelectObjectFromHandle(self.__hsmallfont)
+
+	def __restoreFont(self, dc):
+		if self.__hfont_org:
+			dc.SelectObjectFromHandle(self._hfont_org)
+
 
 ###########################
 
@@ -359,6 +393,8 @@ class Viewport(win32window.Window):
 		# adjust some variables
 		self._topwindow = self
 
+		self._showname = 1
+
 		self._regions = {}
 		self.__createRegions(name, ctx._context)
 
@@ -371,6 +407,11 @@ class Viewport(win32window.Window):
 	def update(self, rc=None):
 		self._ctx.update(rc)
 
+	def showNames(self, bv):
+		for w in self._subwindows:
+			w.showNames(bv)
+		self._showname = bv
+		
 	def getMouseTarget(self, point):
 		for w in self._subwindows:
 			if w.inside(point):
@@ -433,6 +474,7 @@ class Viewport(win32window.Window):
 				parRegion = dr[parRgnName]
 			region._do_init(parRegion)
 
+		
 
 ###########################
 
@@ -441,6 +483,7 @@ class Region(win32window.Window):
 		self._name = name
 		self._ctx = ctx
 		self._dict = dict
+		self._showname = 1
 		win32window.Window.__init__(self)
 
 	def _do_init(self, parent):
@@ -462,6 +505,17 @@ class Region(win32window.Window):
 		for w in L:
 			w.paintOn(dc)
 
+		if self._showname:
+			dc.SetBkMode(win32con.TRANSPARENT)
+			dc.DrawText(self._name, ltrb, win32con.DT_SINGLELINE|win32con.DT_CENTER|win32con.DT_VCENTER)
+
 		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
 		dc.FrameRectFromHandle(ltrb,br)
 		Sdk.DeleteObject(br)
+
+	def showNames(self, bv):
+		for w in self._subwindows:
+			w.showNames(bv)
+		self._showname = bv
+
+
