@@ -57,11 +57,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			CHANNELVIEW(callback = (self.view_callback, (2,))),
 			LINKVIEW(callback = (self.view_callback, (3,))),
 			LAYOUTVIEW(callback = (self.view_callback, (4,))),
-			SAVE(callback = (self.save_callback, ())),
-			SAVE_AS(callback = (self.saveas_callback, ())),
 			RESTORE(callback = (self.restore_callback, ())),
 			CLOSE(callback = (self.close_callback, ())),
 			]
+		if self.main.cansave():
+			self.commandlist = self.commandlist + [
+				SAVE(callback = (self.save_callback, ())),
+				SAVE_AS(callback = (self.saveas_callback, ())),
+				]
 		import Help
 		if Help.hashelp():
 			self.commandlist.append(
@@ -227,6 +230,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# Get rid of hyperlinks outside the current tree and clipboard
 		# (XXX We shouldn't *save* the links to/from the clipboard,
 		# but we don't want to throw them away either...)
+		license = self.main.wanttosave()
+		if not license:
+			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
+			return 0
 		roots = [self.root]
 		import Clipboard
 		type, data = Clipboard.getclip()
