@@ -1246,6 +1246,7 @@ class BaseSMILWriter:
 		x = self.__stack[-1][1]
 		if self.set_char_pos and x is not None:
 			x.char_positions = x.char_positions[0], end
+			x.tag_positions = x.tag_positions + ((end-2-len(self.__stack[-1][0]), end-2),)
 		del self.__stack[-1]
 
 	def close(self):
@@ -1340,6 +1341,7 @@ class BaseSMILWriter:
 		start, end = write('<' + tag)
 		if self.set_char_pos and x is not None:
 			x.char_positions = start, None
+			x.tag_positions = ((end-len(tag), end), )
 		for attr, val in attrs:
 			if attr[:len(NSGRiNSprefix)] == NSGRiNSprefix and not hasGRiNSprefix:
 				continue
