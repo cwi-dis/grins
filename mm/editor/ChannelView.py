@@ -16,7 +16,8 @@ __version__ = "$Id$"
 
 from math import sin, cos, atan2, pi, ceil, floor
 import windowinterface, WMEVENTS, StringStuff
-from ViewDialog import ViewDialog
+from ChannelViewDialog import ChannelViewDialog, GOCommand, \
+	ChannelBoxCommand, NodeBoxCommand, ArcBoxCommand
 
 from MMNode import alltypes, leaftypes, interiortypes
 import MMAttrdefs
@@ -78,11 +79,10 @@ PLACING_COPY = 2
 PLACING_MOVE = 3
 
 
-begend = ('begin', 'end')
 
 # Channel view class
 
-class ChannelView(ViewDialog):
+class ChannelView(ChannelViewDialog):
 
 	# Initialization.
 	# (Actually, most things are initialized by show().)
@@ -102,7 +102,7 @@ class ChannelView(ViewDialog):
 		self.showall = 0
 		self.placing_channel = 0
 		title = 'Channel View (' + self.toplevel.basename + ')'
-		ViewDialog.__init__(self, 'cview_')
+		ChannelViewDialog.__init__(self)
 		self.delayed_drawarcs_id = None
 
 	def __repr__(self):
@@ -115,14 +115,7 @@ class ChannelView(ViewDialog):
 			return
 		self.toplevel.showstate(self, 1)
 		title = 'Channel View (' + self.toplevel.basename + ')'
-		self.load_geometry()
-		x, y, w, h = self.last_geometry
-		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, canvassize = (w, h))
-		if self.waiting:
-			self.window.setcursor('watch')
-		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
-		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
-		self.window.register(WMEVENTS.WindowExit, self.hide, None)
+		ChannelViewDialog.show(self, title)
 		self.window.bgcolor(BGCOLOR)
 		# Other administratrivia
 		self.editmgr.register(self)
@@ -138,16 +131,13 @@ class ChannelView(ViewDialog):
 			obj = self.focus
 		else:
 			obj = self.baseobject
-		self.window.create_menu(obj.commandlist, title = obj.menutitle)
+		self.setcommands(obj.commandlist, title = obj.menutitle)
 
 	def hide(self, *rest):
 		if not self.is_showing():
 			return
 		self.toplevel.showstate(self, 0)
-		self.save_geometry()
-		self.window.close()
-		self.window = None
-		self.displist = self.new_displist = None
+		ChannelViewDialog.hide(self)
 		self.cleanup()
 		self.editmgr.unregister(self)
 		self.toplevel.checkviews()
@@ -598,7 +588,7 @@ class ChannelView(ViewDialog):
 			obj = self.focus
 		else:
 			obj = self.baseobject
-		self.window.create_menu(obj.commandlist, title = obj.menutitle)
+		self.setcommands(obj.commandlist, title = obj.menutitle)
 
 	# Global focus stuff
 
@@ -771,7 +761,7 @@ class ChannelView(ViewDialog):
 # These live in close symbiosis with their "mother", the ChannelView!
 # Note: reshape() must be called before draw() or ishit() can be called.
 
-class GO:
+class GO(GOCommand):
 
 	def __init__(self, mother, name):
 		self.mother = mother
@@ -789,24 +779,8 @@ class GO:
 		# Menu and shortcut definitions are stored as data in
 		# the class
 
-		self.commandlist = c = []
-##		c.append('h', 'Help...', (self.helpcall, ()))
-		c.append('', 'Canvas', [
-			('', 'Double height',
-			 (self.canvascall, (windowinterface.DOUBLE_HEIGHT,))),
-			('', 'Double width',
-			 (self.canvascall, (windowinterface.DOUBLE_WIDTH,))),
-			('', 'Reset',
-			 (self.canvascall, (windowinterface.RESET_CANVAS,)))])
-		c.append('n', 'New channel...',  (self.newchannelcall, ()))
-		c.append('N', 'Next mini-document', (self.nextminicall, ()))
-		c.append('P', 'Previous mini-document', (self.prevminicall, ()))
-		c.append('',  'Ancestors', self.ancestors)
-		c.append('', 'Siblings', self.siblings)
-		c.append('', 'Descendants', self.descendants)
-		c.append('T', 'Toggle unused channels', (self.toggleshowcall, ()))
-		self.menutitle = 'Base ops'
-
+		GOCommand.__init__(self)
+		
 	def __repr__(self):
 		if hasattr(self, 'name'):
 			name = ', name=' + `self.name`
@@ -851,7 +825,7 @@ class GO:
 		self.mother.deselect()
 		self.selected = 1
 		self.mother.focus = self
-		self.mother.window.create_menu(self.commandlist,
+		self.mother.setcommands(self.commandlist,
 					       title = self.menutitle)
 		if self.ok:
 			self.drawfocus()
@@ -865,7 +839,7 @@ class GO:
 		mother.focus = None
 		if self.ok:
 			baseobject = mother.baseobject
-			mother.window.create_menu(baseobject.commandlist,
+			mother.setcommands(baseobject.commandlist,
 						  title = baseobject.menutitle)
 			self.drawfocus()
 
@@ -984,7 +958,7 @@ class TimeScaleBox(GO):
 
 # Class for Channel Objects
 
-class ChannelBox(GO):
+class ChannelBox(GO, ChannelBoxCommand):
 
 	def __init__(self, mother, channel):
 		GO.__init__(self, mother, channel.name)
@@ -993,19 +967,8 @@ class ChannelBox(GO):
 			self.ctype = channel['type']
 		except KeyError:
 			self.ctype = '???'
-		c = self.commandlist
-		c.append(None)
-## 		c.append('i', '', (self.attrcall, ()))
-		c.append('a', 'Channel attr...', (self.attrcall, ()))
-		c.append('d', 'Delete channel',  (self.delcall, ()))
-		c.append('m', 'Move channel', (self.movecall, ()))
-		c.append('c', 'Copy channel', (self.copycall, ()))
-		c.append(None)
-		c.append('', 'Toggle on/off', (self.channel_onoff, ()))
-		c.append(None)
-		c.append('', 'Highlight window', (self.highlight, ()))
-		c.append('', 'Unhighlight window', (self.unhighlight, ()))
-		self.menutitle = 'Channel ' + self.name + ' ops'
+		
+		ChannelBoxCommand.__init__(self)
 
 	def channel_onoff(self):
 		self.mother.toplevel.setwaiting()
@@ -1146,7 +1109,7 @@ class ChannelBox(GO):
 
 
 
-class NodeBox(GO):
+class NodeBox(GO, NodeBoxCommand):
 
 	def __init__(self, mother, node):
 		import Duration
@@ -1172,35 +1135,7 @@ class NodeBox(GO):
 		self.locked = 0
 		GO.__init__(self, mother, name)
 		self.is_node_object = 1
-		c = self.commandlist
-		c.append(None)
-		c.append('p', 'Play node...', (self.playcall, ()))
-		c.append('G', 'Play from here...', (self.playfromcall, ()))
-		c.append('f', 'Push focus', (self.focuscall, ()))
-		c.append(None)
-		c.append('s', 'Finish sync arc...', (self.newsyncarccall, ()))
-		c.append('L', 'Finish hyperlink...', (self.hyperlinkcall, ()))
-		c.append(None)
-		c.append('i', 'Node info...', (self.infocall, ()))
-		c.append('a', 'Node attr...', (self.attrcall, ()))
-		c.append('e', 'Edit contents...', (self.editcall, ()))
-		c.append('t', 'Edit anchors...', (self.anchorcall, ()))
-		arcmenu = []
-		for arc in MMAttrdefs.getattr(node, 'synctolist'):
-			xuid, xside, delay, yside = arc
-			try:
-				xnode = node.MapUID(xuid)
-			except NoSuchUIDError:
-				# Skip sync arc from non-existing node
-				continue
-			if xnode.FindMiniDocument() is mother.viewroot:
-				xname = MMAttrdefs.getattr(xnode, 'name')
-				if not xname:
-					xname = '#' + xuid
-				arcmenu.append('', 'From %s of node "%s" to %s of self' % (begend[xside], xname, begend[yside]), (self.selsyncarc, (xnode, xside, delay, yside)))
-		if arcmenu:
-			c.append('', 'Select sync arc', arcmenu)
-		self.menutitle = 'Node ' + self.name + ' ops'
+		NodeBoxCommand.__init__(self, mother, node)
 
 
 	def selsyncarc(self, xnode, xside, delay, yside):
@@ -1471,17 +1406,13 @@ class INodeBox(GO):
 		return
 
 	
-class ArcBox(GO):
+class ArcBox(GO, ArcBoxCommand):
 
 	def __init__(self, mother, snode, sside, delay, dnode, dside):
 		self.snode, self.sside, self.delay, self.dnode, self.dside = \
 			snode, sside, delay, dnode, dside
 		GO.__init__(self, mother, 'arc')
-		c = self.commandlist
-		c.append(None)
-		c.append('i', 'Sync arc info...', (self.infocall, ()))
-		c.append('d', 'Delete sync arc',  (self.delcall, ()))
-		self.menutitle = 'Sync arc ' + self.name + ' ops'
+		ArcBoxCommand.__init__(self)
 
 
 	def reshape(self):
