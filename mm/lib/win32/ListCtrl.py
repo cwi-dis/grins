@@ -4,12 +4,13 @@ import win32ui
 import win32con
 import commctrl
 import DropTarget
+import IconMixin
 
 import win32mu
 
 from pywinlib.mfc import window
 
-class ListCtrl(window.Wnd, DropTarget.DropTargetProxy):
+class ListCtrl(window.Wnd, DropTarget.DropTargetProxy, IconMixin.CtrlMixin):
 	def __init__ (self, dlg=None, ctrl=None, resId=None):
 		self.parent = dlg
 		if not ctrl:
