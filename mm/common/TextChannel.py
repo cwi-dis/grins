@@ -64,7 +64,7 @@ class TextChannel(ChannelWindow):
 				  chr0, 0, curlines, partoline)
 			line1, char1 = map_parpos_to_linepos(par1, \
 				  chr1, 1, curlines, partoline)
-			if (line0, char0) > (line1, char1):
+			if (line0, char0) >= (line1, char1):
 				print 'Anchor without screenspace:', name
 				continue
 			# write everything before the anchor
@@ -208,8 +208,9 @@ def extract_paragraphs(text):
 def extract_taglist(parlist):
 	import regex
 	# (1) Extract the raw tags, removing them from the text
-	pat = regex.compile('<[Aa] +[Nn][Aa][Mm][Ee]=\([a-zA-Z0-9_]+\)>\|'+
-		  '<[Aa] +[Hh][Rr][Ee][Ff]="[Cc][Mm][Ii][Ff]:\([a-zA-Z0-9_]+\)">\|</[Aa]>')
+	pat = regex.compile('<a +name=\([a-z0-9_]+\)>\|'
+			    '<a +href="cmif:\([a-z0-9_]+\)>\|</a>',
+			    regex.casefold)
 	rawtaglist = []
 	for i in range(len(parlist)):
 		par = parlist[i]
