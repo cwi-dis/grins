@@ -547,6 +547,19 @@ def getpercentage(writer, node, attr):
 	else:
 		return fmtfloat(prop * 100, suffix = '%')
 
+def getsensitivity(writer, node):
+	if not writer.smilboston:
+		return
+	sensitivity = node.GetRawAttrDef('sensitivity', None)
+	if sensitivity is None:
+		return
+	if sensitivity >= 100:
+		return 'transparent'
+	elif sensitivity <= 0:
+		return			# 'opaque' is default
+	elif 0 < sensitivity < 100:
+		return '%d%%' % sensitivity
+
 def escape_name(name, quote_initial = 1):
 	name = string.join(string.split(name, '.'), '\\.')
 	name = string.join(string.split(name, '-'), '\\-')
@@ -820,7 +833,7 @@ smil_attrs=[
 	("clip-end", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
 	("clipBegin", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None),
 	("clipEnd", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
-	("sensitivity", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'sensitivity', 'opaque')) or None),
+	("sensitivity", getsensitivity),
 	("targetElement", lambda writer, node: node.GetRawAttrDef("targetElement", None)),
 	("attributeName", lambda writer, node: node.GetRawAttrDef("attributeName", None)),
 	("attributeType", getattributetype),

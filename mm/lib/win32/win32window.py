@@ -177,12 +177,12 @@ class Window:
 			pass
 		else:
 			raise error, 'invalid function'
-		if event in(ResizeWindow, KeyboardInput, Mouse0Press,
+		if event in (ResizeWindow, KeyboardInput, Mouse0Press,
 			     Mouse0Release, Mouse1Press, Mouse1Release,
 			     Mouse2Press, Mouse2Release, 
-				 DropFile, PasteFile, DragFile,
-				 DragNode, DropNode,
-				 WindowExit, WindowContentChanged):
+			     DropFile, PasteFile, DragFile,
+			     DragNode, DropNode,
+			     WindowExit, WindowContentChanged):
 			self._callbacks[event] = func, arg
 			if event in (DropFile, PasteFile, DragFile, DragNode, DropNode):
 				self.registerDropTarget()
@@ -240,15 +240,20 @@ class Window:
 		# Called from, for example, self.OnLButtonDown which is called from a view's mouse event.
 		cont, stop = 0, 1
 		if self.is_closed(): return cont
-		point = self._DPtoLP(point) # does absolutely nothing. -mjvdg
+		point = self._DPtoLP(point)
 		for wnd in self._subwindows:
 			# test that point is inside the window (not the media space area)
 			if wnd.inside(point):
 				if wnd.onMouseEvent(point, ev, params=params):
 					return stop
-			
+
 		disp = self._active_displist
-		if disp:
+		if disp is not None:
+			if disp.isTransparent(point):
+				# don't consider transparent media
+				if self._transparent:
+					return cont
+				return stop
 			x, y, w, h = self.getwindowpos()
 			xp, yp = point
 			point= xp-x, yp-y
@@ -257,9 +262,8 @@ class Window:
 			for button in disp._buttons:
 				if button._inside(x,y):
 					buttons.append(button)
-			if self.onEvent(ev,(x, y, buttons, params)):
-				# a button has received event, so we have to stop
-				return stop
+			self.onEvent(ev,(x, y, buttons, params))
+			return stop
 
 		# at this point, we didn't find a "anchor button" associated to this event
 		if self._transparent==0:
@@ -267,30 +271,8 @@ class Window:
 			# display list (existing or not)
 			return stop
 		else:
-			if disp:
-				# if the channel is transparent, we have to check if the event location
-				# is inside or outside the media. Note: the media area depend of media type
-				# Currently, only win32displaylist give this information (it's at least the
-				# case for images).
-				if disp._insideMedia(x,y):
-					# event inside the media, the behavior depend of the sensitibity attribute on the media (see SMIL2 specification for more details)
-					if disp._alphaSensitivity == 'transparent':
-						return cont
-					elif disp._alphaSensitivity == 'alpha':
-						# xxx to do: check if the point is transparent.
-						# if yes, return cont
-						if disp.isTransparent(point):
-							return cont
-						return stop
-					else: 
-						# default value (opaque)
-						return stop						
-				else:
-					# outside the media, and transparent window. So check the next window
-					return cont
-			else:
-				# not active display list and transparent window. So check the next window
-				return cont
+			# not active display list and transparent window. So check the next window
+			return cont
 
 	def setcursor_from_point(self, point):
 		cont, stop = 0, 1
@@ -324,20 +306,20 @@ class Window:
 				# Currently, only win32displaylist give this information (it's at least the
 				# case for image).
 				if self._active_displist._insideMedia(x,y):
-					# event inside the media, the behavior depend of the sensitibity attribute on the media (see SMIL2 specification for more details)
-					if self._active_displist._alphaSensitivity == 'transparent':
+					# event inside the media, the behavior depend of the sensitivity attribute on the media (see SMIL2 specification for more details)
+					if self._active_displist._alphaSensitivity == 100:
 						return cont
-					elif self._active_displist._alphaSensitivity == 'alpha':
+					elif self._active_displist._alphaSensitivity == 0:
+						# default value (opaque)
+						self.setcursor(self._cursor)
+						return stop
+					else:
 						# xxx to do: check if the point is transparent.
 						# if yes, return cont
 						if self._active_displist.isTransparent(point):
 							return cont
 						self.setcursor(self._cursor)
 						return stop
-					else: 
-						# default value (opaque)
-						self.setcursor(self._cursor)
-						return stop						
 				else:
 					# outside the media, and transparent window. So check the next window
 					return cont
@@ -2543,7 +2525,3 @@ class _ResizeableDisplayList(_DisplayList):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._list.append(('label', str))
- 
- 
- 
- 
