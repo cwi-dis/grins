@@ -118,13 +118,15 @@ class NodeInfo(NodeInfoDialog):
 			layoutchannels = self.context.layouts.get(layout, [])
 		channelnames1 = []
 		for ch in layoutchannels:
-			channelnames1.append(ch.name)
+			if ch.get('type','') != 'layout':
+				channelnames1.append(ch.name)
 		channelnames1.sort()
 		channelnames2 = self.newchannels
 		channelnames3 = []
-		for chname in self.context.channelnames:
-			if chname not in channelnames1:
-				channelnames3.append(chname)
+		for ch in self.context.channels:
+			if ch.name not in channelnames1 and \
+			   ch.get('type','') != 'layout':
+				channelnames3.append(ch.name)
 		channelnames3.sort()
 		all = channelnames1
 		if channelnames2:
