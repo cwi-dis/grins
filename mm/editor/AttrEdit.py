@@ -197,6 +197,8 @@ class NodeWrapper(Wrapper):
 			self.editmgr.dellink(links[0])
 			links = []
 		if not links:
+			if new is None:
+				return None
 			if not new:
 				# remove the anchor since it isn't used
 				alist = MMAttrdefs.getattr(self.node, 'anchorlist')[:]
