@@ -500,7 +500,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	# Close the opened document
 	def close(self):
 		# 1. destroy cascade menus
-		self._mainmenu.clear_cascade_menus()
+		exceptions=[usercmd.OPEN_RECENT,]
+		self._mainmenu.clear_cascade_menus(exceptions)
 
 		# 2. then the document
 		__main__.toplevel.cleardocmap(self._cmifdoc)
@@ -708,6 +709,9 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	# items are checked/unchecked by the core system
 	def check_cascade_menu_entry(self,id):
 		submenu=self.get_cascade_menu(id)
+		if not submenu:
+			print 'failed to find cascade_menu with id',id
+			return
 		if not submenu._toggles.has_key(id):return
 		state=submenu.GetMenuState(id,win32con.MF_BYCOMMAND)
 		if state & win32con.MF_CHECKED:
