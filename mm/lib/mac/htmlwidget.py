@@ -42,7 +42,7 @@ TRACKED_PARTS=(Controls.inUpButton, Controls.inDownButton,
 		Controls.inPageUp, Controls.inPageDown)
 
 class HTMLWidget:
-	def __init__(self, window, rect, name):
+	def __init__(self, window, rect, name, controlhandler=None):
 		init_waste()
 		self.last_mouse_was_down = 0
 		self.url = ''
@@ -60,6 +60,7 @@ class HTMLWidget:
 		self.font_size = 12
 		self.name = name
 		self.wid = window
+		self.controlhandler = controlhandler
 		l, t, r, b = rect
 		self.rect = rect
 		vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
@@ -80,18 +81,34 @@ class HTMLWidget:
 		del self.ted
 		del self.wid
 		
-	def setcolors(self, bg, fg, an):
-		self.bg_color = bg
-		self.fg_color = fg
-		self.an_color = an
+	def setcolors(self, bg, fg, an, recalc=0):
+		any = 0
+		if not bg is None:
+			self.bg_color = bg
+			any = 1
+		if not fg is None:
+			self.fg_color = fg
+			self.html_color = fg
+			any = 1
+		if not an is None:
+			self.an_color = an
+			any = 1
+		if any and recalc:
+			self.new_font(self.html_font)
 		
-	def setfonts(self, normal, tt, defsize):
+	def setfonts(self, normal, tt, defsize, recalc=0):
+		any = 0
 		if normal != None:
 			self.font_normal = normal
+			any = 1
 		if tt != None:
 			self.font_tt = tt
+			any = 1
 		if defsize != None:
 			self.font_size = defsize
+			any = 1
+		if any and recalc:
+			self.new_font(self.html_font)
 		
 	def createscrollbars(self, reset=0):
 		#
@@ -99,6 +116,8 @@ class HTMLWidget:
 		#
 		if self.bary:
 			self.bary.DisposeControl()
+			if self.controlhandler:
+				self.controlhandler._del_control(self.bary)
 		self.bary = None
 		l, t, r, b = self.rect
 		if reset:
@@ -120,6 +139,9 @@ class HTMLWidget:
 			self.bary = Ctl.NewControl(self.wid, rect, "", 1, vy, 0, dr[3]-dr[1]-(vr[3]-vr[1]), 16, 0)
 			if not self.activated: self.bary.HiliteControl(255)
 			self.updatedocview()
+			if self.controlhandler:
+				self.controlhandler._add_control(self.bary, 
+						self.scrollbar_callback, self.scrollbar_callback)
 		else:
 			vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
 			dr = dr[0], dr[1], dr[0]+vr[2]-vr[0], dr[3]
@@ -293,6 +315,7 @@ class HTMLWidget:
 	def insert_html(self, data, url, tag=None):		
 		if data == '':
 			self.must_clear = 1
+			Qd.SetPort(self.wid)
 			Win.InvalRect(self.rect)
 			return
 
@@ -327,6 +350,38 @@ class HTMLWidget:
 			if tag:
 				print 'Warning: no tag named', tag
 			pos = 0
+		self.ted.WESetSelection(pos, pos)
+##		self.ted.WESetSelection(0, 0)
+		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
+		Win.InvalRect(self.rect)
+
+		self.createscrollbars(reset=1)
+
+	def insert_plaintext(self, data):		
+		if data == '':
+			self.must_clear = 1
+			Qd.SetPort(self.wid)
+			Win.InvalRect(self.rect)
+			return
+
+		self.must_clear = 0
+		Qd.SetPort(self.wid)
+		Qd.RGBBackColor(self.bg_color)
+		self.current_data_loaded = None
+		
+		# Remember where we are, and don't update
+		Qd.SetPort(self.wid)
+		self.ted.WESetSelection(0, 0x3fffffff)
+		self.ted.WEDelete()
+		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 1)
+
+		self.html_init()
+		self.new_font([0, 0, 0, 1])		# Set typewriter font
+		self.send_literal_data(data)	# And insert the data.
+		
+		self.anchor_hrefs = []
+
+		pos = 0
 		self.ted.WESetSelection(pos, pos)
 ##		self.ted.WESetSelection(0, 0)
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
@@ -476,8 +531,13 @@ class MyFormatter(formatter.AbstractFormatter):
 		
 	def my_send_name(self, name):
 		self.writer.send_name(name)
+		
+	def my_body_colors(self, bg, fg, an):
+		self.writer.setcolors(bg, fg, an, recalc=1)
 			
 class MyHTMLParser(htmllib.HTMLParser):
+
+	from machtmlentitydefs import entitydefs
 	
 	def anchor_bgn(self, href, name, type):
 		self.anchor = href
@@ -512,6 +572,31 @@ class MyHTMLParser(htmllib.HTMLParser):
 			self.formatter.add_flowing_data(alt)
 			return
 		self.formatter.my_add_image(handle)
+		
+	def start_body(self, attrs):
+		bg = None
+		fg = None
+		an = None
+		for aname, avalue in attrs:
+			if aname == 'bgcolor':
+				bg = self.parsecolor(avalue)
+			if aname == 'text':
+				fg = self.parsecolor(avalue)
+			if aname == 'link':
+				an = self.parsecolor(avalue)
+		self.formatter.my_body_colors(bg, fg, an)
+		
+	def parsecolor(self, color):
+		if color[0] == '#':
+			try:
+				value = string.atoi(color[1:], 16)
+			except ValueError:
+				return None
+			r = (value>>16) & 0xff
+			g = (value>>8) & 0xff
+			b = value & 0xff
+			return r*0x101, g*0x101, b*0x101
+		return None
 
 
 waste_inited = 0
