@@ -172,8 +172,10 @@ class MainDialog:
 		# this method is called also from the drop stuff
 		# so check for UNC names before calling pathname2url
 		# otherwise it will fail.
-		import longpath, os
-		filename = longpath.short2longpath(filename)
+		import os
+		if os.name != 'ce':
+			import longpath
+			filename = longpath.short2longpath(filename)
 ##		if os.path.isabs(filename):
 ##			cwd = os.getcwd()
 ##			if os.path.isdir(filename):
