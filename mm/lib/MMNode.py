@@ -1625,14 +1625,16 @@ class MMSyncArc:
 		uid = self.dstnode.uid
 		if uidremap.has_key(uid):
 			dstnode = self.context.mapuid(uidremap[uid])
+		else:
+			dstnode = self.dstnode
 		srcnode = self.srcnode
 		if isinstance(srcnode, MMNode):
 			# if it's a string or None, we just copy
 			uid = srcnode.uid
 			if uidremap.has_key(uid):
-				srcnode = self.context.mapuid(uidremap[uid])
+				srcnode = self.dstnode.context.mapuid(uidremap[uid])
 
-		return MMSyncSelf(dstnode, action, srcnode,
+		return MMSyncArc(dstnode, action, srcnode,
 				self.srcanchor, self.channel, self.event,
 				self.marker, self.wallclock,
 				self.accesskey, self.delay)
@@ -2013,8 +2015,7 @@ class MMNode(MMTreeElement):
 		self.infoicon = ''	# An alert icon
 		self.errormessage = None # An error message to accompany the alert icon
 		self.force_switch_choice = 0
-		self.views = {}		# Map {string -> Interactive} - that is, a list of views
-					# looking at this object.
+		self.views = {}		# Used from the structure view to find the structureWidget for this node.
 		self.char_positions= None # The character positions that this node corresponds to in the source.
 		self.timing_info_dict = {}
 		
