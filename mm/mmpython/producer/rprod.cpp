@@ -4181,215 +4181,215 @@ initproducer()
 	if (x == NULL || PyDict_SetItemString(d, "MIME_REALPIX", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_TARGET_28_MODEM);
+	x = PyInt_FromLong((long) ENC_TARGET_28_MODEM);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_TARGET_28_MODEM", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_TARGET_56_MODEM);
+	x = PyInt_FromLong((long) ENC_TARGET_56_MODEM);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_TARGET_56_MODEM", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_TARGET_SINGLE_ISDN);
+	x = PyInt_FromLong((long) ENC_TARGET_SINGLE_ISDN);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_TARGET_SINGLE_ISDN", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_TARGET_DUAL_ISDN);
+	x = PyInt_FromLong((long) ENC_TARGET_DUAL_ISDN);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_TARGET_DUAL_ISDN", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_TARGET_LAN_LOW);
+	x = PyInt_FromLong((long) ENC_TARGET_LAN_LOW);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_TARGET_LAN_LOW", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_TARGET_LAN_HIGH);
+	x = PyInt_FromLong((long) ENC_TARGET_LAN_HIGH);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_TARGET_LAN_HIGH", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_NUM_TARGET_AUDIENCES);
+	x = PyInt_FromLong((long) ENC_NUM_TARGET_AUDIENCES);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_NUM_TARGET_AUDIENCES", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_AUDIO_CONTENT_VOICE);
+	x = PyInt_FromLong((long) ENC_AUDIO_CONTENT_VOICE);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_AUDIO_CONTENT_VOICE", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_AUDIO_CONTENT_VOICE_BACKGROUND);
+	x = PyInt_FromLong((long) ENC_AUDIO_CONTENT_VOICE_BACKGROUND);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_AUDIO_CONTENT_VOICE_BACKGROUND", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_AUDIO_CONTENT_MUSIC);
+	x = PyInt_FromLong((long) ENC_AUDIO_CONTENT_MUSIC);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_AUDIO_CONTENT_MUSIC", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_AUDIO_CONTENT_MUSIC_STEREO);
+	x = PyInt_FromLong((long) ENC_AUDIO_CONTENT_MUSIC_STEREO);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_AUDIO_CONTENT_MUSIC_STEREO", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_NUM_AUDIO_CONTENTS);
+	x = PyInt_FromLong((long) ENC_NUM_AUDIO_CONTENTS);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_NUM_AUDIO_CONTENTS", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_QUALITY_NORMAL);
+	x = PyInt_FromLong((long) ENC_VIDEO_QUALITY_NORMAL);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_QUALITY_NORMAL", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_QUALITY_SMOOTH_MOTION);
+	x = PyInt_FromLong((long) ENC_VIDEO_QUALITY_SMOOTH_MOTION);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_QUALITY_SMOOTH_MOTION", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_QUALITY_SHARP_IMAGE);
+	x = PyInt_FromLong((long) ENC_VIDEO_QUALITY_SHARP_IMAGE);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_QUALITY_SHARP_IMAGE", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_QUALITY_SLIDESHOW);
+	x = PyInt_FromLong((long) ENC_VIDEO_QUALITY_SLIDESHOW);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_QUALITY_SLIDESHOW", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_NUM_VIDEO_QUALITYS);
+	x = PyInt_FromLong((long) ENC_NUM_VIDEO_QUALITYS);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_NUM_VIDEO_QUALITYS", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_FORMAT_RGB24);
+	x = PyInt_FromLong((long) ENC_VIDEO_FORMAT_RGB24);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_FORMAT_RGB24", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_FORMAT_RGB32);
+	x = PyInt_FromLong((long) ENC_VIDEO_FORMAT_RGB32);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_FORMAT_RGB32", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_FORMAT_RGB32_NONINVERTED);
+	x = PyInt_FromLong((long) ENC_VIDEO_FORMAT_RGB32_NONINVERTED);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_FORMAT_RGB32_NONINVERTED", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_FORMAT_BGR32);
+	x = PyInt_FromLong((long) ENC_VIDEO_FORMAT_BGR32);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_FORMAT_BGR32", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_FORMAT_BGR32_NONINVERTED);
+	x = PyInt_FromLong((long) ENC_VIDEO_FORMAT_BGR32_NONINVERTED);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_FORMAT_BGR32_NONINVERTED", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_FORMAT_I420);
+	x = PyInt_FromLong((long) ENC_VIDEO_FORMAT_I420);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_FORMAT_I420", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_FORMAT_YV12);
+	x = PyInt_FromLong((long) ENC_VIDEO_FORMAT_YV12);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_FORMAT_YV12", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_FORMAT_YVU9);
+	x = PyInt_FromLong((long) ENC_VIDEO_FORMAT_YVU9);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_FORMAT_YVU9", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_FORMAT_YUY2);
+	x = PyInt_FromLong((long) ENC_VIDEO_FORMAT_YUY2);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_FORMAT_YUY2", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_FORMAT_YUY2_INVERTED);
+	x = PyInt_FromLong((long) ENC_VIDEO_FORMAT_YUY2_INVERTED);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_FORMAT_YUY2_INVERTED", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_FORMAT_UYVY);
+	x = PyInt_FromLong((long) ENC_VIDEO_FORMAT_UYVY);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_FORMAT_UYVY", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_NUM_VIDEO_FORMATS);
+	x = PyInt_FromLong((long) ENC_NUM_VIDEO_FORMATS);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_NUM_VIDEO_FORMATS", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_NOISE_FILTER_OFF);
+	x = PyInt_FromLong((long) ENC_VIDEO_NOISE_FILTER_OFF);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_NOISE_FILTER_OFF", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_NOISE_FILTER_LOW);
+	x = PyInt_FromLong((long) ENC_VIDEO_NOISE_FILTER_LOW);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_NOISE_FILTER_LOW", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_VIDEO_NOISE_FILTER_HIGH);
+	x = PyInt_FromLong((long) ENC_VIDEO_NOISE_FILTER_HIGH);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_VIDEO_NOISE_FILTER_HIGH", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_NUM_NOISE_FILTER_SETTINGS);
+	x = PyInt_FromLong((long) ENC_NUM_NOISE_FILTER_SETTINGS);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_NUM_NOISE_FILTER_SETTINGS", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_TARGET_AUDIENCES_AUDIO);
+	x = PyInt_FromLong((long) ENC_TARGET_AUDIENCES_AUDIO);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_TARGET_AUDIENCES_AUDIO", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_TARGET_AUDIENCES_VIDEO);
+	x = PyInt_FromLong((long) ENC_TARGET_AUDIENCES_VIDEO);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_TARGET_AUDIENCES_VIDEO", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_TARGET_AUDIENCES_MULTIMEDIA);
+	x = PyInt_FromLong((long) ENC_TARGET_AUDIENCES_MULTIMEDIA);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_TARGET_AUDIENCES_MULTIMEDIA", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_NUM_TARGET_AUDIENCES_OPTIONS);
+	x = PyInt_FromLong((long) ENC_NUM_TARGET_AUDIENCES_OPTIONS);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_NUM_TARGET_AUDIENCES_OPTIONS", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_TARGET_SETTINGS_BASIC);
+	x = PyInt_FromLong((long) ENC_TARGET_SETTINGS_BASIC);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_TARGET_SETTINGS_BASIC", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) ENC_NUM_TARGET_SETTINGS_TYPES);
+	x = PyInt_FromLong((long) ENC_NUM_TARGET_SETTINGS_TYPES);
 	if (x == NULL || PyDict_SetItemString(d, "ENC_NUM_TARGET_SETTINGS_TYPES", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) MEDIA_SAMPLE_SYNCH_POINT);
+	x = PyInt_FromLong((long) MEDIA_SAMPLE_SYNCH_POINT);
 	if (x == NULL || PyDict_SetItemString(d, "MEDIA_SAMPLE_SYNCH_POINT", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) MEDIA_SAMPLE_END_OF_STREAM);
+	x = PyInt_FromLong((long) MEDIA_SAMPLE_END_OF_STREAM);
 	if (x == NULL || PyDict_SetItemString(d, "MEDIA_SAMPLE_END_OF_STREAM", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) IRMAEventMediaSample_URL);
+	x = PyInt_FromLong((long) IRMAEventMediaSample_URL);
 	if (x == NULL || PyDict_SetItemString(d, "IRMAEventMediaSample_URL", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) IRMAEventMediaSample_Title);
+	x = PyInt_FromLong((long) IRMAEventMediaSample_Title);
 	if (x == NULL || PyDict_SetItemString(d, "IRMAEventMediaSample_Title", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) IRMAEventMediaSample_Author);
+	x = PyInt_FromLong((long) IRMAEventMediaSample_Author);
 	if (x == NULL || PyDict_SetItemString(d, "IRMAEventMediaSample_Author", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) IRMAEventMediaSample_Copyright);
+	x = PyInt_FromLong((long) IRMAEventMediaSample_Copyright);
 	if (x == NULL || PyDict_SetItemString(d, "IRMAEventMediaSample_Copyright", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) IRMAImageMapMediaSample_SHAPE_NONE);
+	x = PyInt_FromLong((long) IRMAImageMapMediaSample_SHAPE_NONE);
 	if (x == NULL || PyDict_SetItemString(d, "IRMAImageMapMediaSample_SHAPE_NONE", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) IRMAImageMapMediaSample_SHAPE_RECTANGLE);
+	x = PyInt_FromLong((long) IRMAImageMapMediaSample_SHAPE_RECTANGLE);
 	if (x == NULL || PyDict_SetItemString(d, "IRMAImageMapMediaSample_SHAPE_RECTANGLE", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) IRMAImageMapMediaSample_SHAPE_CIRCLE);
+	x = PyInt_FromLong((long) IRMAImageMapMediaSample_SHAPE_CIRCLE);
 	if (x == NULL || PyDict_SetItemString(d, "IRMAImageMapMediaSample_SHAPE_CIRCLE", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) IRMAImageMapMediaSample_SHAPE_POLYGON);
+	x = PyInt_FromLong((long) IRMAImageMapMediaSample_SHAPE_POLYGON);
 	if (x == NULL || PyDict_SetItemString(d, "IRMAImageMapMediaSample_SHAPE_POLYGON", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) IRMAImageMapMediaSample_ACTION_NONE);
+	x = PyInt_FromLong((long) IRMAImageMapMediaSample_ACTION_NONE);
 	if (x == NULL || PyDict_SetItemString(d, "IRMAImageMapMediaSample_ACTION_NONE", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) IRMAImageMapMediaSample_ACTION_BROWSER_URL);
+	x = PyInt_FromLong((long) IRMAImageMapMediaSample_ACTION_BROWSER_URL);
 	if (x == NULL || PyDict_SetItemString(d, "IRMAImageMapMediaSample_ACTION_BROWSER_URL", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) IRMAImageMapMediaSample_ACTION_PLAYER_URL);
+	x = PyInt_FromLong((long) IRMAImageMapMediaSample_ACTION_PLAYER_URL);
 	if (x == NULL || PyDict_SetItemString(d, "IRMAImageMapMediaSample_ACTION_PLAYER_URL", x) < 0)
 		goto error;
 	Py_DECREF(x);
-	x = PyLong_FromLong((long) IRMAImageMapMediaSample_ACTION_PLAYER_SEEK);
+	x = PyInt_FromLong((long) IRMAImageMapMediaSample_ACTION_PLAYER_SEEK);
 	if (x == NULL || PyDict_SetItemString(d, "IRMAImageMapMediaSample_ACTION_PLAYER_SEEK", x) < 0)
 		goto error;
 	Py_DECREF(x);
