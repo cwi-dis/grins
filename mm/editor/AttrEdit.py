@@ -740,12 +740,22 @@ class AnimationWrapper(NodeWrapper):
 			rmlist.append('by')
 			rmlist.append('additive')
 			rmlist.append('accumulate')
+		elif tag == 'transitionFilter':
+			rmlist.append('attributeName')
+			rmlist.append('attributeType')
+			rmlist.append('path')
+			rmlist.append('origin')
 		parent = self.node.GetParent()
 		if parent.GetType() in leaftypes:
 			rmlist.append('targetElement')
 		for attr in rmlist:
 			if attr in namelist:
 				namelist.remove(attr)
+		if tag == 'transitionFilter':
+			namelist.append('trtype')
+			namelist.append('subtype')
+			namelist.append('mode')
+			namelist.append('fadeColor')
 		return namelist
 
 	def maketitle(self):
