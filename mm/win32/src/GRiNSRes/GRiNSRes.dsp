@@ -53,7 +53,7 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /noentry
 # Begin Custom Build - Generating grinsRC.py
 OutDir=.\..\Build
-InputPath=\ufs\mm\cmif\win32\src\Build\GRiNSRes.dll
+InputPath=..\..\..\win32\src\Build\GRiNSRes.dll
 SOURCE="$(InputPath)"
 
 BuildCmds= \
@@ -511,7 +511,15 @@ SOURCE=.\RES\showed1.ico
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\Build\products\mobile\splash8bit.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\Build\products\smil2real\splash8bit.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Build\products\mobile\splash8bit.bmp
 # End Source File
 # Begin Source File
 

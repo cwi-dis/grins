@@ -296,6 +296,7 @@
 #define IDC_CDARROW                     487
 #define IDD_EDITATTR_DOCTEMPLATE        487
 #define IDC_CDARROWHIT                  488
+#define IDB_SPLASHMOBILE                490
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -959,7 +960,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        489
+#define _APS_NEXT_RESOURCE_VALUE        491
 #define _APS_NEXT_COMMAND_VALUE         32907
 #define _APS_NEXT_CONTROL_VALUE         1564
 #define _APS_NEXT_SYMED_VALUE           104
