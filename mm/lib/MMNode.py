@@ -1837,7 +1837,7 @@ class MMNode_body:
 		self.parent.cleanup_sched(sched, self)
 
 	def add_arc(self, arc, curtime, sctx):
-		self.parent.add_arc(arc, sctx, curtime, self)
+		self.parent.add_arc(arc, curtime, sctx, self)
 
 	def set_start_time(self, timestamp, include_pseudo = 1):
 		self.start_time = timestamp
@@ -3752,7 +3752,7 @@ class MMNode(MMTreeElement):
 			arc = MMSyncArc(self_body, 'dur', srcnode=self_body, event='begin', delay=delay)
 			self_body.durarcs.append(arc)
 ##			self_body.arcs.append((self_body, arc))
-			self_body.add_arc(arc, sctx, curtime)
+			self_body.add_arc(arc, curtime, sctx)
 
 		for child in wtd_children:
 			chname = MMAttrdefs.getattr(child, 'name')
@@ -3762,7 +3762,7 @@ class MMNode(MMTreeElement):
 			if path and path[0] is child:
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = sctx.parent.timefunc() - self.start_time)
 				self_body.arcs.append((srcnode, arc))
-				srcnode.add_arc(arc, sctx, curtime)
+				srcnode.add_arc(arc, curtime, sctx)
 				schedule = 1
 				subpath = path[1:]
 				arc.path = subpath
@@ -3771,13 +3771,13 @@ class MMNode(MMTreeElement):
 					child.set_infoicon('error', 'node cannot start')
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin)
 				self_body.arcs.append((srcnode, arc))
-				srcnode.add_arc(arc, sctx, curtime)
+				srcnode.add_arc(arc, curtime, sctx)
 				schedule = defbegin is not None
 			else:
 				schedule = 0
 				for arc in beginlist:
 					refnode = arc.refnode()
-					refnode.add_arc(arc, sctx, curtime)
+					refnode.add_arc(arc, curtime, sctx)
 					if arc.getevent() == 'begin' and \
 					   refnode is self_body and \
 					   arc.marker is None and \
@@ -3790,7 +3790,7 @@ class MMNode(MMTreeElement):
 ##			    (schedule or termtype == 'ALL')):
 				arc = MMSyncArc(self_body, 'dur', srcnode=child, event='end', delay=0)
 				self_body.arcs.append((child, arc))
-				child.add_arc(arc, sctx, curtime)
+				child.add_arc(arc, curtime, sctx)
 				# we need this in case all children
 				# (or the relevant child) has an
 				# unresolved end and we have a min
@@ -3801,7 +3801,7 @@ class MMNode(MMTreeElement):
 				scheddone_events.append((SCHED_DONE, child))
 			for arc in self.FilterArcList(child.GetEndList()):
 				refnode = arc.refnode()
-				refnode.add_arc(arc, sctx, curtime)
+				refnode.add_arc(arc, curtime, sctx)
 			cdur = child.calcfullduration(sctx, ignoremin = 1)
 			if cdur is not None and (child.fullduration is not None or child.attrdict.has_key('duration') or child.type in leaftypes):
 				if cdur < 0:
@@ -3811,19 +3811,19 @@ class MMNode(MMTreeElement):
 				arc = MMSyncArc(child, 'dur', srcnode=child, event='begin', delay=delay)
 				child.durarcs.append(arc)
 ##				self_body.arcs.append((child, arc))
-				child.add_arc(arc, sctx, curtime)
+				child.add_arc(arc, curtime, sctx)
 			min, max = child.GetMinMax()
 			if min > 0:
 				arc = MMSyncArc(child, 'min', srcnode=child, event='begin', delay=min)
 				child.has_min = min
 				child.durarcs.append(arc)
-				child.add_arc(arc, sctx, curtime)
+				child.add_arc(arc, curtime, sctx)
 			else:
 				child.has_min = 0
 			if max >= 0:
 				arc = MMSyncArc(child, 'end', srcnode=child, event='begin', delay=max)
 				child.durarcs.append(arc)
-				child.add_arc(arc, sctx, curtime)
+				child.add_arc(arc, curtime, sctx)
 			if self.type == 'seq':
 				srcnode = child
 				event = 'end'
@@ -3836,7 +3836,7 @@ class MMNode(MMTreeElement):
 			# which the node should end (dur/end attr)
 			arc = MMSyncArc(self_body, 'end', srcnode=srcnode, event=event, delay=0)
 			self_body.arcs.append((srcnode, arc))
-			srcnode.add_arc(arc, sctx, curtime)
+			srcnode.add_arc(arc, curtime, sctx)
 		#
 		# Trickery to handle dur and end correctly:
 		#
