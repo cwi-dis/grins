@@ -493,6 +493,8 @@ class NodeWrapper(Wrapper):
 			namelist.append('alt')
 			if not snap:
 				namelist.append('longdesc')
+				namelist.append('clipbegin')
+				namelist.append('clipend')
 			if lightweight and ChannelMap.isvisiblechannel(ctype):
 				namelist.append('.hyperlink')
 			if not snap and \
