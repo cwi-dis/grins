@@ -61,6 +61,7 @@ class SchedulerContext:
 		self.erase_chan = {}
 		self.parent._remove_sctx(self)
 		self.playroot.reinit()
+		self.playroot.resetall(None)
 		del self.parent
 		del self.playroot
 
@@ -608,6 +609,7 @@ class SchedulerContext:
 		if not found:
 			# we didn't find a time interval
 			if debugevents: print 'not allowed to start',node,parent.timefunc()
+			node.set_infoicon('error', 'node not run')
 			srdict = pnode.gensr_child(curtime, node, runchild = 0, sctx = self)
 			self.srdict.update(srdict)
 			ev = (SR.SCHED_DONE, node)
@@ -732,7 +734,6 @@ class SchedulerContext:
 			tm, ev = node.endtime
 			if tm == timestamp or ev in ('begin', 'end'):
 				runchild = 0
-				node.set_infoicon('error', 'node not run')
 			del node.endtime
 		ndur = node.calcfullduration(self, ignoremin = 1)
 		mintime, maxtime = node.GetMinMax()
@@ -748,7 +749,6 @@ class SchedulerContext:
 				ndur = maxtime
 		if ndur >= 0 and timestamp + ndur <= parent.timefunc() and MMAttrdefs.getattr(node, 'erase') != 'never' and node.GetFill() == 'remove':
 			runchild = 0
-			node.set_infoicon('error', 'node not run')
 		srdict = pnode.gensr_child(curtime, node, runchild, path = path, sctx = self)
 		self.srdict.update(srdict)
 		if debugdump: self.dump()
@@ -757,6 +757,7 @@ class SchedulerContext:
 			parent.event(self, (SR.SCHED, node), timestamp)
 		else:
 			if debugevents: print 'trigger, no run',parent.timefunc()
+			node.set_infoicon('error', 'node not run')
 			node.startplay(timestamp)
 			timestamp = timestamp + ndur # we know ndur >= 0
 			node.stopplay(timestamp)
