@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-import MMAttrdefs, windowinterface, urlparse, MMurl
+import MMAttrdefs, windowinterface, urlparse, MMurl, os
 from MMExc import NoSuchAttrError
 
 class DummyRP:
@@ -489,10 +489,10 @@ def deltmpfiles():
 	SlideShow.tmpfiles = []
 
 def writenode(node, evallicense = 0, tostring = 0):
-	if not hasattr(node, 'tmpfile'):
+	if not hasattr(node, 'tmpfile') and not tostring:
 		return
 	import realsupport
-	data = realsupport.writeRP(node.tmpfile, node.slideshow.rp, node, savecaptions=1, tostring = 1)
+	data = realsupport.writeRP(None, node.slideshow.rp, node, savecaptions=1, tostring = 1)
 	if tostring:
 		return data
 	url = MMAttrdefs.getattr(node, 'file')
@@ -501,12 +501,19 @@ def writenode(node, evallicense = 0, tostring = 0):
 	if (not utype or utype == 'file') and \
 	   (not host or host == 'localhost'):
 		try:
-			f = open(MMurl.url2pathname(path), 'w')
+			localpathname = MMurl.url2pathname(path)
+			f = open(localpathname, 'w')
 			f.write(data)
 			f.close()
 		except:
 			windowinterface.showmessage("cannot write `%s' for node `%s'" % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>'))
 		else:
+			if os.name == 'mac':
+				import macfs
+				import macostools
+				fss = macfs.FSSpec(localpathname)
+				fss.SetCreatorType('PNst', 'PNRA')
+				macostools.touched(fss)
 			del node.tmpfile
 	else:
 		windowinterface.showmessage("cannot write remote file for node `%s'" % (MMAttrdefs.getattr(node, 'name') or '<unnamed>'))
