@@ -9,6 +9,8 @@ __version__ = "$Id$"
 # XXX delete this:
 TODO = """
 Move focus back to parent node before deleting anything.
+properties doesn't work on a multi-selection..
+test drag+drop with multiple nodes.
 """
 
 
@@ -83,6 +85,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.need_resize = 1	# Whether the tree needs to be resized. Implies need_redraw
 		self.need_redraw = 1	# Whether the scene graph needs redrawing.
 		self.need_redraw_selection = 0 # Whether we only need to redraw the selection.
+
+		self.focus_lock = 0	# prevents recursive focus requests.
 
 		self.base_display_list = None # A display list that may be cloned and appended to.
 		self.extra_displist = None
@@ -492,8 +496,9 @@ class HierarchyView(HierarchyViewDialog):
 		self.refresh_scene_graph()
 		self.need_resize = 1
 		focustype, focusobject = self.editmgr.getglobalfocus()
+		self.focus_lock = 0
 		if focustype is None and focusobject is None:
-			self.editmgr.setglobalfocus('MMNode', self.root)
+			self.editmgr.setglobalfocus('multinode', [self.root])
 		else:
 			self.globalfocuschanged(focustype, focusobject)
 		if self.need_redraw:
@@ -695,29 +700,28 @@ class HierarchyView(HierarchyViewDialog):
 		self.select_node(node, 1)
 
 	def globalfocuschanged(self, focustype, focusobject, redraw = 1):
-		# for now, catch only MMNode focus
-		#print "DEBUG: HierarchyView received globalfocuschanged with ", focustype
-		# XXX Temporary: pick first item of multiselect. Michael will
-		# fix this later.
-
-		#print "DEBUG: globalfocuschanged; temporarily disabled."
-		return
-
-		# XXX Yes, Michael will fix this later..
+		# for now, catch only multinode focus ( a list of selected nodes)
+		if self.focus_lock:
+			return
 
 		if not focusobject:
-			return # XXXX Or should we de-select?
-		if type(focusobject) == type([]):
-			focusobject = focusobject[0][1]
-			print "XXX Selecting first item of multiselect"
-		if not hasattr(focusobject, 'getClassName'):
-			print 'Error: focus objects need getClassName() method!', focusobject
-			return
-		if focusobject.getClassName() != 'MMNode':
-			return
-		if self.get_selected_widget() is not None and self.get_selected_widget().get_node() is focusobject:
-			return
-		self.select_node(focusobject, external = 1, scroll = redraw)
+			return # shouldn't really happen. Fail here??
+		if focustype == 'multinode' and type(focusobject)==type([]):
+			self.select_nodes(focusobject, external=1)
+		elif focustype == 'MMNode':
+			node = self.get_selected_node()
+			if node is focusobject:
+				return
+			self.select_node(focusobject, external=1)
+		elif focustype == "List":
+			# Then the focus came from the Layout view and it's a combined list of nodes and channels.
+			select_us = []
+			for (ntype, nnode) in focusobject:
+				if ntype=='MMNode' and isinstance(nnode, MMNode.MMNode):
+					select_us.append(nnode)
+			self.select_nodes(select_us, external=1)
+		else:
+			print "DEBUG: the hierarchyview recieved a global focus change of unrecognised type ", focustype
 		if redraw:
 			self.draw()
 
@@ -882,8 +886,12 @@ class HierarchyView(HierarchyViewDialog):
 	# is selected.
 
 	def get_selected_node(self):
+		# This returns None if the selection is multiple or non-existant.
+		# Call this method to:
+		# 1. determine if there is a single selected node (for positional operations e.g. paste)
+		# 2. get that node.
 		if len(self.multi_selected_widgets) > 1:
-			assert 0	# we don't want this.
+			return None
 		elif len(self.multi_selected_widgets) < 1:
 			return None
 		else:
@@ -1103,16 +1111,14 @@ class HierarchyView(HierarchyViewDialog):
 	# Paste a node. (TODO: multiple selected nodes).
 	# see self.paste()
 	def pastebeforecall(self):
-		# XXX Change me
-		if self.get_selected_widget(): self.paste(-1)
+		if self.get_selected_node(): self.paste(-1)
 
 	def pasteaftercall(self):
-		# XXX Change me
-		if self.get_selected_widget(): self.paste(1)
+		if self.get_selected_node(): self.paste(1)
 
 	def pasteundercall(self):
-		# XXX Change me
-		if self.get_selected_widget(): self.paste(0)
+		if self.get_selected_node(): self.paste(0)
+
 
 	######################################################################
 	# Drag and drop
@@ -1443,7 +1449,8 @@ class HierarchyView(HierarchyViewDialog):
 			AttrEdit.showattreditor(self.toplevel, newnode, 'name')
 
 	def paste(self, where):
-		# XXX rewrite me.
+		# where is -1 (before), 0 (under) or 1 (after)
+		
 		type, node = self.editmgr.getclip()
 		if node is None:
 			windowinterface.showmessage(
@@ -1459,10 +1466,12 @@ class HierarchyView(HierarchyViewDialog):
 
 		type, node = self.editmgr.getclipcopy()
 		if type == 'node':
+			# If there is a single node on the clipboard.
+			# The hierarchyview always copies and cuts multnodes..
 			if node.context is not self.root.context:
 				node = node.CopyIntoContext(self.root.context)
 			self.insertnode(node, where)
-		elif type == 'multinode':
+		if type == 'multinode':
 			if not self.editmgr.transaction():
 				return
 			for n in node:	# I can't use insertnode because I need to access the editmanager.
@@ -1479,7 +1488,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		if where <> 0:
 			# Get the parent
-			parent = self.get_selected_widget().GetParent()
+			parent = self.get_selected_node().parent
 			if parent is None:
 				windowinterface.showmessage(
 					"Can't insert before/after the root",
@@ -1650,7 +1659,7 @@ class HierarchyView(HierarchyViewDialog):
 		if not self.get_selected_widget():
 			windowinterface.beep()
 			return
-		parent = self.get_selected_widget().GetParent()
+		parent = self.get_selected_node().GetParent()
 		if not parent:
 			windowinterface.beep()
 			return
@@ -1734,7 +1743,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.aftersetfocus()	# XXX change this.
 
 		if not external:
-			self.editmgr.setglobalfocus('MMNode', widget.get_node())
+			# If this method is called, there is only _one_ widget selected.
+			self.editmgr.setglobalfocus('MMNode', self.get_selected_node())
 
 	def also_select_widget(self, widget):
 		# XXX UNTESTED
@@ -1777,11 +1787,25 @@ class HierarchyView(HierarchyViewDialog):
 
 	def select_node(self, node, external = 0, scroll = 1):
 		# Set the focus to a specfic MMNode (obviously the focus did not come from the UI)
+		assert isinstance(node, MMNode.MMNode)
 		if not node:
 			self.select_widget(None, external, scroll)
 		elif node.views.has_key('struct_view'):
 			widget = node.views['struct_view']
 			self.select_widget(widget, external, scroll)
+
+	def select_nodes(self, nodelist, external = 0, scroll = 1):
+		# Select a list of nodes.
+		# XXX with a bit of thought, this could be optimised by checking what I already have
+		# selected. However, that could be a bit difficult.
+		if len(nodelist) == 0:
+			self.select_widget(None, external, scroll)
+		elif nodelist[0].views.has_key('struct_view'):
+			currently_selected_nodes = self.get_selected_nodes()
+			self.select_widget(nodelist[0].views['struct_view'], external, scroll)
+			for node in nodelist[1:]:
+				if node.views.has_key('struct_view'):
+					self.also_select_widget(node.views['struct_view'])
 
 	def select_arrow(self, arrow):
 		caller, colour, src, dest = arrow
