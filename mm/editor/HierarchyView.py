@@ -908,7 +908,12 @@ class HierarchyView(HierarchyViewDialog):
 		   self.toplevel.layoutview is not None and \
 		   self.toplevel.layoutview.curlayout is not None:
 			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
-		if self.insertnode(node, where, index, start_transaction = start_transaction):
+		if self.insertnode(node, where, index, start_transaction = start_transaction, end_transaction = 0):
+			prearmtime = node.compute_download_time()
+			if prearmtime:
+				arc = MMNode.MMSyncArc(node, 'begin', srcnode='syncbase', delay=prearmtime)
+				self.editmgr.setnodeattr(node, 'beginlist', [arc])
+			self.editmgr.commit()
 			if not lightweight:
 				import AttrEdit
 				AttrEdit.showattreditor(self.toplevel, node, chtype = chtype)
@@ -965,7 +970,7 @@ class HierarchyView(HierarchyViewDialog):
 			Clipboard.setclip(type, node.DeepCopy())
 		dummy = self.insertnode(node, where)
 
-	def insertnode(self, node, where, index = -1, start_transaction = 1):
+	def insertnode(self, node, where, index = -1, start_transaction = 1, end_transaction = 1):
 		# 'where' is coded as follows: -1: before 0: under 1: after
 		assert where in [-1,0,1] # asserts by MJVDG.. delete them if they
 		assert node is not None # catch too many bugs :-).
@@ -1029,7 +1034,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.prevfocusnode = self.focusnode
 		self.focusnode = node
 		self.aftersetfocus()
-		em.commit()
+		if end_transaction:
+			em.commit()
 		return 1
 
 	# Copy node at position src to position dst
