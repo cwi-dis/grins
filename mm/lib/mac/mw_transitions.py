@@ -7,6 +7,11 @@ import Transitions
 class TransitionEngine:
 	def __init__(self, window, inout, runit, dict):
 		dur = dict.get('dur', 1)
+		self.exclude_first_window = 0
+		# if this is a multieElt transition with clipChildren we should not
+		# include the parent in the clip.
+		if dict.get('multiElement') and dict.get('childrenClip'):
+			self.exclude_first_window = 1
 		self.windows = [window]
 		self.starttime = time.time()	# Correct?
 		self.duration = dur
@@ -31,12 +36,16 @@ class TransitionEngine:
 		# Now recompute starttime and "duration" based on these values
 		self.duration = self.duration / (self.endprogress-self.startprogress)
 		self.starttime = self.starttime - (self.startprogress*self.duration)
+
 		
 		mw_globals.toplevel.setidleproc(self._idleproc)
 		
-	def join(self, window):
+	def join(self, window, ismaster):
 		"""Join this (sub or super) window to an existing transition"""
-		self.windows.append(window)
+		if ismaster:
+			self.windows.insert(0, window)
+		else:
+			self.windows.append(window)
 		self.move_resize()
 		
 	def endtransition(self):
@@ -57,22 +66,35 @@ class TransitionEngine:
 		"""Internal: recompute the region and rect on which this transition operates"""
 		if self.dstrgn:
 			Qd.DisposeRgn(self.dstrgn)
+		exclude_first_window = self.exclude_first_window
 		x0, y0, x1, y1 = self.windows[0].qdrect()
 		self.dstrgn = Qd.NewRgn()
+		print 'move_resize', self, (x0, y0, x1, y1)
 		for w in self.windows:
 			rect = w.qdrect()
-			newrgn = Qd.NewRgn()
-			Qd.RectRgn(newrgn, rect)
-			Qd.UnionRgn(self.dstrgn, newrgn, self.dstrgn)
-			Qd.DisposeRgn(newrgn)
+			if exclude_first_window:
+				exclude_first_window = 0
+				print 'dont include', rect
+			else:
+				print 'include', rect
+				newrgn = Qd.NewRgn()
+				Qd.RectRgn(newrgn, rect)
+				Qd.UnionRgn(self.dstrgn, newrgn, self.dstrgn)
+				Qd.DisposeRgn(newrgn)
 			nx0, ny0, nx1, ny1 = rect
-			if nx0 < x0: x0 = nx0
-			if ny0 < y0: y0 = ny0
-			if nx1 > x1: x1 = nx1
-			if ny1 > y1: y1 = ny1
+			if nx0 < x0: 
+				x0 = nx0
+			if ny0 < y0: 
+				y0 = ny0
+			if nx1 > x1:
+				x1 = nx1
+			if ny1 > y1:
+				y1 = ny1
 		print 'transition size now', (x0, y0, x1, y1), self
 		self.transitiontype.move_resize((x0, y0, x1, y1))
 			
+	def ismaster(self, window):
+		return window == self.windows[0]
 		
 	def _idleproc(self):
 		"""Called in the event loop to optionally do a recompute"""
