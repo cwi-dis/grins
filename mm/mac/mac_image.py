@@ -22,8 +22,8 @@ def mkpixmap(w, h, fmt, data):
 		fmtinfo[0], fmtinfo[1],
 		fmtinfo[2], fmtinfo[3],
 		0, 0, 0)
-	print 'Our pixmap, size %d:'%len(rv)
-	dumppixmap(rv)
+##	print 'Our pixmap, size %d:'%len(rv)
+##	dumppixmap(rv)
 	return Qd.RawBitMap(rv)
 
 def dumppixmap(data):

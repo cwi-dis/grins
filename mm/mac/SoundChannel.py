@@ -70,16 +70,10 @@ class SoundChannel(ChannelAsync):
 			self.play_data = self.play_fp.readframes(self.play_readsize)
 		if self.play_data:
 			windowinterface.settimer(0.5, (self._playsome, ()))
-			print 'MORE IN 0.5'
 		else:
 			samples_left = self.port.getfilled()
 			time_left = samples_left/float(self.play_framerate)
-			print 'DONE IN', time_left
-			windowinterface.settimer(time_left, (self.xplaydone, (0,)))
-			
-	def xplaydone(self, arg):
-		print 'PLAY DONE'
-		self.playdone(arg)
+			windowinterface.settimer(time_left, (self.playdone, (0,)))
 			
 	def do_play(self, node):
 		if not self.arm_fp or not self.port:

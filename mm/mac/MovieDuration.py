@@ -13,7 +13,6 @@ def getduration(filename):
 	duration = movie.GetMovieDuration()
 	scale = movie.GetMovieTimeScale()
 	duration = duration/float(scale)
-	print 'MOVIE DURATION:', duration
 	return duration
 
 duration_cache = FileCache.FileCache(getduration)
