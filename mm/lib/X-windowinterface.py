@@ -30,6 +30,12 @@ _image_size_cache = {}
 
 class _Toplevel:
 	def __init__(self):
+		global _mscreenwidth
+		global _mscreenheight
+		global _screenwidth
+		global _screenheight
+		global _dpi_x
+		global _dpi_y
 		if debug: print '_TopLevel.__init__() --> '+`self`
 		self._toplevel = self
 		self._win_lock = None
@@ -38,6 +44,12 @@ class _Toplevel:
 		self._main.SetValues({'mappedWhenManaged': X.FALSE,
 			  'x': 500, 'y': 500, 'width': 1, 'height': 1,
 			  'input': X.TRUE})
+		_mscreenwidth = self._main.WidthMMOfScreen()
+		_mscreenheight = self._main.HeightMMOfScreen()
+		_screenwidth = self._main.WidthOfScreen()
+		_screenheight = self._main.HeightOfScreen()
+		_dpi_x = int(_screenwidth * 25.4 / _mscreenwidth + .5)
+		_dpi_y = int(_screenheight * 25.4 / _mscreenheight + .5)
 		self._parent_window = None
 		self._subwindows = []
 		self._fgcolor = _DEF_FGCOLOR
