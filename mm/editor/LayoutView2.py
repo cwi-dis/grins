@@ -2486,7 +2486,6 @@ class PreviousWidget(Widget):
 									
 	# ensure that the viewport is in showing state
 	def __showViewport(self, viewportRef):
-		viewportRef = self._context.getViewportRef(viewportRef)
 		if self.currentViewport == None or viewportRef != self.currentViewport.getNodeRef():
 			if debug: print 'LayoutView.select: change viewport =',viewportRef
 			self.displayViewport(viewportRef)
@@ -2575,6 +2574,10 @@ class PreviousWidget(Widget):
 		if self.currentViewport != None:
 			self.currentViewport.hideAllNodes()
 		self.currentViewport = self.getNode(viewportRef)
+		if self.currentViewport == None:
+			# shouldn't pass here
+			print 'can''t show viewport ',viewportRef
+			return
 		self.currentViewport.showAllNodes()
 
 	def onMultiSelChanged(self, objectList):
