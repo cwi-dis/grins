@@ -716,9 +716,9 @@ DirectDrawSurface_GetPixelFormat(DirectDrawSurfaceObject *self, PyObject *args)
 	return Py_BuildValue("iii",numREDbits, numGREENbits, numBLUEbits);
 	}
 
-inline DWORD blend(double prop, DWORD c1, DWORD c2)
+__forceinline int blend(int w, int c1, int c2)
 	{
-	return (DWORD)floor(double(c1) + prop*(double(c2)-c1) + 0.5);
+	return (c1==c2)?c1:(c1 + w*(c2-c1)/256);
 	}
 
 int FindColour(int r, int g, int b)
@@ -744,6 +744,7 @@ int FindColour(int r, int g, int b)
 
 void CreateBlendTable(float prop)
 	{
+	int weight = int(prop*256);
 	for(int i=0;i<256;i++)
 		{
 		BYTE r1 = paletteEntry[i].peRed;
@@ -755,9 +756,9 @@ void CreateBlendTable(float prop)
 			BYTE g2 = paletteEntry[j].peGreen;
 			BYTE b2 = paletteEntry[j].peBlue;
 
-			int r = (int)blend(prop, r1, r2);
-			int g = (int)blend(prop, g1, g2);
-			int b = (int)blend(prop, b1, b2);
+			int r = blend(weight, r1, r2);
+			int g = blend(weight, g1, g2);
+			int b = blend(weight, b1, b2);
 	
 			blendTable[i][j] = FindColour(r,g,b);
 			}
@@ -787,6 +788,7 @@ HRESULT BltBlend8(IDirectDrawSurface *surf,
 		CreateBlendTable(prop);
 		usingtable = true;
 		}
+	int weight = int(prop*256);
 	for(int row=h-1;row>=0;row--)
 		{
 		BYTE* surfpixel=(BYTE*)desc.lpSurface+row*desc.lPitch;		
@@ -806,9 +808,9 @@ HRESULT BltBlend8(IDirectDrawSurface *surf,
 				BYTE g2 = paletteEntry[*surfpixel2].peGreen;
 				BYTE b2 = paletteEntry[*surfpixel2].peBlue;
 
-				int r = (int)blend(prop, r1, r2);
-				int g = (int)blend(prop, g1, g2);
-				int b = (int)blend(prop, b1, b2);
+				int r = blend(weight, r1, r2);
+				int g = blend(weight, g1, g2);
+				int b = blend(weight, b1, b2);
 			
 				*surfpixel = FindColour(r,g,b);
 				}
@@ -841,7 +843,7 @@ HRESULT BltBlend16(IDirectDrawSurface *surf,
 	if(hr!=DD_OK) return hr;
 	hr=to->Lock(0,&desc2,DDLOCK_WAIT | DDLOCK_READONLY,0);
 	if(hr!=DD_OK) return hr;
-	
+	int weight = int(prop*256);	
 	for(int row=h-1;row>=0;row--)
 		{
 		WORD* surfpixel=(WORD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
@@ -858,9 +860,9 @@ HRESULT BltBlend16(IDirectDrawSurface *surf,
 			WORD g2 = (*surfpixel2 & (WORD)desc2.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
 			WORD b2 = (*surfpixel2 & (WORD)desc2.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
 
-			WORD r = (WORD)blend(prop, r1, r2);
-			WORD g = (WORD)blend(prop, g1, g2);
-			WORD b = (WORD)blend(prop, b1, b2);
+			WORD r = (WORD)blend(weight, r1, r2);
+			WORD g = (WORD)blend(weight, g1, g2);
+			WORD b = (WORD)blend(weight, b1, b2);
 			
 			r = r << loREDbit;
 			g = g << loGREENbit;
@@ -896,7 +898,8 @@ HRESULT BltBlend24(IDirectDrawSurface *surf,
 	if(hr!=DD_OK) return hr;
 	hr=to->Lock(0,&desc2,DDLOCK_WAIT | DDLOCK_READONLY,0);
 	if(hr!=DD_OK) return hr;
-	
+
+	int weight = int(prop*256);	
 	for(int row=h-1;row>=0;row--)
 		{
 		RGBTRIPLE* surfpixel=(RGBTRIPLE*)((BYTE*)desc.lpSurface+row*desc.lPitch);
@@ -913,9 +916,9 @@ HRESULT BltBlend24(IDirectDrawSurface *surf,
 			DWORD g2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
 			DWORD b2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
 
-			DWORD r = blend(prop, r1, r2);
-			DWORD g = blend(prop, g1, g2);
-			DWORD b = blend(prop, b1, b2);
+			DWORD r = (DWORD)blend(weight, r1, r2);
+			DWORD g = (DWORD)blend(weight, g1, g2);
+			DWORD b = (DWORD)blend(weight, b1, b2);
 			
 			r = r << loREDbit;
 			g = g << loGREENbit;
@@ -952,6 +955,7 @@ HRESULT BltBlend32(IDirectDrawSurface *surf,
 	if(hr!=DD_OK) return hr;
 	hr=to->Lock(0,&desc2,DDLOCK_WAIT | DDLOCK_READONLY,0);
 	if(hr!=DD_OK) return hr;
+	int weight = int(prop*256);	
 	for(int row=h-1;row>=0;row--)
 		{
 		RGBQUAD* surfpixel=(RGBQUAD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
@@ -967,9 +971,9 @@ HRESULT BltBlend32(IDirectDrawSurface *surf,
 			DWORD g2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwGBitMask) >> loGREENbit;
 			DWORD b2 = (*(DWORD*)surfpixel2 & desc2.ddpfPixelFormat.dwBBitMask) >> loBLUEbit;
 
-			DWORD r = blend(prop, r1, r2);
-			DWORD g = blend(prop, g1, g2);
-			DWORD b = blend(prop, b1, b2);
+			DWORD r = (DWORD)blend(weight, r1, r2);
+			DWORD g = (DWORD)blend(weight, g1, g2);
+			DWORD b = (DWORD)blend(weight, b1, b2);
 			
 			r = r << loREDbit;
 			g = g << loGREENbit;
