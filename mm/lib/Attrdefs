@@ -144,6 +144,9 @@
 (scale (float) 1.0 'Scale factor' default
 	'Image magnification (0.0 means fit in window)' channel)
 
+(scalefilter (name) '' 'Scaling filter' default
+	'Name of filter used after image scaling' channel)
+
 ##(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars' default
 ##	'Select the presence of horizontal/vertical scroll bars' channel)
 

@@ -169,6 +169,7 @@ class ImageWindow(ChannelWindow):
 		else:
 			winwidth, winheight = 0, 0
 		self.arm_ninfo.effscale = MMAttrdefs.getattr(node, 'scale')
+		scalefilter = MMAttrdefs.getattr(node, 'scalefilter')
 		if self.arm_ninfo.effscale <= 0.0:
 			if not self.is_showing():
 				self.arm_ninfo.effscale = 1.0
@@ -178,20 +179,33 @@ class ImageWindow(ChannelWindow):
 					    float(winheight)/self.arm_ninfo.ysize)
 		self.arm_ninfo.mousescale = self.arm_ninfo.effscale
 		try:
-			if self.arm_ninfo.effscale == int(self.arm_ninfo.effscale):
+			if self.arm_ninfo.effscale == \
+				  int(self.arm_ninfo.effscale):
 				self.arm_ninfo.parray = imgfile.read(filename)
 			else:
-				width = int(self.arm_ninfo.xsize * self.arm_ninfo.effscale)
-				height = int(self.arm_ninfo.ysize * self.arm_ninfo.effscale)
-				self.arm_ninfo.parray = imgfile.readscaled(filename, \
-					                         width, height)
+				width = int(self.arm_ninfo.xsize * \
+					  self.arm_ninfo.effscale)
+				height = int(self.arm_ninfo.ysize * \
+					  self.arm_ninfo.effscale)
+				if not scalefilter:
+					self.arm_ninfo.parray = \
+						  imgfile.readscaled(filename,\
+						  width, height)
+				else:
+					self.arm_ninfo.parray = \
+						  imgfile.readscaled(filename,\
+						  width, height, scalefilter)
 				self.arm_ninfo.effscale = 1.0
-				self.arm_ninfo.xsize, self.arm_ninfo.ysize = width, height
+				self.arm_ninfo.xsize, self.arm_ninfo.ysize = \
+					  width, height
 		except imgfile.error, msg:
 			print 'Cannot read image file', filename_arg, ':', msg
-			self.arm_ninfo.error = 'Cannot read file ' + `filename_arg`
-		self.arm_ninfo.xcorner = int(winwidth - self.arm_ninfo.xsize*self.arm_ninfo.effscale) / 2
-		self.arm_ninfo.ycorner = int(winheight - self.arm_ninfo.ysize*self.arm_ninfo.effscale) / 2
+			self.arm_ninfo.error = 'Cannot read file ' + \
+				  `filename_arg`
+		self.arm_ninfo.xcorner = int(winwidth - \
+			  self.arm_ninfo.xsize*self.arm_ninfo.effscale) / 2
+		self.arm_ninfo.ycorner = int(winheight - \
+			  self.arm_ninfo.ysize*self.arm_ninfo.effscale) / 2
 	#
 	def showimage(self, node):
 		if node != self.arm_ninfo.node:
@@ -295,7 +309,7 @@ class ImageChannel(Channel):
 	# respectively to nodes belonging to this channel.
 	#
 	chan_attrs = ['base_window', 'base_winoff']
-	node_attrs = ['file', 'duration', 'scale', \
+	node_attrs = ['file', 'duration', 'scale', 'scalefilter', \
 		 'bgcolor', 'hicolor']
 ##		 'bgcolor', 'fgcolor', 'hicolor']
 	#
