@@ -36,9 +36,10 @@ class ImageWindow() = ChannelWindow():
 		gl.RGBcolor(255, 255, 255)
 		gl.clear()
 	#
-	def setimage(self, filename):
+	def setimage(self, (filename, scale)):
 		self.parray = None
 		self.xsize, self.ysize = image.imgsize(filename)
+		self.scale = scale
 		tempfile = image.cachefile(filename)
 		f = open(tempfile, 'r')
 		f.seek(8192)
@@ -52,8 +53,9 @@ class ImageWindow() = ChannelWindow():
 		gl.clear()
 		if self.parray:
 			width, height = gl.getsize()
-			x = (width - self.xsize) / 2
-			y = (height - self.ysize) / 2
+			x = (width - self.xsize*self.scale) / 2
+			y = (height - self.ysize*self.scale) / 2
+			gl.rectzoom(self.scale, self.scale)
 			gl.lrectwrite(x, y, x+self.xsize-1, y+self.ysize-1, \
 					self.parray)
 	#
@@ -66,7 +68,7 @@ class ImageChannel() = Channel():
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = ['winsize', 'winpos']
+	chan_attrs = ['winsize', 'winpos', 'scale']
 	node_attrs = ['file', 'wait_for_close', 'duration']
 	#
 	def init(self, (name, attrdict, player)):
@@ -113,7 +115,8 @@ class ImageChannel() = Channel():
 		self.window.clear()
 	#
 	def showimage(self, node):
-		self.window.setimage(self.getfilename(node))
+		scale = MMAttrdefs.getattr(node, 'scale')
+		self.window.setimage(self.getfilename(node), scale)
 	#
 	def getfilename(self, node):
 		# XXX Doesn't use self...
