@@ -899,13 +899,6 @@ def getattributename(writer, node):
 	attr = MMAttrdefs.getattr(node, 'attributeName')
 	return attr
 
-def getrestart(writer, node):
-	if writer.smilboston:
-		restart = getcmifattr(writer, node, 'restart')
-		if restart != 'always':
-			return restart
-	return None
-
 def getpausedisplay(writer, node):
 	if writer.smilboston:
 		pd = getcmifattr(writer, node, 'pauseDisplay')
@@ -940,7 +933,8 @@ smil_attrs=[
 	("repeat", lambda writer, node:(not writer.smilboston and getrepeat(writer, node)) or None),
 	("repeatCount", lambda writer, node:(writer.smilboston and getrepeat(writer, node)) or None),
 	("repeatDur", lambda writer, node:getduration(writer, node, "repeatdur")),
-	("restart", getrestart),
+	("restart", lambda writer, node: getfill(writer, node, 'restart')),
+	("restartDefault", lambda writer, node: getfill(writer, node, 'restartDefault')),
 	("src", lambda writer, node:getsrc(writer, node)),
 	("clip-begin", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None),
 	("clip-end", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
@@ -1033,6 +1027,7 @@ cmif_node_attrs_ignore = {
 	'title':0, 'mimetype':0, 'terminator':0, 'begin':0, 'fill':0,
 	'fillDefault':0, 'syncBehavior':0, 'syncBehaviorDefault':0,
 	'repeatdur':0, 'beginlist':0, 'endlist':0, 'restart':0,
+	'restartDefault':0,
 	'left':0,'right':0,'top':0,'bottom':0,'scale':0,'units':0,
 	'regPoint':0, 'regAlign':0,
 	'bgcolor':0, 'transparent':0,

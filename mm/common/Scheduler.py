@@ -438,9 +438,9 @@ class SchedulerContext:
 		# ignore restart attribute on hyperjump (i.e. when arc is None)
 		if arc is not None and \
 		   ((node.playing in (MMStates.PLAYING, MMStates.PAUSED) and
-		     MMAttrdefs.getattr(node, 'restart') != 'always') or
+		     node.GetRestart() != 'always') or
 		    (node.playing in (MMStates.FROZEN, MMStates.PLAYED) and
-		     MMAttrdefs.getattr(node, 'restart') == 'never')):
+		     node.GetRestart() == 'never')):
 			# ignore event when node doesn't want to play
 			if debugevents: print "node won't restart"
 			return

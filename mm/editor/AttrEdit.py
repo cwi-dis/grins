@@ -595,10 +595,10 @@ class AnimationWrapper(NodeWrapper):
 		self._durattrs  = ['begin', 'duration', 'loop', 
 			'repeatdur', 'speed', 'autoReverse']
 
-		namelist = ['name',
-			'begin', 'duration', 'loop', 'repeatdur', 'restart', 'fill',
-			'speed', 'accelerate', 'decelerate', 'autoReverse',
-			]
+		namelist = ['name', 'begin', 'duration', 'loop', 'repeatdur',
+			    'restart', 'restartDefault', 'fill', 'fillDefault',
+			    'speed', 'accelerate', 'decelerate', 'autoReverse',
+			    ]
 		ctype = 'animate'
 		if ChannelMap.internalchannelmap.has_key(ctype):
 			cclass = ChannelMap.internalchannelmap[ctype]
