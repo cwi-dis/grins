@@ -31,7 +31,11 @@ class GRINS_WEB(_CommandBase):
 class GRINS_QSG(_CommandBase):
 	help = 'GRiNS QuickStart Guide'
 class GRINS_TUTORIAL(_CommandBase):
-	help = 'GRiNS Tutorial'
+	help = 'GRiNS Tutorial Users Guide'
+class GRINS_TDG(_CommandBase):
+	help = 'GRiNS Template Design Guide'
+class GRINS_REFERENCE(_CommandBase):
+	help = 'GRiNS Reference Manual'
 
 class TOOLBAR_GENERAL(_CommandBase):
 	help = 'Show/Hide the general toolbar'
