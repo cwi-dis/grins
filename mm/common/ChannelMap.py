@@ -109,7 +109,7 @@ channelhierarchy = {
     'ole': ['word'],
     }
 SMILchanneltypes = ['null', 'text', 'image', 'sound', 'video',
-		    'RealAudio', 'RealVideo', 'RealPix', 'RealText']
+		    'RealPix', 'RealText']
 
 ct = channelmap.keys()
 ct.sort()
@@ -148,3 +148,8 @@ def getvalidchanneltypes():
 	if settings.get('cmif'):
 		return commonchanneltypes + otherchanneltypes
 	return SMILchanneltypes
+
+def isvisiblechannel(type):
+	return type in ('text', 'image', 'movie', 'video', 'mpeg', 'html',
+			'label', 'graph', 'layout',
+			'RealPix', 'RealText', 'RealVideo')
