@@ -311,7 +311,6 @@ class EventStruct:
 			elif type(self._syncarc.srcnode) is type('') and self._syncarc.srcnode not in ('prev','syncbase'):
 				name = 'XPath:'
 				thing = self._syncarc.srcnode
-				readonly = 0
 			else:
 				thing = "SomeNode"
 		elif c == 'region':
