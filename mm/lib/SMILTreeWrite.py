@@ -989,6 +989,7 @@ prio_attrs = [
 	("collapsed", getcollapsed, None),
 	("showtime", getshowtime, None),
 	("timezoom", gettimezoom, None),
+	("RTIPA-server", lambda writer, node:getcmifattr(writer, node, "RTIPA_server"), "RTIPA_server"),
 	]
 real_media_attrs = [
 	("project_audiotype", lambda writer, node:getcmifattr(writer, node, "project_audiotype"), "project_audiotype"),

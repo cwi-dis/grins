@@ -1398,6 +1398,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error("bad %s attribute" % attr)
 				else:
 					attrdict[attr] = ck
+			# RTIPA start
+			elif attr == 'RTIPA-server':
+				attrdict['RTIPA_server'] = val
+			# RTIPA end
 			elif attr not in smil_node_attrs:
 				# catch all
 				# this should not be used for normal operation
