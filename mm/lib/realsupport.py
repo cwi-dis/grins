@@ -6,7 +6,7 @@ import urlcache
 
 error = 'realsupport.error'
 
-from colors import colors
+import colors
 # see SMILTreeRead for a more elaborate version
 color = re.compile('#(?P<hex>[0-9a-fA-F]{3}|'		# #f00
 		   '[0-9a-fA-F]{6})$')			# #ff0000
@@ -37,7 +37,7 @@ class RTParser(xmllib.XMLParser):
 		'p': {},
 		'br': {},
 		'ol': {},
-		'ul': [],
+		'ul': {},
 		'li': {},
 		'hr': {},
 		'center': {},
@@ -90,8 +90,7 @@ class RTParser(xmllib.XMLParser):
 		self.__printdata = []
 		self.__printfunc = printfunc
 		xmllib.XMLParser.__init__(self, accept_unquoted_attributes = 1,
-					  accept_utf8 = 1, map_case = 1,
-					  translate_attribute_references = 0)
+					  accept_utf8 = 1, map_case = 1)
 
 	def start_window(self, attributes):
 		duration = attributes.get('duration') or attributes.get('endtime')
@@ -149,17 +148,48 @@ class RTParser(xmllib.XMLParser):
 				data.append('. . .')
 			self.__printfunc(string.join(data, '\n'))
 			self.__printdata = []
+		self.elements = None
+		self.__printdata = None
+		self.__printfunc = None
 
 	# the rest is to check that the nesting of elements is done
-	# properly (i.e. according to the SMIL DTD)
+	# properly
 	def finish_starttag(self, tagname, attrdict, method):
 		if len(self.stack) > 1:
 			ptag = self.stack[-2][2]
 			if tagname not in self.entities.get(ptag, ()):
-				self.syntax_error('%s element not allowed inside %s' % (self.stack[-1][0], self.stack[-2][0]))
+				if not self.entities.get(ptag):
+					# missing close tag of empty element, just remove the entry from the stack
+					del self.stack[-2]
+				else:
+					self.syntax_error('%s element not allowed inside %s' % (self.stack[-1][0], self.stack[-2][0]))
 		elif tagname != self.topelement:
 			self.syntax_error('outermost element must be "%s"' % self.topelement)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
+
+	# special version that doesn't complain about missing end tags
+	def finish_endtag(self, tag):
+		self.literal = 0
+		if not tag:
+			xmllib.XMLParser.finish_endtag(self, tag)
+			return
+		else:
+			found = -1
+			for i in range(len(self.stack)):
+				if tag == self.stack[i][0]:
+					found = i
+			if found == -1:
+				xmllib.XMLParser.finish_endtag(self, tag)
+				return
+		while len(self.stack) > found+1:
+			nstag = self.stack[-1][2]
+			method = self.elements.get(nstag, (None, None))[1]
+			if method is not None:
+				self.handle_endtag(nstag, method)
+			else:
+				self.unknown_endtag(nstag)
+			del self.stack[-1]
+		xmllib.XMLParser.finish_endtag(self, tag)
 
 class RPParser(xmllib.XMLParser):
 	topelement = 'imfl'
@@ -294,8 +324,7 @@ class RPParser(xmllib.XMLParser):
 		self.__printdata = []
 		self.__printfunc = printfunc
 		self.__headseen = 0
-		xmllib.XMLParser.__init__(self, accept_utf8 = 1,
-					  translate_attribute_references = 0)
+		xmllib.XMLParser.__init__(self, accept_utf8 = 1)
 
 	def close(self):
 		xmllib.XMLParser.close(self)
@@ -316,6 +345,10 @@ class RPParser(xmllib.XMLParser):
 			start = tag['start']
 			tag['start'] = start - prevstart
 			prevstart = start
+		self.elements = None
+		self.__images = None
+		self.__printdata = None
+		self.__printfunc = None
 
 	def goahead(self, end):
 		try:
@@ -571,8 +604,8 @@ class RPParser(xmllib.XMLParser):
 		if val is None:
 			return
 		val = string.lower(val)
-		if colors.has_key(val):
-			return colors[val]
+		if colors.colors.has_key(val):
+			return colors.colors[val]
 		res = color.match(val)
 		if res is None:
 			self.syntax_error('bad color specification')
@@ -661,10 +694,8 @@ def writecoords(f, str, full, xy, wh, anchor):
 
 def _writeFadeout(f, start, attrs, bgcolor):
 	color = attrs.get('fadeoutcolor', bgcolor)
-	for name, val in colors.items():
-		if color == val:
-			color = name
-			break
+	if colors.rcolors.has_key(color):
+		color = colors.rcolors[color]
 	else:
 		color = '#%02x%02x%02x' % color
 	duration = attrs.get('fadeoutduration',0)
@@ -772,7 +803,7 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, sile
 			images[file] = handle, url
 	for handle, name in images.values():
 		f.write('  <image handle="%d" name=%s/>\n' % (handle, nameencode(name)))
-	if not tostring and bgcolor != (0,0,0):
+	if not tostring and bgcolor is not None and bgcolor != (0,0,0):
 		if rp.tags:
 			# only write extra fill if first tag is not a fill starting at 0 which
 			# fills the whole region
@@ -781,12 +812,10 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, sile
 		else:
 			extrafill = 1
 		if extrafill:
-			for name, val in colors.items():
-				if bgcolor == val:
-					color = name
-					break
-				else:
-					color = '#%02x%02x%02x' % bgcolor
+			if colors.rcolors.has_key(bgcolor):
+				color = colors.rcolors[bgcolor]
+			else:
+				color = '#%02x%02x%02x' % bgcolor
 			f.write('  <fill start="0" color="%s"/>\n' % color)
 	start = 0
 	duration = 0
@@ -809,10 +838,8 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, sile
 			duration = 0
 		if tag in ('fill', 'fadeout'):
 			color = attrs.get('color', bgcolor)
-			for name, val in colors.items():
-				if color == val:
-					color = name
-					break
+			if colors.rcolors.has_key(color):
+				color = colors.rcolors[color]
 			else:
 				color = '#%02x%02x%02x' % color
 			f.write(' color="%s"' % color)
@@ -855,10 +882,8 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, sile
 			f.write(' fadeouttime="%g"' % attrs.get('fadeouttime',0))
 			f.write(' fadeoutduration="%g"' % attrs.get('fadeoutduration',0))
 			color = attrs.get('fadeoutcolor', bgcolor)
-			for name, val in colors.items():
-				if color == val:
-					color = name
-					break
+			if colors.rcolors.has_key(color):
+				color = colors.rcolors[color]
 			else:
 				color = '#%02x%02x%02x' % color
 			f.write(' fadeoutcolor="%s"' % color)
@@ -905,10 +930,8 @@ def writeRT(file, rp, node):
 	ch = node.GetChannel(attrname='captionchannel')
 	color = ch.get('bgcolor', (0,0,0))
 	if color != (255,255,255):
-		for name, val in colors.items():
-			if color == val:
-				color = name
-				break
+		if colors.rcolors.has_key(color):
+			color = colors.rcolors[color]
 		else:
 			color = '#%02x%02x%02x' % color
 		f.write(' bgcolor="%s"' % color)
@@ -1082,10 +1105,7 @@ def getinfo(url, fp = None, printfunc = None):
 			'duration': rp.duration,}
 	elif head == '.RMF':
 		# RealMedia
-		try:
-			info = rmff(url, fp)
-		except:
-			info = {}
+		info = rmff(url, fp)
 	elif head == '.ra\375':
 		# RealAudio
 		import struct
@@ -1097,6 +1117,9 @@ def getinfo(url, fp = None, printfunc = None):
 			nbytes, bpm = struct.unpack('>ii', data[8:8+8])
 			info['duration'] = nbytes * 60. / bpm
 			info['bitrate'] = int(bpm / 60. * 8 + .5)
+	elif head[:3] == 'FWS':
+		import swfparser
+		info = swfparser.swfparser(url, fp)
 	else:
 		# unknown format
 		info = {}
