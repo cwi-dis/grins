@@ -104,6 +104,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					EXPORT_QT(callback = (self.bandwidth_callback, (self.export_QT_callback,))),
 					UPLOAD_QT(callback = (self.bandwidth_callback, (self.upload_QT_callback,))),
 				]								
+			if compatibility.SMIL10 == features.compatibility:
+				self.commandlist = self.commandlist + [
+					EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_SMIL_callback,))),
+					UPLOAD_SMIL(callback = (self.bandwidth_callback, (self.upload_SMIL_callback,))),
+				]								
 			#self.__save = SAVE(callback = (self.save_callback, ()))
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
@@ -346,7 +351,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def export_QT_callback(self):
 		self.export(compatibility.QT)
 
+	def export_SMIL_callback(self):
+		self.export(compatibility.SMIL10)
+
 	def export(self, exporttype):
+		if exporttype != features.compatibility:
+			# For now...
+			raise 'Incompatible export type'
 		ask = self.new_file
 		if not ask:
 			if MMmimetypes.guess_type(self.filename)[0] != 'application/x-grins-project':
@@ -375,12 +386,18 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					   '', self.export_okcallback, None)
 	   
 	def upload_G2_callback(self):
-		self.upload()
+		self.upload(compatibility.G2)
 		
 	def upload_QT_callback(self):
-		self.upload()
+		self.upload(compatibility.QT)
 
-	def upload(self):
+	def upload_SMIL_callback(self):
+		self.upload(compatibility.SMIL10)
+
+	def upload(self, exporttype):
+		if exporttype != features.compatibility:
+			# For now...
+			raise 'Incompatible export type'
 		# XXXX The filename business confuses project file name and resulting SMIL file
 		# XXXX name. To be fixed.
 		#
@@ -388,34 +405,44 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if not self.filename:
 			windowinterface.showmessage('Please save your work first')
 			return
+		have_web_page = (features.compatibility in (compatibility.G2, compatibility.QT))
 		filename, smilurl, self.w_ftpinfo, self.m_ftpinfo = self.get_upload_info()
 			
 		missing = ''
 		attr = None
-		if not self.w_ftpinfo[0] or not self.m_ftpinfo[0]:
-			attr = 'project_ftp_host'
-			missing = '\n- webserver and mediaserver FTP info'
-		if not smilurl:
-			if not attr: attr = 'project_smil_url'
-			missing = missing + '\n- Mediaserver SMILfile URL'
 		attrs = self.context.attributes
-		if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
-			if features.lightweight:
-				attrs['project_html_page'] = 'external_player.html'
-			else:
-				if not attr: attr = 'project_html_page'
-				missing = missing + '\n- HTML Template'
+		if have_web_page:
+			if not self.w_ftpinfo[0] or not self.m_ftpinfo[0]:
+				attr = 'project_ftp_host'
+				missing = '\n- webserver and mediaserver FTP info'
+			if not smilurl:
+				if not attr: attr = 'project_smil_url'
+				missing = missing + '\n- Mediaserver SMILfile URL'
+			if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
+				if features.lightweight:
+					attrs['project_html_page'] = 'external_player.html'
+				else:
+					if not attr: attr = 'project_html_page'
+					missing = missing + '\n- HTML Template'
+		else:
+			# We only have to check mediaserver params (we don't generate a webpage)
+			# For ease of coding we copy the m_ftpinfo to w_ftpinfo, and we then
+			# just skip generating/uploading the HTML later
+			self.w_ftpinfo = self.m_ftpinfo
+			if not self.m_ftpinfo[0]:
+				attr = 'project_ftp_host_media'
+				missing = '\n- Mediaserver FTP info'
 		if missing:
 			if windowinterface.showquestion('Please set these parameters then try again:'+missing):
 				self.prop_callback(attr)
 			return
-		else:
+		if have_web_page:
 			# Do a sanity check on the SMILfile URL
 			fn = MMurl.url2pathname(string.split(smilurl, '/')[-1])
-		if os.path.split(filename)[1] != os.path.split(fn)[1]:
-			# The SMIL upload filename and URL don't match. Warn.
-			if not windowinterface.showquestion('Warning: Mediaserver SMIL URL appears incorrect:\n'+smilurl):
-				return
+			if os.path.split(filename)[1] != os.path.split(fn)[1]:
+				# The SMIL upload filename and URL don't match. Warn.
+				if not windowinterface.showquestion('Warning: Mediaserver SMIL URL appears incorrect:\n'+smilurl):
+					return
 		hostname, username, passwd, dirname = self.w_ftpinfo
 		if username and not passwd:
 			windowinterface.InputDialog('Enter password for %s at %s'%(username, hostname),
@@ -426,6 +453,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def upload_callback_2(self, passwd):
 		# This is the website password. See whether we also have to ask for the
 		# media site password
+		# Note that if we don't generate HTML we've set the two _ftpinfo sets to be the
+		# same, so we never ask for a second password.
 		w_hostname, w_username, dummy, w_dirname = self.w_ftpinfo
 		m_hostname, m_username, m_passwd, m_dirname = self.m_ftpinfo
 		self.w_ftpinfo = w_hostname, w_username, passwd, w_dirname
@@ -448,17 +477,19 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 	def get_upload_info(self, w_passwd='', m_passwd=''):
 		attrs = self.context.attributes
+		have_web_page = (features.compatibility in (compatibility.G2, compatibility.QT))
 
 		# Website FTP parameters
 		w_hostname = ''
 		w_username = ''
 		w_dirname = ''
-		if attrs.has_key('project_ftp_host'):
-			w_hostname = attrs['project_ftp_host']
-		if attrs.has_key('project_ftp_user'):
-			w_username = attrs['project_ftp_user']
-		if attrs.has_key('project_ftp_dir'):
-			w_dirname = attrs['project_ftp_dir']
+		if have_web_page:
+			if attrs.has_key('project_ftp_host'):
+				w_hostname = attrs['project_ftp_host']
+			if attrs.has_key('project_ftp_user'):
+				w_username = attrs['project_ftp_user']
+			if attrs.has_key('project_ftp_dir'):
+				w_dirname = attrs['project_ftp_dir']
 
 		# Mediasite FTP params (default to same as website)
 		m_hostname = ''
@@ -485,7 +516,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			   MMmimetypes.guess_extension('application/smil')
 		
 		# URL of the SMIL file as it appears on the net
-		if attrs.has_key('project_smil_url'):
+		if have_web_page and attrs.has_key('project_smil_url'):
 			smilurl = attrs['project_smil_url']
 		else:
 			smilurl = ''
@@ -670,6 +701,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return 0
 		evallicense= (license < 0)
 		self.pre_save()
+		have_web_page = (features.compatibility in (compatibility.G2, compatibility.QT))
 		#
 		# Progress dialog
 		#
@@ -696,26 +728,27 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				pass
 			windowinterface.showmessage('Upload interrupted.')
 			return 0
-		#
-		# Next create and upload the HTML and RAM files
-		#
-		progress.set("Uploading webpage")
-		#
-		# Invent HTML file name and SMIL file url, and generate webpage
-		#
-		htmlfilename = os.path.splitext(filename)[0] + '.html'
-		# XXXX We should generate from the previously saved HTML file
-		oldhtmlfilename = ''
-		try:
-			import HTMLWrite
-			HTMLWrite.WriteFTP(self.root, htmlfilename, smilurl, w_ftpparams, oldhtmlfilename,
-						evallicense=evallicense)
-		except IOError, msg:
-			windowinterface.showmessage('Webpage upload failed:\n%s'%(msg,))
-			return 0
-		except KeyboardInterrupt:
-			windowinterface.showmessage('Upload interrupted.')
-			return 0
+		if have_web_page:
+			#
+			# Next create and upload the HTML and RAM files
+			#
+			progress.set("Uploading webpage")
+			#
+			# Invent HTML file name and SMIL file url, and generate webpage
+			#
+			htmlfilename = os.path.splitext(filename)[0] + '.html'
+			# XXXX We should generate from the previously saved HTML file
+			oldhtmlfilename = ''
+			try:
+				import HTMLWrite
+				HTMLWrite.WriteFTP(self.root, htmlfilename, smilurl, w_ftpparams, oldhtmlfilename,
+							evallicense=evallicense)
+			except IOError, msg:
+				windowinterface.showmessage('Webpage upload failed:\n%s'%(msg,))
+				return 0
+			except KeyboardInterrupt:
+				windowinterface.showmessage('Upload interrupted.')
+				return 0
 		self.setcommands(self.commandlist) # Is this needed?? (Jack)
 		return 1
 		
