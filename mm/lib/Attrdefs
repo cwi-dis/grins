@@ -219,7 +219,7 @@
 	'FTP username to use for media file upload' raw (all))
 
 (project_ftp_dir (string) '' 'Webserver Directory' default
-	'Directory on FTP server webpage will be stored' raw (all))
+	'Directory on FTP server where webpage will be stored' raw (all))
 
 (project_ftp_dir_media (string) '' 'Mediaserver Directory' default
 	'Directory on FTP server where media files will be stored' raw (all))
@@ -423,7 +423,7 @@
 # QuickTime attributes
 
 (autoplay (bool) 0 'Auto play' default 
-	'Presentation automatically start playback upon instantiation' normal (qt_pro))
+	'Presentation automatically starts playback upon instantiation' normal (qt_pro))
 
 (qtnext (string) '' 'Next presentation' file 
 	'Presentation played after the current presentation is finished' normal (qt_pro))
@@ -447,7 +447,7 @@
 	'Specify the mime type that needs to be supported in order to be able to play back this particular media-object' normal (qt_pro))
 
 (attachtimebase (bool) 1 'Attach time base' default
-	'slave the timebase of this media to the parent' normal (qt_pro))
+	'Slave the timebase of this media to the parent' normal (qt_pro))
 
 (qtchapter (string) '' 'Chapter' default
 	'Specify a chapter name' normal (qt_pro))
