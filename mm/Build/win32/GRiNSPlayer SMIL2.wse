@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.73.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grinsp2.0.75.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -33,7 +33,7 @@ item: Global
   Distribute Path=\\UNIXSERVER\auginet\GRiNS
   Distribute Type=2
   Step View=All
-  File Checksum=1197937465
+  File Checksum=957359560
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -965,6 +965,11 @@ item: Display Graphic
 end
 item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\wingdi.pyd
+  Destination=%MAINDIR%\wingdi.pyd
+  Flags=0000000010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\dsound.pyd
