@@ -4150,18 +4150,11 @@ static char producer_module_documentation[] =
 ""
 ;
 
+extern "C"
 #ifdef _WINDOWS
-#ifdef PY_EXPORTS
-#define DLL_API __declspec(dllexport)
-#else
-#define DLL_API __declspec(dllimport)
+__declspec(dllexport)
 #endif
-#else
-#define DLL_API
-#endif
-#define PY_API extern "C" DLL_API
-
-PY_API void
+void
 initproducer()
 {
 	PyObject *m, *d, *x;
