@@ -804,3 +804,26 @@ class EditMgr(Clipboard.Clipboard):
 
 	def clean_addparsestatus(self, parsestatus):
 		pass
+	
+	#
+	# asset operations
+	#
+	def addasset(self, asset):
+		self.addstep('addasset', asset)
+		self.context.addasset(asset)
+
+	def delasset(self, asset):
+		self.addstep('delasset', asset)
+		self.context.delasset(asset)
+
+	def undo_addasset(self, asset):
+		self.delasset(asset)
+
+	def undo_delasset(self, asset):
+		self.addasset(asset)
+
+	def clean_addasset(self, asset):
+		pass
+
+	def clean_delasset(self, asset):
+		pass
