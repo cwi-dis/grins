@@ -23,19 +23,7 @@ from SMIL import *
 
 interiortypes = interiortypes + ['foreign']
 
-def nameencode(value):
-	"""Quote a value"""
-
-	if '&' in value:
-		value = string.join(string.split(value,'&'),'&amp;')
-	if '>' in value:
-		value = string.join(string.split(value,'>'),'&gt;')
-	if '<' in value:
-		value = string.join(string.split(value,'<'),'&lt;')
-	if '"' in value:
-		value = string.join(string.split(value,'"'),'&quot;')
-
-	return '"' + value + '"'
+from nameencode import nameencode
 
 NSGRiNSprefix = 'GRiNS'
 NSQTprefix = 'qt'
@@ -1002,23 +990,7 @@ qt_node_attrs = {
 	} 
 
 # Mapping from CMIF channel types to smil media types
-smil_mediatype={
-	'text':'text',
-	'sound':'audio',
-	'image':'img',
-	'video': 'video',
-	'html':'text',
-	'null':'ref',
-	'RealAudio':'audio',
-	'RealPix':'animation',
-	'RealText':'textstream',
-	'RealVideo':'video',
-	'unknown': 'ref',
-	'animate': 'animate',
-	'brush': 'brush',
-	'prefetch': 'prefetch',
-	'svg': 'img',
-}
+from smil_mediatype import smil_mediatype
 
 def mediatype(x, error=0):
 	chtype = x.GetChannelType()

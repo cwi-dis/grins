@@ -17,15 +17,7 @@ import windowinterface
 import compatibility
 import features
 from fmtfloat import round
-
-
-def nameencode(value):
-	"""Quote a value"""
-	value = string.join(string.split(value,'&'),'&amp;')
-	value = string.join(string.split(value,'>'),'&gt;')
-	value = string.join(string.split(value,'<'),'&lt;')
-	value = string.join(string.split(value,'"'),'&quot;')
-	return '"' + value + '"'
+from nameencode import nameencode
 
 # CMIF channel types that have a visible representation
 visible_channel_types={
