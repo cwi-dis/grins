@@ -144,8 +144,9 @@ class PlayerCore(Selecter):
 			return 1	# Cannot set on internal nodes
 		return ch.updatefixedanchors(node)
 
-	def updateFocus(self):
-		self.editmgr.setglobalfocus('MMNode', self.__focusNode)
+	def updateFocus(self, focusNode):
+		if focusNode != None:
+			self.editmgr.setglobalfocus('MMNode', focusNode)
 
 	def updatePlayerStateOnStop(self):
 		# send the player state event					
@@ -153,11 +154,14 @@ class PlayerCore(Selecter):
 		
 	# update the player state in order to update all views according to this state
 	# for now, the state is a list of: playing nodes and showing channels
+	# return a node which has the focus: temporarly
 	def updatePlayerStateOnPause(self):
 		# node list is a tuple of (nodetype/node)
 		# here nodetype is either: 'MMChannel' or 'MMNode'
 		nodeList = []
 
+		focusNode = None
+		
 		channelListShowing = []	
 		# first build the region list (only layoutchannel)		
 		for name in self.channelnames:
@@ -176,11 +180,13 @@ class PlayerCore(Selecter):
 			playingNode = ch.getPlayingNode()
 			if playingNode != None:
 				nodeList.append(('MMNode',playingNode))
-				self.__focusNode = playingNode
+				# for now, we give the focus to an arbitrare node
+				focusNode = playingNode
 
 		# send the player state event					
 		self.editmgr.setplayerstate('paused', nodeList)
 
+		return focusNode	
 	#
 	def pause(self, wantpause):
 		if self.pausing == wantpause:
@@ -189,8 +195,8 @@ class PlayerCore(Selecter):
 		self.pausing = wantpause
 		if self.pausing:
 			self.scheduler.setpaused(1)
-			self.updatePlayerStateOnPause()
-			self.updateFocus()
+			focusNode = self.updatePlayerStateOnPause()
+			self.updateFocus(focusNode)
 		else:
 			self.scheduler.setpaused(0)
 		self.showstate()
