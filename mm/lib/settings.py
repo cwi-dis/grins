@@ -63,6 +63,8 @@ default_settings = {
 	'structure_leafcolor': (255,255,222),
 	'structure_darkleaf': (203,203,170),
 	'structure_commentcolor': (203,203,170), # for now equal to darkleaf
+	'structure_foreigncolor': (255,222,255),
+	'structure_darkforeign': (181,164,181),
 	'structure_rpcolor': (196,159,127),
 	'structure_darkrp': (196,159,127),
 	'structure_slidecolor': (222,255,255),

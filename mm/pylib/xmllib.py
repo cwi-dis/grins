@@ -640,17 +640,18 @@ class XMLParser:
                     if aprefix is None:
                         aprefix = ''
                     ans = None
-                    for t, d, nst in self.stack:
-                        if d.has_key(aprefix):
-                            ans = d[aprefix]
-                    if ans is None and aprefix != '':
-                        ans = self.__namespaces.get(aprefix)
+                    if aprefix:
+                        for t, d, nst in self.stack:
+                            if d.has_key(aprefix):
+                                ans = d[aprefix]
+                        if ans is None:
+                            ans = self.__namespaces.get(aprefix)
                     if ans is not None:
                         key = ans + ' ' + key
                     elif aprefix != '':
                         key = aprefix + ':' + key
-                    elif ns is not None:
-                        key = ns + ' ' + key
+##                    elif ns is not None:
+##                        key = ns + ' ' + key
                 nattrdict[key] = val
                 attrnamemap[key] = okey
             attrdict = nattrdict

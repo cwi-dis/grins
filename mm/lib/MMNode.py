@@ -1634,7 +1634,7 @@ class MMNode_body:
 		else:
 			endtime = None
 		self.time_list.append((timestamp, endtime))
-		if self.parent and self.parent.type == 'switch':
+		if self.parent and self.parent.type in ('switch', 'foreign'):
 			self.parent.startplay(timestamp)
 
 	def stopplay(self, timestamp):
@@ -1646,7 +1646,7 @@ class MMNode_body:
 		self.starting_children = 0
 		self.set_armedmode(ARM_DONE)
 		self.time_list[-1] = self.time_list[-1][0], timestamp
-		if self.parent and self.parent.type == 'switch':
+		if self.parent and self.parent.type in ('switch', 'foreign'):
 			self.parent.stopplay(timestamp)
 
 class MMNode_pseudopar_body(MMNode_body):
@@ -1801,7 +1801,7 @@ class MMNode(MMTreeElement):
 			self.set_armedmode(ARM_NONE)
 			self.start_time = None
 		if debug: print 'MMNode.reset', `self`
-		if self.parent and self.parent.type == 'switch':
+		if self.parent and self.parent.type in ('switch', 'foreign'):
 			self.parent.reset()
 
 
@@ -1982,7 +1982,7 @@ class MMNode(MMTreeElement):
 	def set_start_time(self, timestamp, include_pseudo = 1):
 		self.start_time = timestamp
 		p = self.parent
-		while p and p.type == 'switch':
+		while p and p.type in ('switch', 'foreign'):
 			p.start_time = timestamp
 			p = p.parent
 		if not include_pseudo:
@@ -2011,7 +2011,7 @@ class MMNode(MMTreeElement):
 		else:
 			endtime = None
 		self.time_list.append((timestamp, endtime))
-		if self.parent and self.parent.type == 'switch':
+		if self.parent and self.parent.type in ('switch', 'foreign'):
 			self.parent.startplay(timestamp)
 
 	def stopplay(self, timestamp):
@@ -2023,7 +2023,7 @@ class MMNode(MMTreeElement):
 		self.starting_children = 0
 		self.set_armedmode(ARM_DONE)
 		self.time_list[-1] = self.time_list[-1][0], timestamp
-		if self.parent and self.parent.type == 'switch':
+		if self.parent and self.parent.type in ('switch', 'foreign'):
 			self.parent.stopplay(timestamp)
 ##		for c in self.GetSchedChildren():
 ##			c.resetall(self.sctx.parent)
@@ -2289,7 +2289,7 @@ class MMNode(MMTreeElement):
 		if hasattr(self, 'fakeparent'):
 			return self.fakeparent
 		parent = self.parent
-		while parent is not None and (parent.type == 'prio' or (check_playability and parent.type == 'switch')):
+		while parent is not None and (parent.type in ('prio', 'foreign') or (check_playability and parent.type == 'switch')):
 			parent = parent.parent
 		return parent
 
@@ -2327,6 +2327,9 @@ class MMNode(MMTreeElement):
 				continue
 			if c.type == 'prio':
 				children = children + c.GetSchedChildren(check_playability)
+			elif c.type == 'foreign':
+				if c.attrdict.get('skip-content', 'true') != 'true':
+					children = children + c.GetSchedChildren(check_playability)
 			elif check_playability and c.type == 'switch':
 				c = c.ChosenSwitchChild()
 				if c is not None:
@@ -2340,7 +2343,7 @@ class MMNode(MMTreeElement):
 		while children:
 			c = children[0]
 			del children[0]
-			if c.type == 'prio' or c.type == 'switch':
+			if c.type == 'prio' or c.type == 'switch' or c.type == 'foreign':
 				children = children + c.children
 			elif c is x:
 				return 1
@@ -3023,7 +3026,7 @@ class MMNode(MMTreeElement):
 			if pnode is None:
 				self.start_time = 0
 				parent = self.parent
-				while parent and parent.type == 'switch':
+				while parent and parent.type in ('switch', 'foreign'):
 					parent.start_time = 0
 					parent = parent.parent
 				return 0
@@ -3041,7 +3044,7 @@ class MMNode(MMTreeElement):
 						if maybecached:
 							self.start_time = val
 							parent = self.parent
-							while parent and parent.type == 'switch':
+							while parent and parent.type in ('switch', 'foreign'):
 								parent.start_time = val
 								parent = parent.parent
 						return val
@@ -3055,7 +3058,7 @@ class MMNode(MMTreeElement):
 			if pnode.start_time is not None:
 				self.start_time = presolved
 				parent = self.parent
-				while parent and parent.type == 'switch':
+				while parent and parent.type in ('switch', 'foreign'):
 					parent.start_time = presolved
 					parent = parent.parent
 			return presolved
@@ -3074,7 +3077,7 @@ class MMNode(MMTreeElement):
 		if maybecached:
 			self.start_time = presolved + min
 			parent = self.parent
-			while parent and parent.type == 'switch':
+			while parent and parent.type in ('switch', 'foreign'):
 				parent.start_time = presolved + min
 				parent = parent.parent
 		# return earliest resolved time
@@ -4091,6 +4094,8 @@ class MMNode(MMTreeElement):
 			return self.shouldplay
 		self.shouldplay = 0
 		if self.type == 'comment':
+			return self.shouldplay # i.e. 0
+		if self.type == 'foreign' and self.attrdict.get('skip-content', 'true') == 'true':
 			return self.shouldplay # i.e. 0
 		# If any of the system test attributes don't match
 		# we should not play

@@ -539,7 +539,7 @@ class SMIL:
 				if ' ' not in __at and ':' not in __at:
 					for __ns in SMIL2ns:
 						__atd[__ns+' '+__at] = __vl
-					del __atd[__at]
+##					del __atd[__at]
 	del __el, __atd, __at, __vl, __key, __val, __ns
 
 	# all entities with their allowed content

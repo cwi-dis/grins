@@ -468,6 +468,8 @@ class NodeWrapper(Wrapper):
 		elif ntype == 'comment':
 			# special case for comment nodes
 			return ['.values']
+		elif ntype == 'foreign':
+			return self.node.attrdict.keys()
 
 		# Tuples are optional names and will be removed if they
 		# aren't set
