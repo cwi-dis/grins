@@ -951,7 +951,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				except string.atof_error:
 					self.syntax_error('bad %s attribute' % attr)
 				else:
-					attrdict[attr] = val
+					if 0 <= val <= 1:
+						attrdict[attr] = val
+						if attrdict.get('accelerate', 0) + attrdict.get('decelerate', 0) > 1:
+							self.syntax_error('accelerate + decelerate > 1')
+					else:
+						self.syntax_error("`%s' attribute value out of allowed range" % attr)
 				
 			elif attr == 'syncBehavior':
 				if self.__context.attributes.get('project_boston') == 0:
