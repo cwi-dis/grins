@@ -3,44 +3,23 @@ __version__ = "$Id$"
 """ @win32doc|MediaChannel
 
 This module encapsulates a sufficient part
-of the DirectShow infrastructure in order to
-implement GRiNS audio and video media channels.
+of the DirectShow infrastructure to
+implement win32 audio and video media channels.
 
-Any media supported by Windows Media Player
-are also supported by this module:
+Any media type supported by Windows Media Player
+is also supported by this module:
 (.avi,.asf,.rmi,.wav,.mpg,.mpeg,.m1v,.mp2,.mpa, 
 .mpe,.mid,.rmi,.qt,.aif,.aifc,.aiff,.mov,.au,.snd)
----	Exception: asx files can be played directly by MediaPlayer
-	or the MediaPlayer control but not by this module. 
-	(we could use the control for win32 but to leave open
-	the porting to other platforms I prefer not to use it)
+---	Exception: asx files can be played directly 
+	by MediaPlayer or the MediaPlayer control.
 	This module can be used to play the asf streams 
-	referenced in asx files. So, we need to parse the asx 
-	files first using the ASXParser.
-	(I am not sure of how asx support will evolve yet)
+	referenced in the asx files and can also play some
+	simple asx files.Asx parsing is done by ASXParser.
 
-The GraphBuilder is a COM object that builds a graph of filters
+Note that DirectShow builds a graph of filters
 appropriate to parse-render each media type from those filters
 available on the machine. A new parsing filter installed enhances 
 the media types that can be played both by GRiNS and Windows MediaPlayer.
-
-The Python object exported by the Cpp module GraphBuilder
-supports the interface:
-interface IGraphBuilder:
-	def RenderFile(self,fn):return 1
-
-	def Run(self):pass
-	def Stop(self):pass
-	def Pause(self):pass
-
-	def GetDuration(self):return 0
-	def SetPosition(self,pos):pass
-	def GetPosition(self):return 0
-	def SetStopTime(self,pos):pass
-	def GetStopTime(self):return 0
-
-	def SetVisible(self,f):pass
-	def SetWindow(self,w):pass
 
 """
 
@@ -50,11 +29,14 @@ import MMAttrdefs
 # URL module
 import MMurl, urllib
 
-# std win32 libs 
-import win32ui, win32con
+# use: addclosecallback, genericwnd, register, unregister
+import windowinterface
 
 # DirectShow support
-DirectShowSdk=win32ui.GetDS()
+from win32dxm import GraphBuilder
+
+# we need const WM_USER
+import win32con
 
 # private graph notification message
 WM_GRPAPHNOTIFY=win32con.WM_USER+101
@@ -62,10 +44,8 @@ WM_GRPAPHNOTIFY=win32con.WM_USER+101
 # private redraw message
 WM_REDRAW=win32con.WM_USER+102
 
-# use: addclosecallback, genericwnd, register, unregister
-import windowinterface
-
 error = 'MediaChannel.error'
+
 
 class MediaChannel:
 	def __init__(self, channel):
@@ -125,7 +105,7 @@ class MediaChannel:
 	def prepare_player(self, node = None):	
 		self.release_armed_player()
 		try:
-			self.__armBuilder = DirectShowSdk.CreateGraphBuilder()
+			self.__armBuilder = GraphBuilder()
 		except:
 			self.__armBuilder=None
 
