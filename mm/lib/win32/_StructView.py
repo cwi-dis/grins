@@ -41,6 +41,8 @@ class _StructView(DisplayListView):
 			self._dropmap['Tool']=(self.dragtool, self.droptool)
 			self._dragging = None
 
+		self._tooltip = None
+
 	def OnCreate(self,params):
 		DisplayListView.OnCreate(self,params)
 		# enable mechanism to accept paste files
@@ -50,16 +52,17 @@ class _StructView(DisplayListView):
 		frame.HookCommand(self.OnPasteFile,id)
 		frame.HookCommandUpdate(self.OnUpdateEditPaste,id)
 
-		import components
-		tooltip = components.Tooltip(parent = self, id = 0)
-		tooltip.createWindow()
-		tooltip.addTool(0, (0,0,600,400), 'Structure View')
-		self._tooltip = tooltip
+##		import components
+##		tooltip = components.Tooltip(parent = self, id = 0)
+##		tooltip.createWindow()
+##		tooltip.addTool(0, (0,0,600,400), 'Structure View')
+##		self._tooltip = tooltip
 
 	def OnDestroy(self, params):
 		DisplayListView.OnDestroy(self, params)
-		if self._tooltip:
+		if self._tooltip is not None:
 			self._tooltip.destroy()
+			self._tooltip = None
 
 	def PaintOn(self,dc):
 		# only paint the rect that needs repainting
@@ -131,7 +134,7 @@ class _StructView(DisplayListView):
 				self._dragging = None
 	
 	def notifyTooltipForMouseMove(self, params):
-		if not self._tooltip: 
+		if self._tooltip is None: 
 			return
 		msg=win32mu.Win32Msg(params)
 		point=msg.pos()
@@ -145,7 +148,7 @@ class _StructView(DisplayListView):
 		self._tooltip.onMouseMove(params)
 
 	def onMouseMove(self, params):
-		if self._tooltip:
+		if self._tooltip is not None:
 			self.notifyTooltipForMouseMove(params)
 		msg=win32mu.Win32Msg(params)
 		point=msg.pos()
