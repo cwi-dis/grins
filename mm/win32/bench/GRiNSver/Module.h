@@ -13,6 +13,7 @@ class Module : public VS_FIXEDFILEINFO
 	~Module();
 
 	static void VerifyAll(const char* pstr[],ostream& os);
+	static void reportPlatformOn(ostream& os);
 
 	private:
 	bool isLoaded() const {return m_hMod!=NULL;}
