@@ -882,7 +882,13 @@ def getpath(writer, node):
 def getcollapsed(writer, node):
 	if node.GetType() in interiortypes and node.collapsed:
 		return 'true'
-	
+
+def getinlinetrmode(writer, node):
+	mode = MMAttrdefs.getattr(node, 'mode')
+	if mode == 'in':
+		return None
+	return mode
+
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
@@ -976,6 +982,8 @@ smil_attrs=[
 	("keySplines", lambda writer, node:getstringattr(writer, node, "keySplines")),
 	("transIn", lambda writer, node:gettransition(writer, node, "transIn")),
 	("transOut", lambda writer, node:gettransition(writer, node, "transOut")),
+	("mode", getinlinetrmode),
+	("subtype", lambda writer, node:getstringattr(writer, node, "subtype")),
 
 	("mediaSize", lambda writer, node:getstringattr(writer, node, "mediaSize")),
 	("mediaTime", lambda writer, node:getstringattr(writer, node, "mediaTime")),
@@ -2126,7 +2134,10 @@ class SMILWriter(SMIL):
 		attributes = self.attributes.get(tag, {})
 		for name, func in smil_attrs:
 			if attributes.has_key(name):
-				value = func(self, node)
+				if name == 'type':
+					value = getstringattr(self, node, "trtype")
+				else:
+					value = func(self, node)
 				if value and value != attributes[name]:
 					attrlist.append((name, value))
 		self.writetag(tag, attrlist)
@@ -2444,3 +2455,4 @@ def intToEnumString(intValue, dict):
 		return dict[intValue]
 	else:
 		return dict[0]
+ 

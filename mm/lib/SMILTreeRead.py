@@ -3586,6 +3586,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('animateMotion not compatible with SMIL 1.0')
 		self.__context.attributes['project_boston'] = 1
+		value = attributes.get('type')
+		if value:
+			attributes['trtype'] = value
+			del attributes['type']
+		value = attributes.get('fadeColor')
+		if value:
+			attributes['fadeColor'] = value
 		self.NewAnimateNode('transitionFilter', attributes)
 
 	def end_transitionfilter(self):
@@ -4106,3 +4113,4 @@ except:
 		if t:
 			tokens.append(string.join(t, ''))
 		return tokens
+ 
