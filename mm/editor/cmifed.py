@@ -278,8 +278,10 @@ class Main(MainDialog):
 			features = self._license.need('save')
 		except license.Error, arg:
 			print "No license:", arg
-			return None
-		return features
+			return 0
+		if self._license.is_evaluation_license():
+			return -1
+		return 1
 
 def main():
 	try:

@@ -330,6 +330,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if not license:
 			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
 			return 0
+		evallicense= (license < 0)
 		roots = [self.root]
 		import Clipboard
 		type, data = Clipboard.getclip()
@@ -348,16 +349,18 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		print 'saving to', filename, '...'
 		try:
 			import HierarchyView
-			HierarchyView.writenodes(self.root)
+			HierarchyView.writenodes(self.root,
+						 evallicense=evallicense)
 			if filename[-4:] == '.cmi' or filename[-5:] == '.cmif':
 				if cleanSMIL:
 					windowinterface.showmessage('Saving to CMIF file instead of SMIL file', mtype = 'warning')
 				import MMWrite
-				MMWrite.WriteFile(self.root, filename)
+				MMWrite.WriteFile(self.root, filename, evallicense=evallicense)
 			else:
 				import SMILTreeWrite
 				SMILTreeWrite.WriteFile(self.root, filename,
-							cleanSMIL = cleanSMIL)
+						     cleanSMIL = cleanSMIL,
+						     evallicense=evallicense)
 		except IOError, msg:
 			windowinterface.showmessage('Save operation failed.\n'+
 						    'File: '+filename+'\n'+
