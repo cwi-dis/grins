@@ -120,16 +120,16 @@ class MMNodeContext:
 	# Channel administration
 	#
 	def compatchannels(self, url = None, chtype = None):
-		# experimental SMIL Boston layout code
-		# now, the user associate a node to a LayoutChannel (SMIL Boston region)
-		# so we return all layout existing layout channels
-		chlist = []
-		for ch in self.channels:
-			if ch['type'] == 'layout':
-				chlist.append(ch.name)
-		chlist.sort()
-		return chlist		
-		# end experimental
+##		# experimental SMIL Boston layout code
+##		# now, the user associate a node to a LayoutChannel (SMIL Boston region)
+##		# so we return all layout existing layout channels
+##		chlist = []
+##		for ch in self.channels:
+##			if ch['type'] == 'layout':
+##				chlist.append(ch.name)
+##		chlist.sort()
+##		return chlist		
+##		# end experimental
 		
 		# return a list of channels compatible with the given URL
 		if url:
