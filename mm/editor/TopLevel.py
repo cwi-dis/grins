@@ -300,9 +300,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			HTMLWrite.WriteFile(self.root, htmlfilename, smilurl, oldhtmlfilename,
 						evallicense=evallicense)
 		except IOError, msg:
-			windowinterface.showmessage('HTML write failed.\n'+
-						    'File: '+htmlfilename+'\n'+
-						    'Error: '+msg[1])
+			windowinterface.showmessage('HTML export failed:\n%s'%(msg,))
 
 	def bandwidth_callback(self, do_export_callback):
 		import settings
@@ -599,9 +597,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 							progress = progress,
 							convertURLs = 1)
 		except IOError, msg:
-			windowinterface.showmessage('Save operation failed.\n'+
-						    'File: '+filename+'\n'+
-						    'Error: '+msg[1])
+			if exporting:
+				operation = 'Publish'
+			else:
+				operation = 'Save'
+			windowinterface.showmessage('%s failed:\n%s'%(operation, msg))
 			return 0
 ##		print 'done saving.'
 		if not exporting:
@@ -634,7 +634,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 						evallicense=evallicense,
 						progress=progress.set)
 		except IOError, msg:
-			windowinterface.showmessage('Media upload failed:\n'+msg[1])
+			windowinterface.showmessage('Media upload failed:\n%s'%(msg,))
 			return 0
 		except KeyboardInterrupt:
 			windowinterface.showmessage('Upload interrupted')
@@ -654,7 +654,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			HTMLWrite.WriteFTP(self.root, htmlfilename, smilurl, w_ftpparams, oldhtmlfilename,
 						evallicense=evallicense)
 		except IOError, msg:
-			windowinterface.showmessage('Webpage upload failed:\n'+msg[1])
+			windowinterface.showmessage('Webpage upload failed:\n%s'%(msg,))
 			return 0
 		except KeyboardInterrupt:
 			windowinterface.showmessage('Upload interrupted')
