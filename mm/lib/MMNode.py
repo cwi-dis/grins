@@ -2496,7 +2496,7 @@ class MMNode(MMTreeElement):
 	def isCssAttr(self, name):
 		return name in _CssAttrs
 
-	# this method return the media positioning (subregiongeom+mediageom) in pixel values.
+	# Return the media positioning (subregiongeom+mediageom) in pixel values.
 	# All values are relative to the parent region/subregion
 	# it should be use only in some rare cases
 	# if we need to use often this method, we should optimize it
@@ -5006,13 +5006,13 @@ class MMErrors:
 	def getErrorNumber(self):
 		return len(self.list)
 	
-	def getFormatedErrorsMessage(self, maxErrors):
+	def getFormatedErrorsMessage(self, maxErrors = None):
 		errorsMessage = ''
 		errorList = self.getErrorList()
 		number = 0
 		for message, line in errorList:
 			# format only the required lines number
-			if number < maxErrors:
+			if maxErrors is None or number < maxErrors:
 				errorsMessage = errorsMessage+message+'.\n'
 			else:
 				errorsMessage = errorsMessage+'. . .'+'\n'

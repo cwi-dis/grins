@@ -2673,6 +2673,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							break
 					else:
 						# silently ignore attribute in unsupported module
+						if not features.editor:
+							self.warning("Ignoring attribute `%s' in element `%s' in unsupported module%s %s" % (key, tagname, (len(mods) > 1 and 's') or '', ' '.join(mods.keys())), self.lineno)
 						if __debug__:
 							print 'silently ignore attribute',tagname,key,ans,mods
 						del attributes[key]
@@ -2683,6 +2685,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							break
 					else:
 						# silently ignore attribute in unsupported module
+						if not features.editor:
+							self.warning("Ignoring attribute `%s' in element `%s' in unsupported module%s %s" % (key, tagname, (len(mods) > 1 and 's') or '', ' '.join(mods)), self.lineno)
 						if __debug__:
 							print 'silently ignore attribute',tagname,key,ans,mods
 						del attributes[key]
@@ -2829,7 +2833,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		endlist = []
 		keys = []		# list of accesskey keys
 		for key, val in dict.items():
-			if key in ('image', 'width', 'height'):
+			if key in ('image', 'width', 'height', 'component'):
 				continue
 			if key == 'display':
 				coords = val[1]
@@ -3759,6 +3763,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if parsedebug: print 'start par', attributes
 		if not settings.MODULES['NestedTimeContainers']:
 			if len(filter(lambda x: x.GetType() in ('par','seq'), self.__container.GetPath())) >= 2:
+				self.__unsupmods = ['NestedTimeContainers']
 				self.unknown_starttag('par', attributes)
 				return
 		self.start_parexcl('par', attributes)
@@ -3776,6 +3781,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if parsedebug: print 'start seq', attributes
 		if not settings.MODULES['NestedTimeContainers']:
 			if len(filter(lambda x: x.GetType() in ('par','seq'), self.__container.GetPath())) >= 2:
+				self.__unsupmods = ['NestedTimeContainers']
 				self.unknown_starttag('seq', attributes)
 				return
 		id = self.__checkid(attributes)
@@ -4427,6 +4433,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# catch all
 
 	def unknown_starttag(self, tag, attrs):
+		if not features.editor:
+			if self.__unsupmods:
+				self.warning("Ignoring element `%s' in unsupported module%s %s" % (tag, (len(self.__unsupmods) > 1 and 's') or '', ' '.join(self.__unsupmods)), self.lineno)
+			else:
+				self.warning("Ignoring unknown element `%s'" % tag, self.lineno)
 		if __debug__:
 			if parsedebug: print 'start foreign', tag, attrs
 		if self.__in_body:
@@ -4620,6 +4631,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					break
 			else:
 				method = None
+				self.__unsupmods = ELEMENTS.get(tagname, [])
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 
 	def unknown_endtag(self, tagname):
