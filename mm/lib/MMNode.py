@@ -1999,9 +1999,10 @@ class _TimingInfo:
 		self.t1 = 'error'
 		self.t2 = 'error'
 		self.downloadlag = 0
+		self.begindelay = 0
 
 	def GetTimes(self):
-		return self.t0, self.t1, self.t2, self.downloadlag
+		return self.t0, self.t1, self.t2, self.downloadlag, self.begindelay
 
 # used by GetClip() below
 clipre = None
@@ -2875,13 +2876,14 @@ class MMNode(MMTreeElement):
 	def GetTimes(self, which='virtual'):
 		if not self.timing_info_dict.has_key(which):
 			self.context.needtimes(which, self)
-		t0, t1, t2, downloadlag = self.timing_info_dict[which].GetTimes()
-		return t0, t1, t2, downloadlag, self.GetBeginDelay()
+		return self.timing_info_dict[which].GetTimes()
 
 	def GetTimesObject(self, which='virtual'):
-		if not self.timing_info_dict.has_key(which):
-			self.timing_info_dict[which] = _TimingInfo()
-		return self.timing_info_dict[which]
+		to = self.timing_info_dict.get(which)
+		if to is None:
+			self.timing_info_dict[which] = to = _TimingInfo()
+			to.begindelay = self.GetBeginDelay()
+		return to
 
 	def ClearTimesObjects(self):
 		self.timing_info_dict = {}
