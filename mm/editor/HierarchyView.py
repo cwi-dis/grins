@@ -66,6 +66,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.focusnode = self.root
 		self.editmgr = self.root.context.editmgr
 		self.destroynode = None	# node to be destroyed later
+		self.thumbnails = 1
 		HierarchyViewDialog.__init__(self)
 
 	def __repr__(self):
@@ -506,7 +507,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.focusobj = None
 		list = self.makegeometries()
 		for item in list:
-			obj = makeobject(self, item)
+			obj = Object(self, item)
 			self.objects.append(obj)
 			if item[0] in focuspath:
 				# This relies on the fact that nodes
@@ -568,6 +569,13 @@ class HierarchyView(HierarchyViewDialog):
 
 	def canvascall(self, code):
 		self.window.setcanvassize(code)
+
+	def thumbnailcall(self):
+		self.thumbnails = not self.thumbnails
+		if self.new_displist:
+			self.new_displist.close()
+		self.new_displist = self.window.newdisplaylist(BGCOLOR)
+		self.draw()
 
 	def playcall(self):
 		if self.focusobj: self.focusobj.playcall()
@@ -719,10 +727,6 @@ def makeboxes(list, node, left, top, right, bottom,
 
 # XXX The following should be merged with ChannelView's GO class :-(
 
-# Create a new object
-def makeobject(mother, item):
-	return Object(mother, item)
-
 # Fonts used below
 f_title = windowinterface.findfont('Helvetica', 10)
 f_channel = windowinterface.findfont('Helvetica', 8)
@@ -769,7 +773,8 @@ class Object:
 		hmargin = d.strsize('x')[0] / 1.5
 		vmargin = titleheight / 5
 		l, t, r, b = self.box
-		nt = self.node.GetType()
+		node = self.node
+		nt = node.GetType()
 		if nt in MMNode.leaftypes:
 			color = LEAFCOLOR
 		elif nt == 'seq':
@@ -785,7 +790,7 @@ class Object:
 		d.drawfbox(color, (l, t, r - l, b - t))
 		self.drawfocus()
 		# Draw the name, centered in the box
-		if self.node.GetType() in MMNode.leaftypes:
+		if node.GetType() in MMNode.leaftypes:
 			b1 = b
 			# Leave space for the channel if at all possible
 			if b1-t-vmargin >= 2*titleheight:
@@ -793,6 +798,19 @@ class Object:
 				# And draw it now
 				self.drawchannelname(l+hmargin/2, b1,
 						     r-hmargin/2, b-vmargin/2)
+				# draw thumbnail if enough space
+				if self.mother.thumbnails and \
+				   b1-t-vmargin >= 2*titleheight and \
+				   r-l >= hmargin * 4.5 and \
+				   node.GetChannelType() == 'image':
+					import MMurl
+					try:
+						f = MMurl.urlretrieve(node.context.findurl(MMAttrdefs.getattr(node, 'file')))[0]
+					except IOError:
+						pass
+					else:
+						d.display_image_from_file(f, center = 0, coordinates = (l+hmargin, t+vmargin, r-l-2*hmargin, 2*titleheight))
+						t = t + 2*titleheight + vmargin
 		else:
 			b1 = min(b, t + titleheight + vmargin)
 		d.fgcolor(TEXTCOLOR)
@@ -800,14 +818,14 @@ class Object:
 		# If this is a node with suppressed detail,
 		# draw some lines
 		if self.boxtype == LEAFBOX and \
-			  self.node.GetType() in MMNode.interiortypes and \
-			  len(self.node.GetChildren()) > 0:
+			  node.GetType() in MMNode.interiortypes and \
+			  len(node.GetChildren()) > 0:
 			l1 = l + hmargin*2
 			t1 = t + titleheight + vmargin
 			r1 = r - hmargin*2
 			b1 = b - vmargin*2
 			if l1 < r1 and t1 < b1:
-				if self.node.GetType() == 'par':
+				if node.GetType() == 'par':
 					x = l1
 					while x < r1:
 						d.drawline(TEXTCOLOR,
