@@ -223,6 +223,8 @@ class Widget:
 
 	def select(self):
 		self.selected = 1
+		if not self.root:
+			print "Error! Node has no root - should I be selected?"
 		self.root.dirty = 1
 
 	def unselect(self):
