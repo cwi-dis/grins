@@ -275,11 +275,13 @@ def main():
 			if __debug__:
 				import traceback, pdb
 				print
-				print '\t--------------------------------------------'
-				print '\t| Entering debugger -- call Sjoerd or Jack |'
-				print '\t--------------------------------------------'
+				print '\t-------------------------------------------------'
+				print '\t| Fatal error - Please mail this output to      |'
+				print '\t| grins-support@oratrix.com with a description  |'
+				print '\t| of the circumstances.                         |'
+				print '\t-------------------------------------------------'
 				print
-				traceback.print_exception(exc_type, exc_value, None)
+				traceback.print_exception(exc_type, exc_value, exc_traceback)
 				print
 				pdb.post_mortem(exc_traceback)
 			else:
