@@ -330,7 +330,7 @@ class SelectElementDlg(ResDialog):
 		}
 	ICON_WIDTH, ICON_HEIGHT = 16, 16
 
-	from SMILTreeWrite import smil_mediatype
+	from smil_mediatype import smil_mediatype
 	from MMTypes import mediatypes
 	ctrlinteriortypes = ['switch', 'priority']
 
@@ -560,7 +560,7 @@ class SelectElementDlg(ResDialog):
 		for node in parent.children:
 			ntype = node.GetType()
 			if ntype in self.mediatypes:
-				smiltype = self.smil_mediatype.get(node.GetChannelType()) or 'ref'
+				smiltype = self.smil_mediatype.get(node.GetChannelType(), 'ref')
 				wrapper = self.MMObjWrapper(node, smiltype)
 				citemid = self.insertMMObjWrapper(wrapper, itemid)
 			else:
