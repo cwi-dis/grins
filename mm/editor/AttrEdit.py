@@ -468,7 +468,7 @@ class ChannelWrapper(Wrapper):
 		if name == '.cname':
 			if self.channel.name != value and \
 			   self.editmgr.context.getchannel(value):
-			    windowinterface.showmessage('Duplicate channel name (not changed)')
+			    self.showmessage('Duplicate channel name (not changed)')
 			    return
 			self.editmgr.setchannelname(self.channel.name, value)
 		else:
@@ -936,6 +936,9 @@ class AttrEditor(AttrEditorDialog):
 						exp = exp + " or `indefinite'"
 					self.showmessage('%s: value should be a%s %s' % (b.getlabel(), n, exp), mtype = 'error')
 					return 1
+				if name == 'file' and not self.checkurl(value):
+					self.showmessage('URL not compatible with channel', mtype = 'error')
+					return 1
 				dict[name] = value
 		if not dict:
 			# nothing to change
@@ -951,6 +954,30 @@ class AttrEditor(AttrEditorDialog):
 			else:
 				self.wrapper.setattr(name, value)
 		self.wrapper.commit()
+
+	def checkurl(self, url):
+		import settings
+		if not settings.get('lightweight'):
+			return 1
+		if self.wrapper.__class__ is SlideWrapper:
+			# node is a slide
+			import mimetypes
+			mtype = mimetypes.guess_type(url)[0]
+			if not mtype:
+				# unknown type, not compatible
+				return 0
+			# compatible if image and not RealPix
+			return mtype[:5] == 'image' and string.find(mtype, 'real') < 0
+		for b in self.attrlist:
+			if b.getname() == 'channel':
+				str = b.getvalue()
+				try:
+					chan = b.parsevalue(str)
+				except:
+					chan = ''
+				return chan in self.wrapper.getcontext().compatchannels(url)
+		# not found, assume compatible
+		return 1
 
 	#
 	# EditMgr interface
@@ -1047,7 +1074,7 @@ class AttrEditorField(AttrEditorDialogField):
 		self.setvalue(self.getcurrent())
 
 	def help_callback(self):
-		windowinterface.showmessage(self.gethelptext())
+		self.attreditor.showmessage(self.gethelptext())
 
 class IntAttrEditorField(AttrEditorField):
 	type = 'int'
@@ -1131,6 +1158,9 @@ class FileAttrEditorField(StringAttrEditorField):
 		else:
 			url = MMurl.pathname2url(pathname)
 			url = self.wrapper.context.relativeurl(url)
+		if not self.attreditor.checkurl(url):
+			self.attreditor.showmessage('file not compatible with channel', mtype = 'error')
+			return
 		self.setvalue(url)
 		if self.wrapper.__class__ is SlideWrapper and url:
 			import HierarchyView
