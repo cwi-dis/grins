@@ -10,12 +10,12 @@ __version__ = "$Id$"
 ##redo's and safe changes to the MMNode (and other) structures.
 
 ##It works (currently) as follows:
-##	* A specific view wants to make a change to the structure. ed
+##	* A specific view wants to make a change to the structure. em
 ##	is an instance of the editmanager.
-##	* That view calls em.register() to tell everybody in
+##	* That view calls em.transaction() to tell everybody in
 ##	em.registry that it wants an exclusive lock on making changes.
 ##	* The view does it's stuff to the data structures.
-##	* the view calls ed.commit(). commit will record the changes
+##	* the view calls em.commit(). commit will record the changes
 ##	and let all other views know that the document has changed.
 
 ##A better scheme would be as follows:
@@ -35,7 +35,7 @@ __version__ = "$Id$"
 
 ##	In this case, the Edit manager would be more of a transaction
 ##	manager, that records a list of undoable transactions to the
-##	document.	
+##	document.
 
 
 import MMExc
@@ -50,10 +50,10 @@ class EditMgr:
 		self.reset()
 		self.root = root
 		self.context = root.GetContext()
-	#
+
 	def __repr__(self):
 		return '<EditMgr instance, context=' + `self.context` + '>'
-	#
+
 	def reset(self):
 		self.root = self.context = None
 		self.busy = 0
@@ -67,12 +67,12 @@ class EditMgr:
 		self.playerstate_registry = []
 		self.playerstate = None, None
 		self.playerstate_busy = 0
-		
-	#
+
 	def destroy(self):
 		for x in self.registry[:]:
 			x.kill()
 		self.reset()
+
 	#
 	# Dependent client interface.
 	#
@@ -82,23 +82,24 @@ class EditMgr:
 			self.focus_registry.append(x)
 		if want_playerstate:
 			self.playerstate_registry.append(x)
-			
+
 	def registerfirst(self, x, want_focus=0, want_playerstate=0):
 		self.registry.insert(0, x)
 		if want_focus:
 			self.focus_registry.insert(0, x)
 		if want_playerstate:
 			self.playerstate_registry.insert(0, x)
-	
+
 	def unregister(self, x):
 		self.registry.remove(x)
 		if x in self.focus_registry:
 			self.focus_registry.remove(x)
 		if x in self.playerstate_registry:
 			self.playerstate_registry.remove(x)
-	#
+
 	def is_registered(self, x):
 		return x in self.registry
+
 	#
 	# Mutator client interface -- transactions.
 	# This calls the dependent clients' callbacks.
@@ -117,7 +118,7 @@ class EditMgr:
 		self.history.append(self.undostep)
 		self.busy = 1
 		return 1
-	#
+
 	def commit(self, type=None):
 		if not self.busy: raise MMExc.AssertError, 'invalid commit'
 		import MMAttrdefs
@@ -129,10 +130,12 @@ class EditMgr:
 			x.commit(type)
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
-	#
+
 	def rollback(self):
 		if not self.busy: raise MMExc.AssertError, 'invalid rollback'
-		# XXX undo changes made in this transaction
+		# undo changes made in this transaction
+		actions = self.undostep
+		self.__do_undo(actions)
 		for x in self.registry[:]:
 			x.rollback()
 		self.busy = 0
@@ -153,16 +156,16 @@ class EditMgr:
 
 	def getplayerstate(self):
 		return self.playerstate
-		
+
 	#
 	# Focus interface
 	#
 	def setglobalfocus(self, focustype, focusobject):
 		# Jack: Thank you for this elaborately documented code. We have absolutely
-		# no idea what type of object "focustype" is. 
+		# no idea what type of object "focustype" is.
 
-		# Pas op all functions calling this: The focusobject may be None.. 
-		
+		# Pas op all functions calling this: The focusobject may be None..
+
 		# Quick return if this product does not have a shared focus
 		if not features.UNIFIED_FOCUS in features.feature_set:
 			return
@@ -174,30 +177,46 @@ class EditMgr:
 		for client in self.focus_registry:
 			client.globalfocuschanged(focustype, focusobject)
 		self.focus_busy = 0
-		
+
 	def getglobalfocus(self):
 		return self.focus
+
 	#
 	# UNDO interface -- this code isn't ready yet.
 	#
+	def __do_undo(self, actions):
+		for i in range(len(actions)-1,-1,-1):
+			action = actions[i]
+			cmd = action[0]
+			func = getattr(self, 'undo_'+cmd)
+			print 'undoing', cmd
+			apply(func, action[1:])
+		
 	def undo(self):
 		if self.busy: raise MMExc.AssertError, 'undo while busy'
 		i = len(self.history) - 1
 		if i < 0: return 0 # Nothing to undo
 		step = self.history[i]
-		XXX # Carry out items in step in reverse order
+		if not self.transaction():
+			return 0
+		self.__do_undo(step)
+		self.commit()
 		self.future.insert(0, step)
 		del self.history[i]
 		return 1
-	#
+
 	def redo(self):
 		if self.busy: raise MMExc.AssertError, 'undo while busy'
-		if not future: return 0 # Nothing to redo
+		if not self.future: return 0 # Nothing to redo
 		step = self.future(0)
-		XXX # Carry out items in step in forward order
+		if not self.transaction():
+			return 0
+		self.__do_undo(step)
+		self.commit()
 		self.history.append(step)
 		del self.future[0]
 		return 1
+
 	# XXX The undo/redo business is unfinished.
 	# E.g., What to do if the user undoes a few steps,
 	# then makes new changes, then wants to redo?
@@ -208,6 +227,7 @@ class EditMgr:
 	def addstep(self, *step):
 		# This fails if we're not busy because self.undostep is deleted
 		self.undostep.append(step)
+
 	#
 	# Mutator client interface -- tree mutations.
 	#
@@ -218,84 +238,100 @@ class EditMgr:
 		i = parent.GetChildren().index(node)
 		self.addstep('delnode', parent, i, node)
 		node.Extract()
-			
+
+	def undo_delnode(self, parent, i, node):
+		self.addnode(parent, i, node)
+
 	def addnode(self, parent, i, node):
-		self.addstep('addnode', parent, i, node)
+		self.addstep('addnode', node)
 		node.AddToTree(parent, i)
-	#
+
+	def undo_addnode(self, node):
+		self.delnode(node)
+
 	def setnodetype(self, node, type):
 		oldtype = node.GetType()
-		self.addstep('setnodetype', node, oldtype, type)
+		self.addstep('setnodetype', node, oldtype)
 		node.SetType(type)
-	#
+
+	def undo_setnodetype(self, node, oldtype):
+		self.setnodetype(node, oldtype)
+
 	def setnodeattr(self, node, name, value):
 		if name == 'synctolist':
 			raise MMExc.AssertError, 'cannot set synctolist attr'
 		oldvalue = node.GetRawAttrDef(name, None)
-		self.addstep('setnodeattr', node, name, oldvalue, value)
+		self.addstep('setnodeattr', node, name, oldvalue)
 		if value is not None:
 			node.SetAttr(name, value)
 		else:
 			node.DelAttr(name)
-	#
+
+	def undo_setnodeattr(self, node, name, oldvalue):
+		self.setnodeattr(node, name, oldvalue)
+
 	def setnodevalues(self, node, values):
-		self.addstep('setnodevalues', node, node.GetValues(), values)
+		self.addstep('setnodevalues', node, node.GetValues())
 		node.SetValues(values)
+
+	def undo_setnodevalues(node, oldvalues):
+		self.setnodevalues(node, oldvalues)
+
 	#
 	# Sync arc operations
 	#
-	def __isbegin(self, xnode, xside, ynode, yside):
-		if yside == HD:
-			if ynode.GetParent().GetType() == 'seq' and xside == TL:
-				prev = None
-				for n in ynode.GetParent().GetChildren():
-					if n is ynode:
-						break
-					prev = n
-				if prev is not None and xnode is prev:
-					return 1
-			elif xside == HD and xnode is ynode.GetParent():
-				return 1
-		return 0
+##	def __isbegin(self, xnode, xside, ynode, yside):
+##		if yside == HD:
+##			if ynode.GetParent().GetType() == 'seq' and xside == TL:
+##				prev = None
+##				for n in ynode.GetParent().GetChildren():
+##					if n is ynode:
+##						break
+##					prev = n
+##				if prev is not None and xnode is prev:
+##					return 1
+##			elif xside == HD and xnode is ynode.GetParent():
+##				return 1
+##		return 0
 
-	def addsyncarc(self, xnode, xside, delay, ynode, yside):
-		skip = 0
-		if self.__isbegin(xnode, xside, ynode, yside):
-			skip = 1
-			self.setnodeattr(ynode, 'begin', delay)
-		list = ynode.GetRawAttrDef('synctolist', None)
-		if list is None:
-			list = []
-			if not skip:
-				ynode.SetAttr('synctolist', list)
-		xuid = xnode.GetUID()
-		for item in list:
-			xn, xs, de, ys = item
-			if xn==xuid and (xs,ys) == (xside,yside):
-				self.addstep('delsyncarc',xnode,xs,de,ynode,ys)
-				list.remove(item)
-				break
-		if not skip:
-			self.addstep('addsyncarc', xnode, xside, delay, ynode, yside)
-			list.append((xuid, xside, delay, yside))
+##	def addsyncarc(self, xnode, xside, delay, ynode, yside):
+##		skip = 0
+##		if self.__isbegin(xnode, xside, ynode, yside):
+##			skip = 1
+##			self.setnodeattr(ynode, 'begin', delay)
+##		list = ynode.GetRawAttrDef('synctolist', None)
+##		if list is None:
+##			list = []
+##			if not skip:
+##				ynode.SetAttr('synctolist', list)
+##		xuid = xnode.GetUID()
+##		for item in list:
+##			xn, xs, de, ys = item
+##			if xn==xuid and (xs,ys) == (xside,yside):
+##				self.addstep('delsyncarc',xnode,xs,de,ynode,ys)
+##				list.remove(item)
+##				break
+##		if not skip:
+##			self.addstep('addsyncarc', xnode, xside, delay, ynode, yside)
+##			list.append((xuid, xside, delay, yside))
 
-	def delsyncarc(self, xnode, xside, delay, ynode, yside):
-		if self.__isbegin(xnode, xside, ynode, yside):
-			self.setnodeattr(ynode, 'begin', None)
-			return
-		list = ynode.GetRawAttrDef('synctolist', [])
-		xuid = xnode.GetUID()
-		for item in list:
-			xn, xs, de, ys = item
-			if xn==xuid and (xs,de,ys) == (xside,delay,yside):
-				self.addstep('delsyncarc',xnode,xs,de,ynode,ys)
-				list.remove(item)
-				if not list:
-					# no sync arcs left
-					ynode.DelAttr('synctolist')
-				break
-		else:
-			raise MMExc.AssertError, 'bad delsyncarc call'
+##	def delsyncarc(self, xnode, xside, delay, ynode, yside):
+##		if self.__isbegin(xnode, xside, ynode, yside):
+##			self.setnodeattr(ynode, 'begin', None)
+##			return
+##		list = ynode.GetRawAttrDef('synctolist', [])
+##		xuid = xnode.GetUID()
+##		for item in list:
+##			xn, xs, de, ys = item
+##			if xn==xuid and (xs,de,ys) == (xside,delay,yside):
+##				self.addstep('delsyncarc',xnode,xs,de,ynode,ys)
+##				list.remove(item)
+##				if not list:
+##					# no sync arcs left
+##					ynode.DelAttr('synctolist')
+##				break
+##		else:
+##			raise MMExc.AssertError, 'bad delsyncarc call'
 	#
 	# Hyperlink operations
 	#
@@ -303,13 +339,30 @@ class EditMgr:
 		self.addstep('addlink', link)
 		self.context.hyperlinks.addlink(link)
 
+	def undo_addlink(self, link):
+		self.dellink(link)
+
 	def dellink(self, link):
 		self.addstep('dellink', link)
 		self.context.hyperlinks.dellink(link)
 
+	def undo_dellink(self, link):
+		self.addlink(link)
+
 	def addexternalanchor(self, url):
 		self.addstep('addexternalanchor', url)
 		self.context.externalanchors.append(url)
+
+	def undo_addexternalanchor(self, url):
+		self.delexternalanchor(url)
+
+	def delexternalanchor(self, url):
+		self.addstep('delexternalanchor', url)
+		self.context.externalanchors.remove(url)
+
+	def undo_delexternalanchor(self, url):
+		self.addexternalanchor(url)
+
 	#
 	# Channel operations
 	#
@@ -318,9 +371,12 @@ class EditMgr:
 		if c is not None:
 			raise MMExc.AssertError, \
 				'duplicate channel name in addchannel'
-		self.addstep('addchannel', name, i, type)
+		self.addstep('addchannel', name)
 		self.context.addchannel(name, i, type)
-	#
+
+	def undo_addchannel(self, name):
+		self.delchannel(name)
+
 	def copychannel(self, name, i, orig):
 		c = self.context.getchannel(name)
 		if c is not None:
@@ -330,13 +386,20 @@ class EditMgr:
 		if c is None:
 			raise MMExc.AssertError, \
 				'unknown orig channel name in copychannel'
-		self.addstep('copychannel', name, i, orig)
+		self.addstep('copychannel', name)
 		self.context.copychannel(name, i, orig)
-	#
+
+	def undo_copychannel(self, name):
+		self.delchannel(name)
+
 	def movechannel(self, name, i):
-		self.addstep('movechannel', name, i)
+		old_i = self.context.channelnames.index(name)
+		self.addstep('movechannel', name, old_i)
 		self.context.movechannel(name, i)
-	#
+
+	def undo_movechannel(self, name, old_i):
+		self.movechannel(name, old_i)
+
 	def delchannel(self, name):
 		c = self.context.getchannel(name)
 		if c is None:
@@ -346,7 +409,14 @@ class EditMgr:
 		attrdict = c.attrdict
 		self.addstep('delchannel', name, i, attrdict)
 		self.context.delchannel(name)
-	#
+
+	def undo_delchannel(self, name, i, attrdict):
+		self.addchannel(name, i, attrdict['type'])
+		for key, val in attrdict.values():
+			if key == 'type':
+				continue
+			self.setchannelattr(name, key, val)
+
 	def setchannelname(self, name, newname):
 		if newname == name:
 			return # No change
@@ -356,7 +426,10 @@ class EditMgr:
 				  'unknown channel name in setchannelname'
 		self.addstep('setchannelname', name, newname)
 		self.context.setchannelname(name, newname)
-	#
+
+	def undo_setchannelname(self, oldname, name):
+		self.setchannelname(name, oldname)
+
 	def setchannelattr(self, name, attrname, value):
 		c = self.context.getchannel(name)
 		if c is None:
@@ -368,11 +441,14 @@ class EditMgr:
 			oldvalue = None
 		if value == oldvalue:
 			return
-		self.addstep('setchannelattr', name, attrname, oldvalue, value)
+		self.addstep('setchannelattr', name, attrname, oldvalue)
 		if value is None:
 			del c[attrname]
 		else:
 			c[attrname] = value
+
+	def undo_setchannelattr(self, name, attrname, oldvalue):
+		self.setchannelattr(name, attrname, oldvalue)
 
 	#
 	# Layout operations
@@ -384,12 +460,20 @@ class EditMgr:
 		self.addstep('addlayout', name)
 		self.context.addlayout(name)
 
+	def undo_addlayout(self, name):
+		self.dellayout(name)
+
 	def dellayout(self, name):
 		layout = self.context.layouts.get(name)
 		if layout is None:
 			raise MMExc.AssertError, 'unknown layout in dellayout'
 		self.addstep('dellayout', name, layout)
 		self.context.dellayout(name)
+
+	def undo_dellayout(self, name, layout):
+		self.addlayout(name)
+		for channel in layout:
+			self.addlayoutchannel(name, channel)
 
 	def addlayoutchannel(self, name, channel):
 		layout = self.context.layouts.get(name)
@@ -402,6 +486,9 @@ class EditMgr:
 		self.addstep('addlayoutchannel', name, channel)
 		self.context.addlayoutchannel(name, channel)
 
+	def undo_addlayoutchannel(self, name, channel):
+		self.dellayoutchannel(name, channel)
+
 	def dellayoutchannel(self, name, channel):
 		layout = self.context.layouts.get(name)
 		if layout is None:
@@ -412,6 +499,9 @@ class EditMgr:
 			      'channel not in layout in dellayoutchannel'
 		self.addstep('dellayoutchannel', name, channel)
 		self.context.dellayoutchannel(name, channel)
+
+	def undo_dellayoutchannel(self, name, channel):
+		self.addlayoutchannel(name, channel)
 
 	def setlayoutname(self, name, newname):
 		if newname == name:
@@ -425,6 +515,9 @@ class EditMgr:
 		self.addstep('setlayoutname', name, newname)
 		self.context.setlayoutname(name, newname)
 
+	def undo_setlayoutname(self, oldname, name):
+		self.setlayoutname(name, oldname)
+
 	#
 	# User group operations
 	#
@@ -435,6 +528,9 @@ class EditMgr:
 		self.addstep('addusergroup', name)
 		self.context.addusergroup(name, value)
 
+	def undo_addusergroup(self, name):
+		self.delusergroup(name)
+
 	def delusergroup(self, name):
 		usergroup = self.context.usergroups.get(name)
 		if usergroup is None:
@@ -442,6 +538,9 @@ class EditMgr:
 		self.addstep('delusergroup', name, usergroup)
 		self.context.delusergroup(name)
 
+	def undo_delusergroup(self, name, usergroup):
+		self.addusergroup(name, usergroup)
+		
 	def setusergroupname(self, name, newname):
 		if newname == name:
 			return		# no change
@@ -454,6 +553,9 @@ class EditMgr:
 		self.addstep('setusergroupname', name, newname)
 		self.context.setusergroupname(name, newname)
 
+	def undo_setusergroupname(self, oldname, name):
+		self.setusergroupname(name, oldname)
+
 	#
 	# Transitions operations
 	#
@@ -464,12 +566,20 @@ class EditMgr:
 		self.addstep('addtransition', name)
 		self.context.addtransition(name, value)
 
+	def undo_addtransition(self, name):
+		self.deltransition(name)
+
 	def deltransition(self, name):
 		transition = self.context.transitions.get(name)
 		if transition is None:
 			raise MMExc.AssertError, 'unknown transition in deltransition'
 		self.addstep('deltransition', name, transition)
 		self.context.deltransition(name)
+
+	def undo_deltransition(self, name, transition):
+		self.addtransition(name)
+		for key, val in transition.items():
+			self.settransitionvalue(name, key, val)
 
 	def settransitionname(self, name, newname):
 		if newname == name:
@@ -482,50 +592,21 @@ class EditMgr:
 			      'name already in use in settransitionname'
 		self.addstep('settransitionname', name, newname)
 		self.context.settransitionname(name, newname)
-		
+
+	def undo_settransitionname(self, oldname, name):
+		self.settransitionname(name, oldname)
+
 	def settransitionvalue(self, name, key, value):
 		if not self.context.transitions.has_key(name):
 			raise MMExc.AssertError, \
 			      'unknown transition name in settransitionname'
 		dict = self.context.transitions[name]
+		oldvalue = dict.get(key)
+		if oldvalue == value:
+			return
+		# XXX should we delete key if value==None?
 		dict[key] = value
-		self.addstep('settransitionvalue', name, key, value)
+		self.addstep('settransitionvalue', name, key, oldvalue)
 
-##	#
-##	# Style operations
-##	#
-##	def addstyle(self, name):
-##		if self.context.styledict.has_key(name):
-##			raise MMExc.AssertError, \
-##				'duplicate style name in addstyle'
-##		self.addstep('addstyle', name)
-##		self.context.styledict[name] = {}
-##	#
-##	def delstyle(self, name):
-##		self.addstep('delstyle', name, self.context.styledict[name])
-##		del self.context.styledict[name]
-##	#
-##	def setstylename(self, name, newname):
-##		if self.context.styledict.has_key(newname):
-##			raise MMExc.AssertError, \
-##				'duplicate style name in setstylename'
-##		attrdict = self.context.styledict[name]
-##		self.addstep('setstylename', name, newname)
-##		self.context.styledict[newname] = attrdict
-##		del self.context.styledict[name]
-##	#
-##	def setstyleattr(self, name, attrname, value):
-##		attrdict = self.context.styledict[name]
-##		if attrdict.has_key(attrname):
-##			oldvalue = attrdict[attrname]
-##		else:
-##			oldvalue = None
-##		if value is None is oldvalue:
-##			return
-##		self.addstep('setstyleattr', name, attrname, oldvalue, value)
-##		if value is None:
-##			del attrdict[attrname]
-##		else:
-##			attrdict[attrname] = value
-##	#
-
+	def undo_settransitionvalue(self, name, key, oldvalue):
+		self.settransitionvalue(name, key, oldvalue)
