@@ -45,7 +45,6 @@ class Window:
 		self._redrawfunc = None
 		self._callbacks = {}
 		self._showing = None
-		self._curcursor = ''
 
 		self._isvisible = 1
 
@@ -369,9 +368,6 @@ class Window:
 	def setcursor(self, strid):
 		self._topwindow.setcursor(strid)
 	
-	def iscursor(self, strid):
-		return self._topwindow._curcursor == strid
-
 	def updateMouseCursor(self):
 		self._topwindow.updateMouseCursor()
 
