@@ -84,9 +84,8 @@ class LayoutViewDialog:
 			self.__otherlist.addlistitems(channels, 0)
 		if cur is not None:
 			self.__otherlist.selectitem(channels.index(cur))
-
-	def layoutname(self):
-		return self.__layoutlist.getselection()
+		else:
+			self.__otherlist.selectitem(None)
 
 	def __layoutcb(self):
 		sel = self.__layoutlist.getselected()

@@ -89,7 +89,7 @@ class LayoutView(LayoutViewDialog):
 					curother = ch.name
 		ochanlist.sort()
 		self.curother = curother
-		self.setotherlist(ochanlist, self.curother)
+		self.setotherlist(ochanlist, curother)
 		commandlist = [NEW_LAYOUT(callback = (self.new_callback, ())),
 			       CLOSE_WINDOW(callback = (self.hide, ()))]
 		if self.curlayout is not None and self.curlayout != ALL_LAYOUTS:
@@ -229,26 +229,5 @@ class LayoutView(LayoutViewDialog):
 		editmgr.addlayoutchannel(self.curlayout, self.context.channeldict[self.curother])
 		self.curchannel = self.curother
 		self.curother = None
-		editmgr.commit()
-		self.toplevel.setready()
-
-	def name_callback(self):
-		if self.curlayout is None:
-			return
-		new = self.layoutname()
-		if new == self.curlayout or not new:
-			return
-		layouts = self.context.layouts
-		layout = layouts.get(self.curlayout)
-		if layout is None:
-			return
-		if layouts.has_key(new):
-			return
-		editmgr = self.editmgr
-		if not editmgr.transaction():
-			return
-		self.toplevel.setwaiting()
-		editmgr.setlayoutname(self.curlayout, new)
-		self.curlayout = new
 		editmgr.commit()
 		self.toplevel.setready()
