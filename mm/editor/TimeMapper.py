@@ -241,3 +241,6 @@ class TimeMapper:
 
 	def getstall(self, time):
 		return self.stalldict.get(time, (0, None))
+
+	def getallstalls(self):
+		return self.stalldict.items()
