@@ -629,6 +629,7 @@ class SchedulerContext:
 							self.cancelarc(arc, timestamp)
 							for a in deparcs:
 								self.cancelarc(a, timestamp)
+						self.cancel_gensr(node)
 						parent.updatetimer()
 						return
 					elif action == 'defer':
@@ -739,10 +740,8 @@ class SchedulerContext:
 		arc.qid = None
 		deparcs = arc.deparcs
 		arc.deparcs = []
-##		if arc.isstart:
-##			ev = (SR.SCHED_DONE, arc.dstnode)
-##			if self.srdict.has_key(ev):
-##				self.parent.event(self, ev, timestamp)
+		if arc.isstart:
+			self.cancel_gensr(arc.dstnode)
 		for a in deparcs:
 			self.cancelarc(a, timestamp)
 			a.depends = None
@@ -815,12 +814,29 @@ class SchedulerContext:
 				self.trigger(None, node, path, resolved)
 				self.sched_arcs(node, 'begin', timestamp = resolved)
 
+	def cancel_gensr(self, node):
+		# cancel the SCHED_DONE that was added by gensr_child()
+		# but only if the node never played
+		ev = (SR.SCHED_DONE, node)
+		if node.playing == MMStates.IDLE and \
+		   self.srdict.has_key(ev):
+			srdict = self.srdict[ev]
+			val = srdict[ev]
+			del self.srdict[ev]
+			srdict[ev] = None
+			if val is not None:
+				num, srlist = val
+				num = num - 1
+				if num > 0:
+					val[0] = num
+
 	def do_terminate(self, node, timestamp, fill = 'remove', cancelarcs = 0, chkevent = 1):
 		parent = self.parent
 		if debugevents: print 'do_terminate',node,timestamp,fill,parent.timefunc()
 		if debugdump: parent.dump()
 		if fill != 'remove' and node.GetSchedParent() is None:
 			fill = 'remove'
+		self.cancel_gensr(node)
 		for arc in node.durarcs + MMAttrdefs.getattr(node, 'endlist'):
 			if arc.qid is not None:
 				if debugevents: print 'cancel',`arc`,parent.timefunc()
