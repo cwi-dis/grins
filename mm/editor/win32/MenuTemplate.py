@@ -164,3 +164,86 @@ MENUBAR=(
 		(ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 		
 		
+#
+# Popup menus for various states
+#
+POPUP_HVIEW_LEAF = (
+		(ENTRY, '&Cut', None, CUT),
+		(ENTRY, 'Cop&y', None, COPY),
+		(ENTRY, '&Delete', None, DELETE),
+		(SEP,),
+		(ENTRY, 'Paste &Before', None, PASTE_BEFORE),
+		(ENTRY, 'Paste &After', None, PASTE_AFTER),
+		(SEP,),
+		(ENTRY, 'New node B&efore', None, NEW_BEFORE),
+		(ENTRY, 'New node A&fter', None, NEW_AFTER),
+		(SEP,),
+		(ENTRY, '&Play node', None, PLAYNODE),
+		(ENTRY, 'P&lay from node', None, PLAYFROM),
+		(SEP,),
+		(ENTRY, '&Zoom in', None, ZOOMIN),
+		(ENTRY, 'Zoom o&ut', None, ZOOMOUT),
+		(SEP,),
+		(ENTRY, '&Show info', None, INFO),
+		(ENTRY, 'Show proper&ties', None, ATTRIBUTES),
+		(ENTRY, 'Sho&w anchors', None, ANCHORS),
+		(ENTRY, 'Edit c&ontent', None, CONTENT),
+)
+
+POPUP_HVIEW_STRUCTURE = (
+		(ENTRY, '&Cut', None, CUT),
+		(ENTRY, 'Cop&y', None, COPY),
+		(ENTRY, '&Delete', None, DELETE),
+		(SEP,),
+		(ENTRY, 'Paste &Before', None, PASTE_BEFORE),
+		(ENTRY, 'Paste &After', None, PASTE_AFTER),
+		(ENTRY, 'Paste As c&hild', None, PASTE_UNDER),
+		(SEP,),
+		(ENTRY, 'New node B&efore', None, NEW_BEFORE),
+		(ENTRY, 'New node A&fter', 'K', NEW_AFTER),
+		(ENTRY, '&New Child', 'D', NEW_UNDER),
+		(SEP,),
+		(ENTRY, '&Play node', None, PLAYNODE),
+		(ENTRY, 'P&lay from node', None, PLAYFROM),
+		(SEP,),
+		(ENTRY, '&Zoom in', None, ZOOMIN),
+		(ENTRY, 'Zoom o&ut', None, ZOOMOUT),
+		(ENTRY, 'Zoo&m to focus', 'Z', ZOOMHERE),
+		(SEP,),
+		(ENTRY, '&Show info', 'I', INFO),
+		(ENTRY, 'Show proper&ties', 'A', ATTRIBUTES),
+		(ENTRY, 'Sho&w anchors', 'T', ANCHORS),
+)
+
+POPUP_CVIEW_NONE = (
+		(ENTRY, '&New channel', 'M', NEW_CHANNEL),
+)
+
+POPUP_CVIEW_CHANNEL = (
+		(ENTRY, '&Move channel', None, MOVE_CHANNEL),
+		(ENTRY, '&Copy channel', None, COPY_CHANNEL),
+		(ENTRY, '&Toggle channel state', None, TOGGLE_ONOFF),
+		(SEP,),
+		(ENTRY, '&Delete', None, DELETE),
+
+)
+
+POPUP_CVIEW_NODE = (
+		(ENTRY, 'Finish &hyperlink to focus...', 'H', FINISH_LINK),
+		(ENTRY, 'Create s&yncarc from focus...', 'L', FINISH_ARC),
+		(SEP,),
+		(ENTRY, '&Play node', None, PLAYNODE),
+		(ENTRY, 'Play from &node', None, PLAYFROM),
+		(SEP,),
+		(ENTRY, 'Show &info', 'I', INFO),
+		(ENTRY, '&Show properties', 'A', ATTRIBUTES),
+		(ENTRY, 'Show &anchors', 'T', ANCHORS),
+		(ENTRY, 'Edit &content', 'E', CONTENT),
+)
+
+POPUP_CVIEW_SYNCARC = (
+		(ENTRY, '&Show info', 'I', INFO),
+		(SEP,),
+		(ENTRY, '&Delete', None, DELETE),
+)
+
