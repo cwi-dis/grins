@@ -13,7 +13,7 @@ class GRiNSPlayerMonitor extends Thread {
         hgrins = nconnect(cookie);
         int n = ngetTopLayoutCount(hgrins);
         if(n>0){
-            for(int i=0; i<n; i++) player.newViewport(i);
+            player.updateViewports();
             viewportsCount = n;
             }
         while(hgrins!=0 && !interrupted()){
@@ -21,7 +21,7 @@ class GRiNSPlayerMonitor extends Thread {
             player.updateState(ngetState(hgrins));
             n = ngetTopLayoutCount(hgrins);
             if(n!=viewportsCount){
-                for(int i=viewportsCount;i<n; i++)player.newViewport(i);
+                player.updateViewports();
                 viewportsCount = n;
                 }
             try {

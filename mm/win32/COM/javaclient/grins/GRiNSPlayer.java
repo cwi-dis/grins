@@ -176,8 +176,8 @@ implements SMILDocument, SMILController, SMILRenderer
         if(listener!=null) listener.setState(state);
         }
      
-    void newViewport(int index){
-        if(listener!=null) listener.newViewport(index);
+    void updateViewports(){
+        if(listener!=null) listener.updateViewports();
         }
     
     private Dimension viewportSize;

@@ -8,5 +8,5 @@ public interface SMILListener {
     
     void setPos(double pos);
     void setState(int state);
-    void newViewport(int index);
+    void updateViewports();
 }
