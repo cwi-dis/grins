@@ -1762,11 +1762,15 @@ class MMSyncArc:
 			refnode = pnode.looping_body_self or pnode
 		elif type(self.srcnode) is type(''):
 			# XPath-like path
-			if self.srcnode[0] == '/':
-				# absolute
-				# XXX not really correct: we don't take the head element into account
-				return node.GetRoot().xpath(self.srcnode[1:])
-			return node.xpath(self.srcnode)
+			try:
+				if self.srcnode[0] == '/':
+					# absolute
+					# XXX not really correct: we don't take the head element into account
+					return node.GetRoot().xpath(self.srcnode[1:])
+				return node.xpath(self.srcnode)
+			except xpath_error:
+				# invalid path
+				return None
 		elif self.srcnode is node:
 			refnode = node.looping_body_self or node
 		else:
@@ -1776,6 +1780,8 @@ class MMSyncArc:
 	def getevent(self):
 		if self.srcnode == 'syncbase':
 			refnode = self.refnode()
+			if refnode is None:
+				return None
 			pnode = self.dstnode.GetSchedParent()
 			if pnode.looping_body_self:
 				pnode = pnode.looping_body_self
@@ -1827,6 +1833,8 @@ class MMSyncArc:
 			return 0
 		self.__isresolvedcalled = 1
 		refnode = self.refnode()
+		if refnode is None:
+			return 0
 		event = self.getevent()
 		if event is None and self.marker is None:
 			# syncbase-relative offset
@@ -4141,10 +4149,9 @@ class MMNode(MMTreeElement):
 				if a.isresolved(sctx) and syncbase is not None:
 					t = a.resolvedtime(sctx) - syncbase
 				elif aevent == 'begin' or aevent == 'end':
-					n = a.refnode()
-					reft = n.isresolved(sctx)
+					reft = refnode.isresolved(sctx)
 					if reft is None:
-						if aevent == 'begin' and n in self.GetPath():
+						if aevent == 'begin' and refnode in self.GetPath():
 							# node depends on begin
 							# of ancestor, so if
 							# ancestor starts, this
@@ -4153,7 +4160,7 @@ class MMNode(MMTreeElement):
 							conditional_start = 1
 						continue
 					if aevent == 'end':
-						d = n.calcfullduration(sctx)
+						d = refnode.calcfullduration(sctx)
 						if d is None or d < 0:
 							continue
 						t = reft + d
@@ -4615,6 +4622,8 @@ class MMNode(MMTreeElement):
 		newlist = []
 		for arc in arclist:
 			refnode = arc.refnode()
+			if refnode is None:
+				continue
 			if refnode.canplay is None:
 				path = refnode.GetPath()
 				for node in path:
