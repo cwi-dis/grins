@@ -438,8 +438,7 @@ class XMLParser:
                     res = space.match(data, i, j)
                     isspace = res is not None and res.span(0) == (i,j)
                     if content == 'EMPTY':
-                        if not isspace:
-                            complain = 1
+                        complain = 1
                         skip = 1
                     elif not isspace and  type(content) is type([]) and content and type(content[0]) is type({}):
                         complain = 1
