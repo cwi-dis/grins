@@ -1124,6 +1124,7 @@ class KeyTimesSlider(window.Wnd):
 		self._enabled = flag
 		if not flag:
 			self.EnableWindow(0)
+			self.stop()
 			self._parent.EnablePreview(0)
 		else:
 			self.EnableWindow(1)
