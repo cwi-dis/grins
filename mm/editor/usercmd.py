@@ -427,6 +427,12 @@ class ADD_REGION(_CommandBase):
 	help = 'Add region to layout'
 class RENAME(_CommandBase):
 	help = 'Rename the current layout'
+
+class ATTRIBUTES_ANCHORS(_CommandBase):
+	help = 'Edit anchors'
+class ATTRIBUTES_LAYOUT(_CommandBase):
+	help = 'Edit layout'
+	
 #
 # Property dialog commands
 class SHOWALLPROPERTIES(_CommandBase):
