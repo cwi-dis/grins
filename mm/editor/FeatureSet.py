@@ -29,6 +29,8 @@ __version__ = "$Id$";
     USER_GROUPS,
     TRANSITIONS,
     SOURCE,
+    
+    UNIFIED_FOCUS,						# All views share their focus
 
     # Different capabilities within the hierarchy view
     H_NIPPLES,
@@ -37,4 +39,4 @@ __version__ = "$Id$";
     H_MODIFY_STRUCTURE,                # This is the biggy - decides between templates or not.
 
 
-] = range(17);
+] = range(18)
