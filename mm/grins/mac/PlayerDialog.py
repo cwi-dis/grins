@@ -10,6 +10,7 @@ __version__ = "$Id$"
 
 import windowinterface, WMEVENTS
 import usercmd
+import MenuTemplate
 
 ##_BLACK = 0, 0, 0
 ##_GREY = 100, 100, 100
@@ -26,6 +27,11 @@ import usercmd
 STOPPED, PAUSING, PLAYING = range(3)
 
 class PlayerDialog:
+
+	# Adornments for first channel window opened and further windows:
+	adornments = MenuTemplate.PLAYER_ADORNMENTS
+	adornments2 = {}
+	
 	def __init__(self, coords, title):
 		"""Create the Player dialog.
 
@@ -43,6 +49,7 @@ class PlayerDialog:
 		self.__title = title
 		self.__coords = coords
 		self.__state = STOPPED
+		self.__menu_created = None
 		self.__channels = []
 		self.__options = []
 		
@@ -150,9 +157,15 @@ class PlayerDialog:
 
 		self.__state = state
 		if self.__window is not None:
-			self.__window.set_toggle(usercmd.PLAY, self.__state == PLAYING)
+			self.__window.set_toggle(usercmd.PLAY, self.__state != STOPPED)
 			self.__window.set_toggle(usercmd.STOP, self.__state == STOPPED)
 			self.__window.set_toggle(usercmd.PAUSE, self.__state == PAUSING)
+		if self.__menu_created is not None and \
+				self.__menu_created.window is not None:
+			w = self.__menu_created.window
+			w.set_toggle(usercmd.PLAY, self.__state != STOPPED)
+			w.set_toggle(usercmd.STOP, self.__state == STOPPED)
+			w.set_toggle(usercmd.PAUSE, self.__state == PAUSING)
 
 	def hide(self):
 		"""Hide the control panel."""
@@ -193,4 +206,7 @@ class PlayerDialog:
 		windowinterface.setcursor(cursor)
 
 	def get_adornments(self, channel):
-		return None		# XXXX Will eventually return the shortcuts and such
+		if self.__menu_created is not None:
+			return self.adornments2
+		self.__menu_created = channel
+		return self.adornments

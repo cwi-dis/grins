@@ -7,6 +7,10 @@ from usercmd import *
 [ENTRY, TOGGLE, SEP, CASCADE] = range(4)
 
 #
+# Commands that we know are not implemented on the mac:
+UNUSED_COMMANDS=()
+
+#
 # Menu structure
 #
 MENUBAR=(
@@ -35,4 +39,18 @@ MENUBAR=(
 		(TOGGLE, 'Pause', 'B', PAUSE))))
 		
 			
+#
+# Adornments
+#
+PLAYER_ADORNMENTS = {
+	'toolbar': (
+		(TOGGLE, 1000, STOP),
+		(TOGGLE, 1500, PLAY),
+		(TOGGLE, 2000, PAUSE),
+		)
+}
+
+#
+# CNTL resource for the toolbar and its height
+TOOLBAR=(2500, 22)
 		
