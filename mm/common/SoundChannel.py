@@ -23,7 +23,6 @@ MAXQSIZE = 100*1024		# Max audio-queue size=100K
 
 from MMExc import *
 import MMAttrdefs
-from ArmStates import *
 
 from Channel import Channel
 
@@ -83,8 +82,6 @@ class SoundChannel(Channel):
 		self.armed_node = None
 		self.armed_info = None
 		self.node = None
-		#DEBUG: to spoof Jack's scheduler
-		self.dummy_event_id = None
 		import mm, soundchannel
 		self.threads = mm.init(soundchannel.init(), \
 			  0, self.deviceno, None)
@@ -132,19 +129,22 @@ class SoundChannel(Channel):
 			print 'cannot open sound file ' + filename
 			return
 		self.armed_node = node
+
+	def did_prearm(self):
+		return (self.armed_node <> None)
 		
 	def play(self, node, callback, arg):
 		self.node = node
 		self.cb = (callback, arg)
-		self.dummy_event_id = None
 
 		if not self.is_showing():
 			# Don't play it, but still let the duration pass
-			dummy = self.player.enter(node.t1-node.t0, 0, \
+			import Duration
+			duration = Duration.get(node)
+			dummy = self.player.enter(duration, 0, \
 				self.done, None)
 			return
 
-		node.setarmedmode(ARM_PLAYING)
 
 		if self.armed_node <> node:
 			print 'SoundChannel: not the armed node'
@@ -166,21 +166,11 @@ class SoundChannel(Channel):
 			  self.done, None)
 		glwindow.devregister(`self.deviceno`+':'+`mm.stopped`, \
 			  stopped, 0)
-		#DEBUG: enter something in queue to fool scheduler
-		self.dummy_event_id = self.player.enter(1000000, 1, self.done, None)
 		self.threads.play()
-		dummy = \
-		   self.player.enter(0.001, 1, self.player.opt_prearm, node)
+		self.player.arm_ready(self.name)
 	#
 	#DEBUG: remove dummy entry from queue and call proper done method
 	def done(self, arg):
-		if self.dummy_event_id:
-			try:
-				self.player.cancel(self.dummy_event_id)
-			except ValueError:
-				# probably already removed by someone else
-				pass
-			self.dummy_event_id = None
 		if not self.node:
 			# apparently someone has already called stop()
 			return
@@ -195,7 +185,6 @@ class SoundChannel(Channel):
 	def stop(self):
 ##		print 'SoundChannel.stop: self.threads = ' + `self.threads`
 		if self.node:
-			self.node.setarmedmode(ARM_DONE)
 			self.node = None
 			self.threads.stop()
 	#

@@ -82,7 +82,7 @@ class PlayerCore(Scheduler):
 				return
 		else:
 			self.setrate(1.0)
-			self.showstate()
+		self.showstate()
 	#
 	def playsubtree(self, node):
 		self.toplevel.setwaiting()

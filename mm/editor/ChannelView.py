@@ -23,9 +23,9 @@ from ViewDialog import ViewDialog
 from MMNode import alltypes, leaftypes, interiortypes
 import MMAttrdefs
 import Timing
-from ArmStates import *
 from MMExc import *
 from AnchorDefs import *
+from ArmStates import *
 
 
 # Round an 8-bit RGB color triple to 4-bit (as used by doublebuffer)
@@ -67,6 +67,7 @@ armcolors = { \
 	     ARM_ARMING: (255, 255, 0), \
 	     ARM_ARMED: (255, 200, 0), \
 	     ARM_PLAYING: (0, 255, 0), \
+	     ARM_WAITSTOP: (0, 127, 0), \
 	     }
 
 
@@ -881,7 +882,7 @@ class NodeBox(GO):
 					self.haspause = 1
 					break
 		node.cv_obj = self
-		node.setarmedmode = self.setarmedmode
+		node.set_armedmode = self.set_armedmode
 		if node.armedmode == None:
 			node.armedmode = ARM_NONE
 		name = MMAttrdefs.getattr(node, 'name')
@@ -893,10 +894,12 @@ class NodeBox(GO):
 
 	def cleanup(self):
 		del self.node.cv_obj
-		self.node.setarmedmode = self.node.setarmedmode_dummy
+		# This makes the inherited set_armedmode from the class
+		# visible again:
+		del self.node.set_armedmode
 		GO.cleanup(self)
 
-	def setarmedmode(self, mode):
+	def set_armedmode(self, mode):
 		# print 'node', self.name, 'setarmedmode', mode
 		if mode <> self.node.armedmode:
 			self.node.armedmode = mode
