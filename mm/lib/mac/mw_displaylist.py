@@ -57,7 +57,8 @@ def _get_icon(which):
 	
 
 class _DisplayList:
-	def __init__(self, window, bgcolor):
+	def __init__(self, window, bgcolor, units):
+		self.__units = units
 		self.starttime = 0
 		self._window = window
 		window._displists.append(self)
@@ -119,7 +120,7 @@ class _DisplayList:
 
 	def clone(self):
 		w = self._window
-		new = _DisplayList(w, self._bgcolor)
+		new = _DisplayList(w, self._bgcolor, self.__units)
 		# copy all instance variables
 		new._list = self._list[:]
 		new.usefont(self._font)
@@ -482,7 +483,7 @@ class _DisplayList:
 	def _convert_coordinates(self, coords):
 		"""Convert coordinates from window xywh style to quickdraw style"""						
 		xscrolloffset, yscrolloffset = self._window._scrolloffset()
-		coords = self._window._convert_coordinates(coords)
+		coords = self._window._convert_coordinates(coords, units = self.__units)
 		x = coords[0] + xscrolloffset
 		y = coords[1] + yscrolloffset
 		if len(coords) == 2:
@@ -490,6 +491,11 @@ class _DisplayList:
 		else:
 			w, h = coords[2:]
 			return (x, y, x+w, y+h)
+			
+	def _pixel2units(self, coords):
+		if self.__units == UNIT_PXL:
+			return coords
+		return self._window._pxl2rel(coords)
 		
 	def fgcolor(self, color):
 		if self._rendered:
@@ -688,7 +694,7 @@ class _DisplayList:
 		return Res.Handle(data)
 
 	def get3dbordersize(self):
-		return self._window._pxl2rel((0,0,SIZE_3DBORDER,SIZE_3DBORDER))[2:4]
+		return self._pixel2units((0,0,SIZE_3DBORDER,SIZE_3DBORDER))[2:4]
 		
 	def usefont(self, fontobj):
 		if fontobj is None:
@@ -711,11 +717,11 @@ class _DisplayList:
 
 	def __baseline(self):
 		baseline = self._font.baselinePXL()
-		return self._window._pxl2rel((0,0,0,baseline))[3]
+		return self._pixel2units((0,0,0,baseline))[3]
 
 	def __fontheight(self):
 		fontheight = self._font.fontheightPXL()
-		return self._window._pxl2rel((0,0,0,fontheight))[3]
+		return self._pixel2units((0,0,0,fontheight))[3]
 
 	def __pointsize(self):
 		return self._font.pointsize()
@@ -732,7 +738,7 @@ class _DisplayList:
 	def strsize(self, str):
 		# XXXX Or on the _onscreen_wid??
 		width, height = self._font.strsizePXL(str, port=self._window._mac_getoswindowport())
-		return self._window._pxl2rel((0,0,width,height))[2:4]
+		return self._pixel2units((0,0,width,height))[2:4]
 
 	def setpos(self, x, y):
 		self._curpos = x, y
@@ -859,93 +865,6 @@ class _DisplayList:
 	#
 	# End of animation experimental methods
 	##########################################
-
-#class _Button:
-#	def __init__(self, dispobj, coordinates, z, times, sensitive):
-#		self._coordinates = coordinates
-#		self._dispobj = dispobj
-#		self._z = z
-#		self._times = times
-#		self._sensitive = sensitive
-#		buttons = dispobj._buttons
-#		for i in range(len(buttons)):
-#			if buttons[i]._z <= z:
-#				buttons.insert(i, self)
-#				break
-#		else:
-#			buttons.append(self)
-#		self._hicolor = self._color = dispobj._fgcolor
-#		self._width = self._hiwidth = dispobj._linewidth
-#		if self._color == dispobj._bgcolor:
-#			return
-#		self._dispobj.drawbox(coordinates)
-
-#	def close(self):
-#		if self._dispobj is None:
-#			return
-#		self._dispobj._buttons.remove(self)
-#		self._dispobj = None
-
-#	def is_closed(self):
-#		return self._dispobj is None
-
-#	def setsensitive(self, sensitive):
-#		self._sensitive = sensitive
-
-#	def hiwidth(self, width):
-#		pass
-
-#	def hicolor(self, color):
-#		self._hicolor = color
-
-#	def highlight(self):
-#		pass
-
-#	def unhighlight(self):
-#		pass
-		
-#	def _inside(self, x, y):
-#		if not self._sensitive:
-#			return 0
-#		bx, by, bw, bh = self._coordinates
-#		if bx <= x < bx+bw and by <= y < by+bh:
-#			if self._times:
-#				curtime = time.time() - self._dispobj.starttime
-#				t0, t1 = self._times
-#				if (not t0 or t0 <= curtime) and \
-#				   (not t1 or curtime < t1):
-#					return 1
-#				return 0
-#			return 1
-#		return 0
-		
-#	def _get_button_region(self):
-#		"""Return our region, in global coordinates, if we are active"""
-##		print 'getbuttonregion', self._dispobj._window._convert_coordinates(self._coordinates), self._times, time.time()-self._dispobj.starttime #DBG
-#		if self._times:
-#			curtime = time.time() - self._dispobj.starttime
-##			 Workaround for the fact that timers seem to fire early, some times:
-#			curtime = curtime + 0.05
-#			t0, t1 = self._times
-#			if curtime < t0 or (t1 and curtime >= t1):
-#				return None
-#		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates)
-#		x1, y1 = x0+w, y0+h
-#		x0, y0 = Qd.LocalToGlobal((x0, y0))
-#		x1, y1 = Qd.LocalToGlobal((x1, y1))
-#		box = x0, y0, x1, y1
-#		rgn = Qd.NewRgn()
-#		Qd.RectRgn(rgn, box)
-#		return rgn
-		
-#	######################################
-#	# Animation experimental methods
-
-#	def updatecoordinates(self, coords):
-#		print 'button.updatecoords',coords
-
-#	# End of animation experimental methods
-#	##########################################
 
 class _Button:
 	def __init__(self, dispobj, shape, coordinates, z, times, sensitive):
