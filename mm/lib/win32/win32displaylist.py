@@ -555,7 +555,7 @@ class _DisplayList:
 		return 0
 
 	# set the media sensitivity
-	# value can be either 'opaque', 'transparent' or 'alpha' (see SMIL2 specification for more detail)
+	# value is percentage value (0 == 'opaque', 100 == 'transparent')
 	def setAlphaSensitivity(self, value):
 		self._alphaSensitivity = value
 		
@@ -592,16 +592,16 @@ class _DisplayList:
 	# point is inside owner wnd
 	# sensitivity when not 'opaque' should be set before calling this query method	
 	def isTransparent(self, point):
-		if self._alphaSensitivity is None or self._alphaSensitivity == 'opaque':
-			return 0
-		elif self._alphaSensitivity == 'transparent':
+		x, y = point
+		xp, yp = self._window._pxl2rel(point)
+		# if not in media box then its transparent
+		if not self._insideMedia(xp,yp):
 			return 1
-		elif self._alphaSensitivity == 'alpha':
-			x, y = point
-			xp, yp = self._window._pxl2rel(point)
-			# if not in media box then its transparent
-			if not self._insideMedia(xp,yp):
-				return 1
+		if self._alphaSensitivity is None or self._alphaSensitivity == 0:
+			return 0
+		elif self._alphaSensitivity == 100:
+			return 1
+		else:
 			# point is inside media
 			# can be a transparent point?
 			if  self.__transparent is None:
@@ -615,7 +615,7 @@ class _DisplayList:
 			if pxcolor == ddcolor:
 				return 1
 			return 0
-		assert 0, 'invalid sensitivity value %s ' % self._alphaSensitivity
+		assert 0, 'invalid sensitivity value %s' % self._alphaSensitivity
 		 
 	#############################################
 	# draw primitives
@@ -1229,6 +1229,3 @@ class _Button:
 
 	# End of animation experimental methods
 	##########################################
-
- 
- 
