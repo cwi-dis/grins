@@ -24,15 +24,18 @@ public:
 
 }; // CVideoInputPin
 
+#ifndef INC_RCONVERT
+#include "rconvert.h"
+#endif
 
 class CVideoRenderer : 
 	public CBaseVideoRenderer, 
-	public IFileSinkFilter
+	public IFileSinkFilter,
+	public IRealConverter
 {
 public:
 
     // Constructor and destructor
-
     static CUnknown * WINAPI CreateInstance(LPUNKNOWN, HRESULT *);
     CVideoRenderer(TCHAR *pName,LPUNKNOWN pUnk,HRESULT *phr);
     ~CVideoRenderer();
@@ -44,11 +47,11 @@ public:
                                      BYTE **ppVideoImage,
                                      RECT *pSourceRect);
 
-    // Implement the ISpecifyPropertyPages interface
-
     DECLARE_IUNKNOWN
     STDMETHODIMP NonDelegatingQueryInterface(REFIID, void **);
-    //STDMETHODIMP GetPages(CAUUID *pPages);
+
+	// Implements IRealConverter
+	STDMETHODIMP SetInterface(IUnknown *p,LPCOLESTR hint);
 
     // Implements the IFileSinkFilter interface
     STDMETHODIMP SetFileName(LPCOLESTR pszFileName,const AM_MEDIA_TYPE *pmt);
@@ -58,7 +61,6 @@ public:
 
 
     // Override these from the filter and renderer classes
-
     void PrepareRender();
     HRESULT Active();
 	HRESULT Inactive();
@@ -81,6 +83,7 @@ public:
     SIZE m_VideoSize;                   // Size of the current video stream
     LPOLESTR m_pFileName;           // The filename where we Vid2rm to
 	int m_ixframe;
+	BYTE *m_pVideoImage;
 }; 
 
 #endif
