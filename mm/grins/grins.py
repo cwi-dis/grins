@@ -151,6 +151,9 @@ def main():
 	if not files and sys.platform not in ('mac', 'win32'):
 		usage('No files specified')
 
+	if sys.argv[0] and sys.argv[0][0] == '-':
+		sys.argv[0] = 'grins'
+
 	try:
 		import splash
 	except ImportError:
@@ -168,9 +171,6 @@ def main():
 		else:
 			signal.signal(signal.SIGINT,
 				      lambda s, f, pdb=pdb: pdb.set_trace())
-
-	if sys.argv[0] and sys.argv[0][0] == '-':
-		sys.argv[0] = 'cmifplay'
 
 ## 	for fn in files:
 ## 		try:
