@@ -2496,7 +2496,9 @@ class MMNode:
 		if duration > 0:
 			speed = self.attrdict.get('speed')
 			if speed:
-				duration = string.atof(speed) * duration
+				speed = string.atof(speed)
+				if speed!=0.0:
+					duration = duration / speed
 			autoReverse = self.attrdict.get('autoReverse')
 			if autoReverse and autoReverse=='true':
 				duration = 2.0 * duration
