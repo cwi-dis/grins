@@ -447,6 +447,16 @@ _converters = [
 	 unsigned2linear8,
 	 SHUFFLE),
 
+	(linear_8_stereo_excess,
+	 linear_8_stereo_signed,
+	 unsigned2linear8,
+	 SHUFFLE),
+
+	(linear_8_stereo_signed,
+	 linear_8_stereo_excess,
+	 unsigned2linear8,
+	 SHUFFLE),
+
 	(linear_16_mono_big_excess,
 	 linear_16_mono_big_signed,
 	 unsigned2linear16,
