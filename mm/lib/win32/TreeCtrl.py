@@ -64,9 +64,6 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 				commctrl.TVS_HASLINES | commctrl.TVS_SHOWSELALWAYS |\
 				win32con.WS_BORDER | win32con.WS_TABSTOP\
 				 | commctrl.TVS_LINESATROOT | commctrl.LVS_SHAREIMAGELISTS
-#		if self._stateOption:
-#			# For now use the predefined check box
-#			style = style | commctrl.TVS_CHECKBOXES
 		return style
 
 	# create a new instance of the tree ctrl.
@@ -308,7 +305,7 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 		if nsel > 0:
 			if selitem and selitem!=hititem and (selstate & commctrl.TVIS_SELECTED):
 				self.SetItemState(selitem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
-			self.__selecting = 0
+		self.__selecting = 0
 		self.OnMultiSelUpdated(hititem, updateFl)
 
 	def onStateIconClick(self, hititem):
