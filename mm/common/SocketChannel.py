@@ -67,7 +67,7 @@ class SocketChannel(Channel):
 				return
 			if len(fields) == 2:
 				name = fields[1]
-				for nm, tp, bt in self._played_anchors:
+				for nm, tp, bt, tm in self._played_anchors:
 					if nm == name:
 						self._playcontext.anchorfired(\
 						    self._played_node, \
@@ -82,7 +82,7 @@ class SocketChannel(Channel):
 	def do_arm(self, node, same=0):
 		alist =  MMAttrdefs.getattr(node, 'anchorlist')
 		for a in alist:
-			self.setanchor(a[A_ID], a[A_TYPE], None)
+			self.setanchor(a[A_ID], a[A_TYPE], None, a[A_TIMES])
 		return 1
 
 	def do_play(self, node):
