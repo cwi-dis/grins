@@ -1200,7 +1200,7 @@ class ExclWidget(SeqWidget):
 		StructureObjWidget.draw(self, display_list)
 
 
-class PrioWidget(VerticalWidget):
+class PrioWidget(SeqWidget):
 	# Prio node (?!) - I don't know what they are, but here is the code I wrote! :-)
 	def draw(self, display_list):
 		willplay = not self.mother.showplayability or self.node.WillPlay()
