@@ -856,15 +856,15 @@ class AttrEditor(AttrEditorDialog):
 			elif displayername == 'text':
 				C = TextAttrEditorField
 			elif displayername == 'bool3':
-				C = Bool3AttrEditorField
+				C = BoolAttrEditorFieldWithDefault
 			elif displayername == 'captionoverdub':
 				C = CaptionOverdubAttrEditorField
 			elif displayername == 'captionoverdub3':
-				C = CaptionOverdub3AttrEditorField
+				C = CaptionOverdubAttrEditorFieldWithDefault
 			elif displayername == 'language':
 				C = LanguageAttrEditorField
 			elif displayername == 'language3':
-				C = Language3AttrEditorField
+				C = LanguageAttrEditorFieldWithDefault
 			elif displayername == 'bitrate':
 				C = BitrateAttrEditorField
 			elif displayername == 'bitrate3':
@@ -1422,13 +1422,7 @@ class BoolAttrEditorField(PopupAttrEditorField):
 	def getoptions(self):
 		return self.__offon
 
-	def getcurrent(self):
-		val = self.wrapper.getvalue(self.getname())
-		if val is None:
-			return self.getdefault()
-		return self.valuerepr(val)
-
-class Bool3AttrEditorField(BoolAttrEditorField):
+class BoolAttrEditorFieldWithDefault(BoolAttrEditorField):
 	def getoptions(self):
 		return [self.default] + BoolAttrEditorField.getoptions(self)
 
@@ -1453,7 +1447,7 @@ class CaptionOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
 	def getoptions(self):
 		return self.__values
 
-class CaptionOverdub3AttrEditorField(PopupAttrEditorField):
+class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 	__values = ['caption', 'overdub']
 	default = 'Not set'
 
@@ -1489,7 +1483,7 @@ class LanguageAttrEditorField(PopupAttrEditorField):
 			return self.default
 		return self.a2l[value]
 
-class Language3AttrEditorField(LanguageAttrEditorField):
+class LanguageAttrEditorFieldWithDefault(LanguageAttrEditorField):
 	def getoptions(self):
 		options = LanguageAttrEditorField.getoptions(self)
 		return [self.default] + options
