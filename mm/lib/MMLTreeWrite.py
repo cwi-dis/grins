@@ -80,9 +80,10 @@ def getchname(writer, node):
 	ch = node.GetChannel()
 	if not ch:
 		return None
-	if not writer.channels_defined.has_key(ch):
-		# Audio channels and such need not be named
-		return None
+# XXXX Removed: Sjoerd wants channel names on all nodes
+##	if not writer.channels_defined.has_key(ch):
+##		# Audio channels and such need not be named
+##		return None
 	return writer.ch2name[ch]
 
 def getduration(writer, node, attr):
