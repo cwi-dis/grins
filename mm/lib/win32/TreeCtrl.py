@@ -64,9 +64,9 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 				commctrl.TVS_HASLINES | commctrl.TVS_SHOWSELALWAYS |\
 				win32con.WS_BORDER | win32con.WS_TABSTOP\
 				 | commctrl.TVS_LINESATROOT | commctrl.LVS_SHAREIMAGELISTS
-		if self._stateOption:
-			# For now use the predefined check box
-			style = style | commctrl.TVS_CHECKBOXES
+#		if self._stateOption:
+#			# For now use the predefined check box
+#			style = style | commctrl.TVS_CHECKBOXES
 		return style
 
 	# create a new instance of the tree ctrl.
@@ -320,17 +320,10 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 			
 	def getState(self, item):
 		imageIndex = (self.GetItemState(item, commctrl.TVIS_STATEIMAGEMASK) & commctrl.TVIS_STATEIMAGEMASK) / SHIFTBIT
-		if imageIndex == 1:
-			return 0
-		else:
-			return 1
+		return imageIndex
 		
 	def setState(self, item, state):
-		if state:
-			imageIndex = 2
-		else:
-			imageIndex = 1
-		self.SetItemState(item, SHIFTBIT*imageIndex , commctrl.TVIS_STATEIMAGEMASK)
+		self.SetItemState(item, SHIFTBIT*state , commctrl.TVIS_STATEIMAGEMASK)
 	
 	def OnLButtonUp(self, params):
 		return 1

@@ -614,15 +614,18 @@ class TreeManager(IconMixin.ViewMixin):
 		self.treeCtrl.addStateListener(self)
 
 		# init the image list used in the tree
+		import commctrl
 		self.initicons()
-		self.seticonlist(self.treeCtrl)
+		self.seticonlist(self.treeCtrl, commctrl.TVSIL_NORMAL, commctrl.TVSIL_NORMAL)
+		self.initstateicons()
+		self.setstateiconlist(self.treeCtrl, commctrl.TVSIL_STATE)
 
 	def removeNode(self, item):
 		self.treeCtrl.DeleteItem(item)
 
-	def OnStateActivated(self, item, state):
+	def OnStateActivated(self, item, stateIndex):
 		if self._listener != None:
-			self._listener.onStateActivated(item, state)
+			self._listener.onStateActivated(item, self.getstateiconname(stateIndex))
 		
 	def insertNode(self, parent, text, imageName, selectedImageName):
 		iImage = self.geticonid(imageName)
@@ -674,7 +677,7 @@ class TreeManager(IconMixin.ViewMixin):
 		self.treeCtrl.SelectItemList(itemList)
 
 	def setStateNodeList(self, itemList, state):
-		self.treeCtrl.SetStateItemList(itemList, state)
+		self.treeCtrl.SetStateItemList(itemList, self.getstateiconid(state))
 		
 #	def _onSelect(self, std, extra):
 #		action, itemOld, itemNew, ptDrag = extra
