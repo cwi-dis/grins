@@ -448,7 +448,7 @@ class _DisplayList:
 				   dest_x, dest_y, width, height))
 		self._optimize((2,))
 		x, y, w, h = w._rect
-		return float(dest_x - x) / w, float(dest_y - y) / h, \
+		return float(dest_x) / w, float(dest_y) / h, \
 		       float(width) / w, float(height) / h
 
 	def drawline(self, color, points, units = UNIT_SCREEN):
