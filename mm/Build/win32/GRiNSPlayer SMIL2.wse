@@ -1487,7 +1487,7 @@ end
 item: End Block
 end
 item: Install File
-  Source=..\..\bin\win32\_socket.pyd
+  Source=..\..\..\python\PCbuild\_socket.pyd
   Destination=%MAINDIR%\_socket.pyd
   Flags=0000000010000010
 end
@@ -1507,7 +1507,7 @@ item: Install File
   Flags=0000000010000011
 end
 item: Install File
-  Source=..\..\bin\win32\Gear32sd.dll
+  Source=..\..\win32\ACCUSOFT\Gear\Gear32sd.dll
   Destination=%MAINDIR%\Gear32sd.dll
   Flags=0000000010000011
 end
@@ -1537,12 +1537,12 @@ item: Install File
   Flags=0000000010000011
 end
 item: Install File
-  Source=..\..\bin\win32\python16.dll
+  Source=..\..\..\python\PCbuild\python16.dll
   Destination=%MAINDIR%\python16.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=..\..\bin\win32\PyWinTypes.dll
+  Source=..\..\..\python\Extensions\win32\Build\PyWinTypes.dll
   Destination=%MAINDIR%\PyWinTypes.dll
   Flags=0000000010000010
 end
@@ -1552,12 +1552,12 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\bin\win32\win32api.pyd
+  Source=..\..\..\python\Extensions\win32\Build\win32api.pyd
   Destination=%MAINDIR%\win32api.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\bin\win32\win32ui.pyd
+  Source=..\..\..\python\Extensions\Pythonwin\Build\win32ui.pyd
   Destination=%MAINDIR%\win32ui.pyd
   Flags=0000000010000010
 end

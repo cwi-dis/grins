@@ -57,7 +57,7 @@ end
 item: Search for File
   Variable=FIND_DIRECTORY
   Pathname List=GRiNS_SV2.exe
-  Description=Checking for previously installed components...
+  Description=Checking for previously installed components.  This may take several minutes...
   Flags=00000001
 end
 item: If/While Statement
@@ -76,7 +76,7 @@ item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=c:\documents and settings\sjoerd\my documents\src\cmif\build\products\smil-20\lllicense.txt
+  Source=..\products\smil-20\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
 end
@@ -1449,7 +1449,7 @@ item: Create Directory
   Pathname=%MAINDIR%\My Templates
 end
 item: Install File
-  Source=..\products\smil-20\win32\readme.txt
+  Source=..\products\smil-20\win32\relnotes.html
   Destination=%MAINDIR%\relnotes.html
   Flags=0000000010000010
 end
@@ -2077,19 +2077,19 @@ item: Install File
   Flags=0000000010000011
 end
 item: Install File
-  Source=..\..\bin\win32\win32trace.pyd
+  Source=..\..\..\python\Extensions\win32\Build\win32trace.pyd
   Destination=%MAINDIR%\win32trace.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\win32api.pyd
+  Source=..\..\..\python\Extensions\win32\Build\win32api.pyd
   Destination=%MAINDIR%\win32api.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\Scintilla.DLL
+  Source=..\..\..\python\Extensions\Pythonwin\Build\Scintilla.DLL
   Destination=%MAINDIR%\Scintilla.DLL
   Flags=0000000010000010
   Extra Flags=00000010
@@ -2113,25 +2113,25 @@ item: Install File
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\imgop.pyd
+  Source=..\..\..\python\Extensions\img\win32\Release\imgop.pyd
   Destination=%MAINDIR%\imgop.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\imgjpeg.pyd
+  Source=..\..\..\python\Extensions\img\win32\Release\imgjpeg.pyd
   Destination=%MAINDIR%\imgjpeg.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\imgformat.pyd
+  Source=..\..\..\python\Extensions\img\win32\Release\imgformat.pyd
   Destination=%MAINDIR%\imgformat.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\imgcolormap.pyd
+  Source=..\..\..\python\Extensions\img\win32\Release\imgcolormap.pyd
   Destination=%MAINDIR%\imgcolormap.pyd
   Flags=0000000010000010
   Extra Flags=00000010
@@ -2160,19 +2160,19 @@ item: Install File
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\_socket.pyd
+  Source=..\..\..\python\PCbuild\_socket.pyd
   Destination=%MAINDIR%\_socket.pyd
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\PyWinTypes.dll
+  Source=..\..\..\python\Extensions\win32\Build\PyWinTypes.dll
   Destination=%MAINDIR%\PyWinTypes.dll
   Flags=0000000010000010
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\python16.dll
+  Source=..\..\..\python\PCbuild\python16.dll
   Destination=%MAINDIR%\python16.dll
   Flags=0000000010000010
   Extra Flags=00000010
@@ -2184,7 +2184,7 @@ item: Install File
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\win32ui.pyd
+  Source=..\..\..\python\Extensions\Pythonwin\Build\win32ui.pyd
   Destination=%MAINDIR%\win32ui.pyd
   Flags=0000000010000010
   Extra Flags=00000010
@@ -2196,7 +2196,7 @@ item: Install File
   Extra Flags=00000010
 end
 item: Install File
-  Source=..\..\bin\win32\Gear32sd.dll
+  Source=..\..\win32\ACCUSOFT\Gear\Gear32sd.dll
   Destination=%MAINDIR%\Gear32sd.dll
   Flags=0000000010000010
   Extra Flags=00000010
@@ -2314,8 +2314,53 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
-  Source=..\products\smil-20\TDG.pdf
-  Destination=%MAINDIR%\TDG.pdf
+  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\TDG.html
+  Destination=%MAINDIR%\TDG.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\template_files\TopLeftLogo.gif
+  Destination=%MAINDIR%\template_files\TopLeftLogo.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\template_files\TempTut.gif
+  Destination=%MAINDIR%\template_files\TempTut.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\template_files\RepeatPage.gif
+  Destination=%MAINDIR%\template_files\RepeatPage.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\template_files\RepeatMenuDark.gif
+  Destination=%MAINDIR%\template_files\RepeatMenuDark.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\template_files\RepeatMenu.gif
+  Destination=%MAINDIR%\template_files\RepeatMenu.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\template_files\Msie.css
+  Destination=%MAINDIR%\template_files\Msie.css
+  Flags=0000000010000010
+end
+item: Install File
+  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\template_files\HouseBarRepeat.gif
+  Destination=%MAINDIR%\template_files\HouseBarRepeat.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\template_files\Development.gif
+  Destination=%MAINDIR%\template_files\Development.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\products\smil-20\template_files\Demonstrations.gif
+  Destination=%MAINDIR%\template_files\Demonstrations.gif
   Flags=0000000010000010
 end
 item: Install File
@@ -2395,7 +2440,55 @@ item: Create Shortcut
 end
 item: End Block
 end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\TDG.html
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Templates Guide.lnk
+  Icon Number=0
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\TDG.html
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Demos.lnk
+  Icon Number=0
+end
+item: End Block
+end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=Templates Guide
+  Command Line=%MAINDIR%\TDG.html
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Demos
+  Command Line=%MAINDIR%\TDG.html
+end
+item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
