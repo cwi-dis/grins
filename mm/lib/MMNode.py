@@ -1,5 +1,7 @@
 __version__ = "$Id$"
 
+# Comments have been added by mjvdg. I'm not sure if they are accurate. -mjvdg
+
 import MMAttrdefs
 from MMTypes import *
 from MMExc import *
@@ -17,6 +19,7 @@ debuggensr = 0
 debug = 0
 
 class MMNodeContext:
+	"Adds context information about each MMNode" # -mjvdg. TODO: elaborate.
 	def __init__(self, nodeclass):
 		self.nodeclass = nodeclass
 		self.uidmap = {}
@@ -1011,27 +1014,38 @@ class MMNode_caption_body(MMNode_pseudopar_body):
 		if name == 'channel': name = 'captionchannel'
 		return self.parent.GetInherAttrDef(name, default)
 		
+
 class MMNode:
+	# MMNode is the base class from which other Node classes are implemented.
+	# Each Node forms a doubly-linked n-tree - MMNode.children[] stores the
+	# children below the current node and MMNode.parent has a link back up to
+	# the parent. 
+
+	# Nodes are used for representing the structure of the GRiNS production
+	# in a heirachical manner. Playing the GRiNS production involves recursing
+	# through the leaf-nodes of the MMNode structure by calling MMNode.startplay(..).
+	# -mjvdg
+	
 	def __init__(self, type, context, uid):
 		# ASSERT type in alltypes
-		self.type = type
-		self.context = context
-		self.uid = uid
-		self.attrdict = {}
-		self.d_attrdict = {}
+		self.type = type	# see MMTypes.py
+		self.context = context	# From MMContext
+		self.uid = uid		# Unique identifier for each node (starts at 1)
+		self.attrdict = {}	# Attributes of this MMNode
+		self.d_attrdict = {}	# Dynamic (changing) attrs of this MMNode
 		self.values = []
-		self.willplay = None
+		self.willplay = None	# Used for colours in the editor
 		self.shouldplay = None
 		self.canplay = None
-		self.parent = None
-		self.children = []
+		self.parent = None	# The parent of this MMNode
+		self.children = []	# The sub-nodes of this MMNode
 		self.setgensr()
 		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
 		self.curloopcount = 0
-		self.infoicon = ''
-		self.errormessage = None
+		self.infoicon = ''	# An alert icon
+		self.errormessage = None # An error message to accompany the alert icon
 		self.force_switch_choice = 0
 		self.srdict = {}
 		self.events = {}	# events others are interested in
