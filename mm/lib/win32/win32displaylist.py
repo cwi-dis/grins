@@ -168,7 +168,7 @@ class _DisplayList:
 			if b._highlighted:b._do_highlight()
 	
 	# Optimized rendering for simple display lists on a direct draw surface	
-	def _ddsrender(self, dds, dst, rgn, clear=1, mediacoords=None):
+	def _ddsrender(self, dds, dst, rgn, clear=1, mediadisplayrect=None, fit=1):
 		self._rendered = 1
 		clonestart = self._clonestart
 		if not self._cloneof or self._cloneof is not self._window._active_displist:
@@ -194,20 +194,34 @@ class _DisplayList:
 				dds.BltFill((xc, yc, xc+wc, yc+hc), convbgcolor)
 			elif cmd == 'image':
 				mask, image, flags, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]
-				if mediacoords:
-					dest_x, dest_y, width, height = mediacoords
-				xdc, ydc, wdc, hdc = wnd.rectAnd((x+dest_x, y+dest_y, width, height), (xc, yc, wc, hc))
-				xsc, ysc, wsc, hsc = xdc-(x+dest_x), ydc-(y+dest_y), wdc, hdc
-				try:	
- 					dds.Blt((xdc,ydc,xdc+wdc,ydc+hdc), image, (xsc, ysc, xsc+wsc, ysc+hsc), flags)
+				if mediadisplayrect:
+					dest_x, dest_y, width, height = mediadisplayrect
+
+				# src rect taking into account fit
+				rcKeep = wnd._getmediacliprect(rcKeep[2:], (dest_x, dest_y, width, height), fit=fit)
+
+				# split rects
+				ls, ts, rs, bs = wnd.ltrb(rcKeep)
+				xd, yd, wd, hd = dest_x, dest_y, width, height
+				ld, td, rd, bd = x+xd, y+yd, x+xd+wd, y+yd+hd
+
+				# destination clip
+				ldc, tdc, rdc, bdc = wnd.ltrb( wnd.rectAnd((xc, yc, wc, hc), (ld, td, rd-ld, bd-td)) )
+				
+				# find src clip ltrb given the destination clip
+				lsc, tsc, rsc, bsc =  wnd._getsrcclip((ld, td, rd, bd), (ls, ts, rs, bs), (ldc, tdc, rdc, bdc))
+				
+				try:
+					dds.Blt((ldc, tdc, rdc, bdc), image, (lsc, tsc, rsc, bsc), flags)
  				except:
  					pass
+
 			elif cmd == 'fbox':
 				dest_x, dest_y, width, height = entry[2]
 				width = width - dest_x
 				height = height - dest_y
-				if mediacoords:
-					dest_x, dest_y, width, height = mediacoords
+				if mediadisplayrc:
+					dest_x, dest_y, width, height = mediadisplayrect
 				xdc, ydc, wdc, hdc = wnd.rectAnd((x+dest_x, y+dest_y, width, height), (xc, yc, wc, hc))
 				r, g, b = entry[1]
 				convcolor = dds.GetColorMatch((r,g,b))
@@ -491,7 +505,12 @@ class _DisplayList:
 		
 		mediaBox = float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
-		       
+		
+		# preset media display rect and scale for animation
+		self._window.setmediadisplayrect( (dest_x, dest_y, width, height) )
+		self._window.setmediafit(int(scale))
+
+		#
 		self.setMediaBox(mediaBox)
 		if units == UNIT_PXL:
 			return dest_x - x, dest_y - y, width, height
