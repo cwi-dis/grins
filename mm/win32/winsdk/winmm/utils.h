@@ -46,6 +46,8 @@ inline void seterror(const char *funcname, DWORD err)
 
 inline int GetObjHandle(PyObject *obj)
 	{
+	if(obj==Py_None)
+		return 0;
 	if(PyInt_Check(obj))
 		return PyInt_AsLong(obj);
 	struct WrapperObj { PyObject_HEAD; int m_h;};
