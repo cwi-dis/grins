@@ -14,23 +14,16 @@ def shownodeinfo(toplevel, node, new = 0):
 	try:
 		nodeinfo = node.nodeinfo
 	except AttributeError:
-		nodeinfo = NodeInfo(toplevel, node)
+		nodeinfo = NodeInfo(toplevel, node, new)
 		node.nodeinfo = nodeinfo
-	nodeinfo.open(new)
-
-
-def hidenodeinfo(node):
-	try:
-		nodeinfo = node.nodeinfo
-	except AttributeError:
-		return # No node info form active
-	nodeinfo.close()
+	else:
+		nodeinfo.pop()
 
 
 class NodeInfo:
 
-	def __init__(self, toplevel,  node):
-		self.new = 0
+	def __init__(self, toplevel, node, new):
+		self.new = new
 		self.toplevel = toplevel
 		self.node = node
 		self.context = node.GetContext()
@@ -44,14 +37,20 @@ class NodeInfo:
 
 		top = w.SubWindow(left = None, right = None, top = None)
 
-		self.channel_select = top.OptionMenu('Channel:', ['undefined'],
-					0, (self.channel_callback, ()),
+		try:
+			i = self.allchannelnames.index(self.channelname)
+		except ValueError:
+			i = 0		# 'undefined'
+		self.channel_select = top.OptionMenu('Channel:',
+					self.allchannelnames,
+					i, (self.channel_callback, ()),
 					right = None, top = None)
-		self.type_select = top.OptionMenu('Type:', alltypes, 0,
+		self.type_select = top.OptionMenu('Type:', alltypes,
+						  alltypes.index(self.type),
 						  (self.type_callback, ()),
 						  right = self.channel_select,
 						  top = None)
-		self.name_field = top.TextInput('Name:', '', None, None,
+		self.name_field = top.TextInput('Name:', self.name, None, None,
 						left = None, top = None,
 						right = self.type_select)
 		butt = w.ButtonRow(
@@ -68,25 +67,12 @@ class NodeInfo:
 
 		alter = midd.AlternateSubWindow(top = None, bottom = None,
 						right = None, left = None)
-##		self.style_group = midd.SubWindow(top = None, right = None,
-##						  left = alter)
-##		self.styles_browser = self.style_group.List('Styles:', [],
-##				None,
-##				top = None, right = None, left = None)
-##		self.styles_select = self.style_group.OptionMenu('All styles:',
-##					['No styles'], 0, None,
-##					left = None, bottom = None,
-##					top = self.styles_browser)
-##		self.styles_buttons = self.style_group.ButtonRow(
-##			[('Delete', (self.styles_delete_callback, ())),
-##			 ('Add', (self.styles_add_callback, ()))],
-##			top = self.styles_browser, right = None,
-##			left = self.styles_select, bottom = None, vertical = 0)
 		self.imm_group = alter.SubWindow()
 		self.ext_group = alter.SubWindow()
 		self.int_group = alter.SubWindow()
 
-		self.file_input = self.ext_group.TextInput('File:', '',
+		self.file_input = self.ext_group.TextInput('File:',
+				self.filename,
 				(self.file_callback, ()), None,
 				top = None, left = None, right = None)
 		butt = self.ext_group.ButtonRow(
@@ -98,48 +84,42 @@ class NodeInfo:
 		butt = self.int_group.ButtonRow(
 			[('Open...', (self.openchild_callback, ()))],
 			left = None, right = None, bottom = None, vertical = 0)
-		self.children_browser = self.int_group.List('Children:', [],
+		self.children_browser = self.int_group.List('Children:',
+				self.children,
 				[None, (self.openchild_callback, ())],
 				top = None, left = None, right = None,
 				bottom = butt)
 
 		label = self.imm_group.Label('Contents:',
 				top = None, left = None, right = None)
-		self.text_browser = self.imm_group.TextEdit('', None,
+		self.text_browser = self.imm_group.TextEdit(self.immtext, None,
 					top = label, left = None,
 					right = None, bottom = None)
 
-		w.fix()
+		self.imm_group.hide()
+		self.ext_group.hide()
+		self.int_group.hide()
+		self.cur_group = None
+		self.show_correct_group()
+
+		w.show()
+
+		self.editmgr.register(self)
 
 	def __repr__(self):
 		return '<NodeInfo instance, node=' + `self.node` + '>'
 
-	def is_showing(self):
-		return self.window.is_showing()
+	def pop(self):
+		self.window.pop()
 
 	def settitle(self, title):
 		self.window.settitle(title)
-
-	def show(self):
-		if not self.window.is_showing():
-			self.window.show()
-
-	def hide(self):
-		self.window.hide()
 
 	def transaction(self):
 		return 1
 
 	def getcontext(self):
 		return self.context
-
-	def register(self, object):
-		if self.editmgr is not None:   # DEBUG
-			self.editmgr.register(object)
-
-	def unregister(self, object):
-		if self.editmgr is not None:   # DEBUG
-			self.editmgr.unregister(object)
 
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
@@ -175,41 +155,6 @@ class NodeInfo:
 	def rollback(self):
 		pass
 
-	def destroy(self):
-		self.hide()
-		del self.window
-		del self.name_field
-		del self.type_select
-		del self.channel_select
-##		del self.style_group
-##		del self.styles_browser
-##		del self.styles_select
-##		del self.styles_buttons
-		del self.imm_group
-		del self.ext_group
-		del self.int_group
-		del self.file_input
-		del self.children_browser
-		del self.text_browser
-
-	def kill(self):
-		self.close()
-		self.destroy()
-
-	def open(self, new = 0):
-		self.new = 0
-		if self.is_showing():
-			self.new = new
-			self.window.show()
-		else:
-			self.close()
-			self.title = self.maketitle()
-			self.getvalues(1)
-			self.updateform()
-			self.register(self)
-			self.new = new
-			self.show()
-
 	def getvalues(self, always):
 		#
 		# First get all values (except those changed, if
@@ -217,13 +162,8 @@ class NodeInfo:
 		#
 		self.allchannelnames = ['undefined'] + \
 				       self.context.channelnames
-##		self.allstyles = self.context.styledict.keys()
-##		self.allstyles.sort()
 		if always:
 			self.changed = 0
-##		if always or not self.ch_styles_list:
-##			self.styles_list = self.node.GetRawAttrDef('style', [])[:]
-##			self.ch_styles_list = 0
 		if always or not self.ch_name():
 			self.name = MMAttrdefs.getattr(self.node, 'name')
 		if always or not self.ch_channelname:
@@ -314,16 +254,6 @@ class NodeInfo:
 			i = 0		# 'undefined'
 		self.channel_select.setoptions(self.allchannelnames, i)
 
-##		self.styles_browser.delalllistitems()
-##		self.styles_browser.addlistitems(self.styles_list, -1)
-##
-##		if self.allstyles:
-##			self.styles_select.setoptions(self.allstyles, 0)
-##			self.style_group.show()
-##		else:
-##			self.style_group.hide()
-
-
 		self.text_browser.settext(self.immtext)
 
 		self.file_input.settext(self.filename)
@@ -357,9 +287,24 @@ class NodeInfo:
 			group.show()
 
 	def close(self):
-		if self.is_showing():
-			self.unregister(self)
-			self.hide()
+		self.editmgr.unregister(self)
+		self.window.close()
+		del self.node.nodeinfo
+		del self.node
+		del self.toplevel
+		del self.context
+		del self.editmgr
+		del self.root
+		del self.window
+		del self.channel_select
+		del self.type_select
+		del self.name_field
+		del self.imm_group
+		del self.ext_group
+		del self.int_group
+		del self.file_input
+		del self.children_browser
+		del self.text_browser
 	#
 	# Standard callbacks (from Dialog())
 	#
@@ -420,28 +365,6 @@ class NodeInfo:
 		if self.origchannelname <> self.channelname:
 			self.ch_channelname = 1
 			self.changed = 1
-
-##	def styles_add_callback(self):
-##		if not self.styles_select.is_showing():
-##			return
-##		i = self.styles_select.getpos()
-##		self.ch_styles_list = 1
-##		self.changed = 1
-##		new = self.allstyles[i]
-##		if not new in self.styles_list:
-##			self.styles_list.append(new)
-##		self.styles_browser.addlistitems(self.styles_list, -1)
-##		self.styles_browser.selectitem(-1)
-##
-##	def styles_delete_callback(self):
-##		if not self.styles_select.is_showing():
-##			return
-##		i = self.styles_browser.getselected()
-##		self.ch_styles_list = 1
-##		self.changed = 1
-##		self.styles_browser.dellistitem(i)
-##		del self.styles_list[i]
-##		self.styles_browser.selectitem(0)
 
 	def attributes_callback(self):
 		import AttrEdit
