@@ -2704,8 +2704,9 @@ class MMNode(MMTreeElement):
 	#
 	# Public methods for read-only access
 	#
-	def GetFill(self):
-		fill = self.attrdict.get('fill', 'default')
+	def GetFill(self, fill = None):
+		if fill is None:
+			fill = self.attrdict.get('fill', 'default')
 		if fill == 'default':
 			fill = self.GetInherAttrDef('fillDefault', 'inherit')
 		# XXX should endlist be filtered here?
@@ -2720,16 +2721,18 @@ class MMNode(MMTreeElement):
 				fill = 'remove'
 		return fill
 
-	def GetSyncBehavior(self):
-		syncBehavior = self.attrdict.get('syncBehavior')
+	def GetSyncBehavior(self, syncBehavior = None):
+		if syncBehavior is None:
+			syncBehavior = self.attrdict.get('syncBehavior')
 		if syncBehavior is None or syncBehavior == 'default':
 			syncBehavior = self.GetInherAttrDef('syncBehaviorDefault', None)
 		if syncBehavior is None or syncBehavior == 'inherit':
 			return None
 		return syncBehavior
 
-	def GetRestart(self):
-		restart = self.attrdict.get('restart')
+	def GetRestart(self, restart = None):
+		if restart is None:
+			restart = self.attrdict.get('restart')
 		if restart is None or restart == 'default':
 			restart = self.GetInherAttrDef('restartDefault', None)
 		if restart is None or restart == 'inherit':

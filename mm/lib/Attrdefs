@@ -334,8 +334,8 @@
 	'What to do when lower priority nodes interrupt our children' raw (smil2))
 (peers (enum stop pause defer never) stop 'Peers' default
 	'What to do when equal priority nodes interrupt our children' raw (smil2))
-(pauseDisplay (enum inherit disable hide show) inherit 'Pause display' default
-	'How paused children should behave (inherit means inherit from parent prio node)' raw (smil2))
+(pauseDisplay (enum disable hide show) show 'Pause display' default
+	'How paused children should behave' raw (smil2))
 
 # XXXX Transitions need a displayer
 # XXXX This allows for a single transition only (should be a list)
