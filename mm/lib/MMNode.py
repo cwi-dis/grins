@@ -164,9 +164,6 @@ class MMNodeContext:
 		node = self.newnodeuid('animate', self.newuid())
 		node.attrdict['atag'] = tagname
 		node.attrdict['mimetype'] = 'animate/%s' % tagname
-		chname = 'animate%s' % node.GetUID()
-		node.attrdict['channel'] = chname
-		self.addinternalchannels( [(chname, 'animate', node.attrdict), ] )
 		return node
 
 	#
