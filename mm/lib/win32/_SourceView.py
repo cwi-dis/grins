@@ -27,12 +27,16 @@ class _SourceView(docview.EditView):
 		self.mother = None
 		self.readonly = 0
 
+	def setclosecmd(self, cmdid):
+		self._closecmdid = cmdid
+
 	# Create the OS window
 	def createWindow(self,parent):
 		self.CreateWindow(parent)
 
 	def set_readonly(self, readonly):
 		self.readonly = readonly
+		self.SetReadOnly(readonly)
 	
 	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
@@ -42,22 +46,27 @@ class _SourceView(docview.EditView):
 			edit.SetReadOnly(1)
 		self._mdiframe=(self.GetParent()).GetMDIFrame()
 
-	# Called by the framework before this window is closed
+	# Called by the framework to close this window.
 	def OnClose(self):
 		if self.mother:
-			self.mother.close_source_callback()
-##		saveme = windowinterface.GetYesNoCancel("Do you want to keep your changes?", self.GetParent())
+			self.mother.close_callback()
+		#if self._closecmdid>0:
+		#	self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
+		#else:
+		#	self.GetParent().DestroyWindow()
+
+
+
+##		self.mother.close_source_callback(text)
+
+##	def destroy_
+##		saveme = windowinterface.GetOKCancel("Do you want to keep your changes?", self.GetParent())
 ##		if saveme==0:		# Which means the user clicked "yes"
 ##			edit = self.GetEditCtrl()
-##			# Bugger. The TopLevel is miles away, through several rather bizarre API calls.
-##			# For later, anyway:
 ##			text = edit.GetWindowText()
 ##			if self.mother:
-##				self.mother.save_source_callback(text)
-		if self._closecmdid>0:
-			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
-		else:
-			self.GetParent().DestroyWindow()
+	
+##		else:
 
 	# Called when the view is activated 
 	def activate(self):
@@ -78,6 +87,11 @@ class _SourceView(docview.EditView):
 	def get_text(self):
 		return self.GetEditCtrl().GetWindowText()
 
+	def is_changed(self):
+		# Return true or false depending on whether the source view has been changed.
+		#return self.GetEditCtrl().GetModify()
+		return 1
+	
 	def setmother(self, mother):
 		self.mother = mother
 
@@ -95,6 +109,7 @@ class _SourceView(docview.EditView):
 	
 	# Called by the framework to close the view		
 	def close(self):
+		print "DEBUG: _SourceView.close() called."
 		# 1. clean self contends
 		del self._text
 		self._text=None
