@@ -66,7 +66,7 @@ class TopLevel(TopLevelDialog):
 		self.source = None
 		self.read_it()
 		self.__checkParseErrors()
-		
+
 		self.makeplayer()
 		self.commandlist = [
 			CLOSE(callback = (self.close_callback, ())),
@@ -188,7 +188,7 @@ class TopLevel(TopLevelDialog):
 ##		t0 = time.time()
 		import urlcache
 		mtype = urlcache.mimetype(self.filename)
-		if mtype not in ('application/x-grins-project', 'application/smil', 'application/x-grins-binary-project'):
+		if mtype not in ('application/x-grins-project', 'application/smil', 'application/x-grins-binary-project') and (not hasattr(windowinterface, 'is_embedded') or not windowinterface.is_embedded()):
 			ans = windowinterface.GetYesNoCancel('MIME type not application/smil or application/x-grins-project.\nOpen as SMIL document anyway?')
 			if ans == 0:	# yes
 				mtype = 'application/smil'
@@ -203,12 +203,12 @@ class TopLevel(TopLevelDialog):
 				self.progress = windowinterface.ProgressDialog("Loading")
 				self.progressMessage = "Loading GRiNS document..."
 
-			try:			
+			try:
 				import SMILTreeRead
 				self.root = SMILTreeRead.ReadFile(self.filename, self.printfunc, \
 											progressCallback=(self.progressCallback, 0))
 
-			except (UserCancel, IOError):				
+			except (UserCancel, IOError):
 				# the progress dialog will desapear
 				self.progress = None
 				# re-raise
@@ -220,7 +220,7 @@ class TopLevel(TopLevelDialog):
 			if sys.platform == 'wince':
 				self.progress.close()
 			self.progress = None
-			
+
 		elif mtype == 'application/x-grins-binary-project':
 			self.progress = windowinterface.ProgressDialog("Loading")
 			self.progressMessage = "Loading GRiNS document..."
@@ -275,16 +275,16 @@ class TopLevel(TopLevelDialog):
 
 		# show the main frame
 		top.show()
-		
+
 		# update the recent list.
 		self.main._update_recent(None)
 
 		# at list
 		top.player.show()
 
-		# at least, we can close the old instance, before at there was no error		
+		# at least, we can close the old instance, before at there was no error
 		self.close()
-		
+
 	def close_callback(self):
 		self.setwaiting()
 		if self.source is not None:
@@ -409,7 +409,7 @@ class TopLevel(TopLevelDialog):
 				top.player.pause(1)
 			else:
 				print 'jump to external: invalid destination state'
-			
+
 		if atype == TYPE_JUMP:
 			if grinsTarget:
 				self.close()
@@ -426,7 +426,7 @@ class TopLevel(TopLevelDialog):
 				self.player.stop()
 			else:
 				print 'jump to external: invalid source state'
-			
+
 		return 1
 
 	def is_document(self, url):
