@@ -139,17 +139,17 @@ class _Toplevel:
 		return _Window(self, x, y, w, h, title, 1, pixmap, units,
 			       adornments, canvassize, commandlist, resizable)
 
-	__waiting = 0
+##	__waiting = 0
 	def setwaiting(self):
-		if self.__waiting:
-			return
-		self.__waiting = 1
+##		if self.__waiting:
+##			return
+##		self.__waiting = 1
 		self.setcursor(_WAITING_CURSOR)
 
 	def setready(self):
-		if not self.__waiting:
-			return
-		self.__waiting = 0
+##		if not self.__waiting:
+##			return
+##		self.__waiting = 0
 		self.setcursor(_READY_CURSOR)
 
 	def setcursor(self, cursor):
