@@ -236,8 +236,11 @@ class SchedulerContext:
 			# Re-schedule them.
 			#
 			if self.unexpected_armdone.has_key(key):
-				self.parent.event(self, key)
+				ev, node = key
 				del self.unexpected_armdone[key]
+				self.parent.add_runqueue(self, PRIO_PREARM_NOW,
+					       (SR.PLAY_OPTIONAL_ARM, node) )
+
 	#
 	# Tell arm datastructures that we will go through the loop at
 	# least once more after the current loop is finished.
@@ -332,6 +335,15 @@ class SchedulerContext:
 		else:
 			self.sractions[actionpos] = (num, srlist)
 		return []
+
+	# search_unexpected_prearm checks whether any expected ARM_DONE's were
+	# received for this node and clears them.
+	def search_unexpected_prearm(self, node):
+		for ev, arg in self.unexpected_armdone.keys():
+			if arg == node:
+				del self.unexpected_armdone[ev, arg]
+				return 1
+		return 0
 		
 class Scheduler(scheduler):
 	def __init__(self, ui):
@@ -601,7 +613,7 @@ class Scheduler(scheduler):
 	def runone(self, (sctx, todo, dummy)):
 		if not sctx.active:
 			raise error, 'Scheduler: running from finished context'
-		#DBG print 'exec: ', SR.ev2string(todo)
+##		print 'exec: ', SR.ev2string(todo)
 		action, arg = todo
 		if action == SR.PLAY:
 			self.do_play(sctx, arg)
@@ -612,6 +624,8 @@ class Scheduler(scheduler):
 			self.do_sync(sctx, arg)
 		elif action == SR.PLAY_ARM:
 			self.do_play_arm(sctx, arg)
+		elif action == SR.PLAY_OPTIONAL_ARM:
+			self.do_play_arm(sctx, arg, optional=1)
 		elif action in (SR.BAG_START, SR.BAG_STOP):
 			self.ui.bag_event(sctx, todo)
 		elif action == SR.TERMINATE:
@@ -630,16 +644,18 @@ class Scheduler(scheduler):
 
 	def remove_terminate(self, sctx, node):
 		ev = SR.TERMINATE, node
-		if sctx.srevents.has_key(ev):
-			pos = sctx.srevents[ev]
-			del sctx.srevents[ev]
-			num, srlist = sctx.sractions[pos]
-			num = num - 1
-			if num == 0:
-				sctx.sractions[pos] = None
-			else:
-				sctx.sractions[pos] = num, srlist
-		if not node.isloopnode or not node.moreloops():
+##		for ev in [(SR.TERMINATE, node), (SR.TERMINATE, node.looping_body_self)]:
+		if 1: # Simple test 
+			if sctx.srevents.has_key(ev):
+				pos = sctx.srevents[ev]
+				del sctx.srevents[ev]
+				num, srlist = sctx.sractions[pos]
+				num = num - 1
+				if num == 0:
+					sctx.sractions[pos] = None
+				else:
+					sctx.sractions[pos] = num, srlist
+		if not node.moreloops():
 			for ac in sctx.sractions:
 				if ac is None:
 					continue
@@ -668,7 +684,7 @@ class Scheduler(scheduler):
 	#
 	def do_terminate(self, sctx, node):
 		if node.GetType() in interiortypes:
-			node.curloopcount = 0 # no more loops
+			node.stoplooping()
 			# Remove prearms for all our descendents
 			sctx.cancelprearms(node)
 			# turn action into event
@@ -708,6 +724,8 @@ class Scheduler(scheduler):
 						if queue[i][1][0] == SR.PLAY_ARM:
 							do_arm = 1
 						del queue[i]
+##			if not do_arm:
+##				do_arm = sctx.search_unexpected_prearm(node)
 			if do_arm:
 				sctx.arm_ready(chan)
 
@@ -738,8 +756,8 @@ class Scheduler(scheduler):
 			# called after all the cleaun actions.
 			#
 ##			print 'MORE TO PLAY'
-			self.add_runqueue(sctx, PRIO_INTERN,
-					  (SR.SCHED_STOP, node))
+##			self.add_runqueue(sctx, PRIO_INTERN,
+##					  (SR.SCHED_STOP, node))
 			self.add_runqueue(sctx, PRIO_START,
 					  (SR.LOOPRESTART, node))
 		else:
@@ -751,7 +769,9 @@ class Scheduler(scheduler):
 	def do_looprestart(self, sctx, node):
 ##		print 'LOOPRESTART', node
 		if not node.moreloops(decrement=1):
-			raise 'Looprestart without more loops!'
+			# Node has been terminated in the mean time
+			self.event(sctx, (SR.LOOPEND_DONE, node))
+			return
 		if node.moreloops():
 			# If this is still not the last loop we also
 			# set the arm-structures to loop once more.
@@ -767,10 +787,13 @@ class Scheduler(scheduler):
 	#
 	# Execute an ARM SR
 	#
-	def do_play_arm(self, sctx, node):
+	def do_play_arm(self, sctx, node, optional=0):
 		chan = self.ui.getchannelbynode(node)
 		node.set_armedmode(ARM_ARMING)
-		chan.arm(node)
+		if optional:
+			chan.optional_arm(node)
+		else:
+			chan.arm(node)
 	#
 	# Queue interface, based upon sched.scheduler.
 	# This queue has variable time, to implement pause,
@@ -846,12 +869,6 @@ class ArmStorageTree:
 		del self.parent
 		del self.children
 
-##	def moreloops(self):
-##		rv = self.node.moreloops()
-##		if rv:
-##			print 'MORE TO ARM=', rv, self.node
-##		return rv
-
 	def cancel(self, node):
 		"""Cancel arms for node and descendents, knowing that
 		node is currently active (so somewhere between current and
@@ -864,32 +881,10 @@ class ArmStorageTree:
 	def do_cancel(self):
 		"""Cancel arm for this node and its descendents"""
 		self.index = len(self.children)+1
+		self.onemoretime = 0
 		for ch in self.children[self.index:]:
 			ch.do_cancel()
 			
-##	def revive(self, node):
-##		"""Revive arms and reset loopcount for node and its
-##		descendents, knowing node is somewhere in the subtree
-##		under the current active node"""
-##		# XXXX Is that true? Is the node under the subtree when
-##		# we enter it?
-##		if node == self.node:
-##			self.do_revive()
-##		else:
-##			for ch in self.children:
-###				ch.revive(node)
-##	def do_revive(self):
-##		"""Revive arms and reset loopcounter for this node and its
-##		descendents"""
-##		self.index = 0
-##		for ch in self.children:
-##			ch.do_revive()
-
-##	def dump(self, level):
-##		print ' '*level, self, self.node, self.parent, self.index
-##		for c in self.children:
-##			c.dump(level+2)
-
 	def next(self):
 		"""Return next ArmStorage to query and next node to arm"""
 		if self.index >= len(self.children) and self.onemoretime:
