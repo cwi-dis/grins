@@ -203,7 +203,7 @@ def usage():
 	print " -o file      Write output to file (with backup)"
 
 def getdefaultfeatures():
-	return encodefeatures(["editor", "light", "pro", "ALLPLATFORMS"])
+	return encodefeatures(["ALLPRODUCTS", "ALLPLATFORMS"])
 
 def encodefeatures(list):
 	rv = 0
@@ -300,7 +300,7 @@ def codelicense(uniqid, date, features, user):
 	all = ['A']	# License type
 	all.append(_codeint(uniqid, 4))
 	all.append(_codedate(date))
-	all.append(_codeint(features, 2))
+	all.append(_codeint(features, 3))
 	if user:
 		all.append(_codestr(user))
 	license = _codecheck(all)
