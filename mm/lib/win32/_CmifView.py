@@ -579,10 +579,10 @@ class _CmifPlayerView(_CmifView):
 		dds = self._backBuffer
 		sd = dds.GetSurfaceDesc()
 		w, h = sd.GetSize()
-		if self._convcolor == None:
+		if self._convbgcolor == None:
 			r, g, b = self._bgcolor
-			self._convcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
-		dds.BltFill((0, 0, w, h), self._convcolor)
+			self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+		dds.BltFill((0, 0, w, h), self._convbgcolor)
 
 	def paint(self):
 		self.clear()
