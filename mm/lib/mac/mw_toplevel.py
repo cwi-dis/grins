@@ -75,7 +75,7 @@ _y_pixel_per_mm = _y_pixel_per_inch / 25.4
 # Height of menu bar and height of window title
 #
 _screen_top_offset = 26	# XXXX Should be gotten from GetMBarHeight()
-_window_top_offset=18	# XXXX Is this always correct?
+_window_top_offset=21	# XXXX Is this always correct?
 
 #
 # Event loop parameters
@@ -105,9 +105,11 @@ class _Event(AEServer):
 		self._timer_id = 0
 		self._timerfunc = None
 		self._time = Evt.TickCount()/TICKS_PER_SECOND
-		self._idles = []
+		self._idles = {}
+		self.__idleid = 0
 		self._grabbed_wids = []
 		self._active_movies = 0
+		self._active_movie_windows = []
 		self._mouse_tracker = None
 		self._mouse_timer = None
 		self._last_mouse_where = (-100, -100)
@@ -122,7 +124,7 @@ class _Event(AEServer):
 	def grab(self, dialog):
 		"""A dialog wants to be application-modal"""
 		if dialog:
-			self.grabwids([dialog._wid])
+			self.grabwids([dialog._onscreen_wid])
 		else:
 			self.grabwids([])
 			
@@ -202,7 +204,7 @@ class _Event(AEServer):
 				sys.last_traceback = None
 				
 				if not self._eventloop(timeout):
-					for rtn in self._idles:
+					for rtn in self._idles.values():
 						rtn()
 					if not memory_warned and \
 							Evt.TickCount() > last_memory_check+MEMORY_CHECK_INTERVAL*TICKS_PER_SECOND:
@@ -257,15 +259,21 @@ class _Event(AEServer):
 				self._handle_event(event)
 				if self._active_movies and Qt:
 					Qt.MoviesTask(0)
+					for w in self._active_movie_windows:
+						w.changed()
 				gotone, event = Evt.WaitNextEvent(self._eventmask, 0)
 			if self._active_movies and Qt:
 				Qt.MoviesTask(0)
+				for w in self._active_movie_windows:
+					w.changed()
 			return 1
 		else:
 			if self._mouse_tracker:
 				self._mouse_tracker(event)
 			if self._active_movies and Qt:
 				Qt.MoviesTask(0)
+				for w in self._active_movie_windows:
+					w.changed()
 			if Dlg.IsDialogEvent(event):
 				self._handle_dialogevent(event)
 			if self.needmenubarrecalc and self._command_handler:
@@ -334,8 +342,9 @@ class _Event(AEServer):
 					else:
 						defaultcb()
 						return 1
-		gotone, wid, item = Dlg.DialogSelect(event)
+		gotone, dlg, item = Dlg.DialogSelect(event)
 		if gotone:
+			wid = dlg.GetDialogWindow()
 			if self._wid_to_window.has_key(wid):
 				self._wid_to_window[wid].do_itemhit(item, event)
 			else:
@@ -463,20 +472,26 @@ class _Event(AEServer):
 					self._mouseregionschanged()
 					return
 				# Frontmost. Handle click.
+				if modifiers & Events.controlKey:
+					modifiername = 'contextual'
+				elif modifiers & Events.shiftKey:
+					modifiername = 'add'
+				else:
+					modifiername = None
 				double = 0
-				if when - self._last_mouse_when < DOUBLECLICK_TIME:
+				if when - self._last_mouse_when < DOUBLECLICK_TIME and not modifiername:
 					x1, y1 = self._last_mouse_where
 					x2, y2 = where
 					if abs(x2-x1) < 5 and abs(y2-y1) < 5:
 						double = 1
-				if double:
+				if modifiername or double:
+					# Reset the double-click timer
 					self._last_mouse_where = -100, -100
 					self._last_mouse_when = -100
 				else:
 					self._last_mouse_where = where
 					self._last_mouse_when = when
-				self._handle_contentclick(wid, 1, where, event, (modifiers & Events.controlKey),
-						double)
+				self._handle_contentclick(wid, 1, where, event, modifiername, double)
 			else:
 				if self._grabbed_wids and not wid in self._grabbed_wids:
 					beep()
@@ -542,12 +557,13 @@ class _Event(AEServer):
 			return 1
 		return 0
 
-	def _do_user_item(self, wid, item):
+	def _do_user_item(self, dlg, item):
 		"""Handle redraw for user items in dialogs"""
+		wid = dlg.GetDialogWindow()
 		try:
 			win = self._wid_to_window[wid]
 		except KeyError:
-			print "Unknown dialog for user item redraw", wid, item
+			print "Unknown dialog for user item redraw", wid, dlg, item
 		else:
 			try:
 				redrawfunc = win.do_itemdraw
@@ -588,14 +604,23 @@ class _Event(AEServer):
 					self._timers[i] = (tt + t, cb, tid)
 				return
 		raise 'unknown timer', id
+		
+	def getcurtime(self):
+		return Evt.TickCount()/TICKS_PER_SECOND
+		
+	def settimevirtual(self, virtual):
+		pass
 				
 	def setidleproc(self, cb):
 		"""Adds an idle-loop callback"""
-		self._idles.append(cb)
+		id = self.__idleid
+		self.__idleid = self.__idleid + 1
+		self._idles[id] = cb
+		return id
 		
-	def cancelidleproc(self, cb):
+	def cancelidleproc(self, id):
 		"""Remove an idle-loop callback"""
-		self._idles.remove(cb)
+		del self._idles[id]
 
 	def lopristarting(self):
 		"""Called when the scheduler starts with low-priority
@@ -607,11 +632,13 @@ class _Event(AEServer):
 		raise error, 'No select_setcallback for the mac'
 		
 	# Routine to maintain the number of currently active movies
-	def _set_movie_active(self, is_active):
+	def _set_movie_active(self, is_active, which_window):
 		if is_active:
 			self._active_movies = self._active_movies + 1
+			self._active_movie_windows.append(which_window)
 		else:
 			self._active_movies = self._active_movies - 1
+			self._active_movie_windows.remove(which_window)
 		if self._active_movies < 0:
 			raise 'Too many movies deactivated'
 		
@@ -643,7 +670,7 @@ class _Toplevel(_Event):
 		self._bgcolor = 0xffff, 0xffff, 0xffff # white
 		self._fgcolor =      0,      0,      0 # black
 		self._next_xpos = 16
-		self._next_ypos = 24
+		self._next_ypos = 54
 		self._command_handler = None
 		self._cursor_is_default = 1
 		self._cur_cursor = None		# The currently active cursor
@@ -808,13 +835,13 @@ class _Toplevel(_Event):
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = None, pixmap = 0, units=UNIT_MM,
 		      adornments=None, canvassize=None, commandlist=[],
-		      resizable=1):
+		      resizable=1, bgcolor=None):
 		self._initcommands()
 		extras = mw_windows.calc_extra_size(adornments, canvassize)
 		wid, w, h = self._openwindow(x, y, w, h, title, units, resizable, extras)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 0, pixmap,
 					title, adornments, canvassize,
-					commandlist, resizable)
+					commandlist, resizable, bgcolor)
 		self._register_wid(wid, rv)
 		return rv
 	
@@ -922,11 +949,11 @@ class _Toplevel(_Event):
 		x = self._next_xpos
 		y = self._next_ypos
 		if x < 200:
-			self._next_xpos = self._next_xpos + 8
+			self._next_xpos = self._next_xpos + 20
 		else:
 			self._next_xpos = 16
 		if y < 100:
-			self._next_ypos = self._next_ypos + 40
+			self._next_ypos = self._next_ypos + 28
 		else:
 			self._next_ypos = 44
 		return x, y
@@ -939,7 +966,7 @@ class _Toplevel(_Event):
 			if not win._title:
 				# These are dialogs which aren't open yet
 				continue
-			if win._wid == front_wid:
+			if win._onscreen_wid == front_wid:
 				current = len(names)
 			names.append(win._title)
 		return names, current
@@ -1000,13 +1027,13 @@ class _Toplevel(_Event):
 	# Handling of events that are forwarded to windows
 	#
 	
-	def _handle_contentclick(self, wid, down, where, event, shifted, double):
+	def _handle_contentclick(self, wid, down, where, event, modifiers, double):
 		"""A mouse-click inside a window, dispatch to the
 		correct window"""
 		window = self._find_wid(wid)
 		if not window:
 			return
-		window._contentclick(down, where, event, shifted, double)
+		window._contentclick(down, where, event, modifiers, double)
 		
 	def _handle_keyboardinput(self, wid, char, where, event):
 		window = self._find_wid(wid)
@@ -1108,17 +1135,18 @@ class _Toplevel(_Event):
 			self._installcursor('_watch')
 			return None
 
-		keys = Evt.GetKeys()
-		option_pressed = (ord(keys[7]) & 4)
-		lwhere = Evt.GetMouse()
-		where = Qd.LocalToGlobal(lwhere)
 		frontwid = Win.FrontWindow()
-		if self._wid_to_window.has_key(frontwid):
+		if frontwid and self._wid_to_window.has_key(frontwid):
 			frontwindow = self._wid_to_window[frontwid]
 		else:
 			# The front window isn't ours. Use the arrow
 			self._installcursor('_arrow')
 			return None
+		Qd.SetPort(frontwid)
+		keys = Evt.GetKeys()
+		option_pressed = (ord(keys[7]) & 4)
+		lwhere = Evt.GetMouse()
+		where = Qd.LocalToGlobal(lwhere)
 		partcode, cursorwid = Win.FindWindow(where)
 		#
 		# First check whether we need the resize cursor
@@ -1174,7 +1202,7 @@ class _Toplevel(_Event):
 ##		print 'region not cached', which #DBG
 		if which == 'inside':
 			x0, y0, x1, y1 = frontwin.qdrect()
-			Qd.SetPort(frontwin._wid)
+			Qd.SetPort(frontwin._onscreen_wid)
 			x0, y0 = Qd.LocalToGlobal((x0, y0))
 			x1, y1 = Qd.LocalToGlobal((x1, y1))
 			rgn = Qd.NewRgn()
@@ -1188,13 +1216,16 @@ class _Toplevel(_Event):
 			rgn = Qd.NewRgn()
 			if frontwin._needs_grow_cursor():
 				x0, y0, x1, y1 = frontwin.qdrect()
-				Qd.SetPort(frontwin._wid)
+				Qd.SetPort(frontwin._onscreen_wid)
 				x1, y1 = Qd.LocalToGlobal((x1, y1))
 				Qd.RectRgn(rgn, (x1-15, y1-15, x1, y1))
 		elif which == 'buttons':
 			otherrgn = frontwin._get_button_region()
 			rgn = Qd.NewRgn()
 			Qd.CopyRgn(otherrgn, rgn)
+			Qd.SetPort(frontwin._onscreen_wid)
+			xglob, yglob = Qd.LocalToGlobal((0, 0))
+			Qd.OffsetRgn(rgn, xglob, yglob)
 		elif which == 'nobuttons':
 			otherrgn1 = self._mkmouseregion('inside', frontwin)
 			otherrgn2 = self._mkmouseregion('buttons', frontwin)
@@ -1236,3 +1267,6 @@ class _Toplevel(_Event):
 	def _getmmfactors(self):
 		return _x_pixel_per_mm, _y_pixel_per_mm
 	
+	def dumpwindows(self):
+		for w in self._wid_to_window.values():
+			w.dumpwindow()

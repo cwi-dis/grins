@@ -14,6 +14,9 @@ import img
 import imgformat
 import mac_image
 
+##PIXELFORMAT=imgformat.macrgb16
+PIXELFORMAT=imgformat.macrgb
+
 #
 # Stuff needed from other mw_ modules
 #
@@ -21,9 +24,9 @@ import mw_globals
 import mw_menucmd
 
 class _Widget:
-	def __init__(self, wid, item):
-		tp, h, rect = wid.GetDialogItem(item) # XXXX To be fixed
-		wid.SetDialogItem(item, tp,
+	def __init__(self, dlg, item):
+		tp, h, rect = dlg.GetDialogItem(item) # XXXX To be fixed
+		dlg.SetDialogItem(item, tp,
 		      mw_globals.toplevel._dialog_user_item_handler, rect)
 		      
 	def close(self):
@@ -44,11 +47,11 @@ class _ImageMixin:
 	def _loadimagefromfile(self, image, scale=None):
 		if not image:
 			return
-		format = imgformat.macrgb16
+		format = PIXELFORMAT
 		try:
 			rdr = img.reader(format, image)
 			bits = rdr.read()
-		except (img.error, IOError):
+		except (img.error, IOError, MemoryError):
 			return
 		
 		pixmap = mac_image.mkpixmap(rdr.width, rdr.height, format, bits)
@@ -82,41 +85,30 @@ class _ImageMixin:
 		Qd.RGBForeColor(fgcolor)
 
 class _ListWidget(_ControlWidget):
-	def __init__(self, wid, item, content=[], multi=0):
-		self.control = wid.GetDialogItemAsControl(item)
+	def __init__(self, dlg, item, content=[], multi=0):
+		self.control = dlg.GetDialogItemAsControl(item)
 ##		d1, d2, self.rect = wid.GetDialogItem(item)
 		self.rect = (0, 0, 1000, 1000) # DBG
-		h = self.control.GetControlDataHandle(Controls.kControlListBoxPart, 
+		h = self.control.GetControlData_Handle(Controls.kControlListBoxPart, 
 			Controls.kControlListBoxListHandleTag)
 		self.list = List.as_List(h)
 		self.list.LAddRow(len(content), 0)
-##?		self.list.LSetDrawingMode(0)
-##		# wid is the window (dialog) where our list is going to be in
-##		# rect is it's item rectangle (as in dialog item)
-##		self.rect = rect
-##		rect2 = rect[0]+1, rect[1]+1, rect[2]-16, rect[3]-1
-##		self.list = List.LNew(rect2, (0, 0, 1, len(content)),
-##					 (0,0), 0, wid,	0, 0, 0, 1)
 		if not multi:
 			self.list.selFlags = Lists.lOnlyOne
 		self._data = []
 		self._setcontent(0, len(content), content)
-		self.wid = wid
-##?		self.list.LSetDrawingMode(1)
-##		Win.InvalRect(self.rect)
-##		self._redraw() # DBG
+		self.dlg = dlg
+		self.wid = dlg.GetDialogWindow()
 	
 	def close(self):
 ##		print 'DBG: close', self
 		del self.list  # XXXX Or should we DisposeList it?
 		del self.wid
+		del self.dlg
 		del self._data
 		del self.control
 		pass
 
-##	def __del__(self):
-##		print 'del', self
-		
 	def setcellsize(self, width, height):
 		self.list.LCellSize((width, height))
 		
@@ -148,16 +140,14 @@ class _ListWidget(_ControlWidget):
 		
 	def delete(self, fr=None, count=1):
 		self._delete(fr, count)
-		Qd.SetPort(self.wid)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 		
 	def setitems(self, content=[], select=None):
 		self._delete()
 		self._insert(count=len(content))
 		self._setcontent(0, len(content), content)
 		self.select(select)
-		Qd.SetPort(self.wid)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 		
 	def get(self):
 		return self._data
@@ -168,13 +158,11 @@ class _ListWidget(_ControlWidget):
 	def insert(self, where=-1, content=[]):
 		where = self._insert(where, len(content))
 		self._setcontent(where, where+len(content), content)
-		Qd.SetPort(self.wid)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 		
 	def replace(self, where, what):
 		self._setcontent(where, where+1, [what])
-		Qd.SetPort(self.wid)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 		
 	def _deselectall(self):
 		while 1:
@@ -208,14 +196,15 @@ class _ListWidget(_ControlWidget):
 		Ctl.SetKeyboardFocus(self.wid, self.control, Controls.kControlListBoxPart)
 
 class _AreaWidget(_ControlWidget, _ImageMixin):
-	def __init__(self, wid, item, callback=None, scaleitem=None):
-		self.wid = wid
+	def __init__(self, dlg, item, callback=None, scaleitem=None):
+		self.dlg = dlg
+		self.wid = dlg.GetDialogWindow()
 		self.scaleitem = scaleitem
-		self.control = wid.GetDialogItemAsControl(item)
+		self.control = dlg.GetDialogItemAsControl(item)
 		self.rect = self.control.GetControlRect()
-		self.control.SetControlDataCallback(0, Controls.kControlUserPaneDrawProcTag, self.redraw)
-		self.control.SetControlDataCallback(0, Controls.kControlUserPaneHitTestProcTag, self.hittest)
-##		self.control.SetControlDataCallback(0, Controls.kControlUserPaneTrackingProcTag, self.tracking)
+		self.control.SetControlData_Callback(0, Controls.kControlUserPaneDrawProcTag, self.redraw)
+		self.control.SetControlData_Callback(0, Controls.kControlUserPaneHitTestProcTag, self.hittest)
+##		self.control.SetControlData_Callback(0, Controls.kControlUserPaneTrackingProcTag, self.tracking)
 		self.image = None
 		self.outerrect = (0, 0, 1, 1)
 		self.otherrects = []
@@ -226,6 +215,7 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 		
 	def close(self):
 		del self.wid
+		del self.dlg
 		del self.control
 		del self.callback
 		del self._background_image
@@ -371,14 +361,13 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 		self.scale = scale
 ##		print 'self.rect', self.rect
 ##		print 'scale', self.scale
-		Qd.SetPort(self.wid)
-		Win.InvalRect(fullrect)
+		self.wid.InvalWindowRect(fullrect)
 		if self.scaleitem != None:
 			if self.scale == 1:
 				text = ''
 			else:
 				text = '(scale 1:%d, %dx%d)'%(self.scale, w, h)
-			h = self.wid.GetDialogItemAsControl(self.scaleitem)
+			h = self.dlg.GetDialogItemAsControl(self.scaleitem)
 			Dlg.SetDialogItemText(h, text)
 
 	def recalclurven(self):
@@ -412,8 +401,7 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 			self.ourrect = self.rect2screen(rect)
 		self.recalclurven()
 		fullrect = self.control.GetControlRect()
-		Qd.SetPort(self.wid)
-		Win.InvalRect(fullrect)
+		self.wid.InvalWindowRect(fullrect)
 		
 	def get(self):
 		if self.ourrect is None:
@@ -431,26 +419,28 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 		return (rx0-x0)*self.scale, (ry0-y0)*self.scale, w*self.scale, h*self.scale
 					
 class _ImageWidget(_Widget, _ImageMixin):
-	def __init__(self, wid, item, image=None):
-		_Widget.__init__(self, wid, item)
-		tp, h, rect = wid.GetDialogItem(item)
+	def __init__(self, dlg, item, image=None):
+		_Widget.__init__(self, dlg, item)
+		tp, h, rect = dlg.GetDialogItem(item)
 		# wid is the window (dialog) where our image is going to be in
 		# rect is it's item rectangle (as in dialog item)
 		self.rect = rect
 		self.image = image
-		self.wid = wid
-		Win.InvalRect(self.rect)
+		self.dlg = dlg
+		self.wid = dlg.GetDialogWindow()
+		self.wid.InvalWindowRect(self.rect)
 		
 	def close(self):
 ##		print 'DBG: close', self
 		del self.image
 		del self.wid
+		del self.dlg
 		self.image_data = None
 		del self.image_data
 			
 	def setfromfile(self, image):
-		Qd.SetPort(self.wid)
-		Win.InvalRect(self.rect)
+##		Qd.SetPort(self.wid)
+		self.wid.InvalWindowRect(self.rect)
 		self.image_data = self._loadimagefromfile(image)
 				
 	def _redraw(self, rgn=None):
@@ -467,12 +457,13 @@ class _ImageWidget(_Widget, _ImageMixin):
 		pass
 				
 class _SelectWidget(_ControlWidget):
-	def __init__(self, wid, ctlid, items=[], default=None, callback=None):
-		self.wid = wid
+	def __init__(self, dlg, ctlid, items=[], default=None, callback=None):
+		self.dlg = dlg
+		self.wid = dlg.GetDialogWindow()
 		self.itemnum = ctlid
 		self.menu = None
 ##		self.choice = None
-		self.control = self.wid.GetDialogItemAsControl(self.itemnum)
+		self.control = self.dlg.GetDialogItemAsControl(self.itemnum)
 		self.setitems(items, default)
 		if callback:
 			raise 'Menu-callbacks not supported anymore'
@@ -480,7 +471,8 @@ class _SelectWidget(_ControlWidget):
 	def close(self):
 ##		print 'DBG: close', self
 		del self.wid
-##		self.control.SetControlDataHandle(Controls.kControlMenuPart,
+		del self.dlg
+##		self.control.SetControlData_Handle(Controls.kControlMenuPart,
 ##				Controls.kControlPopupButtonMenuHandleTag, self.orig_menu)
 		del self.control
 ##		self.menu.delete()
@@ -503,9 +495,9 @@ class _SelectWidget(_ControlWidget):
 		oldmenu = self.menu
 		self.menu = mw_menucmd.SelectPopupMenu(items)
 		mhandle, mid = self.menu.getpopupinfo()
-##		self.orig_menu = self.control.GetControlDataHandle(Controls.kControlMenuPart,
+##		self.orig_menu = self.control.GetControlData_Handle(Controls.kControlMenuPart,
 ##				Controls.kControlPopupButtonMenuHandleTag)
-		self.control.SetControlDataHandle(Controls.kControlMenuPart,
+		self.control.SetControlData_Handle(Controls.kControlMenuPart,
 				Controls.kControlPopupButtonMenuHandleTag, mhandle)
 ##		ControlAccessor.SetControlData(self.control, Controls.kControlMenuPart,
 ##				Controls.kControlPopupButtonMenuIDTag, mid)
