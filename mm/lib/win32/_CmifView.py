@@ -37,7 +37,6 @@ import sysmetrics
 
 # constants to select web browser control
 [IE_CONTROL, WEBSTER_CONTROL]=0, 1
-HTML_CTRL_SEL=WEBSTER_CONTROL
 
 ###########################################################
 # import window core stuff
@@ -577,7 +576,8 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		if self._transparent in (-1,1):
 			self.setWndTransparent()
 		if self.isclient():self.SetClient(1)
-		self.UseHtmlCtrl(HTML_CTRL_SEL)
+		import settings
+		self.UseHtmlCtrl(settings.get('html_control'))
 
 	# Called by the Html channel. The request is delegated to the Html control
 	# Part of WebBrowsing support
