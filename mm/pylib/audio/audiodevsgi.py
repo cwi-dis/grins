@@ -63,6 +63,7 @@ class AudioDevSGI:
 		width = self.__sampwidthdict[width]
 		c.setwidth(width)
 		nchannels = fmt.getnchannels()
+		self.__nchannels = nchannels
 		nchannels = self.__nchannelsdict[nchannels]
 		c.setchannels(nchannels)
 
@@ -109,7 +110,7 @@ class AudioDevSGI:
 
 	def getfilled(self):
 		if self.__port:
-			return self.__port.getfilled()
+			return self.__port.getfilled() / self.__nchannels
 		else:
 			return 0
 
