@@ -9,9 +9,10 @@ SMILBostonPubid = "-//W3C//DTD SMIL 2.0//EN"
 SMILBostonDtd = "http://www.w3.org/TR/REC-smil/2000/SMIL20.dtd"
 SMIL2 = 'http://www.w3.org/TR/REC-smil/2000/SMIL20'
 SMIL2Language = SMIL2 + '/Language'
-# namespaces recognized for SMIL 2.0
-# the first one is the required default namespace
-SMIL2ns = [SMIL2Language, SMIL2]
+# namespaces recognized by GRiNS
+# the first one is the required default namespace, but SMIL1
+# doesn't generate a warning
+SMIL2ns = [SMIL2Language, SMIL2, SMIL1]
 GRiNSns = "http://www.oratrix.com/"
 QTns = "http://www.apple.com/quicktime/resources/smilextensions"
 
@@ -453,7 +454,7 @@ class SMIL:
 
 	__schedule = ['par', 'seq', 'excl', __choice, __bag] + __media_object
 	__container_content = __schedule + ['switch', 'a'] + __animate_elements
-	__assoc_link = ['anchor', 'area'] + __animate_elements
+	__media_content = ['anchor', 'area', 'param'] + __animate_elements
 
 	# Core, Test and I18n attribs are added to all elements in the language
 	for __el in attributes.keys():
@@ -526,24 +527,24 @@ class SMIL:
 		__choice: __container_content,
 		__bag: __container_content,
 		'switch': ['layout', 'region', 'viewport'] + __container_content,
-		'ref': __assoc_link,
-		'audio': __assoc_link,
-		'img': __assoc_link,
-		'video': __assoc_link,
-		'text': __assoc_link,
-		'animation': __assoc_link,
-		'textstream': __assoc_link,
-		__null: __assoc_link,
-		__cmif: __assoc_link,
-		__shell: __assoc_link,
-		__socket: __assoc_link,
+		'ref': __media_content,
+		'audio': __media_content,
+		'img': __media_content,
+		'video': __media_content,
+		'text': __media_content,
+		'animation': __media_content,
+		'textstream': __media_content,
+		__null: __media_content,
+		__cmif: __media_content,
+		__shell: __media_content,
+		__socket: __media_content,
 		'a': __schedule + ['switch'],
 		}
 
 	# cleanup
 	del __choice, __bag, __cmif, __shell, __socket, __null
 	del __media_object, __schedule, __container_content,
-	del __assoc_link
+	del __media_content
 	del __layouts, __layout
 	del __animate_elements
 	del __I18n, __basicTiming, __Timing, __Core, __Test

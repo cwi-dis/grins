@@ -159,6 +159,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'set': (self.start_set, self.end_set),
 			'animateMotion': (self.start_animatemotion, self.end_animatemotion),
 			'animateColor': (self.start_animatecolor, self.end_animatecolor),
+			'param': (self.start_param, self.end_param),
 			'transition': (self.start_transition, self.end_transition),
 			'regPoint': (self.start_regpoint, self.end_regpoint),
 			'prefetch': (self.start_prefetch, self.end_prefetch),
@@ -2001,6 +2002,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				ch['regPoint'] = regName
 			del attrdict['regPoint']
 
+		if attrdict.has_key('regionName'):
+			ch['regionName'] = attrdict['regionName']
+
 		# deal with channel with window
 		if attrdict.has_key('id'): del attrdict['id']
 		title = attrdict.get('title')
@@ -2623,9 +2627,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				# already dealt with
 				pass
 			elif attr == 'regionName':
+				res = xmllib.tagfind.match(val)
+				if res is None or res.end(0) != len(val):
+					self.syntax_error("illegal regionName value `%s'" % val)
 				regions = self.__regionnames.get(val,[])
 				regions.append(id)
 				self.__regionnames[val] = regions
+				attrdict['regionName'] = val
 			elif attr in ('left', 'width', 'right', 'top', 'height', 'bottom'):
 				# XXX are bottom and right allowed in SMIL-Boston basic layout?
 				if attr in ('bottom', 'right'):
@@ -3888,6 +3896,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def end_animatecolor(self):
 		self.EndAnimateNode()
 
+	def start_param(self, attributes):
+		pass			# XXX needs to be implemented
+
+	def end_param(self):
+		pass			# XXX needs to be implemented
+
 	# other callbacks
 
 	__whitespace = re.compile(_opS + '$')
@@ -4193,6 +4207,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.error('outermost element must be "smil"', self.lineno)
 		elif ns and self.getnamespace().get('', '') != ns:
 			self.error('outermost element must be "smil" with default namespace declaration', self.lineno)
+		elif ns and ns == SMIL1:
+			pass
 		elif ns and ns != SMIL2ns[0]:
 			self.warning('default namespace should be "%s"' % SMIL2ns[0], self.lineno)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)

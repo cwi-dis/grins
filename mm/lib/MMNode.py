@@ -1278,7 +1278,7 @@ class MMNode:
 		# XXX should endlist be filtered here?
 		if fill is None or fill == 'inherit' or fill == 'auto':
 			if not self.attrdict.has_key('duration') and \
-			   not self.attrdict.get('endlist',[]) and \
+			   not self.FilterArcList(self.attrdict.get('endlist',[])) and \
 			   not self.attrdict.has_key('repeatdur') and \
 			   not self.attrdict.has_key('loop'):
 				fill = 'freeze'

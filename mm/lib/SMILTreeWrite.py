@@ -1665,6 +1665,8 @@ class SMILWriter(SMIL):
 				self.writeregion(sch)
 			return
 		attrlist = [('id', self.ch2name[ch])]
+		if ch.has_key('regionName'):
+			attrlist.append(('regionName', ch['regionName']))
 		title = ch.get('title')
 		if title:
 			attrlist.append(('title', title))
