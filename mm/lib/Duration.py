@@ -10,8 +10,8 @@ import urlcache
 
 def get(node, ignoreloop=0):
 	duration = MMAttrdefs.getattr(node, 'duration')
-	channel = node.GetChannel()
-	if duration == 0 and channel is not None and channel.has_key('type'):
+	ctype = node.GetChannelType()
+	if duration == 0 and ctype:
 		if ignoreloop:
 			loop = 1
 		else:
@@ -19,7 +19,6 @@ def get(node, ignoreloop=0):
 			if loop == 0:
 				return 0
 		context = node.GetContext()
-		ctype = channel['type']
 		filename = MMAttrdefs.getattr(node, 'file')
 		filename = context.findurl(filename)
 		dur = urlcache.urlcache[filename].get('duration')
