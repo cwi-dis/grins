@@ -2497,16 +2497,23 @@ class SystemGroup(AttrGroup):
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_S1R3S5
 
-	def getctrlids(self,ix):
-		if ix == 2 or ix == 4:
-			ids = getattr(grinsRC, 'IDC_%d' % (ix*10+1)),\
-				getattr(grinsRC, 'IDC_%d' % (ix*10+2)),\
-				getattr(grinsRC, 'IDC_%d' % (ix*10+3)),\
-				getattr(grinsRC, 'IDC_%d' % (ix*10+4))
-		else:
-			ids = getattr(grinsRC, 'IDC_%d' % (ix*10+1)),\
-					getattr(grinsRC, 'IDC_%d' % (ix*10+2))
-		return ids
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('system_bitrate')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
+		a = self.getattr('system_captions')
+		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24))
+		a = self.getattr('system_language')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_31, grinsRC.IDC_32))
+		a = self.getattr('system_overdub_or_caption')
+		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43,grinsRC.IDC_44))
+		a = self.getattr('system_required')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
+		a = self.getattr('system_screen_depth')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62))
+		a = self.getattr('system_screen_size')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
+		return cd
 
 	def getpageclass(self):
 		return AttrPage
@@ -2516,6 +2523,18 @@ class PreferencesGroup(SystemGroup):
 
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_S1R3S4
+
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('system_bitrate')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
+		a = self.getattr('system_captions')
+		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))
+		a = self.getattr('system_language')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_31, grinsRC.IDC_32))
+		a = self.getattr('system_overdub_or_caption')
+		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		return cd
 
 class NameGroup(AttrGroup):
 	data=attrgrsdict['name']
@@ -2602,12 +2621,12 @@ class FileGroup(AttrGroup):
 		if self.canpreview():
 			if self._mtypesig=='image' or self._mtypesig=='html' or self._mtypesig=='text': 
 				# static media
-				return getattr(grinsRC, 'IDD_EDITATTR_PF1')
+				return grinsRC.IDD_EDITATTR_PF1
 			else: 
 				# continous media i.e play,stop
-				return getattr(grinsRC, 'IDD_EDITATTR_MF1')	
+				return grinsRC.IDD_EDITATTR_MF1	
 		else:
-			return getattr(grinsRC, 'IDD_EDITATTR_F1')
+			return grinsRC.IDD_EDITATTR_F1
 
 	def getpageclass(self):
 		if not self.canpreview():
