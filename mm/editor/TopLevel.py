@@ -805,7 +805,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def export_QT_callback(self):
 		self.export('QuickTime')
 
-	def export_SMIL2_callback(self, prune):
+	def export_SMIL2_callback(self, prune = 0):
 		if prune:
 			self.prune = 1
 		self.export('SMIL2')
