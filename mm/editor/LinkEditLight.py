@@ -70,7 +70,7 @@ class LinkEditLight:
 
 	# Method to return a whole-node anchor for a node, or optionally
 	# create one.
-	def wholenodeanchor(self, node, notransaction = 0, create = 1, interesting = 1):
+	def findwholenodeanchor(self, node):
 		for c in node.GetChildren():
 			if c.GetType() != 'anchor':
 				continue
@@ -84,6 +84,12 @@ class LinkEditLight:
 			   c.GetAttrDef('endlist', None):
 				# no timing allowed on whole-node anchors
 				continue
+			return c
+		return None
+
+	def wholenodeanchor(self, node, notransaction = 0, create = 1, interesting = 1):
+		c = self.findwholenodeanchor(node)
+		if c is not None:
 			if not create:
 				return c
 			windowinterface.showmessage("Such an anchor already exists on this node.")
