@@ -45,7 +45,7 @@ BORDERCOLOR = fix(75, 75, 75)		# Dark gray
 BORDERLIGHT = fix(255, 255, 255)	# White
 CHANNELCOLOR = fix(240, 240, 240)	# Very light gray
 CHANNELOFFCOLOR = fix(160, 160, 160)	# Darker gray
-NODECOLOR = fix(208, 182, 160)		# Pale pinkish, match block view nodes
+NODECOLOR = fix(208, 182, 160)		# Pale pinkish, match hierarchy view
 ALTNODECOLOR = fix(255, 224, 200)	# Same but brighter
 ARROWCOLOR = fix(0, 0, 255)		# Blue
 TEXTCOLOR = fix(0, 0, 0)		# Black
@@ -858,7 +858,7 @@ class GO:
 
 	commandlist = c = []
 	c.append('h', 'Help...',         helpcall)
-	c.append('c', 'New channel...',  newchannelcall)
+	c.append('n', 'New channel...',  newchannelcall)
 	c.append('N', 'Next mini-document', nextminicall)
 	c.append('P', 'Previous mini-document', prevminicall)
 	c.append('',  'Ancestors', ancestors)
@@ -1160,7 +1160,7 @@ class ChannelBox(GO):
 	c.append('a', 'Channel attr...', attrcall)
 	c.append('d', 'Delete channel',  delcall)
 	c.append('m', 'Move channel', movecall)
-	c.append('C', 'Copy channel', copycall)
+	c.append('c', 'Copy channel', copycall)
 	c.append('', 'Highlight window', highlight)
 	c.append('', 'Unhighlight window', unhighlight)
 	menutitle = 'Channel ops'

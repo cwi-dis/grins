@@ -23,8 +23,8 @@ dirstr = ['->', '<-', '<->']
 class Struct: pass
 
 # The menus:
-LEFT_MENU = 'All|Dangling|Interesting|From Time Chart focus' + \
-	  '|From Block View focus'
+LEFT_MENU = 'All|Dangling|Interesting|From Channel view focus' + \
+	  '|From Hierarchy View focus'
 RIGHT_MENU = LEFT_MENU + '|All related anchors|No anchors, links only|External'
 M_ALL = 1
 M_DANGLING = 2
@@ -406,7 +406,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 			str.node = None
 			str.fillfunc = self.fill_interesting
 		elif ind == M_TCFOCUS:
-			str.node = self.GetTimeChartFocus()
+			str.node = self.GetChannelViewtFocus()
 			if str.node == None:
 				str.fillfunc = self.fill_none
 			else:
@@ -451,7 +451,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 		else:
 			self.linkfocus = f-1
 		self.updateform()
-	def link_add_callback(self, *dummy):
+	def link_new_callback(self, *dummy):
 		self.linkfocus = None
 		self.startlinkedit(0)
 		self.updateform()
@@ -501,7 +501,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 		import AnchorEdit
 		AnchorEdit.showanchoreditor(self.toplevel, node)
 	#
-	def GetTimeChartFocus(self):
+	def GetChannelViewtFocus(self):
 		return self.toplevel.channelview.getfocus()
 
 	def GetHierarchyViewFocus(self):

@@ -30,7 +30,7 @@ BORDERCOLOR = fix(75, 75, 75)		# Dark gray
 BORDERLIGHT = fix(255, 255, 255)	# White
 CHANNELCOLOR = fix(240, 240, 240)	# Very light gray
 CHANNELOFFCOLOR = fix(160, 160, 160)	# Darker gray
-LEAFCOLOR = fix(208, 182, 160)		# Pale pinkish, match block view nodes
+LEAFCOLOR = fix(208, 182, 160)		# Pale pinkish, match channel view
 ALTNODECOLOR = fix(255, 224, 200)	# Same but brighter
 BAGCOLOR = fix(152, 174, 200)		# Light blue
 PARCOLOR = fix(150, 150, 150)		# Gray
@@ -916,7 +916,7 @@ class Object:
 	# since they are the same for all objects of a class...
 
 	commandlist = [ \
-		(None, 'Create', [ \
+		(None, 'New node', [ \
 			(None, 'Before focus', createbeforecall), \
 			(None, 'After focus', createaftercall), \
 			(None, 'Under focus', createundercall), \
