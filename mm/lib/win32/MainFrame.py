@@ -605,6 +605,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	
 	# Response to dynamic menus commands	
 	def OnUserDynCmd(self,id,code):
+		if __main__.toplevel._in_create_box: return
 		for cbd in self._dyncmds.values():
 			if cbd.has_key(id):
 				if not cbd[id]:return
@@ -644,6 +645,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Response to a user command (menu selection)
 	def OnUserCmd(self,id,code):
+		if __main__.toplevel._in_create_box: return
 		cmd=None
 
 		# special manipulation of exit to close first and release resources
@@ -847,6 +849,40 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self._wndToolBar.SetButtonInfo(8,id,afxexttb.TBBS_BUTTON, 12)
 	
 		self.ShowControlBar(self._wndToolBar,1,0)
+
+	def isplayer(self,f):
+		if not hasattr(f,'_view'): return 0
+		return f._view._strid=='pview_'
+	# Show or hide all childs but the player
+	def showChilds(self,flag):
+		if flag:
+			#self.SetMenu(self._mainmenu)
+			self._wndToolBar.ShowWindow(win32con.SW_SHOW)
+			self.ShowControlBar(self._wndToolBar,1,0)
+			self._wndToolBar.RedrawWindow()
+		else:
+			self._wndToolBar.ShowWindow(win32con.SW_HIDE)
+
+		clist=[]
+		player=None
+		c=None
+		while 1:
+			c=self.getNextMDIChildWnd(c)
+			if c: 
+				clist.append(c)
+				if not self.isplayer(c):
+					if flag:c.EnableWindow(1)
+					else: c.EnableWindow(0)
+				else: player=c
+			else: break
+
+		if flag:
+			for c in clist:
+				self.MDIActivate(c)
+		else:
+			pass #self.SetMenu(None)				
+		if player:self.MDIActivate(player)
+
 
 	# Return the number of childs
 	def countMDIChildWnds(self):
