@@ -93,19 +93,19 @@ def readattrdefs(fp, filename):
 	except EOFError:
 		parser.reporterror(filename, 'Unexpected EOF', sys.stderr)
 		raise EOFError
-	except SyntaxError, msg:
+	except MSyntaxError, msg:
 		if type(msg) is type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		parser.reporterror(filename, \
 				'Syntax error: ' + msg, sys.stderr)
-		raise SyntaxError, msg
-	except TypeError, msg:
+		raise MSyntaxError, msg
+	except MTypeError, msg:
 		if type(msg) is type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		parser.reporterror(filename, 'Type error: ' + msg, sys.stderr)
-		raise TypeError, msg
+		raise MTypeError, msg
 	#
 	try:
 		fpc = open(filename_com, 'wb')
@@ -223,7 +223,7 @@ def getattr(node, attrname):
 			ch = node.GetChannel()
 			try:
 				attrvalue = ch[attrname]
-			except (TypeError, KeyError):
+			except (TypeError, KeyError), msg:
 				attrvalue = defaultvalue
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
