@@ -1413,22 +1413,22 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\GRiNS_SNP.exe
   Destination=%MAINDIR%\GRiNS_SNP.exe
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\wmfapi.pyd
   Destination=%MAINDIR%\wmfapi.pyd
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\ddraw.pyd
   Destination=%MAINDIR%\ddraw.pyd
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
   Destination=%MAINDIR%\WebPro32.ocx
-  Flags=0001001010000011
+  Flags=0001001010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\extended-slideshow.bmp
@@ -1453,12 +1453,12 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\python16.dll
   Destination=%MAINDIR%\python16.dll
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\gear32sd.pyd
   Destination=%MAINDIR%\gear32sd.pyd
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\RealVideo.tiff
@@ -1658,12 +1658,12 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\GRiNSRes.dll
   Destination=%MAINDIR%\GRiNSRes.dll
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
   Destination=%MAINDIR%\Gear32sd.dll
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\rma.pyd
@@ -1830,7 +1830,7 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\GRiNS_SNP.exe
-  Destination=%CSTARTUPDIR%\GRiNS Snap!.lnk
+  Destination=%CDESKTOPDIR%\GRiNS Snap!.lnk
   Icon Number=0
 end
 item: End Block
@@ -1855,7 +1855,7 @@ item: If/While Statement
   Flags=00001010
 end
 item: Add ProgMan Icon
-  Group=StartUp
+  Group=%GROUP%
   Icon Name=GRiNS Snap!
   Command Line=%MAINDIR%\GRiNS_SNP.exe
 end
@@ -1921,7 +1921,7 @@ item: Edit Registry
   end
   item: Key
     Key=SMILfile\DefaultIcon
-    New Value=%MAINDIR%\GRiNS_SV1.exe,2
+    New Value=%MAINDIR%\GRiNS_SNP.exe,2
     Root=32
   end
 end
@@ -1967,7 +1967,8 @@ item: Edit Registry
   end
   item: Key
     Key=GRiNSProject\DefaultIcon
-    New Value=%MAINDIR%\GRiNS_SV1.exe,2
+    New Value=%MAINDIR%\GRiNS_SNP.exe,2
+    Root=32
   end
   item: Key
     Key=MIME\Database\Content Type\application/x-grins-project
