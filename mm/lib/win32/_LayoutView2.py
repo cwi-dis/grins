@@ -191,13 +191,13 @@ class _LayoutView2(GenFormView):
 		id=msg.cmdid()
 		nmsg=msg.getnmsg()
 
-		if id==win32con.IDOK:
+		if id==win32con.IDOK or nmsg == win32con.EN_KILLFOCUS:
 			if self.lastModifyCtrlField != None:
 				value = self[self.lastModifyCtrlField].gettext()
 				self._dialogHandler.onFieldCtrl(self.lastModifyCtrlField, value)
 				self.lastModifyCtrlField = None
 				return
-			
+				
 		# delegate combo box notifications to handler
 		if nmsg==win32con.LBN_SELCHANGE:
 			ctrlName = None
