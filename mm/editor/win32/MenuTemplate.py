@@ -226,6 +226,8 @@ MENUBAR=(
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
 		(LIGHT, SEP,),
+		(LIGHT, ENTRY, '&QuickStart Guide', None, GRINS_QSG),
+		(LIGHT, SEP,),
 		(LIGHT, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 
 
