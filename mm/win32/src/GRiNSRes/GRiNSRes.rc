@@ -13,6 +13,52 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// Neutral (Default) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\cmif.ico"
+IDR_PLAY                ICON    DISCARDABLE     "res\\pause.ico"
+IDR_STOP                ICON    DISCARDABLE     "res\\stop.ico"
+IDR_PAUSE               ICON    DISCARDABLE     "res\\play.ico"
+IDR_PYTHON              ICON    DISCARDABLE     "RES\\python.ico"
+IDI_ICON1               ICON    DISCARDABLE     "res\\Timer01.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
+IDC_GRAB_HAND           CURSOR  DISCARDABLE     "res\\grab_han.cur"
+IDC_GRAB_HAND2          CURSOR  DISCARDABLE     "RES\\H_move.cur"
+IDC_LD_STRECH           CURSOR  DISCARDABLE     "RES\\H_ne.cur"
+IDC_D_STRECH            CURSOR  DISCARDABLE     "RES\\H_ns.cur"
+IDC_RD_STRECH           CURSOR  DISCARDABLE     "RES\\H_nw.cur"
+IDC_R_STRECH            CURSOR  DISCARDABLE     "RES\\H_we.cur"
+IDC_PUT                 CURSOR  DISCARDABLE     "RES\\Copy4way.cur"
+IDC_UL_STRECH           CURSOR  DISCARDABLE     "res\\ul_strec.cur"
+IDC_UR_STRECH           CURSOR  DISCARDABLE     "res\\cursor2.cur"
+IDC_L_STRECH            CURSOR  DISCARDABLE     "res\\l_strech.cur"
+IDC_U_STRECH            CURSOR  DISCARDABLE     "res\\cur00001.cur"
+IDC_POINT_HAND2         CURSOR  DISCARDABLE     "RES\\H_point.cur"
+IDC_WATCH2              CURSOR  DISCARDABLE     "RES\\C_no04.cur"
+#endif    // Neutral (Default) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -82,7 +128,6 @@ BEGIN
                     IDC_BOX_LABEL,1,13,170,44
 END
 
-
 IDD_DIALOG1 DIALOG DISCARDABLE  0, 0, 160, 125
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
@@ -93,7 +138,6 @@ BEGIN
     LISTBOX         IDC_LIST2,17,14,125,85,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
 END
-
 
 
 #ifndef _MAC
@@ -235,7 +279,7 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 1 TEXTINCLUDE DISCARDABLE 
 BEGIN
-    "resource.h\0"
+    "GRiNSRes.h\0"
 END
 
 2 TEXTINCLUDE DISCARDABLE 
@@ -263,40 +307,6 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDR_MAINFRAME           ICON    DISCARDABLE     "res\\cmif.ico"
-IDR_PLAY                ICON    DISCARDABLE     "res\\pause.ico"
-IDR_STOP                ICON    DISCARDABLE     "res\\stop.ico"
-IDR_PAUSE               ICON    DISCARDABLE     "res\\play.ico"
-IDR_PYTHON              ICON    DISCARDABLE     "RES\\python.ico"
-IDI_ICON1               ICON    DISCARDABLE     "res\\Timer01.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
-IDC_GRAB_HAND           CURSOR  DISCARDABLE     "res\\grab_han.cur"
-IDC_GRAB_HAND2          CURSOR  DISCARDABLE     "RES\\H_move.cur"
-IDC_LD_STRECH           CURSOR  DISCARDABLE     "RES\\H_ne.cur"
-IDC_D_STRECH            CURSOR  DISCARDABLE     "RES\\H_ns.cur"
-IDC_RD_STRECH           CURSOR  DISCARDABLE     "RES\\H_nw.cur"
-IDC_R_STRECH            CURSOR  DISCARDABLE     "RES\\H_we.cur"
-IDC_PUT                 CURSOR  DISCARDABLE     "RES\\Copy4way.cur"
-IDC_UL_STRECH           CURSOR  DISCARDABLE     "res\\ul_strec.cur"
-IDC_UR_STRECH           CURSOR  DISCARDABLE     "res\\cursor2.cur"
-IDC_L_STRECH            CURSOR  DISCARDABLE     "res\\l_strech.cur"
-IDC_U_STRECH            CURSOR  DISCARDABLE     "res\\cur00001.cur"
-IDC_POINT_HAND2         CURSOR  DISCARDABLE     "RES\\H_point.cur"
-IDC_WATCH2              CURSOR  DISCARDABLE     "RES\\C_no04.cur"
 #endif    // Greek resources
 /////////////////////////////////////////////////////////////////////////////
 
