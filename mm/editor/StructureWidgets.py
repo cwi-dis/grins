@@ -2735,11 +2735,13 @@ class TimelineWidget(MMWidgetDecoration):
 				else:
 					label = '%02d:%02.2d'%(int(time)/60, int(time)%60)
 				lw = displist.strsizePXL(label)[0]
-				if tick_x_mid-lw/2 < x + HEDGSIZE:
-					displist.setpos(x + HEDGSIZE, (label_top + label_bot + displist.fontheightPXL()) / 2)
+				if tick_x_mid-lw/2 < x:
+					# label at the left end of the timeline
+					displist.setpos(x, (label_top + label_bot + displist.fontheightPXL()) / 2)
 					displist.writestr(label)
-				elif tick_x_mid+lw/2 > x + w - HEDGSIZE:
-					displist.setpos(x + w - lw - HEDGSIZE, (label_top + label_bot + displist.fontheightPXL()) / 2)
+				elif tick_x_mid+lw/2 > x + w:
+					# label at the right end of the timeline
+					displist.setpos(x + w - lw, (label_top + label_bot + displist.fontheightPXL()) / 2)
 					displist.writestr(label)
 				else:
 					displist.centerstring(tick_x_mid-lw/2-1, label_top,
