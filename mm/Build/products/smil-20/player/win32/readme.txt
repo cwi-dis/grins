@@ -14,7 +14,7 @@ and known problems with the player.
 
 Oratrix would also appreciate your help in improving this software and
 fixing problems. If you should find any bugs or problems, please use
-the file "BugReport.txt" to fill out and mail a bug report to us.
+the file "BugReportForm.txt" to fill out and mail a bug report to us.
 
 
 System Requirements
@@ -28,7 +28,7 @@ multiple audio channels so you may experience problems.
 General Information
 -------------------
 
-xxx Realplayer 8.0??
+xxx Realplayer 8.0?? Fix this section.
 
 Please see the Oratrix website, http://www.oratrix.com for more
 information on the GRiNS editor and player. 
