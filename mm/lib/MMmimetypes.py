@@ -1,6 +1,5 @@
 import mimetypes
 guess_type = mimetypes.guess_type
-guess_extension = mimetypes.guess_extension
 
 import grins_mimetypes
 mimetypes.types_map.update(grins_mimetypes.mimetypes)
@@ -126,3 +125,9 @@ def get_extensions(type):
 			extlist.append(ext)
 	extlist.sort(_longestfirst)
 	return extlist
+
+def guess_extension(type):
+	extlist = get_extensions(type)
+	if extlist:
+		return extlist[0]
+	return None
