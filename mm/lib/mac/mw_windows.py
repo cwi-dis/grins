@@ -1073,7 +1073,7 @@ class _CommonWindow:
 			]
 		smallboxes = []
 		for x, y in points:
-			smallboxes.append(x-2, y-2, x+2, y+2)
+			smallboxes.append((x-2, y-2, x+2, y+2))
 		return smallboxes
 
 	def _rb_constrain(self, where, xmargin=0, ymargin=0):

@@ -528,7 +528,7 @@ class _Event(AEServer):
 				self._timers.insert(i, (sec - t, cb, self._timer_id))
 				return self._timer_id
 			t = t + time0
-		self._timers.append(sec - t, cb, self._timer_id)
+		self._timers.append((sec - t, cb, self._timer_id))
 		return self._timer_id
 
 	def canceltimer(self, id):
@@ -634,7 +634,7 @@ class _Toplevel(_Event):
 
 	def addclosecallback(self, func, args):
 		"""Specify a routine to be called on termination"""
-		self._closecallbacks.append(func, args)
+		self._closecallbacks.append((func, args))
 
 	#
 	# Menu and popup menu handling.

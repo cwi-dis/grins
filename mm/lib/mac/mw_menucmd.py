@@ -312,7 +312,7 @@ class CommandHandler:
 						  (cbfunc, (cmd,)))
 				self.cmd_to_menu[cmd] = mentry
 				self.cmd_enabled[cmd] = 1
-				itemlist.append(entry_type, cmd, name)
+				itemlist.append((entry_type, cmd, name))
 			elif entry_type == MenuTemplate.SEP:
 				menu.addseparator()
 			elif entry_type in (MenuTemplate.CASCADE, MenuTemplate.DYNAMICCASCADE,
