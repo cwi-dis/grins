@@ -889,7 +889,9 @@ class DrawLayer:
 				win32mu.FrameRect(dcc,self.drawTk._crect.tuple(),(0,0,0))
 				win32mu.FrameRect(dcc,self.drawTk._brect.tuple(),(0,0,0))
 			else:
-				ig = win32ui.Getig()
+				#ig = win32ui.Getig()
+				import gear32sd
+				ig = gear32sd
 				img = self.drawTk._bkimg
 				ig.device_rect_set(img,(0,0,w,h))
 				ig.display_desktop_pattern_set(img,0)
