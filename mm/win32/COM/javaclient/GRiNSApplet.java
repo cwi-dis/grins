@@ -78,22 +78,43 @@ public class GRiNSApplet extends Applet
 	java.awt.Button buttonStop = new java.awt.Button();
 	//}}
 	
+	private void message(String str) {
+	    System.out.println(str+"\n");
+	}
+	
+	public void start() {
+	    }
+	public void stop() {
+	    grinsCanvas.disconnect();
+	    }
+    public void destroy() {
+        }
+	  
 	// standalone execution support
     public static void main(String args[]) 
 		{
-		Frame f = new Frame("GRiNS Player");
+	    class SFrame extends Frame {
+	        SFrame(String title){
+	            super(title);
+	            }
+	        void setApplet(Applet p){
+	            applet = p;
+	            }
+	        private Applet applet;
+	        }
+		SFrame f = new SFrame("GRiNS Player");
 		f.addWindowListener(
-			new WindowAdapter() 
-				{ 
-				public void windowClosing(WindowEvent e) 
-					{System.exit(0);} 
+			new WindowAdapter() { 
+				public void windowClosing(WindowEvent e) {
+				    ((SFrame)e.getWindow()).applet.stop();
+			        System.exit(0);
+			        }
 				});
 	
 		GRiNSApplet	grinsApplet = new GRiNSApplet();
-
+        f.setApplet(grinsApplet);
 		grinsApplet.init();
 		grinsApplet.start();
-
 		f.add("Center", grinsApplet);
 		f.setSize(500,420);
 		f.show();
