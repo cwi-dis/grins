@@ -91,8 +91,8 @@ class MainDialog:
 			}
 		import windowinterface
 		f=windowinterface.getmainwnd()
-		self.__owindow=windowinterface.OpenLocationDlg(callbacks, f, self.last_location)
-		self.__text=self.__owindow._text
+		self.__owindow=windowinterface.OpenLocationDlg(callbacks, f, self.last_location, recent_files=self.get_recent_files())
+		self.__text=self.__owindow
 		self.__owindow.show()
 
 	def openfile_callback(self):
@@ -144,7 +144,6 @@ class MainDialog:
 		else:
 			return windowinterface.DROPEFFECT_NONE
 
-
 	def set_recent_list(self, list):
 		import windowinterface
 		f=windowinterface.getactivedocframe()
@@ -156,6 +155,7 @@ class MainDialog:
 		self.__text = None
 
 	def __tcallback(self):
+		# Callback from the "open" button on the Open URL... dialog.
 		text = self.__text.gettext()
 		self.__ccallback()
 		if text:
