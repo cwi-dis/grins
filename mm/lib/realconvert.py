@@ -196,6 +196,12 @@ def converttextfile(u, dstdir, file, node):
 	f.write(data)
 	f.write('</window>\n')
 	f.close()
+	if os.name == 'mac':
+		import macfs
+		import macostools
+		fss = macfs.FSSpec(fullpath)
+		fss.SetCreatorType('PNst', 'PNRM')
+		macostools.touched(fss)
 	return file
 
 
