@@ -583,6 +583,10 @@ class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 	# Instances of superclasses must be drawn on a time canvas (coords are 
 	def setup(self):
 		self.editmgr = self.node.context.editmgr
+		self.node.views['tempview'] = self
+
+	def destroy(self):
+		del self.node.views['tempview']
 
 	def set_x(self, l,r):
 		x,y,w,h = self.get_box()
@@ -610,6 +614,18 @@ class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 		self.needed_bars = 0
 		return 0;
 
+	def select_parents(self):
+		if self.node.parent:
+			self.node.parent.views['tempview'].select_parents()
+		if not self.selected:
+			self.select()
+
+	def unselect_parents(self):
+		if self.node.parent:
+			self.node.parent.views['tempview'].unselect_parents()
+		if self.selected:
+			self.unselect()
+
 
 class MMWidget(TimeWidget, GeoDisplayWidget):
 	# This is the box which represents one leaf node.
@@ -624,11 +640,10 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.name = self.node.GetAttrDef('name', '')
 		self.w_text = self.graph.AddWidget(Text(self.mother))
 		self.w_text.set_text(self.name)
-		self.node.views['tempview'] = self
 
 	def destroy(self):
 		# TODO: remove me from the list of MMNode Views.
-		del self.node.views['tempview']
+		TimeWidget.destroy(self)
 		self.graph.DelWidget(self.w_outerbox)
 		self.graph.DelWidget(self.w_text)
 		self.graph.DelWidget(self.w_fbox)
@@ -677,12 +692,15 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.w_filltimebox.need_redraw()
 		self.w_text.need_redraw()
 		self.w_outerbox.set_color((255,255,255))
+		# Also select my superiors.
+		self.select_parents()
 	def unselect(self):
 		Widgets.Widget.unselect(self)
 		self.w_fbox.need_redraw()
 		self.w_filltimebox.need_redraw()
 		self.w_text.need_redraw()
 		self.w_outerbox.set_color((0,0,0))
+		self.unselect_parents()
 
 #	def select(self):
 #		self.w_fbox.set_color((230,230,230))
@@ -724,11 +742,13 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 class MultiMMWidget(TimeWidget):
 	# represents any node which has children.
 	def setup(self):
+		TimeWidget.setup(self)
 		self.subwidgets = []
 		self.leafnode = 0;	# will hide all children if I am.
 	def add(self, bob):
 		self.subwidgets.append(bob)
 	def destroy(self):
+		TimeWidget.destroy()
 		for i in self.subwidgets:
 			i.destroy()
 	def is_hit(self, coords):
@@ -748,12 +768,16 @@ class MultiMMWidget(TimeWidget):
 
 	def select(self):
 		print "DEBUG: I've been selected! ", self
-		self.w_startbar.set_color((255,255,255))
-		self.w_endbar.set_color((255,255,255))
+		TimeWidget.select(self)
+		r,g,b = self.color
+		highlight = (r*1.5, g*1.5, b*1.5)
+		self.w_startbar.set_color(highlight)
+		self.w_endbar.set_color(highlight)
 		self.w_startbar_b.need_redraw()
 		self.w_endbar_b.need_redraw()	       
 
 	def unselect(self):
+		TimeWidget.unselect(self)
 		self.w_startbar.set_color(self.color)
 		self.w_endbar.set_color(self.color)
 		self.w_startbar_b.need_redraw()
