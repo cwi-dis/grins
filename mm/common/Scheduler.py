@@ -172,6 +172,8 @@ class SchedulerContext:
 		if debugevents: print 'sched_arc',`node`,`arc`,event,marker,timestamp,self.parent.timefunc()
 		if arc.wallclock is not None:
 			timestamp = arc.resolvedtime(self)-arc.delay
+		elif arc.marker is not None and '#' in arc.marker:
+			timestamp = arc.refnode().markerhappened(arc.marker, self)
 		elif timestamp is None:	# Retrieve the timestamp if it was not supplied.
 			timestamp = self.parent.timefunc()
 		if arc.ismin:
@@ -303,7 +305,11 @@ class SchedulerContext:
 			    arc.accesskey is not None or
 			    arc.delay is None or
 			    ((event != 'begin' or arc.dstnode not in node.GetSchedChildren()) and
-			     (event != 'end' or arc.dstnode in node.GetSchedChildren()))):
+			     (event != 'end' or arc.dstnode in node.GetSchedChildren()))) and \
+			   (marker is not None or
+			    arc.marker is None or
+			    '#' not in arc.marker or
+			    event != 'begin'):
 				continue
 			do_continue = 0	# on old Python we can't continue from inside try/except
 			try:

@@ -61,7 +61,7 @@ offsetvalue = re.compile('(?P<sign>[-+])?' + clock_val + '$')
 mediamarker = re.compile(		# id-ref ".marker(" name ")"
 	_opS +
 	r'(?P<id>' + xmllib._Name + r')\.'			# ID-ref "."
-	r'marker\(' + _opS + r'(?P<markername>' + xmllib._Name + r')' + _opS + r'\)' + _opS + r'$'	# "marker(...)"
+	r'marker\(' + _opS + r'(?P<markername>[^ \t\r\n()]+)' + _opS + r'\)' + _opS + r'$'	# "marker(...)"
 	)
 accesskey = re.compile(			# "accesskey(" character ")"
 	_opS +
@@ -421,7 +421,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					list.append(MMNode.MMSyncArc(node, attr, srcnode = node, event = string.join(string.split(string.join(tokens, ''), '\\'), ''), delay = offset or 0))
 					continue
 
-				if tokens[0] == '.' or tokens[1] != '.' or '.' in tokens[2:]:
+				if tokens[0] == '.' or tokens[1] != '.':
 					self.syntax_error('bad event specification')
 					continue
 
@@ -452,11 +452,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 								if xnode is None:
 									self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
 									continue
+								if xnode.type != 'ext':
+									self.warning('ignoring marker value from non-media element')
+									continue
 								marker = res.group('markername')
 								list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode, marker=marker, delay=offset or 0))
 								continue
 							self.syntax_error('bad marker value')
 							continue
+					if '.' in tokens[2:]:
+						self.syntax_error('bad event specification')
+						continue
 					name = string.join(string.split(tokens[0], '\\'), '')
 					event = string.join(string.split(string.join(tokens[2:], ''), '\\'), '')
 

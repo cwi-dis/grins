@@ -1510,7 +1510,7 @@ class MMSyncArc:
 			self.__isresolvedcalled = 0
 			return refnode.eventhappened(event)
 		self.__isresolvedcalled = 0
-		if self.marker is not None and refnode.markerhappened(self.marker):
+		if self.marker is not None and refnode.markerhappened(self.marker, sctx) is not None:
 			return 1
 		return 0
 
@@ -1599,7 +1599,7 @@ class MMSyncArc:
 				return t + d + atimes[1] + self.delay
 			return refnode.happenings[('event', event)] + atimes[1] + self.delay
 		# self.marker is not None:
-		return refnode.happenings[('marker', self.marker)] + atimes[0] + self.delay
+		return refnode.markerhappened(self.marker, sctx) + atimes[0] + self.delay
 
 class MMNode_body:
 	"""Helper for looping nodes"""
@@ -2117,8 +2117,20 @@ class MMNode(MMTreeElement):
 	def eventhappened(self, event):
 		return self.happenings.has_key(('event', event))
 
-	def markerhappened(self, marker):
-		return self.happenings.has_key(('marker', marker))
+	def markerhappened(self, marker, sctx):
+		if '#' in marker:
+			try:
+				val = self.GetMarkerVal(marker)
+			except ValueError:
+				return None
+		else:
+			val = self.happenings.get(('marker', marker))
+			if val is None:
+				return None
+		start = self.isresolved(sctx)
+		if start is None:
+			return None
+		return start + val
 
 	#
 	# Private methods to build a tree
