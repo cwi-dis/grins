@@ -388,6 +388,7 @@ attrgrs=(
 	{'name':'transitionType',
 	'title':'Transition type',
 	'attrs':[
+		'trname',
 		'trtype',
 		'subtype',
 		]},
@@ -402,8 +403,8 @@ attrgrs=(
 	{'name':'transitionTiming',
 	'title':'Transition timing',
 	'attrs':[
-		'startPercent',
-		'endPercent',
+		'startProgress',
+		'endProgress',
 		'dur',
 		]},
 
