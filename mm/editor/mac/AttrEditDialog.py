@@ -1302,9 +1302,9 @@ class SourceAreaTabPage(AreaTabPage):
 	_attr_to_checkbox = {
 		'fullimage': ITEM_WHOLE,
 	}
-	_xyfield = 'subregionxy'
-	_whfield = 'subregionwh'
-	attrs_on_page = ['fullimage', 'subregionxy', 'subregionwh']
+	_xyfield = 'imgcropxy'
+	_whfield = 'imgcropwh'
+	attrs_on_page = ['fullimage', 'imgcropxy', 'imgcropwh']
 	_checkboxes = (ITEM_WHOLE, )
 	_textfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
 			
@@ -1324,11 +1324,21 @@ class DestinationAreaTabPage(AreaTabPage):
 		'displayfull': ITEM_WHOLE,
 		'aspect': ITEM_ASPECT,
 	}
-	_xyfield = 'imgcropxy'
-	_whfield = 'imgcropwh'
-	attrs_on_page = ['displayfull', 'aspect', 'imgcropxy', 'imgcropwh']
+	_xyfield = 'subregionxy'
+	_whfield = 'subregionwh'
+	attrs_on_page = ['displayfull', 'aspect', 'subregionxy', 'subregionwh']
 	_checkboxes = (ITEM_WHOLE, ITEM_ASPECT)
 	_textfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
+	
+class Destination1AreaTabPage(DestinationAreaTabPage):
+	# Destination area without "keep aspect" checkbox (fadeout)
+	items_to_hide=(12,)
+	_attr_to_checkbox = {
+		'displayfull': DestinationAreaTabPage.ITEM_WHOLE,
+	}
+	attrs_on_page = ['displayfull', 'subregionxy', 'subregionwh']
+	_checkboxes = (DestinationAreaTabPage.ITEM_WHOLE, )
+	
 
 #
 # List of classes handling pages with multiple attributes. The order is
@@ -1360,6 +1370,7 @@ MULTI_ATTR_CLASSES = [
 	ImageConversionTabPage,
 	SourceAreaTabPage,
 	DestinationAreaTabPage,
+	Destination1AreaTabPage,
 	TargetAudienceTabPage,
 	ClipTabPage,
 	UploadTabPage,
