@@ -472,13 +472,13 @@ class SMILHtmlTimeWriter(SMIL):
 			raise CheckError, 'bad node type in writenode'
 
 
-	def writemedianode(self, x, nodeid, attrlist, mtype, regionName, src, transIn, transOut):
+	def writemedianode(self, node, nodeid, attrlist, mtype, regionName, src, transIn, transOut):
 		if mtype=='video':
 			mtype = 'media'
 
 		if src:
 			if self.convertURLs:
-				src = MMurl.canonURL(x.GetContext().findurl(src))
+				src = MMurl.canonURL(node.GetContext().findurl(src))
 				if src[:len(self.convertURLs)] == self.convertURLs:
 					src = src[len(self.convertURLs):]
 			attrlist.append(('src', src))
@@ -515,28 +515,30 @@ class SMILHtmlTimeWriter(SMIL):
 			self.push()
 			self.ids_written[name] = 1
 			pushed = pushed + 1
-
-					
+	
 		transitions = self.root.GetContext().transitions
 		if not nodeid:
-			nodeid = 'm' + x.GetUID()
+			nodeid = 'm' + node.GetUID()
 		if transIn or transOut:
 			subregid = nodeid + '_subReg'
 
 		subRegGeom, mediaGeom = None, None
 		try:
-			geoms = x.getPxGeomMedia()
+			geoms = node.getPxGeomMedia()
 		except:
 			geoms = None
 		if geoms:
 			subRegGeom, mediaGeom = geoms
+			x, y, w, h = subRegGeom
+			xm, ym, wm, hm = mediaGeom
+			mediarc = x, y, wm, hm
+		else:
+			mediarc = None
 
-		if subRegGeom:
-			divlist = []
-			style = self.rc2style(subRegGeom)
+		if mediarc:
+			style = self.rc2style(mediarc)
 
 			if transIn or transOut:
-				divlist.append(('id', scriptid(subregid)))
 				style = style + 'filter:'
 			
 			if transIn:
@@ -582,18 +584,12 @@ class SMILHtmlTimeWriter(SMIL):
 
 			if transIn:
 				style = style + 'visibility=hidden;'
-				trans = 'transIn(%s, \'%s\')' % (scriptid(subregid), transInName)
+				trans = 'transIn(%s, \'%s\')' % (scriptid(nodeid), transInName)
 				attrlist.append( ('onbegin', trans) )
 
-			divlist.append(('style', style))
-			self.writetag('div', divlist)
-			self.push()
-			pushed = pushed + 1
-
-		if mediaGeom:
 			if nodeid:
 				attrlist.insert(0,('id', scriptid(nodeid)))
-			style = 'position=absolute;left=%d;top=%d;width=%d;height=%d;' % mediaGeom
+			
 			if mtype == 'brush':
 				l = []
 				for a, v in attrlist:
@@ -604,7 +600,7 @@ class SMILHtmlTimeWriter(SMIL):
 				attrlist = l
 			attrlist.append( ('style',style) )
 
-		if self.writeAnchors(x, nodeid):
+		if self.writeAnchors(node, nodeid):
 			attrlist.append(('usemap', '#'+scriptid(nodeid)+'map'))
 
 		if transOut:
@@ -623,7 +619,7 @@ class SMILHtmlTimeWriter(SMIL):
 			self.writetag('t:'+mtype, attrlist)
 
 		if transOut:
-			trans = 'transOut(%s, \'%s\')' % (scriptid(subregid), transOutName)
+			trans = 'transOut(%s, \'%s\')' % (scriptid(nodeid), transOutName)
 			self.writetag('t:set', [ ('begin','%s.end-%.1f' % (scriptid(nodeid),transOutDur)), ('dur', '%.1f' % transOutDur), ('onbegin', trans), ])
 			self.pop()
 			pushed = pushed - 1
