@@ -84,9 +84,9 @@ class _Convert:
 ##	keys.sort()
 ##	list = []
 ##	for key in keys:
-##		list.append(key, (_do_edit, (menu[key], filename)))
+##		list.append((key, (_do_edit, (menu[key], filename))))
 ##	list.append(None)
-##	list.append('Cancel', None)
+##	list.append(('Cancel', None))
 ##	w = windowinterface.Dialog(list, title = 'Choose',
 ##				   prompt = 'Choose an editor:', grab = 1,
 ##				   vertical = 0)
