@@ -52,6 +52,9 @@ class TextChannel(ChannelWindow):
 				  chr0, 0, curlines, partoline)
 			line1, char1 = map_parpos_to_linepos(par1, \
 				  chr1, 1, curlines, partoline)
+			if (line0, char0) > (line1, char1):
+				print 'Anchor without screenspace:', name
+				continue
 			# write everything before the anchor
 			for line in range(pline, line0):
 				dummy = self.armed_display.writestr(curlines[line][pchar:] + '\n')
