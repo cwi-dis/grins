@@ -36,29 +36,29 @@ TYPE_JUMP = 0
 TYPE_CALL = 1
 TYPE_FORK = 2
 
-import grinsDOM.dom.core
+import domcore
 
 # The class
-class Hlinks(grinsDOM.dom.core.Element):
+class Hlinks(domcore.Element):
 
 	# Initialize this instance
 	def __init__(self):
-		grinsDOM.dom.core.Element.__init__(self, 'hyperlinks')
+		domcore.Element.__init__(self, 'hyperlinks')
 		self.links = []
 		
 	# def _get_nodeName(self): return 'hyperlinks'
 	def _get_attributes(self):
-		return grinsDOM.dom.core.NamedNodeMap()
+		return domcore.NamedNodeMap()
 	def _get_childNodes(self):
 		nl = []
 		for l in self.links:
-			e = grinsDOM.dom.core.Element('link')
+			e = domcore.Element('link')
 			e.setAttribute('from', str(l[ANCHOR1]))
 			e.setAttribute('to',   str(l[ANCHOR2]))
 			if l[DIR]: e.setAttribute('dir',  str(l[DIR]))
 			if l[TYPE]: e.setAttribute('type', str(l[TYPE]))
 			nl.append(e)
-		return grinsDOM.dom.core.NodeList(nl)
+		return domcore.NodeList(nl)
 
 
 	# Return a string representation of this instance
