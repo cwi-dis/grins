@@ -544,12 +544,17 @@ class _Window:
 	def create_menu(self, list, title = None):
 		self.destroy_menu()
 		menu = self._form.CreatePopupMenu('menu',
-				{'colormap': toplevel._default_colormap,
-				 'visual': toplevel._default_visual,
-				 'depth': toplevel._default_visual.depth})
+				{'colormap': self._colormap,
+				 'visual': self._visual,
+				 'depth': self._visual.depth})
+		if self._visual.depth == 8:
+			# make sure menu is readable, even on Suns
+			menu.foreground = self._convert_color((0,0,0))
+			menu.background = self._convert_color((255,255,255))
 		if title:
 			list = [title, None] + list
-		_create_menu(menu, list, self._accelerators)
+		_create_menu(menu, list, self._visual, self._colormap,
+			     self._accelerators)
 		self._menu = menu
 
 	def _convert_color(self, color):
@@ -963,6 +968,8 @@ class _BareSubWindow:
 
 		self._form = parent._form
 		self._gc = parent._gc
+		self._visual = parent._visual
+		self._colormap = parent._colormap
 		try:
 			self._pixmap = parent._pixmap
 		except AttributeError:
@@ -1892,7 +1899,8 @@ class Dialog:
 				 'depth': toplevel._default_visual.depth})
 		if title:
 			list = [title, None] + list
-		_create_menu(menu, list)
+		_create_menu(menu, list, toplevel._default_visual,
+			     toplevel._default_colormap)
 		self._menu = menu
 		self._widget.AddEventHandler(X.ButtonPressMask, FALSE,
 					     self._post_menu, None)
@@ -1973,7 +1981,7 @@ def _colormask(mask):
 def _generic_callback(widget, (func, args), call_data):
 	apply(func, args)
 
-def _create_menu(menu, list, acc = None):
+def _create_menu(menu, list, visual, colormap, acc = None):
 	accelerator = None
 	length = 0
 	i = 0
@@ -2002,13 +2010,13 @@ def _create_menu(menu, list, acc = None):
 			accelerator, label, callback = entry
 		if type(callback) is ListType:
 			submenu = menu.CreatePulldownMenu('submenu',
-				{'colormap': toplevel._default_colormap,
-				 'visual': toplevel._default_visual,
-				 'depth': toplevel._default_visual.depth})
+				{'colormap': colormap,
+				 'visual': visual,
+				 'depth': visual.depth})
 			button = menu.CreateManagedWidget(
 				'submenuLabel', Xm.CascadeButtonGadget,
 				{'labelString': label, 'subMenuId': submenu})
-			_create_menu(submenu, callback, acc)
+			_create_menu(submenu, callback, visual, colormap, acc)
 		else:
 			if type(callback) is not TupleType:
 				callback = (callback, (label,))
