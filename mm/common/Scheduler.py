@@ -16,8 +16,8 @@ import SR
 debugtimer = 0
 
 # Priorities for the various events:
-N_PRIO = 5
-[PRIO_PREARM_NOW, PRIO_INTERN, PRIO_STOP, PRIO_START, PRIO_LO] = range(N_PRIO)
+N_PRIO = 6
+[PRIO_PREARM_NOW, PRIO_TERMINATE, PRIO_INTERN, PRIO_STOP, PRIO_START, PRIO_LO] = range(N_PRIO)
 
 error = 'Scheduler.error'
 
@@ -190,8 +190,11 @@ class SchedulerContext:
 	# time in the future (i.e. if we're not done yet)
 	#
 	def FutureWork(self):
-		if self.srevents:
-			return 1
+		for ev in self.srevents.keys():
+			if ev[0] != SR.TERMINATE:
+				return 1
+		# no events left except possibly TERMINATE events
+		self.srevents = {}
 		self.parent.ui.sctx_empty(self) # XXXX
 		return 0
 	#
@@ -231,6 +234,8 @@ class SchedulerContext:
 				prio = PRIO_START
 			elif sr[0] == SR.PLAY_STOP:
 				prio = PRIO_STOP
+			elif sr[0] == SR.TERMINATE:
+				prio = PRIO_TERMINATE
 			else:
 				prio = PRIO_INTERN
 			self.parent.add_runqueue(self, prio, sr)
@@ -558,6 +563,7 @@ class Scheduler(scheduler):
 		if action == SR.PLAY:
 			self.do_play(sctx, arg)
 		elif action == SR.PLAY_STOP:
+			self.remove_terminate(sctx, arg)
 			self.do_play_stop(sctx, arg)
 		elif action == SR.SYNC:
 			self.do_sync(sctx, arg)
@@ -565,8 +571,32 @@ class Scheduler(scheduler):
 			self.do_play_arm(sctx, arg)
 		elif action in (SR.BAG_START, SR.BAG_STOP):
 			self.ui.bag_event(sctx, todo)
+		elif action == SR.TERMINATE:
+			self.do_terminate(sctx, arg)
 		else:
+			if action == SR.SCHED_STOP and \
+			   arg.GetType() in interiortypes:
+				self.remove_terminate(sctx, arg)
 			sctx.event((action, arg))
+
+	def remove_terminate(self, sctx, node):
+		ev = SR.TERMINATE, node
+		if sctx.srevents.has_key(ev):
+			pos = sctx.srevents[ev]
+			del sctx.srevents[ev]
+			num, srlist = sctx.sractions[pos]
+			num = num - 1
+			if num == 0:
+				sctx.sractions[pos] = None
+			else:
+				sctx.sractions[pos] = num, srlist
+		for ac in sctx.sractions:
+			if ac is None:
+				continue
+			num, srlist = ac
+			for i in range(len(srlist)-1,-1,-1):
+				if srlist[i] == ev:
+					del srlist[i]
 	#
 	# Execute a PLAY SR.
 	#
@@ -583,6 +613,49 @@ class Scheduler(scheduler):
 		chan = self.ui.getchannelbynode(node)
 		node.set_armedmode(ARM_DONE)
 		chan.stopplay(node)
+	#
+	# Execute a TERMINATE SR.
+	#
+	def do_terminate(self, sctx, node):
+		if node.GetType() in interiortypes:
+			# turn action into event
+			self.event(sctx, (SR.TERMINATE, node))
+		else:
+			# terminate node
+			for ev in sctx.srevents.keys():
+				if ev[1] == node:
+					pos = sctx.srevents[ev]
+					del sctx.srevents[ev]
+					num, srlist = sctx.sractions[pos]
+					num = num - 1
+					if num == 0:
+						sctx.sractions[pos] = None
+					else:
+						sctx.sractions[pos] = num, srlist
+			for action in sctx.sractions:
+				if action is None:
+					continue
+				num, events = action
+				for i in range(len(events)-1,-1,-1):
+					if events[i][1] == node:
+						del events[i]
+			chan = self.ui.getchannelbynode(node)
+			prearmlist = sctx.prearmlists[chan]
+			for i in range(len(prearmlist)-1,-1,-1):
+				if prearmlist[i][1] == node:
+					del prearmlist[i]
+			node.set_armedmode(ARM_DONE)
+			chan.terminate(node)
+			do_arm = 0
+			for queue in self.runqueues:
+				for i in range(len(queue)-1,-1,-1):
+					if queue[i][1][1] == node:
+						if queue[i][1][0] == SR.PLAY_ARM:
+							do_arm = 1
+						del queue[i]
+			if do_arm:
+				sctx.arm_ready(chan)
+
 	#
 	# Execute a SYNC SR
 	#

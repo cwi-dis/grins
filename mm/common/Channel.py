@@ -595,9 +595,6 @@ class Channel:
 		# Node is only passed to do consistency checking.
 		if debug:
 			print 'Channel.stopplay('+`self`+','+`node`+')'
-		if self._playstate == PIDLE:
-			# already stopped
-			return
 		if node and self._played_node is not node:
 			raise error, 'node was not the playing node '+`self,node,self._played_node`
 		if self._playstate == PLAYING:
@@ -624,6 +621,22 @@ class Channel:
 		self._armstate = AIDLE
 		# self._armed_node = None # XXXX Removed for arm-caching
 		# self._armed_anchors = []
+
+	def terminate(self, node):
+		if debug:
+			print 'Channel.terminate('+`self`+','+`node`+')'
+		if self._armstate != AIDLE and self._armed_node is node:
+			save_syncarm = self.syncarm
+			self.syncarm = 1
+			self.stoparm()
+			self.syncarm = save_syncarm
+			self._playcontext.arm_ready(self)
+		if self._playstate != PIDLE and self._played_node is node:
+			# hack to not generate play_done event
+			save_syncplay = self.syncplay
+			self.syncplay = 1
+			self.stopplay(node)
+			self.syncplay = save_syncplay
 
 	def startcontext(self, ctx):
 		# Called by the scheduler to start a new context.  The

@@ -142,10 +142,13 @@ class NodeWrapper(Wrapper):
 	#
 	def attrnames(self):
 		namelist = ['name', 'channel', 'comment']
-		if self.node.GetType() == 'bag':
+		ntype = self.node.GetType()
+		if ntype == 'bag':
 			namelist.append('bag_index')
-		if self.node.GetType() == 'par':
+		if ntype == 'par':
 			namelist.append('terminator')
+		if ntype in ('par', 'seq'):
+			namelist.append('duration')
 		# Get the channel class (should be a subroutine!)
 		ctype = self.node.GetChannelType()
 		if channelmap.has_key(ctype):
