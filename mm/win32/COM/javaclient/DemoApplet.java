@@ -6,9 +6,10 @@ import java.io.*;
 
 
 public class DemoApplet extends Applet
+implements SMILListener
 {
     private Frame frame = null;
-    private GRiNSPlayer player;
+    private SMILPlayer player;
     private Viewport viewport;
 	public void init()
 	{
@@ -47,8 +48,7 @@ public class DemoApplet extends Applet
 		buttonClose.setBounds(368,56,104,28);
 		//}}
 	
-	    player = new GRiNSPlayer();
-	    //player.setComponent(playerCanvas);
+	    player = GRiNSToolkit.createGRiNSPlayer(this);
 
 		//{{REGISTER_LISTENERS
 		SymAction lSymAction = new SymAction();
@@ -77,15 +77,16 @@ public class DemoApplet extends Applet
 	public void start() {
 	    }
 	public void stop() {
-	    try {
-	        if(player!=null) player.close();
-	        }
-	    catch(GRiNSInterfaceException e){
-	        System.out.println(""+e);
-	        }
+	    if(player!=null) player.close();
 	    }
     public void destroy() {
         }
+    public void setWaiting(){
+        setCursor(new Cursor(Cursor.WAIT_CURSOR));
+    }
+    public void setReady(){
+       setCursor(Cursor.getDefaultCursor());
+    }
 	  
 	// standalone execution support
     public static void main(String args[]) 
@@ -99,7 +100,7 @@ public class DemoApplet extends Applet
 	            }
 	        private Applet applet;
 	        }
-		SFrame frame = new SFrame("GRiNS Player sample");
+		SFrame frame = new SFrame("Java GRiNS Player");
 		frame.addWindowListener(
 			new WindowAdapter() { 
 				public void windowClosing(WindowEvent e) {
@@ -149,59 +150,47 @@ public class DemoApplet extends Applet
 		    textFieldURL.setText(absFilename);
 		}
 		if(player!=null){
-	        viewport = new Viewport(0,0);
-	        player.setComponent(viewport.getCanvas());	    
-		    try {player.open(textFieldURL.getText());}
-		    catch(GRiNSInterfaceException e){System.out.println(""+e);}
-            Dimension d = new Dimension(0,0);
-		    while(d.width==0){
-		        try {d=player.getPreferredSize();}
-		        catch(GRiNSInterfaceException e){System.out.println(""+e);}
-		        try{Thread.sleep(100);}
-		        catch(InterruptedException e){System.out.println(""+e);}
-		    }
-		    viewport.update(d.width, d.height);
+	        viewport = new Viewport(player.getCanvas());
+		    player.open(textFieldURL.getText());
 	    }
 		
 	}
 
+    // implement interface of SMILListener
+    public void opened(){
+    }
+    public void closed(){
+        viewport.setVisible(false);
+        viewport.dispose();
+        viewport = null;
+    }
+    public void setViewportSize(int w, int h){
+        viewport.update(w, h);
+    }
+    
+    
 	void buttonPlay_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		if(player!=null){
-		    try {player.play();}
-		    catch(GRiNSInterfaceException e){System.out.println(""+e);}
-	    }
+		if(player!=null) player.play();
 	}
 
 	void buttonPause_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		if(player!=null){
-		    try {player.pause();}
-		    catch(GRiNSInterfaceException e){System.out.println(""+e);}
-	    }
+		if(player!=null) player.pause();
 	}
 
 	void buttonStop_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		if(player!=null){
-		    try {player.stop();}
-		    catch(GRiNSInterfaceException e){System.out.println(""+e);}
-	    }
+		if(player!=null) player.stop();
 	}
 
 	void buttonClose_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		if(player!=null){
-		    try {player.close();}
-		    catch(GRiNSInterfaceException e){System.out.println(""+e);}
-		    if(viewport!=null) viewport.dispose();
-		    viewport = null;
-	    }
-			 
+		if(player!=null)player.close();
 	}
 
 }

@@ -1,46 +1,147 @@
 
 import java.awt.*;
-import java.awt.event.*;
+import java.util.Vector;
 
-public class GRiNSPlayer implements Renderer {
-    public GRiNSPlayer() {
-    }
+class GRiNSPlayer implements SMILPlayer, Runnable {
     
-    public Component getComponent() 
-    {
-        if(component==null)
-            component = new PlayerCanvas();
-        return component;
-    }
-    
-    public void setComponent(Component c) 
-    {
-        component = c;
-        if(c!=null && c instanceof PlayerCanvas) {
-            ((Renderable)c).setRenderer(this);
+    GRiNSPlayer(SMILListener listener){
+        this.listener = listener;
         }
+    
+    public Canvas getCanvas() {
+        if(canvas==null)
+            canvas = new PlayerCanvas();
+        if(canvas instanceof PlayerCanvas)
+            ((PlayerCanvas)canvas).setPlayer(this);
+        return canvas;
+        }
+    
+    public void setCanvas(Canvas c) {
+        canvas = c;
+        if(c!=null && c instanceof PlayerCanvas)
+            ((PlayerCanvas)c).setPlayer(this);
+        }
+            
+    public void update() {push(new GRiNSCmd("update"));}
+    
+    public void mouseClicked(int x, int y){push(new GRiNSCmd("mouseClicked", x, y));}
+    
+    public boolean mouseMoved(int x, int y){
+        push(new GRiNSCmd("mouseMoved", x, y));
+        return ishot;
+        }
+        
+    public void open(String fn) {   
+        push(new GRiNSCmd("open", fn));
+        if(isRunning) return;
+        new Thread(this).start();
+        }
+        
+    public void close(){push(new GRiNSCmd("close"));}
+    
+    public void play(){push(new GRiNSCmd("play"));}
+    
+    public void stop(){push(new GRiNSCmd("stop"));}
+    
+    public void pause(){push(new GRiNSCmd("pause"));}
+       
+    public int getState() throws GRiNSInterfaceException
+    {
+        if(hgrins!=0) return ngetState(hgrins);
+        return -1;
+    }
+             
+    public double getDuration() {return -1.0;}
+    
+    public void setTime(double t) {}
+    
+    public double getTime() {return -1;}
+    
+    public void setSpeed(double v) {}
+    
+    public double getSpeed() {return 1.0;}
+       
+    class GRiNSCmd {
+        GRiNSCmd(String fname){
+            this.fname = fname;
+        }
+        GRiNSCmd(String fname, String strarg){
+            this.fname = fname;
+            this.strarg = strarg;
+        }
+    
+        GRiNSCmd(String fname, int xarg, int yarg){
+            this.fname = fname;
+            this.xarg = xarg;
+            this.yarg = yarg;
+        }
+    
+        String fname;
+        int xarg, yarg;
+        String strarg;
     }
     
-    public void update()
-    {
-        if(hgrins!=0) nupdate(hgrins);
+    public void run(){
+        isRunning = true;
+        try {
+            while(!Thread.currentThread().interrupted()){
+                GRiNSCmd cmd = peek();
+                if(cmd==null){
+                    Thread.sleep(interval);
+                    continue;
+                }
+                try {
+                if(cmd.fname.equals("open")){
+                    listener.setWaiting();
+                    hopen(cmd.strarg);
+                    viewportSize = ngetPreferredSize(hgrins);
+                    while(viewportSize.width==0){
+                        Thread.sleep(50);
+                        viewportSize = ngetPreferredSize(hgrins);
+                        }
+                     listener.setViewportSize(viewportSize.width, viewportSize.height);  
+                     listener.setReady();
+                }
+                else if(cmd.fname.equals("close"))
+                    {hclose();listener.closed(); break;}
+                else if(cmd.fname.equals("play"))
+                    nplay(hgrins);
+                else if(cmd.fname.equals("stop"))
+                    nstop(hgrins);
+                else if(cmd.fname.equals("pause"))
+                    npause(hgrins);
+                else if(cmd.fname.equals("update"))
+                    nupdate(hgrins);
+                else if(cmd.fname.equals("mouseClicked"))
+                    nmouseClicked(hgrins, cmd.xarg, cmd.yarg);
+                else if(cmd.fname.equals("mouseMoved"))
+                    ishot = nmouseMoved(hgrins, cmd.xarg, cmd.yarg);
+                }
+                catch(GRiNSInterfaceException e){System.out.println(""+e);}
+                }
+            }
+        catch(InterruptedException e){System.out.println(""+e);}
+        isRunning = false;
+    }
+
+    private synchronized void push(GRiNSCmd cmd){
+        cmds.add(cmd);
+        notifyAll();
     }
     
-    public void mouseClicked(int x, int y)
-    {
-        if(hgrins!=0) nmouseClicked(hgrins, x, y);
-        System.out.println("mouseClicked "+x+", "+y);
-    }
-    public boolean mouseMoved(int x, int y)
-    {
-        if(hgrins!=0) return nmouseMoved(hgrins, x, y);
-        return false;
-    }
+    private synchronized GRiNSCmd peek() {
+	    int	len = cmds.size();
+	    if (len == 0)
+	        return null;
+	    GRiNSCmd cmd = (GRiNSCmd)cmds.elementAt(0);
+	    cmds.removeElementAt(0);
+	    return cmd;
+     }
     
-    public void open(String fn) throws GRiNSInterfaceException
+    private void hopen(String fn) throws GRiNSInterfaceException
     {
-        if(component!=null && component.isDisplayable())
-            hgrins = nconnect(component);
+        if(canvas!=null && canvas.isDisplayable())
+            hgrins = nconnect(canvas);
         else
             hgrins = nconnect();
         if(hgrins!=0) {
@@ -49,7 +150,7 @@ public class GRiNSPlayer implements Renderer {
         }
     }
     
-    public void close() throws GRiNSInterfaceException
+    private void hclose() throws GRiNSInterfaceException
         {
         if(hgrins!=0) {
             nclose(hgrins);
@@ -60,64 +161,24 @@ public class GRiNSPlayer implements Renderer {
             Thread.sleep(500);
          }
          catch(InterruptedException e){}
-         if(component!=null && component.isDisplayable())
-            component.repaint();
+         if(canvas!=null && canvas.isDisplayable())
+            canvas.repaint();
     }
     
-    public void play() throws GRiNSInterfaceException
-    {
-        if(hgrins!=0) nplay(hgrins);
-    }
-    public void stop() throws GRiNSInterfaceException
-    {
-        if(hgrins!=0) nstop(hgrins);
-    }
-    public void pause() throws GRiNSInterfaceException
-    {
-        if(hgrins!=0) npause(hgrins);
-    }
+    private boolean ishot = false;
+    private boolean isRunning = false;
+    private Vector cmds = new Vector(10);
+    private int interval = 50;
+    private Dimension viewportSize;
+    private SMILListener listener;
     
-    public int getState() throws GRiNSInterfaceException
-    {
-        if(hgrins!=0) return ngetState(hgrins);
-        return -1;
-    }
-        
-    public Dimension getPreferredSize() throws GRiNSInterfaceException
-    {
-        if(hgrins!=0) return ngetPreferredSize(hgrins);
-        return null;
-    }
-     
-    public double getDuration() throws GRiNSInterfaceException
-    {
-        if(hgrins!=0) return ngetDuration(hgrins);
-        return -1;
-    }
-    public void setTime(double t) throws GRiNSInterfaceException
-    {
-        if(hgrins!=0) nsetTime(hgrins, t);
-    }
-    
-    public double getTime() throws GRiNSInterfaceException
-    {
-        if(hgrins!=0) return ngetTime(hgrins);
-        return -1.0;
-    }
-     
-    public void setSpeed(double v) throws GRiNSInterfaceException
-    {
-        if(hgrins!=0) nsetSpeed(hgrins, v);
-    }
-    
-    public double getSpeed() throws GRiNSInterfaceException
-    {
-        if(hgrins!=0) return ngetSpeed(hgrins);
-        return 1.0;
-    }
-                
+	private Canvas canvas; 
+	
 	private int hgrins;
-	private Component component; 
+	
+    public native void initializeThreadContext();
+    public native void uninitializeThreadContext();
+    
     private native int nconnect();
     private native int nconnect(Component g);
     private native void ndisconnect(int hgrins);
@@ -139,4 +200,6 @@ public class GRiNSPlayer implements Renderer {
     static {
          System.loadLibrary("grinsp");
      }
+    
 }
+
