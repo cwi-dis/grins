@@ -484,4 +484,9 @@ void parser::end_node()
 	m_curnode = m_curnode->up();
 	}
 
+void parser::show_error(std::string& msg)
+	{
+	showmessage(TextPtr(msg.c_str()));
+	}
+
 } // namespace smil

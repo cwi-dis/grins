@@ -184,9 +184,7 @@ class parser : public xml::sax_handler
 		{
 		}
 
-	virtual void show_error(std::string& report)
-		{
-		}
+	virtual void show_error(std::string& report);
 
 	//
 	private:
