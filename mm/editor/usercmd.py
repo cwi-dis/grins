@@ -51,7 +51,10 @@ class DEBUG(_CommandBase):
 	help = 'DEBUG: enter Python debugger'
 class DUMPWINDOWS(_CommandBase):
 	help = 'DEBUG: dump window hierarchy'
-class CONSOLE(_CommandBase): pass
+class CONSOLE(_CommandBase):
+	help = 'DEBUG: toggle debug window'
+class SCHEDDEBUG(_CommandBase):
+	help = 'DEBUG: toggle scheduler debug flag'
 class EXIT(_CommandBase):
 	help = 'Exit GRiNS'
 class SAVE(_CommandBase):
@@ -329,9 +332,6 @@ class TOGGLE_ARCS(_CommandBase):
 	help = 'Toggle showing synchronization arcs'
 class TOGGLE_BWSTRIP(_CommandBase):
 	help = 'Toggle showing bandwidth usage strip'
-class NEXT_MINIDOC(_CommandBase):
-	help = 'Display next mini document'
-class PREV_MINIDOC(_CommandBase): pass
 class MOVE_CHANNEL(_CommandBase): pass
 class COPY_CHANNEL(_CommandBase): pass
 class TOGGLE_ONOFF(_CommandBase): pass

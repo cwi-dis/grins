@@ -65,6 +65,7 @@ MENUBAR=(
 			(FLAG_DBG, ENTRY, 'Enter &debugger', None, DEBUG),
 			(FLAG_DBG, ENTRY, '&Abort', None, CRASH),
 			(FLAG_DBG, TOGGLE, 'Show &log/debug window', None, CONSOLE),
+			(FLAG_DBG, TOGGLE, 'Toggle Scheduler.debugevents', None, SCHEDDEBUG),
 			)),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'C&heck for GRiNS update...', None, CHECKVERSION),
@@ -213,13 +214,6 @@ MENUBAR=(
 			)),
 		(FLAG_CMIF, SEP,),
 		(FLAG_CMIF, TOGGLE, '&Timeline view follows player', None, SYNCCV),
-		(FLAG_CMIF, CASCADE, '&Minidoc navigation', (
-			(FLAG_CMIF, ENTRY, '&Next', None, NEXT_MINIDOC),
-			(FLAG_CMIF, ENTRY, '&Previous', None, PREV_MINIDOC),
-			(FLAG_CMIF, DYNAMICCASCADE, '&Ancestors', ANCESTORS),
-			(FLAG_CMIF, DYNAMICCASCADE, '&Descendants', DESCENDANTS),
-			(FLAG_CMIF, DYNAMICCASCADE, '&Siblings', SIBLINGS),
-			)),
 ##		(FLAG_ALL, DYNAMICCASCADE, '&Layout navigation', LAYOUTS),
 		)
 	 ),
