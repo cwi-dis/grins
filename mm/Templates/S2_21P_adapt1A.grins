@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/" xmlns:rn="http://features.real.com/2001/SMIL20/Extensions">
+  <head>
+    <meta name="title" content="PocketPC Adaptive Quality Video presentation with background image"/>
+    <meta name="generator" content="GRiNS Pro for SMIL 2.0, v2.2 win32 build 134"/>
+    <meta name="project_html_page" content="external_player.html"/>
+    <layout>
+      <root-layout id="AdaptiveShow" backgroundColor="black" width="240" height="270" GRiNS:editBackground=" 192 192 192" GRiNS:showEditBackground="off"/>
+      <region id="audio" GRiNS:type="sound"/>
+      <region id="bkgd_image" width="240" height="270" GRiNS:type="image"/>
+      <region id="Video1" left="0" width="240" top="7" height="240" z-index="1" GRiNS:type="video"/>
+      <region id="Images1" left="7" width="233" top="7" height="240" z-index="1" GRiNS:type="image"/>
+    </layout>
+    <transition id="slideover" type="slideWipe"/>
+    <transition id="fade" type="fade"/>
+    <transition id="push" type="pushWipe"/>
+    <GRiNS:viewinfo view="structure" top="0" left="0" width="399" height="224"/>
+    <GRiNS:viewinfo view="assets" top="308" left="28" width="399" height="143"/>
+  </head>
+  <body GRiNS:hidden="true">
+    <par id="AdaptivePresentation" GRiNS:project_default_region_image="Images1" GRiNS:project_default_region_video="Video1" GRiNS:project_default_region_sound="audio" GRiNS:project_default_region_text="Video1" GRiNS:thumbnailIcon="T-icons/adapt_1_1A.bmp" GRiNS:thumbnailScale="false" GRiNS:showtime="bwstrip" GRiNS:timezoom="14">
+      <seq id="AdaptiveSet" GRiNS:emptyIcon="T-icons/dropVITS.gif" GRiNS:emptyText="Drag MediaSelector object from Asset View onto Icon" GRiNS:emptyColor="#dfdb9f" GRiNS:emptyDur="10s" GRiNS:nonEmptyIcon="T-icons/dropVITS.gif">
+      </seq>
+      <img id="Image" region="bkgd_image" fill="freeze" src="media/Back3P.gif"/>
+    </par>
+    <GRiNS:assets skip-content="true">
+      <switch id="mediaSelector">
+        <seq systemBitrate="34400" GRiNS:emptyIcon="T-icons/dropVideo.gif" GRiNS:emptyText="240x180 video object (56K - 112K)." GRiNS:emptyColor="#dfdb9f" GRiNS:emptyDur="10s" GRiNS:nonEmptyIcon="T-icons/dropVideo.gif">
+        </seq>
+        <seq GRiNS:emptyIcon="T-icons/dropImage.gif" GRiNS:emptyText="Image Set (less than 56K)." GRiNS:emptyColor="#dfdb9f" GRiNS:emptyDur="10s" GRiNS:nonEmptyIcon="T-icons/dropImage.gif">
+        </seq>
+      </switch>
+    </GRiNS:assets>
+  </body>
+</smil>
