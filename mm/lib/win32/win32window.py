@@ -1557,13 +1557,15 @@ class Region(Window):
 		if not self._oswnd: return 0
 		return self._oswnd.HasHtmlCtrl()
 	
-	def CreateHtmlCtrl(self):
+	def CreateHtmlCtrl(self, which = 0):
 		if self._oswnd:
+			self._oswnd.UseHtmlCtrl(which)
 			self._oswnd.CreateHtmlCtrl()
-
+	
 	def DestroyHtmlCtrl(self):
 		if self._oswnd:
 			self._oswnd.DestroyHtmlCtrl()
+
 	def SetImmHtml(self, text):
 		if self._oswnd:
 			self._oswnd.SetImmHtml(text)
