@@ -59,12 +59,6 @@ class Main(MainDialog):
 		import settings
 		if hasattr(windowinterface, 'is_embedded') and windowinterface.is_embedded():
 			settings.factory_defaults()
-		if settings.get('debug'):
-			self.commandlist = self.commandlist + [
-				TRACE(callback = (self.trace_callback, ())),
-				DEBUG(callback = (self.debug_callback, ())),
-				CRASH(callback = (self.crash_callback, ())),
-				]
 		MainDialog.__init__(self, 'GRiNS')
 		self._update_recent(None)
 
@@ -129,22 +123,6 @@ class Main(MainDialog):
 		if sys.platform == 'mac':
 			import MacOS
 			MacOS.OutputSeen()
-
-	def crash_callback(self):
-		raise 'Crash requested by user'
-
-	def debug_callback(self):
-		import pdb
-		pdb.set_trace()
-
-	def trace_callback(self):
-		import trace
-		if self._tracing:
-			trace.unset_trace()
-			self._tracing = 0
-		else:
-			self._tracing = 1
-			trace.set_trace()
 
 	def preferences_callback(self):
 		import Preferences
