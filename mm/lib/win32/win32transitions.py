@@ -228,6 +228,12 @@ class InlineTransitionEngine:
 		if wnd.is_closed():
 			return
 		
+		# hack until i find the bug
+		if value == 1.0 and not self.outtrans:
+			wnd._paintOnDDS(wnd._drawsurf, wnd._rect)
+			wnd.update(wnd.getwindowpos())
+			return
+
 		if self.outtrans:
 			wnd._paintOnDDS(wnd._fromsurf, wnd._rect)
 			wnd.updateBackDDS(self._tosurf, exclwnd=wnd) 
