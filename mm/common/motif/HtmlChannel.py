@@ -21,10 +21,6 @@ try:
 except ImportError:
 	has_xrm = 0
 
-if windowinterface.Version <> 'X':
-	print 'HtmlChannel: Cannot work without X (use CMIF_USE_X=1)'
-	raise ImportError
-
 error = 'HtmlChannel.error'
 
 HtmlWidgets = {}
