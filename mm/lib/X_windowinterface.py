@@ -3869,7 +3869,8 @@ def Dialog(title, prompt, grab, vertical, list):
 	if grab:
 		options['callback'] = (lambda w: w.close(), (w,))
 	b = apply(w.ButtonRow, (list,), options)
-	w.buttons = b
+	w.setbutton = b.setbutton
+	w.getbutton = b.getbutton
 	w.show()
 	return w
 
