@@ -336,8 +336,8 @@ class CommandHandler:
 			if group:
 				callback = group.get_command_callback(cmd)
 				if callback:
-					if mustfind and not self.cmd_enabled[cmd]: # debug
-						print 'CommandHandler: disabled command selected:', cmd # debug
+##					if mustfind and self.cmd_enabled.has_key(cmd) and not self.cmd_enabled[cmd]: # debug
+##						print 'CommandHandler: disabled command selected:', cmd # debug
 					return callback
 		return None
 		
