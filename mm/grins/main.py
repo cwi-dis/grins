@@ -38,7 +38,11 @@ class Main:
 			windowinterface.select_setcallback(pipe_r,
 						self._mmcallback, ())
 		for fn in files:
-			top = TopLevel.TopLevel(self, fn)
+			try:
+				top = TopLevel.TopLevel(self, fn)
+			except:
+				print 'parsing file %s failed' % fn
+				continue
 			top.setwaiting()
 			top.show()
 			top.player.show()
