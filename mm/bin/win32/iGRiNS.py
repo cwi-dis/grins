@@ -42,7 +42,7 @@ CMIFPATH = [
 	os.path.join(CMIFDIR, 'common'),
 	os.path.join(CMIFDIR, 'lib'),
 	os.path.join(CMIFDIR, 'pylib'),
-	os.path.join(CMIFDIR, 'pylib\\audio'),
+#	os.path.join(CMIFDIR, 'pylib\\audio'),
 	os.path.join(CMIFDIR, 'win32\\src\\Build'),
 	os.path.join(os.path.split(CMIFDIR)[0], 'python\\Lib')
 ]
