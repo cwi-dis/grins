@@ -694,6 +694,7 @@ class SubWindow(Window):
 	def __init__(self, parent, coordinates, transparent, z, units):
 		Window.__init__(self, parent, coordinates, units, z, transparent)
 		self._oswnd = None
+		self._dlsurf = None
 		self.__init_transitions()
 
 	def __repr__(self):
@@ -906,7 +907,13 @@ class SubWindow(Window):
 			dc.SetWindowOrg((x0,y0))
 			dc.Detach()
 			dds.ReleaseDC(hdc)
-
+			if self._dlsurf:
+				ddds, rc = self._dlsurf
+				xv, yv, wv, hv = rc
+				rc_dst = x+xv, y+yv, x+xv+wv, y+yv+hv
+				rc_src = (0, 0, wv, hv)
+				dds.Blt(rc_dst, ddds, rc_src, ddraw.DDBLT_WAIT)
+				
 	def paintOnDDS(self, dds, rel=None):
 		x, y, w, h = self.getwindowpos(rel)
 
@@ -955,7 +962,6 @@ class SubWindow(Window):
 		x, y, w, h = self._rect
 		dds = self._topwindow.CreateSurface(w,h)
 		return dds
-
 
 	#
 	# Animations interface
@@ -1019,9 +1025,7 @@ class SubWindow(Window):
 		
 	def begintransition(self, inout, runit, dict):
 		if not self._passive:
-			self._passive = self.createDDS()
-			self._passive.BltFill(self.GetClientRect(),0)
-			inout = 1
+			self.freeze_content('transition')
 		self._transition = win32transitions.TransitionEngine(self, inout, runit, dict)
 		if runit:
 			self._transition.begintransition()
