@@ -137,23 +137,14 @@ def getfont(node):
 # Turn a text string into a list of strings, each representing a paragraph.
 # Tabs are expanded to spaces (since the font mgr doesn't handle tabs),
 # but this only works well at the start of a line or in a monospaced font.
-# Blank lines and lines starting with whitespace separate paragraphs.
+# \n characters separate paragraphs.
 
 def extract_paragraphs(text):
 	lines = string.splitfields(text, '\n')
 	parlist = []
-	par = []
 	for line in lines:
 		if '\t' in line: line = string.expandtabs(line, 8)
-		i = len(line) - 1
-		while i >= 0 and line[i] == ' ': i = i-1
-		line = line[:i+1]
-		if not line or line[0] in ' \t':
-			parlist.append(string.join(par))
-			par = []
-		if line:
-			par.append(line)
-	if par: parlist.append(string.join(par))
+		parlist.append(line)
 	return parlist
 
 
