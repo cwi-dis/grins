@@ -1004,6 +1004,7 @@ class _Toplevel(_Event):
 			'stop': channel,
 			'channel': channel,
 			'link': link,
+			'': arrow_cursor,
 		# These are internal names, not user settable
 			'_arrow': arrow_cursor,
 			'_hand': hand_cursor,
