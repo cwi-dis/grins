@@ -490,6 +490,19 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 		self._showing=None
 		self.update()
 	
+	# draw an XOR line between to given points (in pixels)
+	def drawxorline(self, pt0, pt1):
+		Sdk = win32ui.GetWin32Sdk()
+		dc = self.GetDC()
+		oldrop = dc.SetROP2(win32con.R2_NOTXORPEN)
+		pen = Sdk.CreatePen(win32con.PS_SOLID,1,win32mu.RGB((0,0,0)))
+		oldpen = dc.SelectObjectFromHandle(pen)
+		dc.MoveTo(pt0)
+		dc.LineTo(pt1)
+		dc.SelectObjectFromHandle(oldpen)
+		Sdk.DeleteObject(pen)
+		dc.SetROP2(oldrop)
+
 	# Forced window update
 	def update(self):
 		self.InvalidateParentRect()

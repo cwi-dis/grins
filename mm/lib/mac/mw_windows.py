@@ -375,6 +375,10 @@ class _CommonWindow:
 		rect = Qd.InsetRect(rect, -2, -2)
 		self.wid.InvalWindowRect(rect)
 
+	# draw an XOR line from pt0 to pt1 (in pixels)
+	def drawxorline(self, pt0, pt1):
+		pass
+
 	def setcursor(self, cursor):
 		if cursor == 'watch':
 			cursor = ''
