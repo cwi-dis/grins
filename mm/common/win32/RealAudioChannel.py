@@ -80,8 +80,12 @@ class RealAudioChannel(Channel.Channel):
 
 		if not self._rmaplayer:
 			self._rmaplayer=rma.CreatePlayer()
+		self._rmaplayer.SetStatusListener(self)
 		self._rmaplayer.OpenURL(url)	
 		self._rmaplayer.Begin()
+
+	def OnStop(self):
+		self.playdone(0)
 
 	# part of stop sequence
 	def stopplay(self, node):
