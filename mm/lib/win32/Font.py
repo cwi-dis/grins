@@ -128,13 +128,16 @@ class _Font:
 			
 	# Returns this font baseline
 	def baselinePXL(self):
-		return self._tm['tmAscent']+self._tm['tmDescent']
+		# Wrong: return self._tm['tmAscent']+self._tm['tmDescent']
+		# Put the leading on the top
+		return self._tm['tmHeight']# +self._tm['tmExternalLeading']
 	def baseline(self):
 		return pxl2mm_y(self.baselinePXL())
 
 	# Returns this font height
 	def fontheightPXL(self):
-		return self._tm['tmHeight']
+		# Wrong: return self._tm['tmHeight']
+		return self._tm['tmHeight'] + self._tm['tmExternalLeading']
 	def fontheight(self):
 		return pxl2mm_y(self.fontheightPXL())
 
@@ -151,14 +154,14 @@ class _Font:
 		dc=wnd.GetDC()
 		self._hfont_org=dc.SelectObjectFromHandle(self._hfont)
 		maxwidth = 0
-		maxheight = len(strlist) * self.baseline()
+		height = len(strlist) * self.fontheightPXL()
 		for str in strlist:
 			cx,cy=dc.GetTextExtent(str)
 			if cx > maxwidth:
 				maxwidth = cx
 		dc.SelectObjectFromHandle(self._hfont_org)
 		wnd.ReleaseDC(dc)
-		return maxwidth, maxheight
+		return maxwidth, height
 	def strsize(self,str):
 		maxwidth, maxheight = self.strsizePXL(str)
 		return pxl2mm_x(maxwidth),pxl2mm_y(maxheight)
