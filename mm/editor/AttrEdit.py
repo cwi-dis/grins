@@ -2212,6 +2212,7 @@ class PopupAttrEditorField(AttrEditorField):
 
 	def getoptions(self):
 		# derived class overrides this to defince the choices
+		self.default = '%s [%s]' % (PopupAttrEditorField.default, self.getdefault())
 		return [self.default]
 
 	def parsevalue(self, str):
@@ -2233,13 +2234,14 @@ class PopupAttrEditorFieldWithUndefined(PopupAttrEditorField):
 
 	def getoptions(self):
 		# derived class overrides this to defince the choices
-		return [DEFAULT, UNDEFINED]
+		self.default = '%s [%s]' % (PopupAttrEditorFieldWithUndefined.default, self.getdefault())
+		return [self.default, UNDEFINED]
 
 	def valuerepr(self, value):
 		if value is None:
 			if self.nodefault:
 				return self.getdefault()
-			return DEFAULT
+			return self.default
 		options = self.getoptions()
 		if value not in options:
 			return UNDEFINED
@@ -2416,12 +2418,53 @@ class BitrateAttrEditorFieldWithDefault(BitrateAttrEditorField):
 		return self.valuerepr(val)
 
 class EnumAttrEditorField(PopupAttrEditorFieldNoDefault):
+	__default = 'default'
+	__inherit = 'inherit'
+
 	def __init__(self, attreditor, name, label):
 		PopupAttrEditorFieldNoDefault.__init__(self, attreditor, name, label)
-		self.__values = self.attrdef[0][1]
+		self.__values = self.attrdef[0][1][:]
+		for i in range(len(self.__values)):
+			v = self.__values[i]
+			if v == 'default':
+				node = self.attreditor.wrapper.node
+				default = None
+				if name == 'fill':
+					default = node.GetFill('default')
+				elif name == 'restart':
+					default = node.GetRestart('default')
+				elif name == 'syncBehavior':
+					default = node.GetSyncBehavior('default')
+				if default is not None:
+					self.__values[i] = self.__default = 'default [%s]' % default
+			elif v == 'inherit':
+				pnode = self.attreditor.wrapper.node.GetParent()
+				default = None
+				if name == 'fillDefault':
+					default = pnode.GetInherAttrDef('fillDefault', 'auto')
+				elif name == 'restartDefault':
+					default = pnode.GetRestart('default')
+				elif name == 'syncBehaviorDefault':
+					default = pnode.GetSyncBehavior('default')
+				if default is not None:
+					self.__values[i] = self.__inherit = 'inherit [%s]' % default
 
 	def getoptions(self):
 		return self.__values
+
+	def valuerepr(self, value):
+		if value == 'default':
+			return self.__default
+		if value == 'inherit':
+			return self.__inherit
+		return value
+
+	def parsevalue(self, str):
+		if str == self.__default:
+			return 'default'
+		if str == self.__inherit:
+			return 'inherit'
+		return str
 
 class EnumAttrEditorFieldWithDefault(EnumAttrEditorField):
 	default = 'Not set'
@@ -2458,7 +2501,7 @@ class CpuAttrEditorField(EnumAttrEditorFieldWithDefault):
 class OperatingSystemAttrEditorField(EnumAttrEditorFieldWithDefault):
 	default = 'Not set'
 
-class RegpointAttrEditorField(EnumAttrEditorField):
+class RegpointAttrEditorField(PopupAttrEditorFieldNoDefault):
 	type = 'regpoint'
 
 	def getoptions(self):
