@@ -18,8 +18,6 @@
 # showing		true when the form is shown
 # width, height		form dimensions
 # title			window title (better use settitle() method though)
-# border		nonzero (default) if the window has a border
-#			(use x.setborder(flag) to change it)
 # last_geometry		the window's geometry when last hidden, or None
 #
 # The Dialog class also defines cancel_button, restore_button,
@@ -47,7 +45,6 @@ class BasicDialog(glwindow.glwindow):
 		self.title = title
 		self.showing = 0
 		self.last_geometry = None
-		self.border = 1
 		self.make_form()
 		return self
 	#
@@ -66,7 +63,7 @@ class BasicDialog(glwindow.glwindow):
 		self.load_geometry()
 		self.fix_geometry()
 		glwindow.setgeometry(self.last_geometry)
-		self.form.show_form(PLACE_FREE, self.border, self.title)
+		self.form.show_form(PLACE_FREE, 1, self.title)
 		glwindow.register(self, self.form.window)
 		self.showing = 1
 		self.setwin()
@@ -93,16 +90,6 @@ class BasicDialog(glwindow.glwindow):
 		if self.showing:
 			self.setwin()
 			gl.wintitle(self.title)
-	#
-	def setborder(self, border):
-		if border == self.border:
-			return
-		self.border = border
-		if self.showing:
-			self.setwin()
-			if not self.border:
-				gl.noborder()
-			gl.winconstraints()
 	#
 	def pop(self):
 		if self.showing:
@@ -226,9 +213,19 @@ class GLDialog(glwindow.glwindow):
 	def init(self, title):
 		self.title = title
 		self.wid = 0
+		self.parentwid = 0
 		self.last_geometry = None
-		self.border = 1
+		self.used_as_base = 0
 		return self
+
+	def setparent(self, pwid, pgeom):
+		self.parentwid = pwid
+		self.parentgeom = pgeom
+
+	def getwid(self):
+		self.used_as_base = 1
+		return self.wid
+
 	#
 	def show(self):
 		if self.wid <> 0:
@@ -236,17 +233,27 @@ class GLDialog(glwindow.glwindow):
 			return
 		self.load_geometry()
 		glwindow.setgeometry(self.last_geometry)
-		if not self.border:
-			gl.noborder()
-		self.wid = gl.winopen(self.title)
-		if not self.border:
-			gl.noborder()
-		gl.winconstraints()
+		if self.parentwid:
+			gl.winset(self.parentwid)
+			pw, ph = gl.getsize()
+			self.wid = gl.swinopen(self.parentwid)
+			x = int(self.parentgeom[0]*pw)
+			y = int(self.parentgeom[1]*ph)
+			w = int(self.parentgeom[2]*pw)
+			h = int(self.parentgeom[3]*ph)
+			y = ph - y - h
+			gl.winposition(x, x+w, y, y+h) # Of is dit verkeerdom?
+			gl.reshapeviewport()
+		else:
+			self.wid = gl.winopen(self.title)
+			gl.winconstraints()
 		glwindow.register(self, self.wid)
 		fl.qdevice(DEVICE.WINSHUT)
 	#
 	def hide(self):
 		if self.wid <> 0:
+			if self.used_as_base:
+				print 'XXXX Should reshow all windows?'
 			self.save_geometry()
 			glwindow.unregister(self)
 			gl.winclose(self.wid)
@@ -267,23 +274,13 @@ class GLDialog(glwindow.glwindow):
 			self.setwin()
 			gl.wintitle(self.title)
 	#
-	def setborder(self, border):
-		if border == self.border:
-			return
-		self.border = border
-		if self.wid <> 0:
-			self.setwin()
-			if not self.border:
-				gl.noborder()
-			gl.winconstraints()
-	#
 	def pop(self):
 		if self.wid <> 0:
 			self.setwin()
 			gl.winpop()
 	#
 	def get_geometry(self):
-		if self.wid <> 0:
+		if self.wid <> 0 and self.parentwid == 0:
 			self.setwin()
 			self.last_geometry = glwindow.getgeometry()
 	#

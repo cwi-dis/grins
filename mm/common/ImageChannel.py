@@ -85,39 +85,26 @@ class ImageWindow(ChannelWindow):
 	#
 	def getmouse(self):
 		mx, my = fl.get_mouse()
+		return self.convmouse(mx, my)
+
+	def convmouse(self, (mx, my)):
 		mx = int((mx - self.xcorner) / self.mousescale)
 		my = int((my - self.ycorner) / self.mousescale)
 		return mx, my
 	#
 	def mouse(self, (dev, val)):
-		if dev == DEVICE.RIGHTMOUSE:
+		if dev == DEVICE.RIGHTMOUSE or self.newanchor:
 			ChannelWindow.mouse(self, (dev, val))
 			return
 		if not self.node:
 			gl.ringbell()
 			return
-		mx, my = self.getmouse()
-		if self.newanchor:
-			# We're not playing, we're defining anchors
-			if dev <> DEVICE.LEFTMOUSE:
-				gl.ringbell()
-				return
-			if val == 1:
-				self.pm = (mx, my)
-				fl.qdevice(DEVICE.MOUSEX)
-				fl.qdevice(DEVICE.MOUSEY)
-			else:
-				fl.unqdevice(DEVICE.MOUSEX)
-				fl.unqdevice(DEVICE.MOUSEY)
-				a = self.newanchor
-				self.newanchor = (a[0], a[1], \
-					  [self.pm[0], self.pm[1], mx, my])
-				self.drawnewanchor()
-			return
 		if (dev, val) <> (DEVICE.LEFTMOUSE, 1):
 			return
 		if not self.anchors:
 			print 'mouse: no anchors on this node'
+
+		mx, my = self.getmouse()
 		al2 = []
 		for a in self.anchors:
 			args = a[A_ARGS]
@@ -137,24 +124,6 @@ class ImageWindow(ChannelWindow):
 		if rv == 0 and len(al2) == 1 and al2[0][A_TYPE] == ATYPE_PAUSE:
 			self.channel.haspauseanchor = 0
 			self.channel.done(0)
-	#
-	def mousex(self, val):
-		if not self.newanchor:
-			print '*** Huh? MOUSEX but not defining anchors ***'
-			return
-		self.newxy()
-	#
-	def mousey(self, val):
-		if not self.newanchor:
-			print '*** Huh? MOUSEY but not defining anchors ***'
-			return
-		self.newxy()
-	#
-	def newxy(self):
-		mx, my = self.getmouse()
-		a = self.newanchor
-		self.newanchor = (a[0], a[1], [self.pm[0], self.pm[1], mx, my])
-		self.drawnewanchor()
 	#
 	def armimage(self, (filename_arg, node)):
 		# (Import imgfile here so if it doesn't exist we can
@@ -225,10 +194,14 @@ class ImageWindow(ChannelWindow):
 			self.saveanchor = None
 		self.newanchor = anchor
 		self.redraw()
+		self.sqqstart(anchor[2])
 	#
 	# Stop defining an anchor
 	def getdefanchor(self):
-		res = self.newanchor
+		x0, y0, x1, y1 = self.sqqend()
+		x0, y0 = self.convmouse(x0, y0)
+		x1, y1 = self.convmouse(x1, y1)
+		res = (self.newanchor[0], self.newanchor[1], [x0,y0,x1,y1])
 		self.anchors.append(res)
 		self.saveanchor = None
 		self.newanchor = None
@@ -237,6 +210,7 @@ class ImageWindow(ChannelWindow):
 	#
 	# Abort defining an anchor
 	def enddefanchor(self, anchor):
+		dummy = self.sqqend()
 		if self.saveanchor <> None:
 			self.anchors.append(self.saveanchor)
 			self.saveanchor = None
@@ -269,24 +243,10 @@ class ImageWindow(ChannelWindow):
 			gl.RGBcolor(self.hicolor)
 			for dummy, tp, a in self.anchors:
 				self.drawanchor(a)
-		self.drawnewanchor()
-	#
-	# Subroutine to render just the new anchor in the pop-up planes.
-	# In all cases the pop-up planes are first cleared.
-	#
-	def drawnewanchor(self):
-		# XXX I'm using PUPDRAW because it's the only
-		# mode that works on a basic Indigo; on the
-		# other hand SGI says that pop-up planes are
-		# maintained for compatibility only...
-		gl.drawmode(GL.PUPDRAW)
-		gl.color(0)
-		gl.clear()
+		# And redraw current defining anchor, if needed
 		if self.newanchor:
-			gl.mapcolor((1,) + self.fgcolor)
-			gl.color(1)
-			self.drawanchor(self.newanchor[2])
-		gl.drawmode(GL.NORMALDRAW)
+			self.sqqredraw()
+
 	#
 	# Subroutine to draw an anchor
 	#
@@ -313,7 +273,7 @@ class ImageChannel(Channel):
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = []
+	chan_attrs = ['base_window', 'base_winoff']
 	node_attrs = ['file', 'duration', 'scale', \
 		 'bgcolor', 'fgcolor', 'hicolor']
 	#
@@ -367,7 +327,7 @@ class ImageChannel(Channel):
 
 		import AdefDialog
 		try:
-			rv = AdefDialog.run('Select reactive area with mouse')
+			rv = AdefDialog.anchor('Select reactive area with mouse')
 			a = self.window.getdefanchor()
 			if rv == 0:
 				a = (a[0], a[1], [])

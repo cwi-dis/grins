@@ -38,6 +38,12 @@
 (bag_index (name) '' 'Bag index' default
 	'Name of child used as index' normal)
 
+(base_window (name) '' 'Channel base window' default
+	'Name of window in which channelwin is created' raw)
+
+(base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
+	'Border offset' default 'Position/size in percent of base window' raw)
+
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 	'Color used for text/images in window' channel)
 
