@@ -34,6 +34,7 @@ import afxres,commctrl
 # GRiNS resource ids
 import grinsRC
 
+
 # Base dialog bar
 class DlgBar(window.Wnd):
 	# Class constructor. Calls base class constructor and creates the OS window
@@ -455,13 +456,22 @@ class AttrEditForm(docview.ListView):
 		self.SetItemText(i,2,hd[1])
 		self.SetItemText(i,3,hd[2])
 
-	# Set the selction on the list control to the index				
+	# Set the selction on the list control to the index	
+	#   SetItem args:
+	#	@pyparm int|item||The item number.
+	#	@pyparm int|subItem||The sub-item number.
+	#	@pyparm int|state||The items state.
+	#	@pyparm int|stateMask||A mask indicating which of the state bits are valid..
+	#	@pyparm string|text||The text for the item
+	#	@pyparm int|iImage||The image offset for the item
+	#	@pyparm int|userObject||Any integer to be associated with the item.				
 	def SelectItem(self,nItem=0):
 		#args: nItem,nSubItem,nMask,szItem,nImage,nState,nStateMask,lParam
 		nSubItem=nImage=lParam=0;szItem=''
 		nMask=commctrl.LVIF_STATE
 		nState=nStateMask=commctrl.LVIS_SELECTED|commctrl.LVIS_FOCUSED
-		self.SetItem(nItem,nSubItem,nMask,szItem,nImage,nState,nStateMask,lParam)
+		self.SetItem((nItem,nSubItem,nState,nMask,szItem,nImage,lParam))
+		#self.SetItem(nItem,nSubItem,nMask,szItem,nImage,nState,nStateMask,lParam)
 
 	# Response to WM_SIZE
 	def onSize(self,params):
@@ -470,8 +480,10 @@ class AttrEditForm(docview.ListView):
 		if cx<360:cx=360
 		cx=cx-2*sysmetrics.cxframe
 		self._cx=cx
-		self._dlgBar.resize(cx)
-		self._stdDlgBar.resize(cx)
+		if self._dlgBar:
+			self._dlgBar.resize(cx)
+		if self._stdDlgBar:
+			self._stdDlgBar.resize(cx)
 
 	def doResize(self):
 		if hasattr(self,'_cx'):
