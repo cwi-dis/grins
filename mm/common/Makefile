@@ -1,7 +1,6 @@
-GUIDO =	/ufs/guido
-GSRC = $(GUIDO)/src
-PYTHON = $(GSRC)/python
+PYTHON = ../python
 BUILD = $(PYTHON)/build.sgi
+GSRC = /ufs/guido/src
 
 LIBPYTHON = $(BUILD)/libpython.a
 LIBFORMS = $(GSRC)/forms/FORMS/libforms.a
@@ -9,6 +8,7 @@ LIBREADLINE = $(GSRC)/readline.sgi/libreadline.a
 LIBDL = $(GSRC)/dl/libdl.a
 
 DEFS =	\
+	-DPYTHONPATH='"$(PYTHON)/lib"' \
 	-DUSE_SELECT \
 	-DUSE_MATH \
 	-DUSE_TIME \
@@ -17,15 +17,15 @@ DEFS =	\
 	-DUSE_PWD \
 	-DUSE_THREAD \
 	-DUSE_MARSHAL \
-	-DUSE_IMGFILE \
+	-DUSE_RGBIMG \
 	-DUSE_STROP \
 	-DUSE_IMAGEOP \
 	-DUSE_FCNTL \
+	-DMM_DEBUG \
+	-DUSE_CL \
 	-DUSE_XLIB -DUSE_XT -DUSE_XM \
 	-DUSE_GL -DUSE_FL -DUSE_FM \
-	-DUSE_CL \
-	-DMM_DEBUG \
-	-DPYTHONPATH='"$(GUIDO)/lib/python"'
+	-DUSE_MALLOC -Dmalloc=xmalloc -Drealloc=xrealloc -Dfree=xfree # -DCOUNT_ALLOCS
 
 CFLAGS = -g -G0 -xansi -D__STDC__ -I$(PYTHON)/src $(DEFS)
 
@@ -64,6 +64,4 @@ clobber: clean
 	rm -f *.ld python
 
 $(OBJS): mmmodule.h
-
 config.o: Makefile
-
