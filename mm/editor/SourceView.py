@@ -7,6 +7,7 @@ import windowinterface
 import SMILTreeRead, SMILTreeWrite
 from ViewDialog import ViewDialog
 import features
+import settings
 
 class SourceView(SourceViewDialog.SourceViewDialog, ViewDialog):
 	def __init__(self, toplevel):
@@ -140,12 +141,38 @@ class SourceView(SourceViewDialog.SourceViewDialog, ViewDialog):
 		if parseErrors == None:
 			# Converts the MMNode structure into SMIL and puts it in the window.
 			text = SMILTreeWrite.WriteString(self.root, grinsExt = features.SOURCE_VIEW_EDIT in features.feature_set, set_char_pos = 1)
-			self.set_text(text)
+			colors = self._getcolorpositions(self.root)
+			self.set_text(text, colors)
 		else:
 			self.set_text(parseErrors.getSource())
 
 		# keep the line number before any modification
 		self.__originalLineNumber = self.getLineNumber()
+
+	_TYPE2COLOR = {
+		# Colors are structure_xxxcolor with 60,60,60 subtracted.
+		# Except for media, which have been darkened.
+		'par': (19, 96, 70), # settings.get('structure_parcolor'),
+		'seq': (56, 94, 129), # settings.get('structure_seqcolor'),
+		'excl': (84, 57, 106), # settings.get('structure_exclcolor'),
+		'switch': (124, 35, 35), # settings.get('structure_altcolor'),
+		'prio': (106, 1, 66), # settings.get('structure_priocolor'),
+		'imm': (95, 95, 62), #settings.get('structure_leafcolor'),
+		'ext': (95, 95, 62), #settings.get('structure_leafcolor'),
+	}
+
+			
+	def _getcolorpositions(self, node):
+		# Return (begin, end, color) list for this node and children
+		rv = []
+		if hasattr(node, 'tag_positions') and node.tag_positions:
+			for beginpos, endpos in node.tag_positions:
+				type = node.GetType()
+				color = self._TYPE2COLOR.get(type, (0, 0, 0))
+				rv.append((beginpos, endpos, color))
+		for ch in node.GetChildren():
+			rv = rv + self._getcolorpositions(ch)
+		return rv
 			
 	def write_text(self):
 		# Writes the text back to the MMNode structure.
