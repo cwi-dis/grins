@@ -161,16 +161,12 @@ def del_anchor(button):
 	if anchors.has_key(button):
 		del anchors[button]
 
+# Locked on entry, locked on return.
 def dispatch(dev, val):
 	import windowinterface, events, EVENTS
 	global focuswindow, focuswid
 ##	print 'dispatch:', `dev,val` #DBG
-	waslocked = 0
 	if GLLock.gl_lock:
-##		print 'try acquire'
-		if not GLLock.gl_lock.acquire(0):
-##			print 'acquire failed'
-			waslocked = 1
 ##		print 'release'
 		GLLock.gl_lock.release()
 	# Use some undocumented internals of the windowinterface module.
@@ -203,9 +199,8 @@ def dispatch(dev, val):
 ##			if highlight and not highlight.is_closed():
 ##				highlight.unhighlight()
 ##			highlight = None
-	if waslocked:
-##		print 're-acquire'
-		GLLock.gl_lock.acquire()
+##	print 're-acquire'
+	GLLock.gl_lock.acquire()
 ##	print `dummy`
 	if dev == REDRAW:
 		# Ignore events for unregistered windows
