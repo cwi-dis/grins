@@ -25,6 +25,8 @@
 
 ##(bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default
 ##	'Bounding box for embedded PostScript image' channel)
+(arm_duration (float) -1.0 'Arm duration' default
+	'Time needed to arm this event before displaying' raw)
 
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' default
 	'Color used for text/images in window' channel)
@@ -34,6 +36,9 @@
 
 (blockview_winsize (tuple (int) (int)) (400 800) 'Block view winsize' default
 	 'Window size for block view' raw)
+
+(border (int) 1 'Channel border' default
+	'Determines whether channel window has a border (1=yes)' raw)
 
 ##(center (bool) 0 'Center' default
 ##	'If on, text is centered within the margins' channel)
@@ -54,7 +59,7 @@
 (closed (bool) 0 'Closed' default
 	'If on, the node is closed in the hierarchy view' raw)
 
-(duration (float) 2.0 'Duration' default
+(duration (float) 0.0 'Duration' default
 	'Duration of a node/subtree (in seconds)' channel)
 
 ##(extraspaceafter (float) 0.0 'Extra space after' default
@@ -154,6 +159,9 @@
 
 ##(vspace (tuple (float) (float)) (-1 -1) 'Vertical space' default
 ##	'Vertical space before/after text (in lines)')
+
+(visible (int) 1 'Channel visibility' default
+	'Determines visibility of channel (1=visible)' raw)
 
 (wait_for_close (bool) 0 'Wait for close' default
 	'Wait for "close window" action to proceed' channel)
