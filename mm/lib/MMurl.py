@@ -297,8 +297,8 @@ def guessurl(filename):
 
 _pathname2url = pathname2url
 def pathname2url(path):
-	import os
-	if os.name != 'ce':
+	import os, sys
+	if sys.platform == 'win32' and os.name != 'ce':
 		import longpath
 		filename = longpath.short2longpath(path)
 	url = _pathname2url(path)

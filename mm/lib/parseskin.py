@@ -110,7 +110,7 @@ def parsegskin(file):
 		res = settingre.match(line)
 		if res is not None and \
 		   settings.default_settings.has_key(res.group('key')):
-			exec(line, prefs)
+			exec line in prefs, prefs
 			continue
 
 		# first part is GRiNS command

@@ -64,7 +64,7 @@ case "$dir" in
 */bin)	dir=`dirname "$dir"`;;
 esac
 
-for sub in $function common video python lib mmpython
+for sub in $function common python lib mmpython
 do
 	if [ ! -d "$dir/$sub" ]
 	then
