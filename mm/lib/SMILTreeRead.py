@@ -446,6 +446,41 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__node = None
 		del self.__attributes
 		mediatype, subtype = node.__mediatype
+		if mediatype == 'audio':
+			if subtype in ('vnd.rn-realaudio', 'x-pn-realaudio'):
+				mtype = 'RealAudio'
+			else:
+				mtype = 'sound'
+		elif mediatype == 'image':
+			if subtype == 'vnd.rn-realpix':
+				mtype = 'RealPix'
+			else:
+				mtype = 'image'
+		elif mediatype == 'video':
+			if subtype == 'vnd.rn-realvideo':
+				mtype = 'RealVideo'
+			else:
+				mtype = 'video'
+		elif mediatype == 'text':
+			if subtype == 'plain':
+				mtype = 'text'
+			elif subtype == 'vnd.rn-realtext':
+				mtype = 'RealText'
+			else:
+				mtype = 'html'
+		elif mediatype == 'application' and \
+		     subtype == 'x-shockwave-flash':
+			mtype = 'RealVideo'
+		elif mediatype == 'cmif_cmif':
+			mtype = 'cmif'
+		elif mediatype == 'cmif_socket':
+			mtype = 'socket'
+		elif mediatype == 'cmif_shell':
+			mtype = 'shell'
+		else:
+			mtype = mediatype
+			self.warning('unrecognized media type %s' % mtype)
+		node.__chantype = mtype
 
 		if not self.__is_ext:
 			# don't warn since error message already printed
@@ -495,8 +530,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__width > 0 and self.__height > 0:
 			# we don't have to calculate minimum sizes
 			pass
-		elif mediatype in ('image', 'video') or \
-		     (mediatype == 'text' and subtype == 'vnd.rn-realtext'):
+		elif mtype in ('image', 'movie', 'video', 'mpeg',
+			       'RealPix', 'RealText', 'RealVideo'):
 			x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
 			# if we don't know the region size and
 			# position in pixels, we need to look at the
@@ -524,7 +559,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						ch['minwidth'] = width
 					if ch['minheight'] < height:
 						ch['minheight'] = height
-		elif mediatype == 'text':
+		elif mtype in ('text', 'label', 'html', 'graph'):
 			# want to make them at least visible...
 			if ch['width'] == 0:
 				ch['minwidth'] = 200
@@ -850,37 +885,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		except AttributeError:
 			region = '<unnamed>'
 		attrdict = self.__regions.get(region, {})
-		if mediatype == 'audio':
-			if subtype in ('vnd.rn-realaudio', 'x-pn-realaudio'):
-				mtype = 'RealAudio'
-			else:
-				mtype = 'sound'
-		elif mediatype == 'image':
-			if subtype == 'vnd.rn-realpix':
-				mtype = 'RealPix'
-			else:
-				mtype = 'image'
-		elif mediatype == 'video':
-			if subtype == 'vnd.rn-realvideo':
-				mtype = 'RealVideo'
-			else:
-				mtype = 'video'
-		elif mediatype == 'text':
-			if subtype == 'plain':
-				mtype = 'text'
-			elif subtype == 'vnd.rn-realtext':
-				mtype = 'RealText'
-			else:
-				mtype = 'html'
-		elif mediatype == 'cmif_cmif':
-			mtype = 'cmif'
-		elif mediatype == 'cmif_socket':
-			mtype = 'socket'
-		elif mediatype == 'cmif_shell':
-			mtype = 'shell'
-		else:
-			mtype = mediatype
-			self.warning('unrecognized media type %s' % mtype)
+		mtype = node.__chantype
+		del node.__chantype
 		ctx = self.__context
 		for ch in self.__region2channel.get(region, []):
 			if ch['type'] == mtype:
@@ -912,7 +918,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ctx.channelnames.append(name)
 			ctx.channels.append(ch)
 			ch['type'] = mtype
-			if mediatype in ('image', 'video', 'text'):
+			if mtype in ('image', 'movie', 'video', 'mpeg',
+				     'RealPix', 'RealText', 'RealVideo',
+				     'text', 'label', 'html', 'graph'):
 				if not self.__regions.has_key(region):
 					self.warning('no region %s in layout' %
 						     region, self.lineno)
