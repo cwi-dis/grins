@@ -98,7 +98,7 @@ PLAYER_TEMPLATE = (
 )
 
 LINKING_TEMPLATE = (
-	('Region alignment', 'toolbar', 'docked', wndusercmd.TOOLBAR_LINKING, IDW_TOOLBAR_LINKING, grinsRC.IDR_TB_EDITOR, 0, (
+	('Linking and Timing', 'toolbar', 'docked', wndusercmd.TOOLBAR_LINKING, IDW_TOOLBAR_LINKING, grinsRC.IDR_TB_EDITOR, 0, (
 		Button(usercmd.CREATEANCHOR, TBICON_CREATE_ANCHOR),
 		Button(usercmd.FINISH_LINK, TBICON_FINISH_LINK),
 		Separator(6),
@@ -110,7 +110,7 @@ LINKING_TEMPLATE = (
 )
 
 ALIGN_TEMPLATE = (
-	('Linking and Timing', 'toolbar', 'docked', wndusercmd.TOOLBAR_ALIGNMENT, IDW_TOOLBAR_ALIGNMENT, grinsRC.IDR_TB_EDITOR, 0, (
+	('Region alignment', 'toolbar', 'docked', wndusercmd.TOOLBAR_ALIGNMENT, IDW_TOOLBAR_ALIGNMENT, grinsRC.IDR_TB_EDITOR, 0, (
 		Button(usercmd.ALIGN_LEFT, TBICON_ALIGN_LEFT),
 		Button(usercmd.ALIGN_CENTER, TBICON_ALIGN_VERTICAL),
 		Button(usercmd.ALIGN_RIGHT, TBICON_ALIGN_RIGHT),
