@@ -346,7 +346,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				cwd = os.path.join(os.getcwd(), cwd)
 		else:
 			cwd = os.getcwd()
-		windowinterface.FileDialog('Publish SMIL file:', cwd, '*.smil',
+		windowinterface.FileDialog('Publish SMIL file:', cwd, 'application/smil',
 					   '', self.export_okcallback, None)
 	   
 	def upload_callback(self):
