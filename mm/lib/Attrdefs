@@ -53,10 +53,10 @@
 	'Base URL of document, used for resolving relative URLs' raw (g2 qt smil10 smil2 cmif snap))
 
 (base_window (name) 'undefined' 'Channel base window' basechannelname
-	'Name of window in which channelwin is created' raw (smil2 cmif snap))
+	'Name of window in which channelwin is created' raw (cmif))
 
 (base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
-	'Position and size' default 'Position and size, usually in pixels' channel (g2 qt smil10 smil2 cmif snap))
+	'Position and size' default 'Position and size, usually in pixels' channel (g2 qt smil10 cmif))
 
 (begin (float) 0.0 'Begin time' default
 	'Start delay of node' normal (g2 qt smil10 smil2 cmif snap))
