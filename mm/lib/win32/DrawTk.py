@@ -169,6 +169,8 @@ class SelectTool(DrawTool):
 			position = Rect(drawObj._position.tuple())
 			if tk.selectMode == DrawTk.SM_MOVE:
 				position.moveByPt(delta)
+				if delta.x!=0 or delta.y!=0:
+					position.round()
 				drawObj.moveTo(position,view)
 				if delta.x+delta.y:view.SetDrawObjDirty(1)
 			elif tk.ixDragHandle != 0:
@@ -342,14 +344,13 @@ class DrawObj:
 		tk=view.drawTk
 		if position.iseq(self._position):
 			return
-		if not tk._brect.isRectIn(position):
+		if not tk.InDrawAreaRc(position):
 			return
 		if not view:
 			self.invalidate()
 			self._position.setToRect(position)
 			self.invalidate();
 		else:
-			if not tk._brect.isRectIn(position):return
 			view.InvalObj(self)
 			self._position.setToRect(position)
 			view.InvalObj(self)
@@ -455,23 +456,19 @@ class DrawRect(DrawObj):
 		win32mu.FrameRect(dc,self._position.tuple(),(255,0,0))
 
 		# write dimensions
+		s=''
 		str_units=''
-		if self._client_units == UNIT_PXL:
-			if not tk.IsScaled():
-				s='(%d,%d,%d,%d)' % self._position.tuple_ps()
-			else:
-				scaledpos=tk.ToScaledCoord(self._position)
-				s='(%.0f,%.0f,%.0f,%.0f)' % scaledpos.tuple_ps()
-		elif self._client_units == UNIT_SCREEN and tk._rel_coord_ref:
-			s='(%.2f,%.2f,%.2f,%.2f)' % tk._rel_coord_ref.inverse_coordinates(self._position.tuple_ps(),units=self._client_units)
+		scale = tk.GetScale()
+		if scale:
+			s,str_units=scale.orgrect_str(self._position,self._client_units)
 		else:
-			str_units='mm'
-			if not tk.IsScaled():
-				s='(%.1f,%.1f,%.1f,%.1f)' % tk._rel_coord_ref.inverse_coordinates(self._position.tuple_ps(),units=self._client_units)
+			if self._client_units == UNIT_PXL:				
+				s='(%d,%d,%d,%d)' % self._position.tuple_ps()
+			elif self._client_units == UNIT_SCREEN and tk._ref_wnd:
+				s='(%.2f,%.2f,%.2f,%.2f)' % tk._ref_wnd.inverse_coordinates(self._position.tuple_ps(),units=self._client_units)
 			else:
-				scaledpos=tk.ToScaledCoord(self._position)
-				s='(%.1f,%.1f,%.1f,%.1f)' % tk._rel_coord_ref.inverse_coordinates(scaledpos.tuple_ps(),units=self._client_units)
-			# s=''
+				str_units='mm'
+				s='(%.1f,%.1f,%.1f,%.1f)' % tk._ref_wnd.inverse_coordinates(self._position.tuple_ps(),units=self._client_units)
 		if s:
 			tk.SetSmallFont(dc)
 			dc.SetBkMode(win32con.TRANSPARENT)
@@ -525,10 +522,12 @@ class DrawTk:
 		self._hfont_org=0
 		self._limit_rect=1 # number of rect allowed
 		self._capture=None
+
+		# layout page support
+		self._layoutmode=1
 		self._brect=None
 		self._crect=None
-		self._layoutmode=1
-		self._has_scale=0
+		self._scale=None
 
 	def __del__(self):
 		if self._hsmallfont:
@@ -582,49 +581,28 @@ class DrawTk:
 			dc.SelectObjectFromHandle(self._hfont_org)
 
 	def SetRelCoordRef(self,wnd):
-		self._rel_coord_ref=wnd
+		self._ref_wnd=wnd
 	
-	# Scaled coordinates support
-	def	SetScale(self,xs,ys):
-		self._xscale=xs
-		self._yscale=ys
-		self._wscale=xs
-		self._hscale=ys
-		self._has_scale=1
+	
+	######################
+	# layout page support
+	def SetLayoutMode(self,v):
+		self._layoutmode=v
+	def InLayoutMode(self):
+		return self._layoutmode
 
-	def IsScaled(self):
+	def	SetScale(self,scale):
+		self._scale=scale
+
+	def GetScale(self):
 		if self.InLayoutMode():
-			return 0
-		return self._has_scale
-
-	def AdjustScale(self,lbox,box):
-		if not box or not lbox or len(box)!=4 or len(lbox)!=4:
-			return
-		self._xscale=float(lbox[0])/box[0]
-		self._yscale=float(lbox[1])/box[1]
-		self._wscale=float(lbox[2])/box[2]
-		self._hscale=float(lbox[3])/box[3]
-
-	def ToScaledCoord(self,rc):
-		l=int(rc.left/float(self._xscale)+0.5)
-		t=int(rc.top/float(self._yscale)+0.5)
-		w=int(rc.width()/float(self._wscale)+0.5)
-		h=int(rc.height()/float(self._hscale)+0.5)
-		if self._rel_coord_ref.IsDrawObjDirty():
-			self._xscale=self._wscale
-			self._yscale=self._hscale
-		return Rect((l,t,l+w,t+h))
+			return None
+		return self._scale
 
 	def	SetBRect(self,rc):
 		self._brect=Rect(rc)
 	def	SetCRect(self,rc):
 		self._crect=Rect(rc)
-
-	# 
-	def SetLayoutMode(self,v):
-		self._layoutmode=v
-	def InLayoutMode(self):
-		return self._layoutmode
 
 	def InDrawArea(self,point):
 		if self.InLayoutMode():
@@ -632,11 +610,22 @@ class DrawTk:
 				return 0
 			else:
 				return 1
-		return self._brect.isPtInRect(point)
+		return self._brect.isPtInRectEq(point)
+
+	def InDrawAreaRc(self,rc):
+		if self.InLayoutMode():
+			return 1
+		return self._brect.isRectIn(rc)
+
+	def SetUnits(self,units):
+		self.selectTool.setunits(units)
+		self.rectTool.setunits(units)
+		objs=self._ref_wnd._objects
+		if len(objs):objs[0].setunits(units)
+		self._ref_wnd._rb_units=units
 
 	def	RestoreState(self):
-		self._brect=None
-		self._crect=None
+		self._scale=None
 		self._layoutmode=1
 		self._has_scale=0
 	
