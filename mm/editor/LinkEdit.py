@@ -37,7 +37,8 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.root = self.toplevel.root
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
-		width, height = MMAttrdefs.getattr(self.root, 'links_winsize')
+		form = flp.parse_form('LinkEditForm', 'form')
+		width, height = form[0].Width, form[0].Height
 		self = BasicDialog.init(self, (width, height, 'Link editor'))
 		self.left = Struct()
 		self.right = Struct()
@@ -51,7 +52,6 @@ class LinkEdit(ViewDialog, BasicDialog):
 		self.right.hidden = 0
 		self.linkedit = 0
 		self.linkfocus = None
-		form = flp.parse_form('LinkEditForm', 'form')
 		flp.merge_full_form(self, self.form, form)
 		self.left.node_menu.set_menu(LEFT_MENU)
 		self.right.node_menu.set_menu(RIGHT_MENU)
@@ -67,6 +67,9 @@ class LinkEdit(ViewDialog, BasicDialog):
 		if self.form.window >= 0:
 			gl.winset(self.form.window)
 		self.updateform()
+	#
+	def kill(self):
+		self.destroy()
 	#
 	def show(self):
 		if not self.showing:
@@ -374,7 +377,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 		str = getattr(self, str)
 		node = str.node
 		import AnchorEdit
-		AnchorEdit.showanchoreditor(node, self.toplevel)
+		AnchorEdit.showanchoreditor(self.toplevel, node)
 	#
 	def GetTimeChartFocus(self):
 		return self.toplevel.channelview.getfocus()
