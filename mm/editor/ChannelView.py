@@ -104,6 +104,7 @@ class ChannelView(ChannelViewDialog):
 		self.showarcs = 1
 		self.placing_channel = 0
 		self.thumbnails = 0
+		self.showbandwidthstrip = 0
 		self.layouts = [('All channels', ())]
 		for name in self.context.layouts.keys():
 			self.layouts.append((name, (name,)))
@@ -301,14 +302,14 @@ class ChannelView(ChannelViewDialog):
 			# channel not visible
 			return 0, 0
 # original code: all channels and extra lines at same distance from each other
-##		height = float(self.timescaleborder) / nlines
+##		height = float(self.bandwidthstripborder) / nlines
 ##		x, y = (i + 0.1) * height, (i + 0.9) * height
 ##		channel.chview_map = x, y, height
 ##		return x + line*height, y + line*height
 # new code: extra lines closer together
 		nchannels = len(list)
 		nextras = nlines - nchannels
-		dist = float(self.timescaleborder) / (nchannels + 0.9 * nextras)
+		dist = float(self.bandwidthstripborder) / (nchannels + 0.9 * nextras)
 		height = 0.8 * dist
 		ldist = 0.9 * dist
 		x = 0.1 * dist
@@ -325,7 +326,7 @@ class ChannelView(ChannelViewDialog):
 		nchannels = len(list)
 		if nchannels == 0:
 		    return 0
-		height = float(self.timescaleborder) / nchannels
+		height = float(self.bandwidthstripborder) / nchannels
 		rv = int((y+height/2)/height)
 		if rv < 0:
 		    rv = 0
@@ -360,6 +361,12 @@ class ChannelView(ChannelViewDialog):
 		self.settoggle(TOGGLE_ARCS, self.showarcs)
 		self.arcs = []
 		self.resize()
+		
+	def togglebwstrip(self):
+		self.toplevel.setwaiting()
+		self.showbandwidthstrip = not self.showbandwidthstrip
+		self.settoggle(TOGGLE_BWSTRIP, self.showbandwidthstrip)
+		self.resize()
 
 	# Return list of currently visible channels
 
@@ -388,6 +395,15 @@ class ChannelView(ChannelViewDialog):
 		self.channelright = displist.strsize('999999')[0]
 		self.nodetop = min(self.channelright * 2, self.channelright + .05)
 		self.timescaleborder = 1.0 - 4 * fh
+		if self.showbandwidthstrip:
+			# Wild guess: make bandwidth strip 5 textlines high, but at most
+			# 15% of the window
+			stripheight = 5 * displist.strsize('X')[1]
+			if stripheight > 0.15:
+				stripheight = 0.15
+			self.bandwidthstripborder = self.timescaleborder - stripheight
+		else:
+			self.bandwidthstripborder = self.timescaleborder
 
 		self.objects = []
 		self.focus = self.lockednode = None
@@ -395,9 +411,15 @@ class ChannelView(ChannelViewDialog):
 		self.objects.append(self.baseobject)
 		self.timescaleobject = TimeScaleBox(self)
 		self.objects.append(self.timescaleobject)
+		if self.showbandwidthstrip:
+			self.bwstripobject = BandwidthStripBox(self)
+			self.objects.append(self.bwstripobject)
+		else:
+			self.bwstripobject = None
 		self.initchannels(focus)
 		self.initnodes(focus)
 		self.initarcs(focus)
+		self.initbwstrip()
 
 		# enable Next and Prev Minidoc commands if there are minidocs
 		if self.baseobject.descendants or \
@@ -657,6 +679,14 @@ class ChannelView(ChannelViewDialog):
 				   focus[1] == (xnode, xside, delay, ynode, yside):
 					obj.select()
 
+	def initbwstrip(self):
+		# clear all bandwidth box pointers
+		for obj in self.objects:
+			obj.bandwidthboxes = []
+		# XXXX loop over nodes and create continuous media boxes
+		# XXXX loop over channels/nodes and create prearm boxes
+		# XXXX compute starttime disregarding t0 prearm
+		
 	# Focus stuff (see also recalc)
 
 	def deselect(self):
@@ -927,6 +957,7 @@ class GO(GOCommand):
 			THUMBNAIL(callback = (mother.thumbnailcall, ())),
 			TOGGLE_ARCS(callback = (mother.togglearcs, ())),
 			LAYOUTS(callback = mother.layoutcall),
+			TOGGLE_BWSTRIP(callback = (mother.togglebwstrip, ())),
 			]
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
@@ -982,6 +1013,8 @@ class GO(GOCommand):
 		self.mother.setpopup(self.popupmenu)
 		if self.ok:
 			self.drawfocus()
+		if self.mother.bwstripobject:
+			self.mother.bwstripobject.setstripfocus(self.bandwidthboxes)
 
 	def deselect(self):
 		# Remove this object from the focus
@@ -1106,7 +1139,46 @@ class TimeScaleBox(GO):
 		        l, r = self.mother.maptimes(i, i)
 			d.drawline(ANCHORCOLOR, [(l, t), (l, b)])
 
+class BandwidthStripBox(GO):
 
+	def __init__(self, mother):
+		GO.__init__(self, mother, 'bandwidthstrip')
+
+	def reshape(self):
+		self.top = self.mother.bandwidthstripborder + \
+			   self.mother.new_displist.fontheight()
+		self.bottom = self.mother.timescaleborder
+		t0, t1 = self.mother.timerange()
+		self.left, self.right = self.mother.maptimes(t0, t1)
+		self.ok = 1
+
+	def drawfocus(self):
+		l, t, r, b = self.left, self.top, self.right, self.bottom
+		width = r-l
+		if width <= 0:
+			return
+		d = self.mother.new_displist
+##		f_width = d.strsize('x')[0]
+##		d.fgcolor(BORDERCOLOR)
+		hmargin = d.strsize('x')[0] / 9
+##		vmargin = d.fontheight() / 4
+		vmargin = 0
+		l = l + hmargin
+		t = t + vmargin
+		r = r - hmargin
+		b = b - vmargin
+		# Draw the axes
+		d.drawline(BORDERCOLOR, [(l, t), (l, b), (r, b)])
+		bwpos = (t+b)/2 # XXXX
+		f_height = d.strsize('x')[1]
+		d.drawline(BORDERCOLOR, [(l, bwpos), (r, bwpos)])
+		d.fgcolor(TEXTCOLOR)
+		str = "28k8"
+		d.centerstring(0, bwpos-f_height/2,
+			       self.mother.channelright, bwpos+f_height, str)
+			       
+	def setstripfocus(self, focusboxes):
+		print "FOCUSBOXES", focusboxes
 
 # Class for Channel Objects
 
