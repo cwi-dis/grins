@@ -17,33 +17,41 @@ from win32mu import Point,Rect
 import win32ui,win32con,win32api
 import __main__
 from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
+import appcon
 
 class _rbtk:
 	def __init__(self):
-		self._next_create_box = []
+		pass
 
 	# Called by the core system to create or resize a box
 	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
-		if modeless:
-			return # To be implemented
-		# if we are in create box mode, queue request
+		self.assert_not_in_create_box()
+		
+		# for modal boxes cancel is async, so:
 		if self.in_create_box_mode():
-			self.get_box_modal_wnd()._next_create_box.append((self, msg, callback, box, units))
+			apply(callback, ())
 			return
-
+					
 		# if we are closed call cancel
 		if self.is_closed():
 			apply(callback, ())
 			return
+
+
+		self._rb_modeless=modeless
+		self._rb_callback=callback
+		self._rb_units=units
+		self._rb_box=box
 
 		if box:
 			# convert box to relative sizes if necessary
 			box = self._inverse_coordinates(self._convert_coordinates(box, units = units))
 
 		# set application in create box mode
-		self.getgrinsframe().showChilds(0)
+		if not modeless:
+			self.getgrinsframe().showChilds(0)
+			self.pop() # bring to top
 		self.set_create_box_mode(self)
-		self.pop() # bring to top
 	
 
 		# set rel coord reference
@@ -93,27 +101,27 @@ class _rbtk:
 		d.render()
 		self._rb_curdisp = d
 
-		f=self._topwindow._parent
-		components.CreateBoxBar(f,msg,
-			callback = (self.EndModalLoop, (win32con.IDOK,)),
-			cancelCallback = (self.EndModalLoop, (win32con.IDCANCEL,)))	
-	
-		# clip cursor
-		#win32api.ClipCursor(self.GetWindowRect())
+		if not modeless:
+			# display dlg (bar) with OK and CANCEL
+			f=self._topwindow._parent
+			components.CreateBoxBar(f,msg,
+				callback = (self.EndModalLoop, (win32con.IDOK,)),
+				cancelCallback = (self.EndModalLoop, (win32con.IDCANCEL,)))	
+			# loop here dispatching messages until the user or the system
+			# directly or indirectly calls self.EndModalLoop with OK or CANCEL arg.
+			# The mechanism is actually a simple and clean callback mechanism
+			userResponse=self.RunModalLoop(0)
+			self._rb_finish(userResponse)
 		
-		# loop here dispatching messages until user
-		# selects OK or CANCEL
-		userResponse=self.RunModalLoop(0)
 
-
-		# cleanup steps before callback
-		
+	def _rb_finish(self,userResponse):
 		# 1. restore mode
 		self.set_create_box_mode(None)
-		self.getgrinsframe().showChilds(1)
+		if not self._rb_modeless:
+			self.getgrinsframe().showChilds(1)
 
 		# 2. restore wnds state
-		self._topwindow.ShowWindows(win32con.SW_SHOW)
+			self._topwindow.ShowWindows(win32con.SW_SHOW)
 
 		# 3. restore display list
 		if self._rb_dl and not self._rb_dl.is_closed():
@@ -125,27 +133,62 @@ class _rbtk:
 		# 5. get user object
 		if self._objects:
 			drawObj=self._objects[0]
-			rb=self.get_relative_coords100(drawObj._position.tuple_ps(), units = units)
+			rb=self.get_relative_coords100(drawObj._position.tuple_ps(), units = self._rb_units)
 		else:
 			rb=()
 		self.DeleteContents()
 				
-		# call user selected callback
+		# callback with the box or () according to self.EndModalLoop argument
 		if userResponse==win32con.IDOK:
-			apply(callback, rb)
+			apply(self._rb_callback, rb)
 		else:
-			apply(callback,())	
-
-		# execute pending create_box calls
-		next_create_box = self._next_create_box
-		self._next_create_box = []
-		for win, msg, cb, box, units in next_create_box:
-			win.create_box(msg, cb, box, units)
+			# for modeless boxes do here what we should
+			# have done on every change.
+			if self._rb_modeless and self._rb_dirty(rb):
+				apply(self._rb_callback, rb)
+			else:	
+				apply(self._rb_callback,())	
 
 	def cancel_create_box(self):
-		"""Cancel a modeless create_box"""
-		pass
+		"""Cancel create_box"""
+		if not self.in_create_box_mode():
+			raise 'Not in_create_box mode', self
+		if self.in_create_box_mode():
+			mw=self.get_box_modal_wnd()
+			if self._rb_modeless:
+				mw._rb_finish(win32con.IDCANCEL)
+			else:
+				mw.PostMessage(appcon.WM_USER_CREATE_BOX_CANCEL)	
+			
 		
+	def return_create_box(self):
+		"""Return create_box"""
+		if not self.in_create_box_mode():
+			raise 'Not _in_create_box', self
+		if self.in_create_box_mode():
+			mw=self.get_box_modal_wnd()
+			if self._rb_modeless:
+				mw._rb_finish(win32con.IDOK)
+			else:
+				mw.PostMessage(appcon.WM_USER_CREATE_BOX_OK)
+
+	def _rb_dirty(self,box):
+		if not self._rb_box and box: return 1
+		for i in range(4):
+			if self._rb_box[i]!=box[i]:
+				return 1
+		return 0
+					
+	def assert_not_in_create_box(self):
+		if self.in_create_box_mode():
+			self.get_box_modal_wnd().cancel_create_box()
+
+	def onCreateBoxOK(self,params):
+		self.EndModalLoop(win32con.IDOK)
+
+	def onCreateBoxCancel(self,params):
+		self.EndModalLoop(win32con.IDCANCEL)
+
 	# Notify the toolkit about mouse and paint messages
 	def notifyListener(self,key,params):
 		if not self.in_create_box_mode(): return 0
@@ -158,6 +201,11 @@ class _rbtk:
 	# returns true if we are in create box mode 
 	def in_create_box_mode(self):
 		return __main__.toplevel._in_create_box
+
+	def in_modal_create_box_mode(self):
+		mw=__main__.toplevel._in_create_box
+		if not mw: return 0
+		return (not mw._rb_modeless) 
 
 	# Set/remove create box mode
 	def set_create_box_mode(self,f):
