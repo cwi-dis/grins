@@ -1547,8 +1547,8 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "Closed-captions preferred over overdub",IDC_CHECK1,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,43,140,10
-    CONTROL         "Show closed-captions when available",IDC_CHECK2,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,11,57,135,10
+    CONTROL         "Show captions when available",IDC_CHECK2,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,57,112,10
     CONTROL         "Use Internet Explorer HTML control",IDC_CHECK4,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,11,71,165,10
     DEFPUSHBUTTON   "OK",IDOK,163,88,50,14
@@ -1569,8 +1569,8 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "Subtitles preferred over overdub",IDC_CHECK1,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,11,43,117,10
-    CONTROL         "Show closed-captions when available",IDC_CHECK2,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,11,57,135,10
+    CONTROL         "Show captions when available",IDC_CHECK2,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,57,112,10
     CONTROL         "Use Internet Explorer HTML control",IDC_CHECK4,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,11,85,165,10
     DEFPUSHBUTTON   "OK",IDOK,163,101,50,14
@@ -2492,6 +2492,59 @@ BEGIN
     LTEXT           "Replace with:",IDC_STATIC,7,28,44,8
 END
 
+IDD_EDITATTR_BRUSH DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_READINDEXV,222,23,64,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EVENTSENSITIVITYV,222,46,64,12,ES_AUTOHSCROLL
+    CONTROL         "whenDone",IDC_ERASEV1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY | WS_TABSTOP,192,71,49,10
+    CONTROL         "never",IDC_ERASEV2,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY,251,71,31,10
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "Color",IDC_GROUP2,5,9,137,45
+    LTEXT           "Read index:",IDC_READINDEXL,162,25,48,8
+    LTEXT           "Event sensitivity:",IDC_EVENTSENSITIVITYL,162,48,54,8
+    GROUPBOX        "",IDC_GROUP6,188,66,98,16
+    LTEXT           "Erase:",IDC_ERASEL,162,71,24,8
+    GROUPBOX        "Advanced",IDC_GROUP7,153,9,139,79
+    EDITTEXT        IDC_COLORS,15,27,72,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Pick color...",IDC_COLOR_PICK,91,27,46,12
+END
+
+IDD_EDITATTR_S1R3S7 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "System",IDC_GROUP1,6,5,287,98
+    LTEXT           "Bitrate:",IDC_11,12,19,96,8
+    COMBOBOX        IDC_12,109,17,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Captions:",IDC_31,12,35,96,8
+    CONTROL         "on",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+                    WS_TABSTOP,116,35,24,10
+    CONTROL         "off",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,196,
+                    35,24,10
+    GROUPBOX        "",IDC_GROUP2,109,29,174,17
+    LTEXT           "Language:",IDC_21,12,51,96,8
+    COMBOBOX        IDC_22,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Overdub or Subtitle:",IDC_41,12,67,96,8
+    CONTROL         "subtitle",IDC_42,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY | WS_TABSTOP,116,67,38,10
+    CONTROL         "overdub",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    196,67,42,10
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "",IDC_GROUP3,109,61,174,17
+    LTEXT           "Audio description:",IDC_SAUDIODESCL,12,83,74,8
+    CONTROL         "on",IDC_SAUDIODESCV1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY | WS_TABSTOP,116,83,24,10
+    CONTROL         "off",IDC_SAUDIODESCV2,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY,196,83,24,10
+    GROUPBOX        "",IDC_GROUP6,109,77,174,17
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2903,6 +2956,11 @@ BEGIN
         RIGHTMARGIN, 235
         TOPMARGIN, 7
         BOTTOMMARGIN, 83
+    END
+
+    IDD_EDITATTR_BRUSH, DIALOG
+    BEGIN
+        RIGHTMARGIN, 296
     END
 END
 #endif    // APSTUDIO_INVOKED
