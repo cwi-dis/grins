@@ -334,8 +334,8 @@
 	'What the size/position numbers are measured in' raw (g2_pro qt_pro smil10 cmif))
 
 (usergroups (list (enclosed (tuple (name) (tuple (string) (bool) (name)))))
-	() 'User groups' hidden
-	'Usergroups used in this document (root node only)' normal (smil2 cmif))
+	() 'Custom tests' hidden
+	'Custom tests used in this document (root node only)' normal (smil2 cmif))
 
 (video (bool) 0 'Video output' default
 	'Do image smoothing for video output' channel (cmif))

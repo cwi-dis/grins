@@ -30,7 +30,7 @@ class PlayerDialog(PlayerDialogBase):
 				(FLAG_ALL, 'Pause', PAUSE, 't'),
 				(FLAG_ALL, 'Stop', STOP, 't'),
 				]),
-			(FLAG_BOSTON, 'User Groups', USERGROUPS),
+			(FLAG_BOSTON, 'Custom tests', USERGROUPS),
 			(FLAG_CMIF, 'Channels', CHANNELS),
 			(FLAG_ALL|FLAG_DBG, 'View', [
 				(FLAG_CMIF, 'Timeline view follows player', SYNCCV, 't'),

@@ -111,7 +111,7 @@ class LINKVIEW(_CommandBase):
 class LAYOUTVIEW(_CommandBase):
 	help = 'Show Layout View 2'
 class USERGROUPVIEW(_CommandBase):
-	help = 'Show User Group Editor'
+	help = 'Show Custom Test Editor'
 class TRANSITIONVIEW(_CommandBase):
 	help = 'Show Transition view'
 class LAYOUTVIEW2(_CommandBase):
@@ -149,7 +149,7 @@ class STOP(_CommandBase):
 class MAGIC_PLAY(_CommandBase):
 	help = 'Continue when paused, pause when playing, play when stopped'
 class USERGROUPS(_DynamicCascade):
-	help = 'User groups'
+	help = 'Custom tests'
 class CHANNELS(_DynamicCascade):
 	help = 'Toggle channels on/off'
 class SYNCCV(_CommandBase):
