@@ -202,15 +202,15 @@ class AnimationData:
 		
 	def _posListToStr(self, sl):
 		str = ''
-		for r, g, b in sl:
-			str = str + '%d %d;' % (x, y)
+		for point in sl:
+			str = str + '%d %d;' % point
 		return str[:-1]
 
 	def _colorListToStr(self, sl):
 		str = ''
 		for rgb in sl:
-			if colors.rcolors.has_key(val):
-				s = colors.rcolors[val]
+			if colors.rcolors.has_key(rgb):
+				s = colors.rcolors[rgb]
 			else:
 				s = '#%02x%02x%02x' % rgb
 			str = str + s + ';'
@@ -239,7 +239,7 @@ class AnimationData:
 			if s: 
 				pair = self._getNumPair(s)
 				if pair:
-					vl.append(string.atof(s))
+					vl.append(pair)
 		return vl	
 
 	def _getNumPair(self, str):
