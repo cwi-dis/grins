@@ -1057,6 +1057,14 @@ SOURCE=.\M_tokenize.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_Toolbars.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_ToolbarTemplate.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_TopLevel.c
 # End Source File
 # Begin Source File
@@ -1078,6 +1086,10 @@ SOURCE=.\M_TransitionBitBlit.c
 # Begin Source File
 
 SOURCE=.\M_Transitions.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_TreeCtrl.c
 # End Source File
 # Begin Source File
 
