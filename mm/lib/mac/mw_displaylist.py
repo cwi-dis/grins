@@ -143,6 +143,11 @@ class _DisplayList:
 ##			depth=16 # XXX
 ##			App.SetThemePen(Appearance.kThemeBrushDocumentWindowBackground, depth, 1)
 ##			return
+		# XXX Not sure about this:
+		if fgcolor == None:
+			fgcolor = self._bgcolor
+		if fgcolor == None:
+			fgcolor = (0,0,0)
 		Qd.RGBForeColor(fgcolor)
 		
 	def _restorecolors(self):
@@ -279,7 +284,7 @@ class _DisplayList:
 				else:
 					Qd.EraseRect(window.qdrect())
 		elif cmd == 'fg':
-			Qd.RGBForeColor(entry[1])
+			self._setfgcolor(entry[1])
 		elif cmd == 'font':
 			entry[1]._setfont(grafport)
 		elif cmd == 'text':
@@ -487,7 +492,10 @@ class _DisplayList:
 	def fgcolor(self, color):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		color = self._window._convert_color(color)
+		if color == None:
+			color = self._bgcolor
+		else:
+			color = self._window._convert_color(color)
 		self._list.append(('fg', color))
 		self._fgcolor = color
 
