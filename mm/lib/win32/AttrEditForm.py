@@ -1779,7 +1779,6 @@ class StringOptionsCtrl(AttrCtrl):
 class HtmlTemplateCtrl(StringOptionsCtrl):
 	def __init__(self,wnd,attr,resid):
 		import compatibility
-		import features
 		# for instance, only embedded_player is supported in QuickTime version
 		if compatibility.QT == features.compatibility:
 			options=['embedded_player.html']

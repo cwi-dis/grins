@@ -2,9 +2,6 @@ __version__ = "$Id$"
 
 # Experimental layout view for light region view
 
-# editor features
-import features
-
 # std win32 modules
 import win32ui, win32con, win32api
 Sdk = win32ui.GetWin32Sdk()
