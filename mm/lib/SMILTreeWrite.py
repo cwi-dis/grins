@@ -638,6 +638,14 @@ def getlayout(writer, node):
 		return
 	return writer.layout2name[layout]
 
+def gettransition(writer, node, which):
+	if not node.GetContext().transitions:
+		return
+	transition = MMAttrdefs.getattr(node, which)
+	if not transition:
+		return
+	return writer.transition2name[transition]
+	
 def getautoreverse(writer, node):
 	autoReverse = MMAttrdefs.getattr(node, 'autoReverse')
 	if autoReverse == 'false':
@@ -746,6 +754,8 @@ smil_attrs=[
 	("calcMode", getcalcmode),
 	("keyTimes", lambda writer, node:getstringattr(writer, node, "keyTimes")),
 	("keySplines", lambda writer, node:getstringattr(writer, node, "keySplines")),
+	("transIn", lambda writer, node:gettransition(writer, node, "transIn")),
+	("transOut", lambda writer, node:gettransition(writer, node, "transOut")),
 
 ]
 
@@ -763,6 +773,7 @@ cmif_node_attrs_ignore = {
 	'author':0, 'copyright':0, 'abstract':0, 'alt':0, 'longdesc':0,
 	'title':0, 'mimetype':0, 'terminator':0, 'begin':0, 'fill':0,
 	'repeatdur':0, 'beginlist':0, 'endlist':0,
+	'transIn':0, 'transOut':0,
 	}
 cmif_node_realpix_attrs_ignore = {
 	'bitrate':0, 'size':0, 'duration':0, 'aspect':0, 'author':0,
@@ -879,6 +890,9 @@ class SMILWriter(SMIL):
 
 		self.layout2name = {}
 		self.calclayoutnames(node)
+		
+		self.transition2name = {}
+		self.calctransitionnames(node)
 
 		self.ch2name = {}
 		self.top_levels = []
@@ -1067,6 +1081,7 @@ class SMILWriter(SMIL):
 				links.append(string.join(string.split(link, ' '), '%20'))
 			self.writetag('meta', [('name', 'project_links'), ('content', string.join(links))])
 		self.writelayout()
+		self.writetransitions()
 		self.writeusergroups()
 		self.writegrinslayout()
 		self.pop()
@@ -1094,6 +1109,24 @@ class SMILWriter(SMIL):
 				name = nn
 			self.ids_used[name] = 1
 			self.ugr2name[ugroup] = name
+
+	def calctransitionnames(self, node):
+		"""Calculate unique names for transitions"""
+		transitions = node.GetContext().transitions
+		if not transitions:
+			return
+		self.smilboston = 1
+		for transition in transitions.keys():
+			name = identify(transition)
+			if self.ids_used.has_key(name):
+				i = 0
+				nn = '%s-%d' % (name, i)
+				while self.ids_used.has_key(nn):
+					i = i+1
+					nn = '%s-%d' % (name, i)
+				name = nn
+			self.ids_used[name] = 1
+			self.transition2name[transition] = name
 
 	def calclayoutnames(self, node):
 		"""Calculate unique names for layouts"""
@@ -1472,6 +1505,29 @@ class SMILWriter(SMIL):
 				attrlist.append(('override', override))
 			self.writetag('uGroup', attrlist)
 		self.pop()
+
+	def writetransitions(self):
+		transitions = self.root.GetContext().transitions
+		if not transitions:
+			return
+		defaults = {
+			'dur':'1s',
+			'startPercent':'0',
+			'endPercent':'100',
+			'color':'black',
+			'vertRepeat':'0',
+			'horzRepeat':'0',
+			'borderWidth':'0',
+			'direction':'forward',
+			'multiElement':'false'}
+		for key, val in transitions.items():
+			attrlist = []
+			attrlist.append(('id', self.transition2name[key]))
+			for akey, aval in val.items():
+				if defaults.has_key(akey) and defaults[akey] == aval:
+					continue
+				attrlist.append((akey, aval))
+			self.writetag('transition', attrlist)
 
 	def writegrinslayout(self):
 		layouts = self.root.GetContext().layouts
