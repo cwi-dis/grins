@@ -116,12 +116,12 @@ class PlayerDlgBar(window.Wnd):
 			menu = miniframe.GetSystemMenu()
 			if menu:
 				try:
-					miniframe.DeleteMenu(win32con.SC_CLOSE, win32con.MF_BYCOMMAND)
+					menu.DeleteMenu(win32con.SC_CLOSE, win32con.MF_BYCOMMAND)
 				except:
 					pass
 				else:
 					miniframe.DrawMenuBar()
-
+		
 	def createResourceItems(self, attributes):
 		id = 1
 		for attr in attributes:
