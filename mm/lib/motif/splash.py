@@ -125,12 +125,13 @@ class _Splash:
 		w.AddCallback('exposeCallback', self.expose,
 			      (gc.PutImage, (image, 0, 0, 0, 0, width, height)))
 		gc.PutImage(image, 0, 0, 0, 0, width, height)
+		w.DefineCursor(self.watchcursor)
 		self.dpy.Flush()
 		import Xtdefs, time
-		time.sleep(0.1)
+		Xt.ProcessEvent(Xtdefs.XtIMAll)
+## 		time.sleep(0.1)
 		while Xt.Pending():
 			Xt.ProcessEvent(Xtdefs.XtIMAll)
-		w.DefineCursor(self.watchcursor)
 		return 1
 
 	def wininit(self):
