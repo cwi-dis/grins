@@ -2047,6 +2047,10 @@ class HierarchyView(HierarchyViewDialog):
 			self.clear_showtime(node)
 		else:
 			node.showtime = which
+		# If we've toggled the bandwidth strip we
+		# should also tell toplevel so it can add/remove
+		# the player control panel bandwidth menu
+		self.toplevel.update_toolbarpulldowns()
 		self.need_resize = 1
 		self.draw()
 

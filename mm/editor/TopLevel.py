@@ -615,10 +615,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# Returns the initializer dictionary used
 		# to create the toolbar pulldown menus for
 		# preview playback preferences
-##		import time
-#		t = time.time()
+
 		alltests = self.root.GetAllSystemTests()
-##		print 'ALLSYSTEMTESTS', time.time()-t, alltests
+		# Special case: if we are showing bandwidths in the
+		# structure view we always show the bitrate popup.
+		if not 'system_bitrate' in alltests and self.root.showtime == 'bwstrip':
+			alltests.append('system_bitrate')
 		dict = {}
 		for testname in alltests:
 			exttestname = systemtestnames.int2extattr(testname)
