@@ -106,9 +106,18 @@ class TextWindow(ChannelWindow):
 			if val == 1:
 				self.pm = (mx, my)
 			else:
+				try:
+					# Check if self.pm is set -- somehow
+					# it is possible that the mouse-down
+					# was never seen (e.g. down outside
+					# the window and up inside it)
+					pm = self.pm
+				except AttributeError:
+					gl.ringbell()
+					return
 				a = self.anchors[0]
 				self.anchors[0] = (a[0], a[1], \
-					  [self.pm[0], self.pm[1], mx, my])
+					  [pm[0], pm[1], mx, my])
 				self.redraw()
 			return
 		if (dev, val) <> (DEVICE.LEFTMOUSE, 0):
