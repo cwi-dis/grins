@@ -55,8 +55,6 @@ class Window:
 		self._transition = None
 		self._fromsurf = None
 		self._drawsurf = None
-		self._outtrans = 0
-		self._stdpaint = 1
 
 		# scaling support
 		self._device2logical = 1
@@ -64,6 +62,13 @@ class Window:
 		# animation support
 		self._mediadisplayrect = None
 		self._fit = 1
+
+		# scroll support
+		self._canscroll = 0
+		self._scrollpos = 0, 0
+
+		# scroll implementation by dragging
+		self._ptdown = None
 
 	def create(self, parent, coordinates, units, z=0, transparent=0, bgcolor=None):
 		self.__setparent(parent)
@@ -102,11 +107,62 @@ class Window:
 	# mediacoords in UNIT_PXL
 	def setmediadisplayrect(self, rc):
 		self._mediadisplayrect = rc
+		self.checkscrolling()
 
 	# fit: 'hidden':1, 'meet':0, 'slice':-1, ('meed_hidden'=-2,) 'fill':-3', 'scroll':-4
 	def setmediafit(self, fit):
 		self._fit = fit
-		
+		self.checkscrolling()
+	
+	#
+	# Scrolling support
+	#
+	def checkscrolling(self):
+		wd, hd = self._rect[2:]
+		ws, hs = self._mediadisplayrect[2:]
+		if self._fit==-4 and ws>wd or hs>hd:
+			self._canscroll = 1	
+			self.setdefaultcursor('draghand')
+
+	def setscrollpos(self, pos):
+		if not self._ptdown or not self._canscroll: return	
+		x1, y1 = self._ptdown
+		x2, y2 = pos
+		dx = x2-x1
+		dy = y2-y1
+		x, y = self._scrollpos
+		x, y = x-dx, y-dy
+		wd, hd = self._rect[2:]
+		ws, hs = self._mediadisplayrect[2:]
+		if x<0: x=0
+		if x>ws-wd: x = ws-wd
+		if y<0: y=0
+		if y>hs-hd: y = hs-hd
+		self._scrollpos = x, y
+		self.update(self.getwindowpos())
+
+	def _onlbuttondown(self, point):
+		for wnd in self._subwindows:
+			if wnd.inside(point):
+				wnd._onlbuttondown(point)
+				return
+		if self._canscroll:
+			self._ptdown = point
+
+	def _onlbuttonup(self, point):
+		for wnd in self._subwindows:
+			if wnd.inside(point):
+				wnd._onlbuttonup(point)
+				return
+		if self._canscroll:
+			self._ptdown = None
+
+	def _onmousemove(self, point):
+		for wnd in self._subwindows:
+			if wnd.inside(point):
+				wnd._onmousemove(point)
+				return
+		self.setscrollpos(point)
 	#
 	# WMEVENTS section
 	#
@@ -1682,11 +1738,9 @@ class Region(Window):
 				# find src clip ltrb given the destination clip
 				lsc, tsc, rsc, bsc =  self._getsrcclip((ld, td, rd, bd), (ls, ts, rs, bs), (ldc, tdc, rdc, bdc))
 
-				if self._fit == -4:
-					if ws>w: 
-						wnd.setdefaultcursor('draghand')
-					if hs>h: 
-						wnd.setdefaultcursor('draghand')
+				if self._canscroll: 	
+					dx, dy = wnd._scrollpos
+					lsc, tsc, rsc, bsc = lsc+dx, tsc+dy, rsc+dx, bsc+dy
 
 				# we are ready, blit it
 				if not vdds.IsLost():
@@ -2000,7 +2054,7 @@ class Region(Window):
 		x0, y0, w0, h0 = self._rectb
 		x1, y1, w1, h1 = self.getwindowpos()
 
-		self._mediadisplayrect = mediacoords
+		self.setmediadisplayrect(mediacoords)
 
 		if self._mediadisplayrect and self._fromsurf and self._transition:
 			tr = self._transition
@@ -2053,7 +2107,6 @@ class Region(Window):
 		if runit:
 			self._multiElement = dict.get('coordinated')
 			self._childrenClip = dict.get('clipBoundary', 'children') == 'children'
-			self._outtrans = outtrans
 			self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict, cb)
 			# uncomment the next line to freeze things
 			# at the moment begintransition is called
@@ -2062,7 +2115,6 @@ class Region(Window):
 		else:
 			self._multiElement = 0
 			self._childrenClip = 0
-			self._outtrans = outtrans
 			self._transition = win32transitions.InlineTransitionEngine(self, outtrans, runit, dict, cb)
 			self._transition.begintransition()
 
@@ -2228,10 +2280,22 @@ class Viewport(Region):
 	def imgAddDocRef(self, file):
 		self._ctx.imgAddDocRef(file)
 
-	def onMouseMove(self, flags, point):		
+	def onMouseEvent(self, point, event):
+		import WMEVENTS
+		for w in self._subwindows:
+			if w.inside(point):
+				if event == WMEVENTS.Mouse0Press:
+					w._onlbuttondown(point)
+				elif event == WMEVENTS.Mouse0Release:
+					w._onlbuttonup(point)
+				break		
+		return Region.onMouseEvent(self, point, event)
+
+	def onMouseMove(self, flags, point):
 		# check subwindows first
 		for w in self._subwindows:
 			if w.inside(point):
+				w._onmousemove(point)
 				if w.setcursor_from_point(point):
 					return
 
