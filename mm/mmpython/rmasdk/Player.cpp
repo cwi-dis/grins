@@ -34,7 +34,11 @@ public:
 protected:
 	PlayerObject();
 	~PlayerObject();
+#if !defined(_ABIO32) || _ABIO32 == 0
 	virtual string repr();
+#else
+	virtual char *repr();
+#endif
 
 private:
 	bool SetContext();
@@ -87,11 +91,24 @@ PyObject *PlayerObject_CreateInstance(PyObject *engine, PyObject *args)
 	return PlayerObject::CreateInstance(engine, args);
 }
 
-string PlayerObject::repr()
+#if !defined(_ABIO32) || _ABIO32 == 0
+string
+#else
+char *
+#endif
+PlayerObject::repr()
 {
 	char buf[256];
 	sprintf(buf, " instance 0x%X", this);
+#if !defined(_ABIO32) || _ABIO32 == 0
+	sprintf (buf, " instance 0x%X", this);
 	return RMAObject::repr() + buf;
+#else
+	char *rep = RMAObject::repr();
+	sprintf (buf, "%s instance 0x%X", rep, this);
+	free(rep);
+	return strdup(buf);
+#endif
 }
 
 PyObject *
@@ -199,10 +216,10 @@ PlayerObject::SetPyVideoSurface(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "O", &obj))
 		return NULL;
 	ExampleClientContext *pCC = ((PlayerObject*)self)->pContext;
-	if(pCC) {
-		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
-		//if(ss)ss->SetPyVideoSurface(obj);
-	}
+//	if(pCC) {
+//		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
+//		if(ss)ss->SetPyVideoSurface(obj);
+//	}
 	RETURN_NONE;
 }
 
