@@ -37,6 +37,16 @@ static void seterror(const char *funcname, DWORD err)
 }
 
 ////////////////////////////////////////
+struct EnhMetaFileObject
+	{
+	PyObject_HEAD
+	HENHMETAFILE ob_itself;
+	static void InitInstance(EnhMetaFileObject *p){p->ob_itself = NULL;}
+	void Release(){if(ob_itself!=NULL) DeleteEnhMetaFile(ob_itself);}
+	};
+staticforward python_type_object<EnhMetaFileObject> EnhMetaFileType;
+
+////////////////////////////////////////
 static char SetWorldTransform__doc__[] =
 "sets a two-dimensional linear transformation between world space and page space "
 ;
@@ -912,6 +922,30 @@ TextOut(PyObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char DrawText__doc__[] =
+"draws formatted text in the specified rectangle"
+;
+static PyObject*
+DrawText(PyObject *self, PyObject *args)
+{
+	HDC hdc;
+	PyObject *pystr;
+	RECT rc;
+	UINT uFormat = DT_SINGLELINE | DT_CENTER | DT_VCENTER;
+	if (!PyArg_ParseTuple(args, "iO(iiii)|i", &hdc, &pystr,
+		&rc.left, &rc.top, &rc.right, &rc.bottom, &uFormat))
+		return NULL;
+	int cbstr = PyString_GET_SIZE(pystr);
+	const char *pstr = PyString_AS_STRING(pystr);
+	BOOL res = DrawText(hdc, pstr, cbstr, &rc, uFormat);
+	if(!res){
+		seterror("DrawText", GetLastError());
+		return NULL;
+		}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 //////////////////
 static char SelectObject__doc__[] =
 "selects an object into the specified device context"
@@ -1138,6 +1172,54 @@ PtInRegion(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", res);
 }
 
+//////////////////////////////////////////////
+// EnhMetaFile
+
+static char GetEnhMetaFile__doc__[] =
+"opens an enhanced metafile"
+;
+static PyObject*
+GetEnhMetaFile(PyObject *self, PyObject *args)
+{
+	char *filename;
+	if (!PyArg_ParseTuple(args, "s", &filename))
+		return NULL;
+	EnhMetaFileObject *obj = EnhMetaFileType.CreateInstance();
+	if(obj == NULL) return NULL;
+	obj->ob_itself = GetEnhMetaFile(filename);
+	if(obj->ob_itself == NULL){
+		seterror("GetEnhMetaFile", GetLastError());
+		return NULL;
+		}
+	return (PyObject*)obj;
+}
+
+static char EnhMetaFile_Play__doc__[] =
+"displays the picture stored in the enhanced-format metafile"
+;
+static PyObject* EnhMetaFile_Play(EnhMetaFileObject *self, PyObject *args)
+{
+	HDC hdc;
+	RECT rc;
+	if (!PyArg_ParseTuple(args, "i(iiii)", &hdc, &rc.left, &rc.top, &rc.right, &rc.bottom))
+		return NULL;
+	BOOL res = PlayEnhMetaFile(hdc, self->ob_itself, &rc); 
+	if(!res){
+		seterror("PlayEnhMetaFile", GetLastError());
+		return NULL;
+		}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static struct PyMethodDef EnhMetaFile_methods[] = {
+	{"Play", (PyCFunction)EnhMetaFile_Play, METH_VARARGS, EnhMetaFile_Play__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+static python_type_object<EnhMetaFileObject> 
+EnhMetaFileType("PyEnhMetaFile", EnhMetaFile_methods, "Python Enhanced-Format Metafile");
+
+//////////////////////////////////////////////
 
 static struct PyMethodDef wingdi_methods[] = {
 	{"SetWorldTransform", (PyCFunction)SetWorldTransform, METH_VARARGS, SetWorldTransform__doc__},
@@ -1186,6 +1268,7 @@ static struct PyMethodDef wingdi_methods[] = {
 	{"PolyBezierTo", (PyCFunction)PolyBezierTo, METH_VARARGS, PolyBezierTo__doc__},
 	{"PolyDraw", (PyCFunction)PolyDraw, METH_VARARGS, PolyDraw__doc__},
 	{"TextOut", (PyCFunction)TextOut, METH_VARARGS, TextOut__doc__},
+	{"DrawText", (PyCFunction)DrawText, METH_VARARGS, DrawText__doc__},
 
 	{"SelectObject", (PyCFunction)SelectObject, METH_VARARGS, SelectObject__doc__},
 	{"DeleteObject", (PyCFunction)DeleteObject, METH_VARARGS, DeleteObject__doc__},
@@ -1201,6 +1284,8 @@ static struct PyMethodDef wingdi_methods[] = {
 	{"SelectClipRgn", (PyCFunction)SelectClipRgn, METH_VARARGS, SelectClipRgn__doc__},
 	{"PaintRgn", (PyCFunction)PaintRgn, METH_VARARGS, PaintRgn__doc__},
 	{"PtInRegion", (PyCFunction)PtInRegion, METH_VARARGS, PtInRegion__doc__},
+
+	{"GetEnhMetaFile", (PyCFunction)GetEnhMetaFile, METH_VARARGS, GetEnhMetaFile__doc__},
 
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
