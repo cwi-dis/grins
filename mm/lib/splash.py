@@ -56,7 +56,8 @@ class _Splash:
 						   {'visual': self.visual,
 						   'depth': self.visual.depth,
 						   'colormap': self.colormap,
-						   'mwmDecorations': 0})
+						   'mwmDecorations': 0,
+						    'x': 300, 'y': 200})
 		self.shell = shell
 		w = shell.CreateManagedWidget('image', Xm.DrawingArea,
 					      {'width': width,
@@ -68,11 +69,11 @@ class _Splash:
 						0, data, width, height, 32, 0)
 		w.AddCallback('exposeCallback', self.expose,
 			      (gc.PutImage, (image, 0, 0, 0, 0, width, height)))
-		gc.PutImage(image, 0, 0, 0, 0, width, height)
+##		gc.PutImage(image, 0, 0, 0, 0, width, height)
 		import Xtdefs, time
 		while Xt.Pending():
 			Xt.ProcessEvent(Xtdefs.XtIMAll)
-		time.sleep(0.1)
+		time.sleep(0.5)
 		while Xt.Pending():
 			Xt.ProcessEvent(Xtdefs.XtIMAll)
 
