@@ -2,20 +2,9 @@
  * 
  *  $Id$
  *
- *  Copyright (C) 1995,1996,1997 RealNetworks, Inc.
- *  All rights reserved.
- *
- *  http://www.real.com/devzone
- *
- *  This program contains proprietary information of RealNetworks, Inc.,
- *  and is licensed subject to restrictions on use and distribution.
- * 
- *  excontxt.cpp
- *
  *  Sample Implementation of Client Context
  *
  */
-
 
 /****************************************************************************
  * Includes
@@ -67,32 +56,17 @@ ExampleClientContext::~ExampleClientContext()
  *  ExampleClientContext::Init                               ref:  excontxt.h
  *
  */
-void ExampleClientContext::Init(IUnknown* /*IN*/ pUnknown)
+void ExampleClientContext::Init(IUnknown* /*IN*/pUnknown)
 {
     m_pErrorSink	= new ExampleErrorSink();
     m_pClientSink	= new ExampleClientAdviceSink(pUnknown);
-    m_pAuthMgr          = new ExampleAuthenticationManager();
+    m_pAuthMgr      = new ExampleAuthenticationManager();
     m_pSiteSupplier	= new ExampleSiteSupplier(pUnknown);
 
-    if (m_pClientSink)
-    {
-	m_pClientSink->AddRef();
-    }
-    
-    if (m_pErrorSink)
-    {
-	m_pErrorSink->AddRef();
-    }
-
-    if(m_pAuthMgr)
-    {
-	m_pAuthMgr->AddRef();
-    }
-
-    if(m_pSiteSupplier)
-    {
-	m_pSiteSupplier->AddRef();
-    }
+    if (m_pClientSink)m_pClientSink->AddRef(); 
+    if (m_pErrorSink)m_pErrorSink->AddRef();
+    if(m_pAuthMgr)m_pAuthMgr->AddRef();
+    if(m_pSiteSupplier)m_pSiteSupplier->AddRef();
 }
 
 
