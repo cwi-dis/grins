@@ -23,7 +23,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=..\..\bin\win32\grinsp2.0.132.exe
+  EXE Filename=..\..\bin\win32\grinsp2.0.133.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -1386,6 +1386,14 @@ item: Remark
 end
 item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
+end
+item: Install File
+  Source=..\..\grins\grprefs.txt
+  Destination=%MAINDIR%\grprefs.txt
+  Flags=0000000010001010
+end
+item: Create Directory
+  Pathname=%MAINDIR%\My Devices
 end
 item: Install File
   Source=..\..\bin\win32\Qt.pyd
