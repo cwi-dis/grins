@@ -161,35 +161,26 @@ class GraphBuilder:
 # the type of an asf stream (video or audio)
 def HasVideo(url):
 	try:
-		builder = dshow.CreateGraphBuilder()
+		builder = GraphBuilder()
 	except:
 		print 'Missing DirectShow infrasrucrure'
 		return None
-	try:
-		vrenderer = builder.FindFilterByName('Video Renderer')
-	except:
-		vrenderer = None
-	return vrenderer
+	if not builder.RenderFile(url):
+		return None
+	return builder.HasVideo()
 
 # Returns the size of a video	
 def GetVideoSize(url):
 	try:
-		builder = dshow.CreateGraphBuilder()
+		builder = GraphBuilder()
 	except:
 		print 'Missing DirectShow infrasrucrure'
-		return (0, 0)
-	try:
-		builder.RenderFile(url)
-	except:
-		print 'failed to render',url
-		return(0, 0)
-	vw = builder.QueryIVideoWindow()
-	try:
-		width, height = vw.GetWindowPosition()[2:]
-	except:
-		print 'failed to get size',url
-		width, height = 0, 0
-	return (width, height)
+		return 100, 100
+
+	if not builder.RenderFile(url):
+		return 100, 100
+
+	return builder.GetWindowPosition()[2:]
 
 
 # Returns the duration of the media file in secs	
@@ -200,10 +191,6 @@ def GetMediaDuration(url):
 		print 'Missing DirectShow infrasrucrure'
 		return 0
 	if not builder.RenderFile(url):
-		return 0
-
-	# avoid crash for ASF
-	if builder.IsASF():
 		return 0
 
 	return builder.GetDuration()
@@ -224,16 +211,16 @@ class MMStream:
 		self._parsed = 0
 
 	def open(self, url):
+		print 'open', url
 		mmstream = 	self._mmstream
 		try:
-			mmstream.OpenFile(url)
+			self._mmstream.OpenFile(url)
 		except:
 			print 'failed to render', url
 			self._parsed = 0
 			return 0
-		else:
-			self._parsed = 1
-		self._mstream = mmstream.GetPrimaryVideoMediaStream()
+		self._parsed = 1
+		self._mstream = self._mmstream.GetPrimaryVideoMediaStream()
 		self._ddstream = self._mstream.QueryIDirectDrawMediaStream()
 		self._sample = self._ddstream.CreateSample()
 		self._dds = ddraw.CreateSurfaceObject()
@@ -244,7 +231,6 @@ class MMStream:
 		del self._mstream
 		del self._ddstream
 		del self._sample
-		del self._dds
 		del self._mmstream
 			
 	def run(self):
@@ -267,7 +253,10 @@ class MMStream:
 			msecs = dshow.large_int(int(secs*1000+0.5))
 			f = dshow.large_int('10000')
 			v = msecs * f
-		self._mmstream.Seek(v)
+		try:
+			self._mmstream.Seek(v)
+		except:
+			print 'seek not supported for media type'
 
 	def getDuration(self):
 		if not self._parsed: return
