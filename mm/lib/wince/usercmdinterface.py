@@ -12,19 +12,23 @@ class UserCmdInterface:
 		if commandlist:
 			for cmd in 	commandlist:
 				self._activecmds[context][cmd.__class__] = cmd
-		print 'set_commandlist', commandlist, context
+##		print 'set_commandlist', commandlist, context
 
 	def setcoords(self,coords, units=UNIT_MM):
-		print 'setcoords', coords, units
+		pass
+##		print 'setcoords', coords, units
 
 	def set_dynamiclist(self, command, list):
-		print 'set_dynamiclist', command, list
+		pass
+##		print 'set_dynamiclist', command, list
 
 	def set_toggle(self, cmdcl, onoff):
-		print 'set_toggle',  cmdcl, onoff
+		pass
+##		print 'set_toggle',  cmdcl, onoff
 
 	def setplayerstate(self, state):
-		print 'setplayerstate', state
+		pass
+##		print 'setplayerstate', state
 
 	def execute_cmd(self, cmdclass):
 		for ctx in ('pview_', 'document', 'app'):
