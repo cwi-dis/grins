@@ -19,10 +19,17 @@ BOOL GRiNSPlayerApp::InitInstance()
 	AfxGetThread()->m_pMainWnd = pMainWnd;
 	if(!pMainWnd->CreateMainWnd())
 		return FALSE;
-
 	m_pMainWnd->ShowWindow(m_nCmdShow);
 	m_pMainWnd->UpdateWindow();
+	m_pMainWnd->EnableWindow(TRUE);
+
 	g_pGRiNSMain = new grins::Main(m_lpCmdLine);
+
+#ifdef _DEBUG
+	// avoid not traceable (yet) assertion fire
+	AfxMessageBox(TEXT("Debug"));
+#endif
+
 	return TRUE;
 	}
 
