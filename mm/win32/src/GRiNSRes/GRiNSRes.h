@@ -399,6 +399,8 @@
 #define IDC_COLOR_PICK                  1275
 #define IDC_LABEL                       1277
 #define IDC_SLIDER_POS                  1279
+#define IDC_MIN                         1280
+#define IDC_MAX                         1281
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -483,7 +485,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        295
 #define _APS_NEXT_COMMAND_VALUE         32865
-#define _APS_NEXT_CONTROL_VALUE         1280
+#define _APS_NEXT_CONTROL_VALUE         1282
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
