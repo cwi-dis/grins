@@ -79,7 +79,7 @@ class SocketChannel(Channel):
 			windowinterface.showmessage('SocketChannel: unknown command\n'+
 				  rv)
 
-	def do_arm(self, node):
+	def do_arm(self, node, same=0):
 		alist =  MMAttrdefs.getattr(node, 'anchorlist')
 		modanchorlist(alist)
 		for a in alist:

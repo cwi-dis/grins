@@ -272,9 +272,14 @@ class Channel:
 		if not self._armcontext:
 			raise error, 'no context to arm in'
 		self._armstate = ARMING
+		if self._armed_node == node:
+		        # Same as last time, apparently
+			print 'Same node on', self # DBG
+			return 1
 		self._armed_node = node
 		self._armed_anchors = []
 		self.armed_duration = self.getduration(node)
+		return 0
 
 	def arm_1(self):
 		# This does the final part of arming a node.  This
@@ -301,7 +306,7 @@ class Channel:
 		# Only tell scheduler if not synchronous.
 		if not self.syncarm:
 			self._playcontext.arm_ready(self)
-		self._armed_node = None
+		# self._armed_node = None # XXXX Removed for arm-caching
 
 	def wait_for_arm(self):
 		# Wait until the arm state is either AIDLE or ARMED so
@@ -457,7 +462,7 @@ class Channel:
 		self._has_pause = 0
 		self.playdone(1)
 
-	def do_arm(self, node):
+	def do_arm(self, node, same=0):
 		# Do the actual arm.
 		# Expect to override this method.
 		# Return 1 if arm is finished when this returns,
@@ -491,9 +496,11 @@ class Channel:
 		# Do_arm() is called to do the actual arming.  If it
 		# returns 0, we should not call arm_1() because that
 		# will happen later.
-		self.arm_0(node)
-		if self._is_shown and not self.do_arm(node):
+		same = self.arm_0(node)
+		if self._is_shown and not self.do_arm(node, same):
+		        if same: print 'Could not skip arm on', self # DBG
 			return
+		if same: print 'Skipped an arm on', self # DBG
 		self.arm_1()
 
 	def seekanchor(self, node, aid, args):
@@ -553,11 +560,12 @@ class Channel:
 			print 'Channel.stoparm('+`self`+')'
 		if self._armstate == ARMING:
 			self.armstop()
+			self._armed_node = None
 		if self._armstate != ARMED:
 			raise error, 'not armed'
 		self._armstate = AIDLE
 		self._armed_anchors = []
-		self._armed_node = None
+		# self._armed_node = None # XXXX Removed for arm-caching
 
 	def startcontext(self, ctx):
 		# Called by the scheduler to start a new context.  The
@@ -943,14 +951,19 @@ class ChannelWindow(Channel):
 		windowinterface.setcursor('')
 
 	def arm_0(self, node):
-		Channel.arm_0(self, node)
+		same = Channel.arm_0(self, node)
+		if same and self.armed_display and \
+		   not self.armed_display.is_closed():
+		        return 1
+		if same: print 'Same, but no armed_display' # DBG
 		if not self._is_shown or not self.window:
-			return
+			return 0
 		if self.armed_display:
 			self.armed_display.close()
 		bgcolor = self.getbgcolor(node)
 		self.armed_display = self.window.newdisplaylist(bgcolor)
 		self.armed_display.fgcolor(self.getfgcolor(node))
+		return 0
 
 	def play(self, node):
 		if debug:

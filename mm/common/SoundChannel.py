@@ -10,7 +10,7 @@ class SoundChannel(ChannelThread):
 		import soundchannel
 		return soundchannel.init()
 
-	def do_arm(self, node):
+	def do_arm(self, node, same=0):
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1

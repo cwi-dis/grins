@@ -106,8 +106,9 @@ class HtmlChannel(Channel.ChannelWindow):
 #	def seekanchor(self, node, aid, args):
 #		windowinterface.showmessage('JUMP:'+`aid`+`args`)
 		
-	def do_arm(self, node):
-		self.armed_str = self.getstring(node)
+	def do_arm(self, node, same=0):
+	        if not same:
+		    self.armed_str = self.getstring(node)
 		if self._is_shown and not self.htmlw:
 			self._after_creation()
 		return 1
