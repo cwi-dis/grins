@@ -39,19 +39,8 @@ def beep():
 # The _Toplevel class represents the root of all windows.  It is never
 # accessed directly by any user code.
 class _Toplevel:
-	# Trap use in order to initialize the class properly
-	def __getattr__(self, attr):
-		if not self._initialized: # had better exist...
-			self._do_init()
-			try:
-				return self.__dict__[attr]
-			except KeyError:
-				pass
-		raise AttributeError, attr
-
 	# Class constructor. Initalizes class members
 	def __init__(self):
-		self._initialized = 0
 		self.xborder = sysmetrics.cxframe+2*sysmetrics.cxborder
 		self.yborder = sysmetrics.cyframe + 2* sysmetrics.cyborder
 		self.caption = sysmetrics.cycaption
@@ -72,13 +61,7 @@ class _Toplevel:
 		self.genericwnd=GenWnd.GenWnd
 		
 		self._in_create_box=None
-		self._do_init()
 
-	# Part of the constructor initialization
-	def _do_init(self):
-		if self._initialized:
-			raise error, 'can only initialize once'
-		self._initialized = 1	
 		self._closecallbacks = []
 		self._subwindows = []	# A list of child windows, each are of type
 		self._bgcolor = 255, 255, 255 # white
@@ -341,6 +324,10 @@ class _Toplevel:
 		
 		# com automation support
 		self.enableCOMAutomation()
+
+		# if timers already set before mainloop is called...
+		if self._timers:
+			self.StartTimer()
 
 		# enter application loop
 		win32ui.GetApp().RunLoop()
