@@ -694,6 +694,8 @@ class AttrEditor(AttrEditorDialog):
 				C = NodeTypeAttrEditorField
 			elif displayername == 'text':
 				C = TextAttrEditorField
+			elif displayername == 'bool3':
+				C = Bool3AttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -1080,17 +1082,35 @@ class BoolAttrEditorField(PopupAttrEditorField):
 	__offon = ['off', 'on']
 
 	def parsevalue(self, str):
-		if str == 'Default':
+		return self.__offon.index(str)
+
+	def valuerepr(self, value):
+		return self.__offon[value]
+
+	def getoptions(self):
+		return self.__offon
+
+	def getcurrent(self):
+		val = self.wrapper.getvalue(self.getname())
+		if val is None:
+			return self.getdefault()
+		return self.valuerepr(val)
+
+class Bool3AttrEditorField(PopupAttrEditorField):
+	__offon = ['off', 'on']
+
+	def parsevalue(self, str):
+		if str == 'Not set':
 			return None
 		return self.__offon.index(str)
 
 	def valuerepr(self, value):
 		if value is None:
-			return 'Default'
+			return 'Not set'
 		return self.__offon[value]
 
 	def getoptions(self):
-		return ['Default'] + self.__offon
+		return ['Not set'] + self.__offon
 
 class UnitsAttrEditorField(PopupAttrEditorField):
 	__values = ['mm', 'relative', 'pixels']
@@ -1256,6 +1276,11 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 				list.append(name)
 		list.sort()
 		return ['Default', 'undefined'] + list
+
+	def channelprops(self):
+		ch = self.wrapper.context.getchannel(self.getvalue())
+		if ch is not None:
+			showchannelattreditor(self.wrapper.toplevel, ch)
 
 class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current RealText channel names
