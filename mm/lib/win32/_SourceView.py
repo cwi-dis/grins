@@ -14,7 +14,6 @@ import win32mu
 import usercmd
 
 from pywinlib.mfc import window,object,docview
-print window, object, docview
 import windowinterface
 import afxres,commctrl
 
@@ -83,7 +82,8 @@ class _SourceView(docview.RichEditView):
 	# cmif interface
 	# Set the text to be shown
 	def settext(self,text):
-		#self.__editctrl.m_nWordWrap = WrapNone; (normally, you would do this. It doesn't work here.)
+		f = win32ui.CreateFont({"name":"courier new", "width":12, "height":12,})
+		self.__editctrl.SetFont(f)
 		self.__editctrl.SetWordWrap(0) # helps if you are psycic.
 		self._text=self.convert2ws(text)
 		# if already visible, update text in window
@@ -94,10 +94,15 @@ class _SourceView(docview.RichEditView):
 	def get_text(self):
 		return self.__editctrl.GetWindowText()
 
+	def select_lines(self, startline, endline):
+		# lines is a tuple of two lines. The text between them will be selected.
+		startchar = self.__editctrl.LineIndex(startline)
+		endchar = self.__editctrl.LineIndex(endline)
+		self.__editctrl.SetSel(startchar,endchar) # Automatically scrolls.
+
 	def is_changed(self):
 		# Return true or false depending on whether the source view has been changed.
 		modified = self.__editctrl.GetModify()
-		print "DEBUG: modified is: ", modified
 		return modified
 	
 	def setmother(self, mother):
