@@ -1256,6 +1256,9 @@ class NodeBox(GO):
 	def focuscall(self):
 		self.mother.toplevel.hierarchyview.globalsetfocus(self.node)
 
+	def hyperlinkcall(self):
+		self.mother.toplevel.links.finish_link(self.node)
+
 	commandlist = c = GO.commandlist[:]
 	char, text, proc = c[-1]
 	c[-1] = char, text + '%l', proc
@@ -1263,7 +1266,8 @@ class NodeBox(GO):
 	c.append('i', 'Node info...', infocall)
 	c.append('a', 'Node attr...', attrcall)
 	c.append('e', 'Edit contents...', editcall)
-	c.append('t', 'Edit anchors...%l', anchorcall)
+	c.append('t', 'Edit anchors...', anchorcall)
+	c.append('L', 'Finish link%l', hyperlinkcall)
 	c.append('f', 'Push focus', focuscall)
 	c.append('l', 'Lock node', lockcall)
 	c.append('u', 'Unlock node', unlockcall)

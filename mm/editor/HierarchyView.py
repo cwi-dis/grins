@@ -956,7 +956,7 @@ class Object:
 		('a', 'Node attr...', attrcall), \
 		('e', 'Edit contents...', editcall), \
 		('t', 'Edit anchors...', anchorcall), \
-		('l', 'Finish hyperlink%l', hyperlinkcall), \
+		('L', 'Finish hyperlink%l', hyperlinkcall), \
 		('f', 'Push focus', focuscall), \
 		('z', 'Zoom out', zoomoutcall), \
 		('.', 'Zoom here', zoomherecall), \
