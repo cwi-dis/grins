@@ -39,6 +39,7 @@ hasLayoutView2 = None
 class TopLevel(TopLevelDialog, ViewDialog):
 	def __init__(self, main, url, new_file):
 		ViewDialog.__init__(self, 'toplevel_')
+		self.prune = 0
 		self.select_fdlist = []
 		self.select_dict = {}
 		self._last_timer_id = None
@@ -211,14 +212,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					]
 
 #				print "TODO: make this version dependant. TopLevel.py:__init__()"
-##				self.commandlist.append(EXPORT_WMP(callback = (self.bandwidth_callback, (self.export_WMP_callback,))));
-				self.commandlist.append(EXPORT_WMP(callback = (self.export_WMP_callback,())))
-				self.commandlist.append(UPLOAD_WMP(callback = (self.bandwidth_callback, (self.upload_WMP_callback,))));
-				self.commandlist.append(EXPORT_HTML_TIME(callback = (self.export_HTML_TIME_callback,())))
-			
 				self.commandlist = self.commandlist + [
-						EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_SMIL_callback,))),
-						UPLOAD_SMIL(callback = (self.bandwidth_callback, (self.upload_SMIL_callback,))),
+##					EXPORT_WMP(callback = (self.bandwidth_callback, (self.export_WMP_callback,))),
+					EXPORT_WMP(callback = (self.export_WMP_callback,())),
+					UPLOAD_WMP(callback = (self.bandwidth_callback, (self.upload_WMP_callback,))),
+					EXPORT_HTML_TIME(callback = (self.export_HTML_TIME_callback,())),
+					EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_SMIL_callback,))),
+					UPLOAD_SMIL(callback = (self.bandwidth_callback, (self.upload_SMIL_callback,))),
+					EXPORT_PRUNE(callback = (self.saveas_callback, (1,))),
 					]								
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
@@ -581,7 +582,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			return 1
 
-	def saveas_callback(self):
+	def saveas_callback(self, prune = 0):
 		cwd = self.dirname
 		if cwd:
 			cwd = MMurl.url2pathname(cwd)
@@ -589,7 +590,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				cwd = os.path.join(os.getcwd(), cwd)
 		else:
 			cwd = os.getcwd()
-		filetypes = ['application/x-grins-project', 'application/smil']
+		self.prune = 1
+		if prune:
+			filetypes = ['application/smil']
+		else:
+			filetypes = ['application/x-grins-project', 'application/smil']
 ##		import settings
 ##		if settings.get('cmif'):
 ##			filetypes.append('application/x-grins-cmif')
@@ -1043,14 +1048,18 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					progress = progress.set
 				else:
 					progress = None
-				SMILTreeWrite.WriteFile(self.root, filename,
-							cleanSMIL = cleanSMIL,
-							grinsExt = grinsExt,
-							copyFiles = exporting,
-							evallicense=evallicense,
-							progress = progress,
-							convertURLs = 1,
-							convertfiles = exporting and self.exporttype != compatibility.SMIL10)
+				try:
+					SMILTreeWrite.WriteFile(self.root, filename,
+								cleanSMIL = cleanSMIL,
+								grinsExt = grinsExt,
+								copyFiles = exporting,
+								evallicense=evallicense,
+								progress = progress,
+								convertURLs = 1,
+								convertfiles = exporting and self.exporttype != compatibility.SMIL10,
+								prune = self.prune)
+				finally:
+					self.prune = 0
 		except IOError, msg:
 			if exporting:
 				operation = 'Publish'

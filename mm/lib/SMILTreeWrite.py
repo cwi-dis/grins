@@ -115,17 +115,21 @@ class IndentedFile:
 # Write a node to a CMF file, given by filename
 
 Error = 'Error'
+cancel = 'cancel'
 
-def WriteFile(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress = None, convertURLs = 0, convertfiles = 1):
+def WriteFile(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress = None, convertURLs = 0, convertfiles = 1, prune = 0):
 	fp = open(filename, 'w')
 	try:
-		writer = SMILWriter(root, fp, filename, cleanSMIL, grinsExt, copyFiles, evallicense, progress = progress, convertURLs = convertURLs, convertfiles = convertfiles)
+		writer = SMILWriter(root, fp, filename, cleanSMIL, grinsExt, copyFiles, evallicense, progress = progress, convertURLs = convertURLs, convertfiles = convertfiles, prune = prune)
 	except Error, msg:
 		from windowinterface import showmessage
 		showmessage(msg, mtype = 'error')
 		return
 
-	writer.write()
+	try:
+		writer.write()
+	except cancel:
+		return
 	
 	if os.name == 'mac':
 		import macfs
@@ -138,19 +142,22 @@ def WriteFile(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evalli
 		macostools.touched(fss)
 
 import FtpWriter
-def WriteFTP(root, filename, ftpparams, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress=None):
+def WriteFTP(root, filename, ftpparams, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress=None, prune=0):
 	host, user, passwd, dir = ftpparams
 	try:
 		conn = FtpWriter.FtpConnection(host, user=user, passwd=passwd, dir=dir)
 		ftp = conn.Writer(filename, ascii=1)
 		try:
 			writer = SMILWriter(root, ftp, filename, cleanSMIL, grinsExt, copyFiles,
-						evallicense, tmpcopy=1, progress=progress)
+						evallicense, tmpcopy=1, progress=progress, prune=prune)
 		except Error, msg:
 			from windowinterface import showmessage
 			showmessage(msg, mtype = 'error')
 			return
-		writer.write()
+		try:
+			writer.write()
+		except cancel:
+			return
 		#
 		# Upload generated media items
 		#
@@ -199,16 +206,22 @@ class MyStringIO(StringIO.StringIO):
 	def close(self):
 		pass
 
-def WriteString(root, cleanSMIL = 0, evallicense = 0, set_char_pos = 0):
+def WriteString(root, cleanSMIL = 0, evallicense = 0, set_char_pos = 0, prune = 0):
 	fp = MyStringIO()
-	writer = SMILWriter(root, fp, '<string>', cleanSMIL, evallicense=evallicense, set_char_pos = set_char_pos)
-	writer.write()
+	writer = SMILWriter(root, fp, '<string>', cleanSMIL, evallicense=evallicense, set_char_pos = set_char_pos, prune = prune)
+	try:
+		writer.write()
+	except cancel:
+		return ''
 	return fp.getvalue()
 
-def WriteBareString(node, cleanSMIL = 0):
+def WriteBareString(node, cleanSMIL = 0, prune = 0):
 	fp = MyStringIO()
-	writer = SMILWriter(node, fp, '<string>', cleanSMIL)
-	writer.writebare()
+	writer = SMILWriter(node, fp, '<string>', cleanSMIL, prune = prune)
+	try:
+		writer.writebare()
+	except cancel:
+		return ''
 	return fp.getvalue()
 
 #
@@ -347,7 +360,7 @@ def getsrc(writer, node):
 			file = writer.copyfile(url, node)
 		except IOError, msg:
 			import windowinterface
-			windowinterface.showmessage('Cannot copy %s: %s\n'%(val, msg)+'The URL is left unchanged; the document may not be playable.')
+			windowinterface.showmessage('Cannot copy %s: %s\n'%(val, msg)+'The URL is left unchanged; the document may not be playable.', cancelCallback = (writer.cancelwrite, ()))
 			node.set_infoicon('error', msg)
 			return val
 	writer.copycache[url] = file
@@ -576,13 +589,15 @@ def getsyncarc(writer, node, isend):
 		elif arc.marker is None:
 			if arc.channel is not None:
 				name = writer.ch2name[arc.channel]
-			elif arc.srcanchor:
-				aid = (arc.srcnode.GetUID(), arc.srcanchor)
-				name = escape_name(writer.aid2name[aid])
 			elif arc.srcnode == 'syncbase':
 				name = ''
 			elif arc.srcnode == 'prev':
 				name = 'prev'
+			elif writer.prune and arc.srcnode is not None and not arc.srcnode.WillPlay():
+				continue
+			elif arc.srcanchor:
+				aid = (arc.srcnode.GetUID(), arc.srcanchor)
+				name = escape_name(writer.aid2name[aid])
 			elif arc.srcnode is node:
 				name = ''
 			else:
@@ -813,24 +828,24 @@ smil_attrs=[
 	("accelerate", lambda writer, node:getproportion(writer, node, "accelerate"), "accelerate"),
 	("decelerate", lambda writer, node:getproportion(writer, node, "decelerate"), "decelerate"),
 	("autoReverse", getautoreverse, "autoReverse"),
-	("system-bitrate", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_bitrate")) or None, "system_bitrate"),
-	("system-captions", lambda writer, node:(not writer.smilboston and getboolean(writer, node, 'system_captions')) or None, "system_captions"),
-	("system-language", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_language")) or None, "system_language"),
-	("system-overdub-or-caption", lambda writer, node:(not writer.smilboston and {'overdub':'overdub','subtitle':'caption'}.get(getcmifattr(writer, node, "system_overdub_or_caption"))) or None, None),
-	("system-required", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_required")) or None, "system_required"),
-	("system-screen-size", lambda writer, node:(not writer.smilboston and getscreensize(writer, node)) or None, "system_screen_size"),
-	("system-screen-depth", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_screen_depth")) or None, "system_screen_depth"),
-	("systemAudioDesc", lambda writer, node:(writer.smilboston and getboolean(writer, node, 'system_audiodesc')) or None, "system_audiodesc"),
-	("systemBitrate", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_bitrate")) or None, "system_bitrate"),
-	("systemCaptions", lambda writer, node:(writer.smilboston and getboolean(writer, node, 'system_captions')) or None, "system_captions"),
-	("systemComponent", lambda writer, node:(writer.smilboston and getsyscomp(writer, node, 'system_component')) or None, "system_component"),
-	("systemCPU", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_cpu")) or None, "system_cpu"),
-	("systemLanguage", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_language")) or None, "system_language"),
-	("systemOperatingSystem", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_operating_system")) or None, "system_operating_system"),
-	("systemOverdubOrSubtitle", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_overdub_or_caption")) or None, "system_overdub_or_caption"),
-	("systemRequired", lambda writer, node:(writer.smilboston and getsysreq(writer, node, "system_required")) or None, "system_required"),
-	("systemScreenSize", lambda writer, node:(writer.smilboston and getscreensize(writer, node)) or None, "system_screen_size"),
-	("systemScreenDepth", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_screen_depth")) or None, "system_screen_depth"),
+	("system-bitrate", lambda writer, node:(not writer.prune and not writer.smilboston and getcmifattr(writer, node, "system_bitrate")) or None, "system_bitrate"),
+	("system-captions", lambda writer, node:(not writer.prune and not writer.smilboston and getboolean(writer, node, 'system_captions')) or None, "system_captions"),
+	("system-language", lambda writer, node:(not writer.prune and not writer.smilboston and getcmifattr(writer, node, "system_language")) or None, "system_language"),
+	("system-overdub-or-caption", lambda writer, node:(not writer.prune and not writer.smilboston and {'overdub':'overdub','subtitle':'caption'}.get(getcmifattr(writer, node, "system_overdub_or_caption"))) or None, None),
+	("system-required", lambda writer, node:(not writer.prune and not writer.smilboston and getcmifattr(writer, node, "system_required")) or None, "system_required"),
+	("system-screen-size", lambda writer, node:(not writer.prune and not writer.smilboston and getscreensize(writer, node)) or None, "system_screen_size"),
+	("system-screen-depth", lambda writer, node:(not writer.prune and not writer.smilboston and getcmifattr(writer, node, "system_screen_depth")) or None, "system_screen_depth"),
+	("systemAudioDesc", lambda writer, node:(not writer.prune and writer.smilboston and getboolean(writer, node, 'system_audiodesc')) or None, "system_audiodesc"),
+	("systemBitrate", lambda writer, node:(not writer.prune and writer.smilboston and getcmifattr(writer, node, "system_bitrate")) or None, "system_bitrate"),
+	("systemCaptions", lambda writer, node:(not writer.prune and writer.smilboston and getboolean(writer, node, 'system_captions')) or None, "system_captions"),
+	("systemComponent", lambda writer, node:(not writer.prune and writer.smilboston and getsyscomp(writer, node, 'system_component')) or None, "system_component"),
+	("systemCPU", lambda writer, node:(not writer.prune and writer.smilboston and getcmifattr(writer, node, "system_cpu")) or None, "system_cpu"),
+	("systemLanguage", lambda writer, node:(not writer.prune and writer.smilboston and getcmifattr(writer, node, "system_language")) or None, "system_language"),
+	("systemOperatingSystem", lambda writer, node:(not writer.prune and writer.smilboston and getcmifattr(writer, node, "system_operating_system")) or None, "system_operating_system"),
+	("systemOverdubOrSubtitle", lambda writer, node:(not writer.prune and writer.smilboston and getcmifattr(writer, node, "system_overdub_or_caption")) or None, "system_overdub_or_caption"),
+	("systemRequired", lambda writer, node:(not writer.prune and writer.smilboston and getsysreq(writer, node, "system_required")) or None, "system_required"),
+	("systemScreenSize", lambda writer, node:(not writer.prune and writer.smilboston and getscreensize(writer, node)) or None, "system_screen_size"),
+	("systemScreenDepth", lambda writer, node:(not writer.prune and writer.smilboston and getcmifattr(writer, node, "system_screen_depth")) or None, "system_screen_depth"),
 	("customTest", getugroup, "u_group"),
 	("layout", getlayout, "layout"),
 	("color", getcolor, "fgcolor"),		# only for brush element
@@ -971,7 +986,7 @@ def mediatype(x, error=0):
 class SMILWriter(SMIL):
 	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
 		     evallicense = 0, tmpcopy = 0, progress = None,
-		     convertURLs = 0, convertfiles = 1, set_char_pos = 0):
+		     convertURLs = 0, convertfiles = 1, set_char_pos = 0, prune = 0):
 		self.set_char_pos = set_char_pos
 		ctx = node.GetContext()
 		if convertURLs:
@@ -984,6 +999,7 @@ class SMILWriter(SMIL):
 			self.convertURLs = None
 			
 		self.evallicense = evallicense
+		self.prune = prune
 		self.__generate_number = 0
 		if filename == '<string>':
 			self.__generate_basename = 'grinstmp'
@@ -1108,6 +1124,9 @@ class SMILWriter(SMIL):
 		while self.__stack:
 			self.pop()
 		fp.close()
+
+	def cancelwrite(self):
+		raise cancel, 'user requested cancellation'
 
 	def writecomment(self, x):
 		write = self.fp.write
@@ -1373,6 +1392,9 @@ class SMILWriter(SMIL):
 
 	def calcnames1(self, node):
 		"""Calculate unique names for nodes; first pass"""
+		if self.prune and not node.WillPlay():
+			# skip unplayable nodes when pruning
+			return
 		uid = node.GetUID()
 		name = node.GetRawAttrDef('name', '')
 		if name:
@@ -1386,6 +1408,9 @@ class SMILWriter(SMIL):
 
 	def calcnames2(self, node):
 		"""Calculate unique names for nodes; second pass"""
+		if self.prune and not node.WillPlay():
+			# skip unplayable nodes when pruning
+			return
 		uid = node.GetUID()
 		name = node.GetRawAttrDef('name', '')
 		if not self.uid2name.has_key(uid):
@@ -1464,6 +1489,9 @@ class SMILWriter(SMIL):
 
 	def calcanames(self, node):
 		"""Calculate unique names for anchors"""
+		if self.prune and not node.WillPlay():
+			# skip unplayable nodes when pruning
+			return
 		uid = node.GetUID()
 		for a in node.GetRawAttrDef('anchorlist', []):
 			aid = (uid, a.aid)
@@ -1489,6 +1517,9 @@ class SMILWriter(SMIL):
 
 	def syncidscheck(self, node):
 		# make sure all nodes referred to in sync arcs get their ID written
+		if self.prune and not node.WillPlay():
+			# skip unplayable nodes when pruning
+			return
 		for arc in node.GetRawAttrDef('beginlist', []) + node.GetRawAttrDef('endlist', []):
 			# see also getsyncarc() for similar code
 			if arc.srcnode is None and arc.event is None and arc.marker is None and arc.wallclock is None and arc.accesskey is None:
@@ -1500,11 +1531,13 @@ class SMILWriter(SMIL):
 			elif arc.marker is None:
 				if arc.channel is not None:
 					pass
+				elif arc.srcnode in ('syncbase', 'prev'):
+					pass
+				elif self.prune and arc.srcnode is not None and not arc.srcnode.WillPlay():
+					pass
 				elif arc.srcanchor is not None:
 					aid = (arc.srcnode.GetUID(), arc.srcanchor)
 					self.ids_used[self.aid2name[aid]] = 1
-				elif arc.srcnode in ('syncbase', 'prev'):
-					pass
 				elif arc.srcnode is not node:
 					self.ids_used[self.uid2name[arc.srcnode.GetUID()]] = 1
 			else:
@@ -1851,6 +1884,9 @@ class SMILWriter(SMIL):
 
 	def writenode(self, x, root = 0):
 		"""Write a node (possibly recursively)"""
+		if self.prune and not x.WillPlay():
+			# skip unplayable nodes when pruning
+			return
 		type = x.GetType()
 		# XXX I don't like this special casing here --sjoerd
 		if type=='animate':
@@ -1886,6 +1922,11 @@ class SMILWriter(SMIL):
 				else:
 					ns = ''
 					xtype = mtype = tag
+			elif self.prune and type == 'switch':
+				# special case: only at most one of the children will actually get written
+				for c in x.GetChildren():
+					self.writenode(c)
+				return
 			else:
 				xtype = mtype = type
 		else:
