@@ -1,4 +1,4 @@
-# Main program for the CMIF editor
+# Main program for the CMIF editor.
 
 import sys
 import getopt
