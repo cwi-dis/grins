@@ -190,7 +190,6 @@ class _CommonWindow:
 		
 		del self._subwindows
 		del self._displists
-		del self._parent
 		del self._active_displist
 		del self._eventhandlers
 		del self._redrawfunc
@@ -670,8 +669,6 @@ class _CommonWindow:
 		global _in_create_box
 		if _in_create_box:
 			raise 'Recursive create_box'
-##			_in_create_box._next_create_box.append((self, msg, callback, box))
-##			return
 		if self.is_closed():
 			apply(callback, ())
 			return
@@ -689,14 +686,6 @@ class _CommonWindow:
 		self._rb_transparent = []
 		sw = self._subwindows[:]
 		sw.reverse()
-##		r = Xlib.CreateRegion()
-##		for win in sw:
-##			if not win._transparent:
-##				# should do this recursively...
-##				self._rb_transparent.append(win)
-##				win._transparent = 1
-##				d.drawfbox(win._bgcolor, win._sizes)
-##				apply(r.UnionRectWithRegion, win._rect) # XXXX
 		for win in sw:
 			b = win._sizes
 			if b != (0, 0, 1, 1):
@@ -706,15 +695,10 @@ class _CommonWindow:
 		if box:
 			x0, y0, w, h = self._convert_coordinates(box)
 			self._rb_box = (x0, y0, x0+w, y0+h)
-			print 'NEW BOX', self._rb_box
 		else:
 			self._rb_box = None
 		self._rb_dragpoint = None
 		Win.InvalRect(self.qdrect())
-##		if self._rb_transparent:
-##			self._mkclip()
-##			self._do_expose(r)
-##			self._rb_reg = r
 		self._rb_finished = 0
 		self._rb_dialog = showmessage(
 			msg, mtype = 'message', grab = 0,
@@ -731,13 +715,6 @@ class _CommonWindow:
 	def _rb_finish(self):
 		global _in_create_box
 		_in_create_box = None
-##		if self._rb_transparent:
-##			for win in self._rb_transparent:
-##				win._transparent = 0
-##			self._mkclip()
-##			self._do_expose(self._rb_reg)
-##			del self._rb_reg
-##		del self._rb_transparent
 		if self._rb_dl and not self._rb_dl.is_closed():
 			self._rb_dl.render()
 		self._rb_display.close()
@@ -752,58 +729,26 @@ class _CommonWindow:
 		ww = wx1-wx0
 		wh = wy1-wy0
 		x0, y0, x1, y1 = self._rb_box
-		print 'WIN', wx0, wy0, wx1, wy1, ww, wh
-		print 'BOX', x0, y0, x1, y1
 		x0 = float(x0-wx0)/ww
 		y0 = float(y0-wy0)/wh
 		x1 = float(x1-wx0)/ww
 		y1 = float(y1-wy0)/wh
-		print 'RES', x0, y0, (x1-x0), (y1-y0)
 		return x0, y0, (x1-x0), (y1-y0)
 
 		raise 'not yet implemented'
-##		x0 = self._rb_start_x
-##		y0 = self._rb_start_y
-##		x1 = x0 + self._rb_width
-##		y1 = y0 + self._rb_height
-##		if x1 < x0:
-##			x0, x1 = x1, x0
-##		if y1 < y0:
-##			y0, y1 = y1, y0
-##		x, y, width, height = self._rect
-##		if x0 < x: x0 = x
-##		if x0 >= x + width: x0 = x + width - 1
-##		if x1 < x: x1 = x
-##		if x1 >= x + width: x1 = x + width - 1
-##		if y0 < y: y0 = y
-##		if y0 >= y + height: y0 = y + height - 1
-##		if y1 < y: y1 = y
-##		if y1 >= y + height: y1 = y + height - 1
-##		return float(x0 - x) / (width - 1), \
-##		       float(y0 - y) / (height - 1), \
-##		       float(x1 - x0) / (width - 1), \
-##		       float(y1 - y0) / (height - 1)
 
 	def _rb_done(self):
 		callback = self._rb_callback
 		self._rb_finish()
 		apply(callback, self._rb_cvbox())
-##		self._rb_end()
 		self._rb_finished = 1
 
 	def _rb_cancel(self):
 		callback = self._rb_callback
 		self._rb_finish()
 		apply(callback, ())
-##		self._rb_end()
 		self._rb_finished = 1
 
-##	def _rb_end(self):
-##		# execute pending create_box calls
-##		next_create_box = self._next_create_box
-##		self._next_create_box = []
-##		for win, msg, cb, box in next_create_box:
-##			win.create_box(msg, cb, box)
 
 	def _rb_redraw(self):
 		if not self._rb_box:
@@ -849,7 +794,6 @@ class _CommonWindow:
 		#
 		if self._rb_box == (x0, y0, x1, y1):
 			return
-		
 		#
 		# Otherwise first erase old box, then draw the new one.
 		#
@@ -927,7 +871,8 @@ class _CommonWindow:
 			self._rb_box = (x, y, x, y)
 			dragpoint = 3
 		self._rb_dragpoint = dragpoint
-		print 'RB_MOUSEDOWN', self._rb_box, self._rb_dragpoint
+		Qd.SetPort(self._wid)
+		Win.InvalRect(self.qdrect())
 #### Not needed: the render() above has scheduled a redraw anyway
 ##		if not self._clip:
 ##			self.mkclip()
@@ -1592,6 +1537,8 @@ class DialogWindow(_Window):
 		return self._is_shown
 		
 	def close(self):
+		if not self._parent:
+			return
 		self.hide()
 		del self._widgetdict
 		del self._item_to_cmd
