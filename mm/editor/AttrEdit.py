@@ -256,7 +256,7 @@ class NodeWrapper(Wrapper):
 			for link in hlinks.findsrclinks((uid, a.aid)):
 				links.append(link[1:])
 			links.sort()
-			times = a.times[0], a.times[1] - a.times[0]
+			times = a.atimes[0], a.atimes[1] - a.atimes[0]
 			anchors[a.aid] = a.atype, a.aargs, times, a.aaccess, links
 		return anchors
 
