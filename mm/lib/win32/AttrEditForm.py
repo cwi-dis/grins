@@ -4083,7 +4083,7 @@ class ActiveDuration2Group(AttrGroup):
 		AttrGroup.__init__(self, self.data)
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_ACTIVEDUR1
+		return grinsRC.IDD_EDITATTR_ACTIVEDUR2
 
 	def createctrls(self, wnd):
 		cd = {}
