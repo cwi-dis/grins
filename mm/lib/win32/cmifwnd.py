@@ -367,6 +367,7 @@ class _CmifWnd(win32window.Window, DropTarget, rbtk._rbtk, DrawTk.DrawLayer):
 			     Mouse0Release, Mouse1Press, Mouse1Release,
 			     Mouse2Press, Mouse2Release, 
 				 DropFile, PasteFile, DragFile,
+				 DragNode, DropNode,
 				 WindowExit):
 			self._callbacks[event] = func, arg
 			if event == DropFile:

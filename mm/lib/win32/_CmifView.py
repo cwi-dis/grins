@@ -871,15 +871,18 @@ class _CmifStructView(_CmifView):
 				str='%d %d' % (xp, yp)
 				self.DoDragDrop(self.CF_NODE, str)
 
+	# we must return DROPEFFECT_NONE
+	# when paste at x, y is not allowed
 	def dragnode(self, dataobj, kbdstate, x, y):
 		node=dataobj.GetGlobalData(self.CF_NODE)
 		if node:
-			# we must return DROPEFFECT_NONE
-			# when paste at x, y is not allowed
+			x, y = self._DPtoLP((x,y))
+			x, y = self._pxl2rel((x, y),self._canvas)
 			if self.isShiftPressed(kbdstate):
-				return DropTarget.DROPEFFECT_MOVE   
+				cmd = 'move'
 			else:
-				return DropTarget.DROPEFFECT_COPY   
+				cmd = 'copy'
+			return self.onEventEx(DragNode,(x, y, cmd))
 		return DropTarget.DROPEFFECT_NONE
 
 	def dropnode(self, dataobj, effect, x, y):
@@ -891,23 +894,23 @@ class _CmifStructView(_CmifView):
 			# copy or cut (according to arg effect)
 			# the node at point self._dragging 
 			# to position x, y
+			x, y = self._DPtoLP((x,y))
+			x, y = self._pxl2rel((x, y),self._canvas)
+
+			xf, yf = self._dragging
+			xf, yf = self._DPtoLP((xf,yf))
+			xf, yf = self._pxl2rel((xf, yf),self._canvas)
+			self._dragging = None
 
 			# if the operation can not be executed return DROP_FAILED
 			# else return DROP_SUCCEEDED
 
-			# cut or copy
-			self.onMouseEvent(self._dragging, Mouse0Press)
 			if effect == DropTarget.DROPEFFECT_MOVE:
-				self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CUT].id)
+				cmd = 'move'
 			else:
-				self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.COPY].id)
-			
-			# paste
-			self.onMouseEvent((x,y),Mouse0Press)
-			self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PASTE_AFTER].id)
+				cmd = 'copy'
 
-			self._dragging = None
-			return DROP_SUCCEEDED
+			return self.onEventEx(DropNode,(x, y, cmd, xf, yf))
 
 		return DROP_FAILED
 							

@@ -28,6 +28,8 @@ PasteFile = 31
 DropURL = 32
 DragFile = 33
 DragURL = 34
+DragNode = 35
+DropNode = 36
 
 # Underlying OS window/bitmap has changed (onscreen<->offscreen bitmap, etc)
 OSWindowChanged = 40
