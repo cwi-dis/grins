@@ -6,7 +6,7 @@ from AnchorDefs import *
 import string
 import MMurl
 import MMAttrdefs
-import textex, gifex
+import gifex
 import os
 
 [SINGLE, HTM, TEXT] = range(3)
@@ -157,8 +157,7 @@ class LabelChannel(ChannelWindow):
 		self.taglist=[]
 		if node.type == 'imm':
 			str = string.joinfields(node.GetValues(), '\n')
-			str2 = textex.PrepareText(self.window._hWnd, self.create_anchor_list, self.id, str, 0, self._facename, self._pointsize,self.window._align)
-			#textex.GetAnchors(self.window._hWnd)
+			str2 = cmifex.PrepareText(self.window._hWnd, self.create_anchor_list, self.id, str, 0, self._facename, self._pointsize,self.window._align)
 			return str2
 		elif node.type == 'ext':
 			#filename = self.getfileurl(node)
@@ -175,8 +174,7 @@ class LabelChannel(ChannelWindow):
 			#text = fp.read()
 			fp.close()
 			self.filename = filename
-			str2 = textex.PrepareText(self.window._hWnd, self.create_anchor_list, self.id, filename, 1, self._facename, self._pointsize,self.window._align)
-			#textex.GetAnchors(self.window._hWnd)
+			str2 = cmifex.PrepareText(self.window._hWnd, self.create_anchor_list, self.id, filename, 1, self._facename, self._pointsize,self.window._align)
 			return str2
 		else:
 			raise CheckError, \
