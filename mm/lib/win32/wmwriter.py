@@ -26,6 +26,8 @@ System configuration profiles
 20 3Mb Video
 """
 
+import dshow
+
 try:
 	import wmfapi
 except ImportError:
@@ -34,12 +36,14 @@ else:
 	wmfapi.CoInitialize()
 		
 class WMWriter:
-	def __init__(self, dds, profile=20):
+	def __init__(self, exporter, dds, profile=20):
+		self._exporter = exporter
 		self._dds = dds
 		self._writer = None
 		self._filename = None
 		self._sample = None
 		self._lasttm = 0
+		self._writing = 0
 		if not wmfapi:
 			return
 		profman = wmfapi.CreateProfileManager()
@@ -48,6 +52,10 @@ class WMWriter:
 		wmtype = wmfapi.CreateDDVideoWMType(self._dds)
 		writer.SetVideoFormat(wmtype)
 		self._writer = writer
+		self._audiopeer = dshow.CreatePyRenderingListener(self)
+		
+		#audiofile = r'D:\ufs\mm\cmif\bin\win32\examples\168.au'
+		#self.setAudioFormatFromFile(audiofile)
 
 	def setOutputFilename(self, filename):
 		self._filename = filename
@@ -59,11 +67,13 @@ class WMWriter:
 			self._writer.BeginWriting()
 			self._sample = self._writer.AllocateDDSample(self._dds)
 			self._lasttm = 0
+			self._writing = 1
 
 	def endWriting(self):
 		if self._writer:
 			self._writer.Flush()
 			self._writer.EndWriting()
+			self._writing = 0
 
 	def update(self, now):
 		now = int(1000.0*now+0.5)
@@ -76,8 +86,116 @@ class WMWriter:
 		self._sample = self._writer.AllocateDDSample(self._dds)
 		self._lasttm = now
 
+	#
+	#  Audio section
+	#
 
+	# implement method of IRendererAdviceSink for audio
+	def OnRenderSample(self, ms):
+		return # XXX: we need stream sync
+		if self._writing:
+			self._writer.WriteDSAudioSample(ms, self._audiotm)
 
+	# implement method of IRendererAdviceSink for audio
+	def OnActive(self):
+		self._audiotm = self._lasttm
+
+	# set the audio format to that of the audio/video file
+	def setAudioFormatFromFile(self, filename):
+		dummy  = AudioFormatSetter(self._writer, filename)
+
+	# alter filter graph so that audio samples are feeded to the writer
+	def redirectAudioFilter(self, fg):
+		# find renderer
+		try:
+			aurenderer = fg.FindFilterByName('Default DirectSound Device')
+		except:
+			aurenderer=None
+		if not aurenderer:
+			try:
+				aurenderer=fg.FindFilterByName('Default WaveOut Device')
+			except:
+				aurenderer=None
+		if not aurenderer:
+			print 'Audio renderer not found'
+			return None
+
+		enumpins=aurenderer.EnumPins()
+		pin=enumpins.Next()
+		aulastpin=pin.ConnectedTo()
+		fg.RemoveFilter(aurenderer)
+		try:
+			f = dshow.CreateFilter('Audio Windows Media Converter')
+		except:
+			print 'Audio windows media converter filter is not installed'
+			return None
+
+		try:
+			wmconv=f.QueryIWMConverter()
+		except:
+			print 'Filter does not support interface IWMConverter'
+			return
+		wmconv.SetAdviceSink(self._audiopeer)
+
+		fg.AddFilter(f,'AWMC')
+		
+		fg.Render(aulastpin)
+
+		return fg
+
+#######################
+class AudioFormatSetter:
+	def __init__(self, writer, filename):
+		self._audiopeer = dshow.CreatePyRenderingListener(self)
+		self._writer = writer
+		# this call will set indirectly self._writer format
+		fg = self.__createFilterGraph(filename)
+
+	def __createFilterGraph(self, filename):
+		fg = dshow.CreateGraphBuilder()
+		fg.RenderFile(filename)
+		
+		# find renderer
+		try:
+			aurenderer=fg.FindFilterByName('Default DirectSound Device')
+		except:
+			aurenderer=None
+		if not aurenderer:
+			try:
+				aurenderer=fg.FindFilterByName('Default WaveOut Device')
+			except:
+				aurenderer=None
+		if not aurenderer:
+			print 'Audio renderer not found'
+			return None
+
+		enumpins=aurenderer.EnumPins()
+		pin=enumpins.Next()
+		aulastpin=pin.ConnectedTo()
+		fg.RemoveFilter(aurenderer)
+		try:
+			f = dshow.CreateFilter('Audio Windows Media Converter')
+		except:
+			print 'Audio windows media converter filter is not installed'
+			return None
+
+		try:
+			wmconv=f.QueryIWMConverter()
+		except:
+			print 'Filter does not support interface IWMConverter'
+			return
+		wmconv.SetAdviceSink(self._audiopeer)
+
+		fg.AddFilter(f,'AWMC')
+		
+		fg.Render(aulastpin)
+
+		return fg
+	
+	def OnSetMediaType(self, mt):
+		self._writer.SetDSAudioFormat(mt)
+
+		
 #######################
 class WMVideoConverter:
 	def __init__(self):
@@ -228,7 +346,6 @@ class WMVideoConverter:
 	def OnRenderSample(self, ms):
 		if self._writing:
 			self._writer.WriteDSSample(self._videopinix, ms)
-
 
 #######################
 class WMAudioConverter:
