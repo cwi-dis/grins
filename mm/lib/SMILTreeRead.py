@@ -663,11 +663,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def addQTAttr(self, key, val, node):
 		attrdict = node.attrdict
 		if key == 'immediate-instantiation': 
-			internalval = self.parseEnumValue(val, {'false':0,'true':1},key, 'immediateinstantiationmedia')
+			internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 0)
 			attrdict['immediateinstantiationmedia'] = internalval
 			return 1
 		elif key == 'bitrate':
-			internalval = self.parseIntValue(val, key, 'bitratenecessary')
+			internalval = self.parseIntValue(val, key, 14400)
 			attrdict['bitratenecessary'] = internalval
 			return 1
 		elif key == 'system-mime-type-supported':
@@ -675,7 +675,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			attrdict['systemmimetypesupported'] = internalval
 			return 1
 		elif key == 'attach-timebase': 
-			internalval = self.parseEnumValue(val, {'false':0,'true':1},key, 'attachtimebase')
+			internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 1)
 			attrdict['attachtimebase'] = internalval
 			return 1
 		elif key == 'chapter':
@@ -688,24 +688,22 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return 1
 		
 		return 0
-				
-	def parseEnumValue(self, val, dict, smilattributename, internalattributename):
+
+	def parseEnumValue(self, val, dict, smilattributename, default):
 		if dict.has_key(val):
 			return dict[val]
 		else:
-			self.syntax_error('invalid '+smilattributename+' value')
-			return MMAttrdefs.getdefattr(None, internalattributename)
+			self.syntax_error("invalid `%s' value" % smilattributename)
+			return default
 
-	def parseIntValue(self, val, smilattributename, internalattributename):
+	def parseIntValue(self, val, smilattributename, default):
 		intvalue = 0
 		try:
-			intvalue = string.atoi(val)
+			return string.atoi(val)
 		except string.atoi_error:
-			self.syntax_error('invalid '+smilattributename+' value')
-			intvalue = MMAttrdefs.getdefattr(None, internalattributename)
-			
-		return intvalue
-			
+			self.syntax_error("invalid `%s' value" % smilattributename)
+			return default
+
 	def NewNode(self, tagname, attributes):
 		# mimetype -- the MIME type of the node as specified in attr
 		# mtype -- the MIME type of the node as calculated
@@ -1864,15 +1862,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def parseQTAttributeOnSmilElement(self, attributes):
 		for key, val in attributes.items():
 			if key == 'time-slider':
-				internalval = self.parseEnumValue(val, {'false':0,'true':1},key, 'qttimeslider')
+				internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 0)
 				self.__context.attributes['qttimeslider'] = internalval
 				del attributes[key]
 			elif key == 'autoplay':
-				internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 'autoplay')
+				internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 0)
 				self.__context.attributes['autoplay'] = internalval
 				del attributes[key]
 			elif key == 'chapter-mode':
-				internalval = self.parseEnumValue(val, {'all':0,'clip':1}, key, 'qtchaptermode')
+				internalval = self.parseEnumValue(val, {'all':0,'clip':1}, key, 0)
 				self.__context.attributes['qtchaptermode'] = internalval
 				del attributes[key]
 			elif key == 'next':
@@ -1882,7 +1880,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.__context.attributes['qtnext'] = val
 				del attributes[key]
 			elif key == 'immediate-instantiation':
-				internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 'immediateinstantiation')
+				internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 0)
 				self.__context.attributes['immediateinstantiation'] = internalval
 				del attributes[key]
 		
@@ -1975,6 +1973,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.FixRegpoints()
 		metadata = string.join(self.__metadata, '')
 		self.__context.metadata = metadata
+		MMAttrdefs.flushcache(self.__root)
 
 	# head/body sections
 
