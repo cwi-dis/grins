@@ -953,7 +953,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 			toplevel._image_size_cache[file] = xsize, ysize
 		return xsize, ysize
 
-	def _prepare_image(self, file, crop, scale, center, coordinates):
+	def _prepare_image(self, file, crop, scale, center, coordinates, units = UNIT_SCREEN):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
@@ -988,7 +988,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 		if coordinates is None:
 			x, y, width, height = self._rect
 		else:
-			x, y, width, height = self._convert_coordinates(coordinates)
+			x, y, width, height = self._convert_coordinates(coordinates, units = units)
 		if scale == 0:
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
@@ -1023,7 +1023,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 			if not reader:
 				# we got the size from the cache, don't believe it
 				del toplevel._image_size_cache[file]
-				return self._prepare_image(file, crop, oscale, center, coordinates)
+				return self._prepare_image(file, crop, oscale, center, coordinates, units = units)
 			if hasattr(reader, 'transparent'):
 				if type(file) is type(''):
 					r = img.reader(imgformat.xrgb8, file)
