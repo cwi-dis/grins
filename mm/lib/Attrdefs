@@ -109,6 +109,9 @@
 (thumbnail_icon (string) '' 'Thumbnail URL' hidden
 	'URL for a thumbnail image of this node' normal (g2 qt smil10 smil2 cmif snap))
 
+(dropicon (string) '' 'Drop icon' hidden
+	'URL for a drop icon' normal (g2 qt smil10 smil2 cmif snap))
+
 (empty_icon (string) '' 'Icon URL' hidden
 	'URL for an icon when this node is empty' normal (g2 qt smil10 smil2 cmif snap))
 
