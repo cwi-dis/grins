@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import string
 
 # Draw a string centered in a box, breaking lines if necessary
