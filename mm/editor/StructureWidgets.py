@@ -401,13 +401,21 @@ class SeqWidget(StructureObjWidget):
     def get_minsize(self):
         # Return the minimum size that I can be.
 
-        if len(self.children) == 0 or self.iscollapsed():
+        if self.iscollapsed():
             boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
             return self.get_relx(boxsize), self.get_rely(boxsize)
 
+        xgap = self.get_relx(sizes_notime.GAPSIZE)
+
+        if not self.children:
+            boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
+            min_width, min_height = self.get_relx(boxsize), self.get_rely(boxsize)
+            if self.dropbox:
+                min_width = min_width + self.dropbox.get_minsize()[0] + xgap
+            return min_width, min_height
+
         min_width = 0.0; min_height = 0.0
         
-        xgap = self.get_relx(sizes_notime.GAPSIZE)
         if self.channelbox:
             min_width, min_height = self.channelbox.get_minsize()
             min_width = min_width + xgap
@@ -443,9 +451,18 @@ class SeqWidget(StructureObjWidget):
     def get_minsize_abs(self):
         # Everything here calculated in pixels.
 
-        if len(self.children) == 0 or self.iscollapsed():
-            boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE;
+        if self.iscollapsed():
+            boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
             return boxsize, boxsize
+
+        xgap = sizes_notime.GAPSIZE
+
+        if not self.children:
+            boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
+            min_width, min_height = boxsize, boxsize
+            if self.dropbox:
+                min_width = min_width + self.dropbox.get_minsize_abs()[0] + xgap
+            return min_width, min_height
 
         mw=0; mh=0
         if self.channelbox:
