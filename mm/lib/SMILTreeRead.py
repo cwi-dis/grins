@@ -1605,6 +1605,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__tops[top]['height'] = 480
 		layout['winsize'] = self.__tops[top]['width'], self.__tops[top]['height']
 		layout['units'] = UNIT_PXL
+		close = self.__tops[top].get('close')
+		# for the root-layout element, this attribute may be None.
+		if close == None:
+			close = 'never'
+		layout['close'] = close
+		open = self.__tops[top].get('open')
+		# for the root-layout element, this attribute may be None.
+		if open == None:
+			open = 'always'
+		layout['open'] = open
 
 	def FixBaseWindow(self):
 		if not self.__topchans:
@@ -2482,10 +2492,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if height < 0:
 				self.syntax_error('root-layout height not a positive integer')
 				height = 0
+				
+		close = attributes['close']
+		if close not in ('never', 'whenNotActive'):
+			self.syntax_error('illegal close attribute value')
+			close = 'never'
+
+		open = attributes['open']
+		if open not in ('always', 'whenActive'):
+			self.syntax_error('illegal open attribute value')
+			open = 'always'
+			
 		self.__tops[id] = {'width':width,
 				   'height':height,
 				   'declwidth':width,
 				   'declheight':height,
+				   'close':close,
+				   'open':open,
 				   'attrs':attributes}
 
 	def end_viewport(self):
