@@ -1045,6 +1045,30 @@ class SubWindow(Window):
 		if wc==0 or hc==0:
 			return
 		
+		if self._video and self._active_displist:
+			# get video info
+			vdds, vrcDst, vrcSrc = self._video
+			ld, td, rd, bd = self.ltrb(vrcDst) 
+			ls, ts, rs, bs = self.ltrb(vrcSrc)
+
+			# clip destination
+			ld, td, rd, bd = self.ltrb(self.rectAnd((xc, yc, wc, hc), 
+				(x+ld, y+td, rd-ld, bd-td)))
+			
+			# find part of source mapped to the clipped destination
+			# apply linear afine transformation from destination -> source
+			# x^p = ((x_2^p - x_1^p)*x + (x_1^p*x_2-x_2^p*x_1))/(x_2-x_1)
+			# rem: primes represent source coordinates
+			a = (rs-ls)/float(rd-ld);b=(ls*rd-rs*ld)/float(rd-ld)
+			ls = int(a*ld + b + 0.5)
+			rs = int(a*rd + b + 0.5)
+			a = (bs-ts)/float(bd-td);b=(ts*bd-bs*td)/float(bd-td)
+			ts = int(a*td + b + 0.5)
+			bs = int(a*bd + b + 0.5)
+			
+			# we are ready, blit it
+			dds.Blt((ld, td, rd, bd), vdds, (ls,ts,rs,bs), ddraw.DDBLT_WAIT)
+
 		hdc = dds.GetDC()
 		dc = win32ui.CreateDCFromHandle(hdc)
 		if rgn:
@@ -1052,20 +1076,6 @@ class SubWindow(Window):
 		x0, y0 = dc.SetWindowOrg((-x,-y))
 
 		if self._active_displist:
-			if self._video:
-				vdds, vrcDst, vrcSrc = self._video
-				ld, td, wd, hd = vrcDst
-				ls, ts, ws, hs = vrcSrc
-				if wd!=ws or hd!=hs: 
-					# needs scaling
-					zvdds = self.createDDS(wd, hd)
-					zvdds.Blt((0,0,wd,hd), vdds, vrcSrc, ddraw.DDBLT_WAIT)
-				else: zvdds = vdds
-				zvhdc = zvdds.GetDC()
-				zvdc = win32ui.CreateDCFromHandle(zvhdc)
-				dc.BitBlt((ld,td),(wd,hd),zvdc,(ls, ts), win32con.SRCCOPY)
-				zvdc.Detach()
-				zvdds.ReleaseDC(zvhdc)
 			self._active_displist._render(dc,None)
 			if self._showing:
 				win32mu.FrameRect(dc,self._rect,self._showing)
