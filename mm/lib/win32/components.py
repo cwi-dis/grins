@@ -531,7 +531,7 @@ class Tooltip(Control):
 	def __init__(self, parent=None, id=-1):
 		Control.__init__(self, parent, id)
 		self._toolscounter = 0
-		self._cptextlist = []
+		self._cptext = {}
 		self._lbuttondown = 0
 
 	def createWindow(self, rc=(0,0,0,0), title=''):
@@ -539,27 +539,37 @@ class Tooltip(Control):
 		hwnd = self._parent.GetSafeHwnd()
 		rcd = win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT
 		self._hwnd = Sdk.CreateWindowEx(win32con.WS_EX_TOPMOST, 'tooltips_class32', title, win32con.WS_POPUP 
-			# | commctrl.TTS_ALWAYSTIP
+			 # | commctrl.TTS_ALWAYSTIP
 			,rcd, hwnd, self._id)
 		Sdk.SetWindowPos(self._hwnd, win32con.HWND_TOPMOST, (0,0,0,0),
 			win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
-	
+
 	def destroy(self):
 		Control.destroy(self)
-		for cp in self._cptextlist:
-			print 'deleting c-string:', Sdk.GetWMString(cp)
+		for cp in self._cptext.values:
+			Sdk.GetWMString(cp)
+		del self._cptext
 
-	def addTool(self, rc):
+	def __releasetoolres(self, toolid):
+		cp = self._cptext.get(toolid)
+		if cp: 
+			Sdk.GetWMString(cp)
+			del self._cptext[toolid]
+		
+	def addTool(self, toolid, rc, text):
+		assert not self._cptext.has_key(toolid), 'tool already exists'
 		hwnd = self._parent.GetSafeHwnd()
-		Sdk.AddToolInfo(self._hwnd, hwnd, self._id, rc)
+		cp = Sdk.AddTool(self._hwnd, hwnd, toolid, rc, text)
+		self._cptext[toolid] = cp
 		self._toolscounter = self._toolscounter + 1
-
-	def addToolText(self, rc, text):
+	
+	def delTool(self, toolid):
+		assert self._cptext.has_key(toolid), 'tool does not exist'
 		hwnd = self._parent.GetSafeHwnd()
-		cp = Sdk.AddToolInfo(self._hwnd, hwnd, self._id, rc, text)
-		self._cptextlist.append(cp)
-		self._toolscounter = self._toolscounter + 1
-
+		Sdk.DelTool(self._hwnd, hwnd, toolid)
+		self._toolscounter = self._toolscounter - 1
+		self.__releasetoolres(toolid)
+		
 	def relayEvent(self, params):
 		assert self._hwnd>0, 'Tooltip control has not been created'
 		if self._toolscounter == 0: 
@@ -588,13 +598,21 @@ class Tooltip(Control):
 		x, y = msg.pos()
 		rc = x, y, x+1, y+1
 		hwnd = self._parent.GetSafeHwnd()
-		Sdk.NewToolRect(self._hwnd, hwnd, self._id, rc)
+		Sdk.NewToolRect(self._hwnd, hwnd, 0, rc)
 		self.relayEvent(params)
 
 	def activate(self, flag):
-		if flag: flag = 1
-		else: flag = 0
+		if flag: 
+			flag = 1
+		else: 
+			flag = 0
 		self.sendmessage(commctrl.TTM_ACTIVATE, flag, 0)
+
+	def updatetiptext(self, toolid, text):
+		assert self._cptext.has_key(toolid), 'tool does not exist'
+		cp = self._cptext[toolid]
+		hwnd = self._parent.GetSafeHwnd()
+		Sdk.UpdateTipText(self._hwnd, hwnd, toolid, text, cp)
 
 	def setdelay(self, which, msecs):
 		whichid = None
@@ -611,6 +629,7 @@ class Tooltip(Control):
 		r, g, b = color
 		self.sendmessage(commctrl.TTM_SETTIPTEXTCOLOR, win32api.RGB(r, g, b), 0)
 
+	
 ##############################
 # Base class for controls creation classes
 class WndClass:
