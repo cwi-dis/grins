@@ -722,9 +722,7 @@ class EffectiveAnimator:
 			region = mmlchan.getCssId()
 			# update coordinates
 			if self.__attr == 'position':
-				left, top = value
-				region.changeRawAttr('left', left)
-				region.changeRawAttr('top', top)
+				region.move(value)
 			else:
 				region.changeRawAttr(attr, value)
 			coords = region.getPxGeom()
@@ -800,9 +798,7 @@ class EffectiveAnimator:
 
 			# update coordinates
 			if self.__attr == 'position':
-				left, top = value
-				region.changeRawAttr('left', left)
-				region.changeRawAttr('top', top)
+				region.move(value)
 			else:
 				region.changeRawAttr(self.__attr, value)
 			
