@@ -591,7 +591,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		if self._viewport:
 			self._viewport.paintOn(dcc)
 			dcc.SelectClipRgn(rgn)
-			self._viewport._drawcaption(dcc)
+			#self._viewport._drawcaption(dcc)
 			self._viewport._draw3drect(dcc)
 			self.drawTracker(dcc)
 
@@ -684,9 +684,8 @@ class Viewport(win32window.Window, UserEventMng):
 		UserEventMng.__init__(self)
 		self.setDeviceToLogicalScale(scale)
 
-		self._cycaption = win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
-		sc = self._device2logical
-		self._cycaptionlog = int(self._device2logical*self._cycaption+0.5)
+		self._cycaption = 0 #win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
+		self._cycaptionlog = 0 # int(self._device2logical*self._cycaption+0.5)
 		x, y, w, h = attrdict.get('wingeom')
 		self._rc = (x, y, w, h)
 		units = attrdict.get('units')
