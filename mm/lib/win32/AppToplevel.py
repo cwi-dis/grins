@@ -248,6 +248,7 @@ class _Toplevel:
 		win32ui.GetApp().RunLoop(wnd)
 		wnd.DestroyWindow()
 		win32ig.deltemp()
+		self.close()
 		(win32ui.GetAfx()).PostQuitMessage(0)
 
 	#def monitor(self,handler,count):
@@ -269,6 +270,7 @@ class _Toplevel:
 				break
 		self._time=float(Sdk.GetTickCount())/TICKS_PER_SECOND
 		self.serve_timeslices()
+		win32api.Sleep(0)
 
 	# Called by the core sustem to set the waiting cursor
 	_waiting=0
@@ -422,7 +424,12 @@ class FileDialog:
 		self._dlg =dlg= win32ui.CreateFileDialog(existing,None,file,flags,filter,parent)
 		dlg.SetOFNTitle(prompt)
 
-		if dlg.DoModal()==win32con.IDOK:
+		# get/set current directory since the core assumes remains the same
+		cd=Sdk.GetCurrentDirectory()
+		dlg.SetOFNInitialDir(directory)
+		result=dlg.DoModal()
+		Sdk.SetCurrentDirectory(cd)
+		if result==win32con.IDOK:
 			if cb_ok: cb_ok(dlg.GetPathName())
 		else:
 			if cb_cancel: cb_cancel()
@@ -432,7 +439,43 @@ class FileDialog:
 
 #######################################
 
+""" @win32doc|shell_execute
+The shell function calls the win32 functions ShellExecute with the given url and verb
+The verb can be one of 'open','edit','print'
+"""
+
+# url parsing
+import MMurl,ntpath, urllib
+
+def shell_execute(url,verb='open'):
+	utype, _url = MMurl.splittype(url)
+	host, _url = MMurl.splithost(_url)
+	islocal = (not utype and not host)
+	if islocal:
+		filename=MMurl.url2pathname(MMurl.splithost(url)[1])
+		if os.path.isfile(filename):
+			if not os.path.isabs(filename):
+				filename=os.path.join(os.getcwd(),filename)
+				filename=ntpath.normpath(filename)
+		else: 
+			win32ui.MessageBox(filename+'\nnot found')
+			return
+		url=filename
+	rc,msg=Sdk.ShellExecute(0,verb,url,None,"", win32con.SW_SHOW)
+	if rc<=32:win32ui.MessageBox('Cannot '+ verb +' '+url+'\n'+msg,'GRiNS')
 
 
+""" @win32doc|htmlwindow
+Class htmlwindow just calls the shell to open the given file
+"""
+
+class htmlwindow:
+	def __init__(self,url):
+		self.goto_url(url)
+	def goto_url(self,url):
+		shell_execute(url,'open')	
+	def close(self):pass
+	def is_closed(self):return 1
+		
 
 
