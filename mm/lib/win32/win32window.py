@@ -853,7 +853,7 @@ class SubWindow(Window):
 			import settings
 			wnd.UseHtmlCtrl(not settings.get('html_control'))
 			wnd.HookMessage(self.onUserUrl,win32con.WM_USER)
-		
+
 		self._oswnd = wnd
 		return wnd
 
@@ -916,10 +916,9 @@ class SubWindow(Window):
 		
 		if self._oswnd:
 			x, y, w, h = self.getwindowpos()
-			self._oswnd.SetWindowPos(self.GetSafeHwnd(),(x,y,w,h),
-				win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | 
-				win32con.SWP_NOREDRAW | win32con.SWP_NOSENDCHANGING)
-		
+			self._oswnd.SetWindowPos(win32con.HWND_TOP, (x,y,w,h) , 
+				win32con.SWP_NOZORDER | win32con.SWP_ASYNCWINDOWPOS | win32con.SWP_DEFERERASE)
+
 	#
 	# Inage management
 	#
@@ -934,25 +933,12 @@ class SubWindow(Window):
 			xsize,ysize,depth=win32ig.size(img)
 			toplevel._image_size_cache[file] = xsize, ysize
 			toplevel._image_cache[file] = img
-		self.imgAddDocRef(file)
+		self._topwindow.imgAddDocRef(file)
 		return xsize, ysize
 
 	# Returns handle of the image
 	def _image_handle(self, file):
 		return  __main__.toplevel._image_cache[file]
-
-	# XXX: to be removed
-	def imgAddDocRef(self,file):
-		toplevel=__main__.toplevel
-		w=self._topwindow
-		frame=(w.GetParent()).GetMDIFrame()		
-		doc = frame._cmifdoc
-		if doc==None: doc="__Unknown"
-		if toplevel._image_docmap.has_key(doc):
-			if file not in toplevel._image_docmap[doc]:
-				toplevel._image_docmap[doc].append(file)
-		else:
-			toplevel._image_docmap[doc]=[file,]
 
 
 	#
@@ -1074,6 +1060,7 @@ class SubWindow(Window):
 			return self.xywh(rc)
 		return (0, 0, 0, 0)
 
+				
 	# paint on surface dds only what this window is responsible for
 	# i.e. self._active_displist and/or bgcolor
 	# clip painting to argument rgn when given
@@ -1134,19 +1121,20 @@ class SubWindow(Window):
 
 			self._active_displist._render(dc, None, clear=0)
 
+
 			if self._showing:
 				win32mu.FrameRect(dc,self._rect,self._showing)
-						
+			
 			dc.SetWindowOrg((x0,y0))
 			dc.Detach()
 			dds.ReleaseDC(hdc)
-			
+
 			# if we have an os-subwindow invalidate its area
 			# but do not update it since we want this to happen
 			# after the surfaces flipping
 			if self._oswnd:
 				self._oswnd.InvalidateRect(self._oswnd.GetClientRect())
-
+			
 		elif self._transparent == 0:
 			if self._convbgcolor == None:
 				r, g, b = self._bgcolor
@@ -1335,7 +1323,6 @@ class SubWindow(Window):
 	#
 	# Animations interface
 	#
-
 	def updatecoordinates(self, coordinates, units=UNIT_SCREEN, scale=1):
 		# first convert any coordinates to pixel
 		if units != UNIT_PXL:
@@ -1350,6 +1337,7 @@ class SubWindow(Window):
 		x0, y0, w0, h0 = self._rectb
 		x1, y1, w1, h1 = self.getwindowpos()
 		
+
 		# sense a size change/restore
 		if not self._resizing:
 			if w!=w0 or h!=h0:
@@ -1365,11 +1353,10 @@ class SubWindow(Window):
 		self._rectb = x, y, w, h  # rect with respect to parent in pixels
 		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
 		
-		# update the pos of any subwindows
-		self.updateoswndpos()
-
 		self._topwindow.update()
-				
+
+		# update the pos of any os subwindows
+		self.updateoswndpos()
 
 	def updatezindex(self, z):
 		self._z = z
