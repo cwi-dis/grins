@@ -14,7 +14,7 @@ def _colormask(mask):
 		mask = mask >> 1
 	if mask < 0:
 		try:
-			i = 0x100000000
+			i = int(0x100000000L)
 		except OverflowError:
 			width = 32 - shift
 		else:
