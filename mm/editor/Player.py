@@ -539,15 +539,13 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		for pn in arm_events:
 			d = pn.GetRawAttr('arm_duration')
 			c = self.getchannel(pn)
-			self.setarmedmode(pn, ARM_SCHEDULED)
+			pn.setarmedmode(ARM_SCHEDULED)
 			# XXX Attempted fix by Jack: get rid of
 			# multiple-arms of first few events
 			if pn.t0 > 0:
-				print 'Schedule prearm for ', pn.t0
 				pn.prearm_event = self.rtpool.enter(pn.t0, d, \
 				  c.arm_only, pn)
 			else:
-##				print 'Pre-arm now'
 				c.arm_only(pn)
 		self.resume_2_playing()
 		return 1
@@ -582,9 +580,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.rtpool.flush()
 		self.setrate(0.0) # Stop the clock
 		self.showstate()
-		#print 'Player: unarm chview'
-		chv = self.toplevel.channelview
-		chv.unarm_all()
+		unarmallnodes(self.playroot)
 		self.setready()
 	#
 	def stop_playing(self):
@@ -599,7 +595,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			    ch.arm_and_measure(node)
 		    else:
 			    ch.arm_only(node)
-		    self.setarmedmode(node, ARM_PLAYING)
+	            node.setarmedmode(ARM_PLAYING)
 		    dummy = self.enter(0.0, 0, ch.play, \
 			      (node, self.decrement, (0, node, TL)))
 		    if self.setcurrenttime_callback:
@@ -684,15 +680,14 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			    except AttributeError:
 				pass
 			    if must_arm:
-##				print 'Player: Node not pre-armed on', \
-##				    MMAttrdefs.getattr(node, 'channel')
+				print 'Player: Node not pre-armed on', \
+				    MMAttrdefs.getattr(node, 'channel'), node.uid
 				if self.measure_armtimes:
 					dummy = self.enter(0.0, -1, \
 						  chan.arm_and_measure, node)
 				else:
 					dummy = self.enter(0.0, -1, \
 						  chan.arm_only, node)
-			    self.setarmedmode(node, ARM_PLAYING) # XXX fout!
 			    dummy = self.enter(0.0, 0, chan.play, \
 				(node, self.decrement, (0, node, TL)))
 			    if self.setcurrenttime_callback:
@@ -702,7 +697,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 				self.decrement, (0, node, TL))
 		    else:
 			# Side is Tail, so...
-			self.setarmedmode(node, ARM_DONE)
+##			node.setarmedmode(ARM_DONE)
 			if not self.seeking:
 				self.opt_prearm(node)
 		elif type == 'par' and side == TL:
@@ -740,7 +735,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 				pass
 			d = pn.GetRawAttr('arm_duration')
 			c = self.getchannel(pn)
-			self.setarmedmode(pn, ARM_SCHEDULED)
+			pn.setarmedmode(ARM_SCHEDULED)
 			pn.prearm_event = self.rtpool.enter(pn.t0, d, \
 				c.arm_only, pn)
 	#
@@ -762,15 +757,6 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		else:
 			node.channel = None
 		return node.channel
-	#
-	# Routine to do prearm feedback
-	#
-	def setarmedmode(self, node, mode):
-		# XXX There's something wrong here,
-		# XXX sometimes it isn't called right
-##		print 'Player.setarmedmode',
-##		print `MMAttrdefs.getattr(node, 'name')`, `mode`
-		self.toplevel.channelview.setarmedmode(node, mode)
 	#
 	# Callback for anchor activations, called by channels.
 	# Return 1 if the anchor fired, 0 if nothing happened.
@@ -885,3 +871,11 @@ def flushchannelcache(node):
 	children = node.GetChildren()
 	for child in children:
 		flushchannelcache(child)
+#
+# Unarm all nodes
+#
+def unarmallnodes(node):
+	node.setarmedmode(ARM_NONE)
+	children = node.GetChildren()
+	for child in children:
+		unarmallnodes(child)

@@ -14,6 +14,8 @@ from ChannelWindow import ChannelWindow
 from AnchorEdit import A_ID, A_TYPE, A_ARGS, ATYPE_NORMAL, ATYPE_PAUSE, \
 	ATYPE_AUTO
 
+from ArmStates import *
+
 import FileCache
 import pipes
 
@@ -327,6 +329,7 @@ class ImageChannel(Channel):
 		self.window.clear()
 	#
 	def play(self, (node, callback, arg)):
+		self.node = node
 		if not self.is_showing():
 			callback(arg)
 			return

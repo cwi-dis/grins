@@ -134,6 +134,8 @@ class MMNode:
 		self.values = []
 		self.summaries = {}
 		self.widget = None # Used to display traversal XXX temporary!
+		self.setarmedmode = self.setarmedmode_dummy
+		self.armedmode = None
 		return self
 	#
 	# Return string representation of self
@@ -475,6 +477,11 @@ class MMNode:
 		summary.sort()
 		return summary
 	#
+	# method for maintaining armed status when the ChannelView is
+	# not active
+	#
+	def setarmedmode_dummy(self, mode):
+		self.armedmode = mode
 
 
 # Make a "deep copy" of an arbitrary value
@@ -519,3 +526,9 @@ def _prstats():
 	list.reverse()
 	for count, key in list:
 		print '#', rjust(`count`, 5), key
+
+#
+# Dummy setarmedmode routine, for use when ChannelView is not active
+#
+def setarmedmode_dummy(mode):
+	node.armedmode = mode

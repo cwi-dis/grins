@@ -14,6 +14,8 @@ import fm
 from Channel import Channel
 from ChannelWindow import ChannelWindow
 
+from ArmStates import *
+
 from AnchorEdit import \
 	A_ID, A_TYPE, A_ARGS, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO
 
@@ -408,6 +410,7 @@ class TextChannel(Channel):
 		self.window.clear()
 	#
 	def play(self, (node, callback, arg)):
+		self.node = node
 		self.showanchors(node)
 		self.showtext(node)
 		Channel.play(self, node, callback, arg)

@@ -140,20 +140,20 @@ class ChannelView(ViewDialog, GLDialog):
 
 	# Special interface for the Player to show armed state of nodes
 
-	def setarmedmode(self, node, mode):
-		try:
-			obj = node.cv_obj
-		except AttributeError:
-			return # Invisible node
-		obj.setarmedmode(mode)
-		self.drawarcs()
-
-	def unarm_all(self):
-		if self.is_showing():
-			for obj in self.objects:
-				obj.armedmode = ARM_NONE
-			self.setwin()
-			self.draw()
+##	def setarmedmode(self, node, mode):
+##		try:
+##			obj = node.cv_obj
+##		except AttributeError:
+##			return # Invisible node
+##		obj.setarmedmode(mode)
+##		self.drawarcs()
+##
+##	def unarm_all(self):
+##		if self.is_showing():
+##			for obj in self.objects:
+##				obj.resetarmedmode()
+##			self.setwin()
+##			self.draw()
 
 	# Dialog interface (extends GLDiallog.{setwin,show,hide})
 
@@ -900,10 +900,12 @@ class NodeBox(GO):
 					self.haspause = 1
 					break
 		node.cv_obj = self
+		node.setarmedmode = self.setarmedmode
+		if node.armedmode == None:
+			node.armedmode = ARM_NONE
 		self.cname = cname # Channel name
 		name = MMAttrdefs.getattr(node, 'name')
 		self.locked = 0
-		self.armedmode = ARM_NONE
 		return GO.init(self, mother, name)
 
 	def getnode(self):
@@ -911,13 +913,16 @@ class NodeBox(GO):
 
 	def cleanup(self):
 		del self.node.cv_obj
+		self.node.setarmedmode = self.node.setarmedmode_dummy
 		GO.cleanup(self)
 
 	def setarmedmode(self, mode):
 		# print 'node', self.name, 'setarmedmode', mode
-		self.armedmode = mode
-		self.mother.setwin()
-		self.drawfocus()
+		if mode <> self.node.armedmode:
+			self.node.armedmode = mode
+			self.mother.setwin()
+			self.drawfocus()
+			self.mother.drawarcs()
 
 	def lock(self):
 		if not self.locked:
@@ -953,8 +958,8 @@ class NodeBox(GO):
 		# Draw a box
 		if self.locked:
 			gl.RGBcolor(LOCKEDCOLOR)
-		elif armcolors.has_key(self.armedmode):
-			gl.RGBcolor(armcolors[self.armedmode])
+		elif armcolors.has_key(self.node.armedmode):
+			gl.RGBcolor(armcolors[self.node.armedmode])
 		else:
 			gl.RGBcolor(NODECOLOR)
 		gl.bgnpolygon()
