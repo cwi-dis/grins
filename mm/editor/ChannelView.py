@@ -1222,7 +1222,8 @@ class ArcBox(GO):
 		#
 		lx = self.dx - self.sx
 		ly = self.dy - self.sy
-		angle = atan2(lx, ly)
+		if lx == 0.0 == ly: angle = 0.0
+		else: angle = atan2(lx, ly)
 		# print 'lx =', lx, 'ly =', ly, 'angle =', angle
 		self.cos = cos(angle)
 		self.sin = sin(angle)
