@@ -551,6 +551,11 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			if w > xsize:
 				xsize = w
 			ysize = ysize + h
+		if self.bwstrip is not None:
+			w, h = self.bwstrip.recalc_minsize(self.node, timemapper)
+			if w > xsize:
+				xsize = w
+			ysize = ysize + h
 ##		if timemapper is not None and not text:
 ##			t0, t1, t2, downloadlag, begindelay = self.GetTimes('virtual')
 ##			if t0 == t2:
@@ -1249,14 +1254,13 @@ class StructureObjWidget(MMNodeWidget):
 		if self.bwstrip is not None:
 			bw_w, bw_h = self.bwstrip.get_minsize()
 			if TIMELINE_AT_TOP:
-				self.bwstrip.moveto((my_l, my_t, my_r, my_t + bw_h))
+				self.bwstrip.moveto((my_l, my_t, my_r, my_t + bw_h), self.node, timemapper)
 				my_t = my_t + bw_h
 				greyout_b = my_t
 			else:
-				self.bwstrip.moveto((my_l, my_b - bw_h, my_r, my_b))
+				self.bwstrip.moveto((my_l, my_b - bw_h, my_r, my_b), self.node, timemapper)
 				my_b = my_b - bw_h
 				greyout_t = my_b
-			self.bwstrip.addallbandwidthinfo(self.node, timemapper)
 		if self.greyout is not None:
 			self.greyout.moveto((my_l, greyout_t, my_r, greyout_b), timemapper)
 
@@ -2112,10 +2116,10 @@ class MediaWidget(MMNodeWidget):
 		if self.bwstrip is not None:
 			bw_w, bw_h = self.timeline.get_minsize()
 			if TIMELINE_AT_TOP:
-				self.bwstrip.moveto((l, t, r, t+bw_h), timemapper)
+				self.bwstrip.moveto((l, t, r, t+bw_h), self.node, timemapper)
 				t = t + bw_h
 			else:
-				self.bwstrip.moveto((l, b-bw_h, r, b), timemapper)
+				self.bwstrip.moveto((l, b-bw_h, r, b), self.node, timemapper)
 				b = b - bw_h
 		# XXXX Support for greyout widget not added, because timelines
 		# on media nodes isn't used anyway nowadays.
@@ -2485,6 +2489,7 @@ class GreyoutWidget(MMWidgetDecoration):
 		MMWidgetDecoration.moveto(self, coords)
 		self.__timemapper = timemapper
 		self.greyout_ranges = []
+		self._recalc_ranges()
 
 	def _recalc_ranges(self):
 		t0, t1, t2, download, begindelay = self.get_mmwidget().GetTimes('virtual')
@@ -2496,7 +2501,6 @@ class GreyoutWidget(MMWidgetDecoration):
 					self.greyout_ranges.append((left+1, right))
 
 	def draw(self, displist):
-		self._recalc_ranges()
 		x, y, w, h = self.get_box()
 		for left, right in self.greyout_ranges:
 			displist.drawstipplebox(self.mmwidget.PLAYCOLOR, (left, y, right-left+1, h))
@@ -2693,12 +2697,6 @@ class BandWidthWidget(MMWidgetDecoration):
 	# A widget showing the timeline
 	def __init__(self, mmwidget, mother):
 		MMWidgetDecoration.__init__(self, mmwidget, mother)
-		self.minwidth = 0
-		self.okboxes = []
-		self.notokboxes = []
-		self.okfocusboxes = []
-		self.notokfocusboxes = []
-		self.collected = 0
 		import settings
 		self.maxbandwidth = settings.get('system_bitrate')
 
@@ -2713,14 +2711,15 @@ class BandWidthWidget(MMWidgetDecoration):
 		import settings
 		self.maxbandwidth = settings.get('system_bitrate')
 		minheight = 2*TITLESIZE
-		self.boxsize = self.minwidth, minheight
+		self.boxsize = 0, minheight
 		return self.boxsize
 
-	def setminwidth(self, width):
-		self.minwidth = width
-		
-	def addallbandwidthinfo(self, node, timemapper):
-		# Should look at self.collected here.
+	def moveto(self, coords, node, timemapper):
+		MMWidgetDecoration.moveto(self, coords)
+		self.okboxes = []
+		self.notokboxes = []
+		self.okfocusboxes = []
+		self.notokfocusboxes = []
 		self._addallbandwidthinfo(node, timemapper)
 
 	def _addallbandwidthinfo(self, node, timemapper):
