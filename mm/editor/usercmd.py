@@ -139,7 +139,7 @@ class CANVAS_RESET(_CommandBase):
 class INFO(_CommandBase):
 	help = 'Display the Info editor for the selected object'
 class ATTRIBUTES(_CommandBase):
-	help = 'Display the Attributes editor for the selected object'
+	help = 'Display the properties editor for the selected object'
 class ANCHORS(_CommandBase):
 	help = 'Display the Anchor editor for the selected object'
 class CONTENT(_CommandBase):

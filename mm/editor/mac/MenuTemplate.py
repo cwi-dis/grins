@@ -57,8 +57,8 @@ MENUBAR=(
 			(ENTRY, 'Child', 'D', NEW_UNDER),
 			(ENTRY, 'Par parent', None, NEW_PAR),
 			(ENTRY, 'Seq parent', None, NEW_SEQ),
-			(ENTRY, 'Switch parent', None, NEW_ALT))),
-			(ENTRY, 'Choice parent', None, NEW_CHOICE),
+			(ENTRY, 'Switch parent', None, NEW_ALT),
+			(ENTRY, 'Choice parent', None, NEW_CHOICE))),
 		(ENTRY, 'New channel', 'M', NEW_CHANNEL),
 		(ENTRY, 'New layout', None, NEW_LAYOUT),
 		(SEP,),
@@ -79,7 +79,7 @@ MENUBAR=(
 
 	(CASCADE, 'Tools', (
 		(ENTRY, 'Show info', 'I', INFO),
-		(ENTRY, 'Show attributes', 'A', ATTRIBUTES),
+		(ENTRY, 'Show properties', 'A', ATTRIBUTES),
 		(ENTRY, 'Show anchors', 'T', ANCHORS),
 		(ENTRY, 'Edit content', 'E', CONTENT),
 		(SEP,),
