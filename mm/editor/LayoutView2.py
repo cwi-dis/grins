@@ -19,12 +19,11 @@ TYPE_ABSTRACT, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT = range(4)
 
 class Node:
 	def __init__(self, name, nodeRef, ctx):
-		self._isExclude = 0
 		self._name = name
 		self._nodeRef = nodeRef
-		self._parent = None
 		self._children = []
 		self._ctx = ctx
+		self._parent = None
 		self._viewport = None
 		
 		# graphic control (implementation: system dependant)
@@ -38,28 +37,27 @@ class Node:
 		# currently, on windows, a selecting operation generate a selected event !
 		self._selecting = 0
 	
+	def _cleanup(self):
+		if self.isShowed:
+			self.hide()
+		del self._ctx
+		del self._viewport
+		del self._nodeRef
+		del self._graphicCtrl
+		del self._parent
+		
 	def addNode(self, node):
 		self._children.append(node)
 		node._parent = self
 		node._viewport = self._viewport
 
-	# not completed yet. But for subregion positioning it's enough for now
 	def removeNode(self, node):
-		ind = 0
-		for child in self._children:
-			if child is node:
-				# remove child as well			
-				if node.isShowed():
-					node.hide()
-				del self._children[ind]
-				break
-			ind = ind+1
+		node._cleanup()
+		try:
+			self._children.remove(node)
+		except ValueError:
+			pass
 
-	def _do_init(self, parent):
-		self._parent = parent
-		parent._children.append(self)
-		self._viewport = parent._viewport
-			
 	def isShowed(self):
 		return self._graphicCtrl != None
 
@@ -71,22 +69,7 @@ class Node:
 	
 	def importAttrdict(self):
 		self._curattrdict = {}
-		
-		isExclude = self._nodeRef.GetAttrDef('isExclude',None)
-		# todo: optimize
-		if isExclude == None:
-			parent = self.getParent()
-			while parent != None:
-				isExclude = parent._nodeRef.GetAttrDef('isExclude',None)
-				if isExclude:
-					break
-				parent = parent.getParent()
-		
-			if parent == None:
-				isExclude = 0
-				
-		self._isExclude = isExclude
-			
+					
 	def getNodeRef(self):
 		return self._nodeRef
 
@@ -145,11 +128,8 @@ class Node:
 			return 1
 		return 0		
 
-	def isExclude(self):
-		return 0
-		
 	def canShow(self):
-		return not self._isExclude
+		return 1
 	
 class Region(Node):
 	def __init__(self, name, nodeRef, ctx):
@@ -239,11 +219,6 @@ class Region(Node):
 		else:
 			self._ctx.selectBgColor(self)
 
-	def isExclude(self):
-		isExclude = self._nodeRef.GetAttrDef('isExclude',0)
-		
-		return isExclude
-
 	def canShow(self):
 		return Node.canShow(self) and self._ctx.isSelectedRegion(self.getName())
 		
@@ -312,7 +287,7 @@ class MediaRegion(Region):
 					if bottom == None and height == None:
 						x,y,w,h = wingeom
 						wingeom = x,y,w,self.media_height
-				
+
 		self._curattrdict['wingeom'] = wingeom
 		
 		self._curattrdict['z'] = 0
@@ -479,10 +454,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentViewport = None
 		
 		self.currentNodeSelected = None
-		self.currentExcludeRegionNameList = None
 		
-		self.currentExcludeRegionList = []
-
 		self.lastViewportNameSelected = None
 		self.currentRegionNameList = []
 		self.currentRegionNameListSel = []
@@ -528,7 +500,6 @@ class LayoutView2(LayoutViewDialog2):
 		import MMNode
 		self.__channelTreeRef = self.context.getchanneltree()
 		self.treeMutation()
-#		self.buildRegionTree(self.context)
 		self.initDialogBox()		
 		self.displayViewport(self._first)
 		self.select(self.currentViewport)
@@ -675,7 +646,7 @@ class LayoutView2(LayoutViewDialog2):
 		# update data structure
 		pNode = self.getNode(parentRef.name)
 		self._nameToRegionNode[regionRef.name] = regionNode = Region(regionRef.name, regionRef, self)
-		regionNode._do_init(pNode)
+		pNode.addNode(regionNode)
 		viewport = self.__channelTreeRef.getviewport(parentRef)
 		self._viewportsRegions[viewport.name].append(regionRef.name)
 
@@ -737,10 +708,8 @@ class LayoutView2(LayoutViewDialog2):
 		from MMTypes import leaftypes
 		if not node.type in leaftypes:
 			return 0
-		if node.GetChannelType() == 'sound':
-			return 0
-
-		return 1
+		import ChannelMap
+		return ChannelMap.isvisiblechannel(node.GetChannelType())
 
 	def focusOnMMChannel(self, focusobject):		
 		name = focusobject.name
@@ -812,8 +781,9 @@ class LayoutView2(LayoutViewDialog2):
 			if type == 'MMChannel':
 				selectedRegionList.append(node.name)
 			elif type == 'MMNode':
-				self.currentNodeListShowed.append(node.attrdict.get("name"))
-				appendList.append(node)
+				if self.isValidMMNode(node):
+					self.currentNodeListShowed.append(node.attrdict.get("name"))
+					appendList.append(node)
 		
 		self.currentSelectedRegionList = selectedRegionList
 
@@ -861,44 +831,6 @@ class LayoutView2(LayoutViewDialog2):
 		
 	def kill(self):
 		self.destroy()
-
-	#		
-	# build one region tree by viewport
-	# 
-	def buildRegionTree(self, mmctx):
-		self._channeldict = mmctx.channeldict
-		self._viewportsRegions = {}
-		self._viewports = {}
-		id2parentid = {}
-		for chan in mmctx.channels:
-			if chan.GetAttrDef('type',None)=='layout':
-				if chan.GetAttr('chsubtype') != 'sound':
-					if chan.has_key('base_window'):
-						# region
-						id2parentid[chan.name] = chan['base_window']
-					else:
-						# no parent --> it's a viewport
-						self._viewportsRegions[chan.name] = []
-						self._viewports[chan.name] = Viewport(chan.name,chan, self)
-						# temporarly
-						self._first = chan.name
-
-		nodes = self._viewports.copy()
-		for id in id2parentid.keys():
-			chan = mmctx.channeldict[id]
-			nodes[id] = Region(id, chan, self)
-
-		for id, parentid in id2parentid.items():
-			idit = id
-			while id2parentid.has_key(idit):
-				idit = id2parentid[idit]
-			viewportid = idit
-			self._viewportsRegions[viewportid].append(id)
-			nodes[id]._do_init(nodes[parentid])
-
-		self._nameToRegionNode = {}
-		for key, viewport in self._viewports.items():
-			self.__initRegionList(viewport)
 	
 	def updateRegionTree(self):
 		# We assume here that no region has been added or supressed
@@ -906,7 +838,6 @@ class LayoutView2(LayoutViewDialog2):
 		for viewportName in viewportNameList:
 			viewport = self._viewports[viewportName]
 			viewport.updateAllAttrdict()
-#		self.updateExcludeRegionOnDialogBox()
 			
 		if self.currentNodeSelected != None:
 			self.select(self.currentNodeSelected)
@@ -982,14 +913,6 @@ class LayoutView2(LayoutViewDialog2):
 			mediaRegion.importAttrdict()
 			mediaRegion.show()
 						
-	# extra pass to initialize map the region name list to the node object
-	def __initRegionList(self, node, isRoot=1):
-		if not isRoot:
-			regionName = node._name
-			self._nameToRegionNode[regionName] = node
-		for child in node._children:
-			self.__initRegionList(child,0)
-
 	# general method for select a node
 	# the rule is
 	#    if the current node can't be displayed, go up into the hierarchy, and display the first found
@@ -1268,15 +1191,6 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setchannelattr(node.getName(), 'transparent', transparent)
 			self.editmgr.commit()
 
-	def applyIsExclude(self, region, value):
-		# test if possible 
-		if self.editmgr.transaction():
-			if value:
-				self.editmgr.setchannelattr(region.getName(), 'isExclude', 1)
-			else:
-				self.editmgr.setchannelattr(region.getName(), 'isExclude', None)
-			self.editmgr.commit()
-
 	def applyZOrderOnRegion(self, region, value):
 		# test if possible 
 		if self.editmgr.transaction():
@@ -1324,37 +1238,12 @@ class LayoutView2(LayoutViewDialog2):
 		if self.editmgr.transaction():
 			self.editmgr.delchannel(viewportId)
 			self.editmgr.commit('REGION_TREE')
-		
-	def updateExcludeRegionOnDialogBox(self):
-		# set exclude region name list
-		excludeList = []
-		ind = 0
-		# disabled for now
-		if 0:
-			for regionName in self.currentRegionNameList:
-				regionNode = self.getRegion(regionName)
-				if regionNode != None:
-					if regionNode.isExclude():
-						if self.lastRegionNameSelected == regionName:
-							self.lastRegionNameSelected = None
-						self.dialogCtrl.setMultiSelecterCtrl('RegionList', ind, 1)
-						excludeList.append(regionName)
-					else:
-						self.dialogCtrl.setMultiSelecterCtrl('RegionList', ind, 0)
-				ind = ind+1
-			
-		self.currentExcludeRegionNameList = excludeList
-		
+				
 	def updateViewportOnDialogBox(self, viewport):
 		# update region list
 		viewportName = viewport.getName()
 		self.currentRegionNameList = self.getRegionNameList(viewportName)
 			
-		# disabled for now
-		if 0:
-			self.dialogCtrl.fillMultiSelCtrl('RegionList', self.currentRegionNameList)
-			self.updateExcludeRegionOnDialogBox()
-	
 		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
 			
 		# get the current geom value
@@ -1603,36 +1492,6 @@ class LayoutView2(LayoutViewDialog2):
 	def updateMediaGeomOnDialogBox(self, geom):
 		self.updateRegionGeomOnDialogBox(geom)
 
-	def excludeRegionList(self, regionListIndex):
-		# looking for the element which has changed
-		regionName = None
-		for index in regionListIndex:
-			item = self.currentRegionNameList[index]
-			try:
-				self.currentExcludeRegionNameList.index(item)
-			except:
-				# select
-				value = 1
-				regionName = item
-				break
-
-		if regionName == None:
-			# not found yet
-			for item in self.currentExcludeRegionNameList:
-				ind = self.currentRegionNameList.index(item)
-				try:
-					regionListIndex.index(ind)
-				except:
-					# unselect
-					value = 0
-					regionName = item
-					break
-
-		# if found
-		if regionName != None:
-			region = self.getRegion(regionName)
-			if region != None:
-				self.applyIsExclude(region, value)
 		
 	#
 	# internal methods
@@ -1756,6 +1615,9 @@ class LayoutView2(LayoutViewDialog2):
 		# to do: manage uid instead name id
 		uid = self.__nameToUid(name)
 		mediaRef = self.getMediaRef(uid)
+		if not self.isValidMMNode(mediaRef):
+			return
+		
 		if mediaRef != None:
 			exist = 0
 			for mediaRegion, parentRegion in self.currentMediaNodeList:
@@ -1972,9 +1834,8 @@ class LayoutView2(LayoutViewDialog2):
 			self.__selectMedia(value)	
 
 	def onMultiSelCtrl(self, ctrlName, itemList):
-		if ctrlName == 'RegionList':
-			self.excludeRegionList(itemList)
-			
+		pass
+	
 	def onCheckCtrl(self, ctrlName, value):
 		if ctrlName == 'ShowNames':
 			self.showName = value
