@@ -32,6 +32,9 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self._status_msg = 'Looading modules ...'
 		self._progress = None
 
+		# player state
+		self.__playerstate = None
+
 	def __getattr__(self, attr):
 		if attr != '__dict__':
 			o = self.__dict__.get('_obj_')
@@ -91,6 +94,80 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 				apply(apply, cbd[cmdid])
 				return
 
+	# XXX: enable/disable commands
+	def set_commandlist(self, commandlist, context):
+		self._activecmds[context] = {}
+		if commandlist:
+			for cmd in 	commandlist:
+				self._activecmds[context][cmd.__class__] = cmd
+
+	def SetMenuItemState(self, submenu_index, id, enabled, checked):
+		hmenu = self.GetMenuHandle()
+		menu = winuser.CreateMenuFromHandle(hmenu)
+		submenu = menu.wce_GetSubMenu(submenu_index)
+
+		if checked:
+			flags = wincon.MF_BYCOMMAND | wincon.MF_CHECKED
+		else:
+			flags = wincon.MF_BYCOMMAND | wincon.MF_UNCHECKED
+		submenu.CheckMenuItem(id, flags)				
+
+		if enabled:
+			flags = wincon.MF_BYCOMMAND | wincon.MF_ENABLED
+		else:
+			flags = wincon.MF_BYCOMMAND | wincon.MF_GRAYED
+		submenu.EnableMenuItem(id, flags)				
+
+	def EnableAndCheck(self, submenu_index, id):
+		self.SetMenuItemState(submenu_index, id, 1, 1)
+
+	def EnableAndUncheck(self, submenu_index, id):
+		self.SetMenuItemState(submenu_index, id, 1, 0)
+
+	def DisableAndUncheck(self, submenu_index, id):
+		self.SetMenuItemState(submenu_index, id, 0, 0)
+
+	def setplayerstate(self, state):
+		import Player
+		self.__playerstate = state
+		id_play = usercmdui.usercmd2id(usercmd.PLAY)
+		id_pause = usercmdui.usercmd2id(usercmd.PAUSE)
+		id_stop = usercmdui.usercmd2id(usercmd.STOP)
+		if state == Player.PLAYING:
+			self.EnableAndUncheck(1, id_pause)
+			self.DisableAndUncheck(1, id_play)
+			self.EnableAndUncheck(1, id_stop)
+		elif state == Player.PAUSING:
+			self.EnableAndUncheck(1, id_play)
+			self.EnableAndCheck(1, id_pause)
+			self.EnableAndUncheck(1, id_stop)
+		elif state == Player.STOPPED:
+			self.EnableAndUncheck(1, id_play)
+			self.DisableAndUncheck(1, id_stop)
+			self.DisableAndUncheck(1, id_pause)
+		else:
+			self.DisableAndUncheck(1, id_pause)
+			self.DisableAndUncheck(1, id_play)
+			self.DisableAndUncheck(1, id_stop)
+
+	def set_toggle(self, cmdcl, onoff):
+		return # XXX interferes with setplayerstate
+		hmenu = self.GetMenuHandle()
+		menu = winuser.CreateMenuFromHandle(hmenu)
+		flags = wincon.MF_BYCOMMAND
+		if onoff: flags = flags | wincon.MF_CHECKED
+		else: flags = flags | wincon.MF_UNCHECKED
+		id = usercmdui.usercmd2id(cmdcl)
+		if cmdcl == usercmd.PLAY:
+			play_menu = menu.wce_GetSubMenu(1)
+			play_menu.CheckMenuItem(id, flags)				
+		elif cmdcl == usercmd.PAUSE:
+			play_menu = menu.wce_GetSubMenu(1)
+			play_menu.CheckMenuItem(id, flags)
+		elif cmdcl == usercmd.STOP:
+			play_menu = menu.wce_GetSubMenu(1)
+			play_menu.CheckMenuItem(id, flags)
+			
 	def OnLButtonDown(self, params):
 		msg = winstruct.winmsg(params)
 		pt = msg.pos()
@@ -130,11 +207,6 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			self._viewport = None
 			viewport.close()
 		self.redraw()
-
-	def set_toggle(self, cmdcl, onoff):
-##		print 'set_toggle',  cmdcl, onoff
-		if cmdcl == usercmd.PLAY:
-			pass
 
 	def newViewport(self, width, height, units, bgcolor):
 		l, t, r, b = self.GetClientRect()
