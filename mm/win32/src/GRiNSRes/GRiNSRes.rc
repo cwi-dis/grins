@@ -2942,7 +2942,7 @@ BEGIN
     "V",            IDUC_PASTE,             VIRTKEY, CONTROL, NOINVERT
     "V",            IDUC_PASTEFILE,         VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
-    VK_DELETE,      IDUC_DELETE,            VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      IDUC_DELETE,            VIRTKEY, NOINVERT
     VK_F5,          IDUC_PLAYER,            VIRTKEY, NOINVERT
     VK_F6,          IDUC_HVIEW,             VIRTKEY, NOINVERT
     VK_F7,          IDUC_CVIEW,             VIRTKEY, NOINVERT
