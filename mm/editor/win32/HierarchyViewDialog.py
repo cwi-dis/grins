@@ -144,8 +144,8 @@ class HierarchyViewDialog(ViewDialog):
 		srcwidget = self.whichhit(srcx, srcy)
 		if srcwidget:
 			srcnode = srcwidget.node
-			return srcnode
-		return None
+			return 'NodeUID', srcnode
+		return None, None
 
 	def dragnode(self, dummy, window, event, params):
 		# event handler for dragging a node over the window.
@@ -162,7 +162,7 @@ class HierarchyViewDialog(ViewDialog):
 			srcnode = srcwidget.node
 		elif ucmd == DRAG_NODEUID:
 			contextid, nodeuid = args
-			if contextid != `id(self.root.context)`:
+			if contextid != id(self.root.context):
 				print "Cannot drag/drop between documents"
 				return windowinterface.DROPEFFECT_NONE
 			srcnode = self.root.context.mapuid(nodeuid)
@@ -208,7 +208,7 @@ class HierarchyViewDialog(ViewDialog):
 			srcpos = srcx, srcy
 		elif ucmd == DRAG_NODEUID:
 			contextid, nodeuid = args
-			if contextid != `id(self.root.context)`:
+			if contextid != id(self.root.context):
 				print "Cannot drag/drop between documents"
 				windowinterface.beep()
 				return 0
