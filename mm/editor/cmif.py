@@ -12,5 +12,5 @@ for mod in ('main', 'grins', 'cmifed', '__main__'):
 	if sys.modules.has_key(mod) and hasattr(sys.modules[mod], 'findfile'):
 		findfile = sys.modules[mod].findfile
 		break
-	else:
-		raise ImportError('no module named cmif')
+else:
+	raise ImportError('no module named cmif')
