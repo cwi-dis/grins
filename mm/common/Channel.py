@@ -553,6 +553,10 @@ class Channel:
 
 	def onclick(self, node):
 		if debug: print 'Channel.onclick'+`self,node`
+		if not self._scheduler.playing:
+			# not currently interested in events
+			return
+
 		if self._player.context.hyperlinks.findsrclinks(node):
 			return self.anchor_triggered(node)
 
@@ -560,19 +564,15 @@ class Channel:
 		for arc in node.sched_children:
 			if arc.event == ACTIVATEEVENT and \
 			   arc.refnode() is node:
-				self.event(ACTIVATEEVENT)
+				self._playcontext.sched_arcs(node, self._scheduler.timefunc(), ACTIVATEEVENT, external = 1)
 
 	def event(self, event):
 		if debug: print 'Channel.event'+`self,event`
 		if not self._scheduler.playing:
 			# not currently interested in events
 			return
-		if type(event) is type(()):
-			node = self._player.root.GetSchedRoot()
-			sctx = self._scheduler.sctx_list[0] # XXX HACK!
-		else:
-			node = self._played_node
-			sctx = self._playcontext
+		node = self._player.root.GetSchedRoot()
+		sctx = self._scheduler.sctx_list[0] # XXX HACK!
 		sctx.sched_arcs(node, self._scheduler.timefunc(), event, external = 1)
 
 	def play_1(self, curtime):
