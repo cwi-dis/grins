@@ -41,6 +41,8 @@ class VideoChannel(ChannelWindow):
 
 		fn = self.getfileurl(node)
 		fn = MMurl.urlretrieve(fn)[0]
+
+		self.window._macsetwin()
 		
 		try:
 			movieResRef = Qt.OpenMovieFile(fn, 1)
