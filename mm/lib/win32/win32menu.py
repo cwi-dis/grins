@@ -157,9 +157,7 @@ class Menu:
 
 	# cascade menus management
 	def get_cascade_menu(self,clid):
-		if clid in self._dynamic_cascade_dict.keys():
-			return self._dynamic_cascade_dict[clid]
-		return None
+		return self._dynamic_cascade_dict.get(clid)
 	def clear_cascade(self,clid):
 		sm=self.get_cascade_menu(clid)
 		if not sm: return
