@@ -1,6 +1,7 @@
 import Win
 import Qd
 import List
+import Lists
 
 #
 # Stuff needed from other mw_ modules
@@ -15,7 +16,7 @@ class _Widget:
 		      mw_globals.toplevel._dialog_user_item_handler, rect)
 		
 class _ListWidget(_Widget):
-	def __init__(self, wid, item, content=[]):
+	def __init__(self, wid, item, content=[], multi=0):
 		_Widget.__init__(self, wid, item)
 		tp, h, rect = wid.GetDialogItem(item)
 		# wid is the window (dialog) where our list is going to be in
@@ -24,6 +25,8 @@ class _ListWidget(_Widget):
 		rect2 = rect[0]+1, rect[1]+1, rect[2]-16, rect[3]-1
 		self.list = List.LNew(rect2, (0, 0, 1, len(content)),
 					 (0,0), 0, wid,	0, 0, 0, 1)
+		if not multi:
+			self.list.selFlags = Lists.lOnlyOne
 		self._data = []
 		self._setcontent(0, len(content), content)
 		self.wid = wid
@@ -139,6 +142,7 @@ class _ListWidget(_Widget):
 		self.list.LUpdate(rgn)
 		
 	def _activate(self, onoff):
+##		print 'ACTIVATE', self, onoff
 		self.list.LActivate(onoff)
 		
 class SelectWidget:
