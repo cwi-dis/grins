@@ -1287,10 +1287,10 @@ class EventCtrl(AttrCtrl):
 			return
 		l = self._eventstruct.get_possible_events()
 		if l:
-			#self._eventwidget.setreadonly(0) # combo boxes don't have readonly attributes.
+			#self._eventwidget.enable(1) # combo boxes don't have readonly attributes.
 			map(self._eventwidget.addstring, l)
 		#else:
-			#self._eventwidget.setreadonly(1)
+			#self._eventwidget.enable(0)
 		i = self._eventstruct.get_event_index()
 		if i:
 			self._eventwidget.setcursel(i)
@@ -1299,13 +1299,13 @@ class EventCtrl(AttrCtrl):
 	def set_textwidget(self):
 		if not self._eventstruct:
 			self._textwidget.settext("")
-			self._textwidget.setreadonly(1)
+			self._textwidget.enable(0)
 			return
 		name, string, isnumber, isreadonly = self._eventstruct.get_thing_string()
-		if isreadonly or string is None:
-			self._textwidget.setreadonly(1)
+		if isreadonly or string is None or self._eventstruct.get_cause()=='wallclock':
+			self._textwidget.enable(0)
 		else:
-			self._textwidget.setreadonly(0)
+			self._textwidget.enable(1)
 		if string:
 			self._textwidget.settext(string)
 		else:
@@ -1319,25 +1319,25 @@ class EventCtrl(AttrCtrl):
 	def set_offsetwidget(self):
 		if not self._eventstruct:
 			self._offsetwidget.settext("")
-			self._offsetwidget.setreadonly(1)
+			self._offsetwidget.enable(0)
 			return
 		r = self._eventstruct.get_offset()
 		#if r:
-		self._offsetwidget.setreadonly(0)
+		self._offsetwidget.enable(1)
 		self._offsetwidget.settext(SMILTreeWrite.fmtfloat(r))
 		#else:
 		#	self._offsetwidget.settext("")
-		#	self._offsetwidget.setreadonly(1)
+		#	self._offsetwidget.enable(0)
 	def set_repeatwidget(self):
 		# Only for event widgets or markers.
 		if not self._eventstruct:
 			self._repeatwidget.settext("")
-			self._repeatwidget.setreadonly(1)
+			self._repeatwidget.enable(0)
 		else:
 			i = self._eventstruct.get_repeat()
 			if i:
 				self._repeatwidget.settext(`i`)
-				self._repeatwidget.setreadonly(0)
+				self._repeatwidget.enable(1)
 			
 			
 
@@ -1408,12 +1408,17 @@ class EventCtrl(AttrCtrl):
 
 	def _thingbuttoncallback(self, id, code):
 		if code == win32con.BN_CLICKED:
-			# TODO: more than just the wallclock.
-			dialog = win32dialog.WallclockDialog(parent=self._wnd._form)
-			dialog.setvalue(self._eventstruct.get_wallclock())
-			dialog.show()
-			
-				
+			if self._eventstruct.get_cause() == 'wallclock':
+				# TODO: more than just the wallclock.
+				dialog = win32dialog.WallclockDialog(parent=self._wnd._form)
+				dialog.setvalue(self._eventstruct.get_wallclock())
+				dialog.show()
+				self._eventstruct.set_wallclock(dialog.getvalue())
+			else:
+				print "TODO: More than just editing the wallclock."
+			self.update()
+
+
 ##################################
 # StringOptionsCtrl can be used as a StringCtrl but the user 
 # can optionally select the string from a drop down list

@@ -92,12 +92,11 @@ class EventStruct:
 		elif c == 'accesskey' and self._setkey:
 			s.__init__(self._node, action, accesskey=self._setkey, event=self.get_event(), delay=self.get_offset())
 		elif c == 'marker' and self._setmarker:
-			s.__init__(self._node, action, marker=self._setmarker)
+			s.__init__(self._node, action, marker=self._setmarker, delay=0)
 		elif c == 'delay':
 			s.__init__(self._node, action, srcnode='syncbase', delay=self.get_offset())
 		elif c == 'wallclock':
-			print "TODO: editing wallclock attributes."
-			#s.__init__(self._node, action,
+			s.__init__(self._node, action, wallclock=self.get_wallclock(), delay=0)
 		return self._syncarc
 
 ##		if self._setevent:
@@ -178,15 +177,19 @@ class EventStruct:
 				marker = ""
 			return "marker('"+marker+"')"
 		elif c == 'wallclock':
-			if s is None and self._setwallclock:
-				wc = SMILTreeWrite.wallclock2string(self._setwallclock)
-			elif s is None and not self._setwallclock:
-				wc = ""
-			elif s.wallclock:
-				wc = SMILTreeWrite.wallclock2string(s.wallclock)
-			else:
-				wc = ""
-			return wc
+			wc = self.get_wallclock()
+			print "DEBUG: wc is: ", wc
+			return SMILTreeWrite.wallclock2string(wc)
+			
+##			if s is None and self._setwallclock:
+##				wc = SMILTreeWrite.wallclock2string(self._setwallclock)
+##			elif s is None and not self._setwallclock:
+##				wc = "wallclock(undefined)"
+##			elif s.wallclock:
+##				wc = SMILTreeWrite.wallclock2string(s.wallclock)
+##			else:
+##				wc = ""
+##			return wc
 
 		# Now for the offset things
 		elif c == 'node':
@@ -383,4 +386,5 @@ class EventStruct:
 		else:
 			return (None, None, None, 12, 0, 0.0, None, None, None)
 	def set_wallclock(self, value):
+		print "DEBUG: setting wallclock to: ", value
 		self._setwallclock = value
