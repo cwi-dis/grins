@@ -34,6 +34,9 @@ ICONNAME_TO_RESID={
 	'properties': grinsRC.IDI_PROPERTIES,
 	'viewport': grinsRC.IDI_VIEWPORT,
 	'region': grinsRC.IDI_REGION,
+	'animation': grinsRC.IDI_ANIMATION,
+	'animate': grinsRC.IDI_ANIMATE,
+	'brush': grinsRC.IDI_BRUSH,
 }
 
 class _AssetsView(GenView.GenView, docview.ListView):
@@ -140,6 +143,7 @@ class _AssetsView(GenView.GenView, docview.ListView):
 			imageindex = self.iconname_to_index.get(imagename)
 			if imageindex is None:
 				imageindex = -1 # XXXX
+				print '_AssetsView: no icon for', imagename
 			text = item[1]
 			iteminfo = item[2:]
 			lc.insertItem(row, text, imageindex, iteminfo)
@@ -170,7 +174,8 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		if not type:
 			return 0
 		if type == 'URL':
-			self.listCtrl.DoDragDrop(self.CF_URL, value)
+			rv = self.listCtrl.DoDragDrop(self.CF_URL, value)
+			print 'DoDragDrop RV=', `rv`
 			return 1
 		print 'Unknown assetview dragtype', type
 		return 0

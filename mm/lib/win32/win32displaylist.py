@@ -43,6 +43,8 @@ _icon_ids = {
 	'endevent' : grinsRC.IDI_EVENTOUT,
 	'activateevent' : grinsRC.IDI_ACTIVATEEVENT,
 	'animation' : grinsRC.IDI_ANIMATION,
+	'animate': grinsRC.IDI_ANIMATE,
+	'brush' : grinsRC.IDI_BRUSH,
 	'causeevent' : grinsRC.IDI_CAUSEEVENT,
 	'duration' : grinsRC.IDI_DURATION,
 	'focusin' : grinsRC.IDI_FOCUSIN,
