@@ -117,6 +117,7 @@ class ChannelView(ViewDialog):
 			self.window.setcursor('watch')
 		self.window.register(EVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(EVENTS.ResizeWindow, self.redraw, None)
+		self.window.register(EVENTS.WindowExit, self.hide, None)
 		self.window.bgcolor(BGCOLOR)
 		# Other administratrivia
 		self.editmgr.register(self)
@@ -134,7 +135,7 @@ class ChannelView(ViewDialog):
 			obj = self.baseobject
 		self.window.create_menu(obj.menutitle, obj.commandlist)
 
-	def hide(self):
+	def hide(self, *rest):
 		if not self.is_showing():
 			return
 		self.toplevel.showstate(self, 0)

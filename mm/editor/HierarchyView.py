@@ -80,6 +80,7 @@ class HierarchyView(ViewDialog):
 			self.window.setcursor('watch')
 		self.window.register(EVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(EVENTS.ResizeWindow, self.redraw, None)
+		self.window.register(EVENTS.WindowExit, self.hide, None)
 		self.window.bgcolor(BGCOLOR)
 		self.objects = []
 		# Other administratrivia
@@ -90,7 +91,7 @@ class HierarchyView(ViewDialog):
 		self.draw()
 		self.window.create_menu(self.focusobj.name, self.focusobj.menu)
 
-	def hide(self):
+	def hide(self, *rest):
 		if not self.is_showing():
 			return
 		self.toplevel.showstate(self, 0)

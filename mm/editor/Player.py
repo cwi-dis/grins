@@ -96,6 +96,7 @@ class Player(ViewDialog, PlayerCore):
 		self.showing = 1
 		window.register(EVENTS.Mouse0Release, self._mouse, None)
 		window.register(EVENTS.ResizeWindow, self.resize, None)
+		window.register(EVENTS.WindowExit, self.hide, None)
 		self.toplevel.setwaiting()
 		self.toplevel.checkviews()
 		self.showchannels()
@@ -178,7 +179,7 @@ class Player(ViewDialog, PlayerCore):
 		d.render()
 		self.displist = d
 
-	def hide(self):
+	def hide(self, *rest):
 		if not self.showing: return
 		self.showing = 0
 		self.toplevel.showstate(self, 0)

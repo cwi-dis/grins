@@ -105,8 +105,11 @@ class TopLevel(ViewDialog):
 				self.window.buttons.setbutton(i+1, showing)
 
 	def destroy(self):
-		self.hide()
 		self.destroyviews()
+		if self.window:
+			self.window.close()
+			self.window = None
+		self.showing = 0
 		self.root.Destroy()
 		import Clipboard
 		type, data = Clipboard.getclip()
@@ -154,7 +157,7 @@ class TopLevel(ViewDialog):
 			v.hide()
 
 	def destroyviews(self):
-		self.hideviews()
+##		self.hideviews()
 		for v in self.views:
 			v.destroy()
 
