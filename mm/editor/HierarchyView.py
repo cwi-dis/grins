@@ -6,12 +6,12 @@ __version__ = "$Id$"
 # positive Y coordinates point down from the top of the window.
 # Also the convention for box coordinates is (left, top, right, bottom)
 
-# XXX delete this:
-TODO = """
-Move focus back to parent node before deleting anything.
-properties doesn't work on a multi-selection..
-test drag+drop with multiple nodes.
-"""
+### XXX delete this:
+##TODO = """
+##Move focus back to parent node before deleting anything.
+##properties doesn't work on a multi-selection..
+##test drag+drop with multiple nodes.
+##"""
 
 
 
@@ -177,11 +177,11 @@ class HierarchyView(HierarchyViewDialog):
 				PASTE_AFTER(callback = (self.pasteaftercall, ())),
 				]
 		self.notatrootcommands = [
+				DELETE(callback = (self.deletecall, ())),
+				CUT(callback = (self.cutcall, ())),
 				NEW_SEQ(callback = (self.createseqcall, ())),
 				NEW_PAR(callback = (self.createparcall, ())),
 				NEW_SWITCH(callback = (self.createaltcall, ())),
-				DELETE(callback = (self.deletecall, ())),
-				CUT(callback = (self.cutcall, ())),
 				]
 		self.structure_commands = [
 				NEW_BEFORE(callback = (self.createbeforecall, ())),
@@ -204,16 +204,6 @@ class HierarchyView(HierarchyViewDialog):
 			self.structure_commands.append(NEW_AFTER_EXCL(callback = (self.createafterintcall, ('excl',))))
 			self.structure_commands.append(NEW_BEFORE_EXCL(callback = (self.createbeforeintcall, ('excl',))))
 		self.mediacommands = self.mediacommands + self.structure_commands
-
-
-##		else:			# TODO: clean this up. This should be later.
-##			self.interiorcommands = []
-##			self.pasteinteriorcommands = []
-##			self.pastenotatrootcommands = []
-##			self.notatrootcommands = [
-##				DELETE(callback = (self.deletecall, ())),
-##				CUT(callback = (self.cutcall, ())),
-##				]
 
 		if self.toplevel.root.context.attributes.get('project_boston', 0):
 			self.notatrootcommands.append(NEW_EXCL(callback = (self.createexclcall, ())))
@@ -351,6 +341,9 @@ class HierarchyView(HierarchyViewDialog):
 				commands = commands + self.notatrootcommands + self.mediacommands
 				if len(pchildren) == 1:
 					commands = commands + self.singlechildcommands
+			else:
+				# parent not an interior node (but e.g. a media node)
+				commands = commands + self.notatrootcommands[:2] # DELETE & CUT are allowed
 
 			commands = commands + self.navigatecommands[0:1]
 
@@ -959,10 +952,11 @@ class HierarchyView(HierarchyViewDialog):
 		# Preconditions:
 		if len(nodes) < 1:
 			return 0
-		if self.root in nodes:
-			# In theory, if the root node is in the selection then it would be the only node.
-			assert len(nodes) == 0
-			return 0
+
+## checked by migrate_focus below, don't need to do this twice
+##		if self.root in nodes:
+##			# In theory, if the root node is in the selection then it would be the only node.
+##			return 0
 
 		if not self.migrate_focus(nodes):	# migrate the focus to a safe place.
 			return 0
