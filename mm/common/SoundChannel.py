@@ -74,6 +74,17 @@ class SoundChannel(ChannelAsync):
 		player.setpaused(paused)
 		self._paused = paused
 
+	def do_hide(self):
+		if self.play_fp:
+			player.stop(self.play_fp)
+			nframes = self.play_fp.getnframes()
+			if nframes == 0:
+				nframes = 1
+			rate = self.play_fp.getframerate()
+			self.play_fp = None
+			windowinterface.settimer(float(nframes) / rate,
+						 (self.playdone, (0,)))
+
 class Player:
 	def __init__(self):
 		# __merger, __converter, __tid, and __data are all None/'',
@@ -121,8 +132,8 @@ class Player:
 
 	def stop(self, rdr):
 		if self.__merger:
-			self.__merger.delete(rdr)
 			self.__converter.setpos(self.__oldpos)
+			self.__merger.delete(rdr)
 			self.__data = self.__converter.readframes(self.__readsize)
 			if not self.__data:
 				# deleted the last one
