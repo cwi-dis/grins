@@ -1559,7 +1559,7 @@ class _BareSubWindow:
 		x, y, w, h = coordinates
 		if w == 0 or h == 0:
 			showmessage('Creating subwindow with zero dimension',
-				    mtype = 'warning')
+				    mtype = 'warning', parent = parent)
 		if w == 0:
 			w = float(self._rect[_WIDTH]) / parent._rect[_WIDTH]
 		if h == 0:
@@ -2440,7 +2440,10 @@ class showmessage:
 				if hasattr(parent, '_main'):
 					parent = parent._main
 					break
-				parent = parent._parent
+				if hasattr(parent, '_parent'):
+					parent = parent._parent
+				else:
+					parent = toplevel
 		else:
 			dialogStyle = Xmd.DIALOG_MODELESS
 			parent = toplevel._main
@@ -2507,7 +2510,10 @@ class Dialog:
 				if hasattr(parent, '_main'):
 					parent = parent._main
 					break
-				parent = parent._parent
+				if hasattr(parent, '_parent'):
+					parent = parent._parent
+				else:
+					parent = toplevel
 		else:
 			dialogStyle = Xmd.DIALOG_MODELESS
 			parent = toplevel._main
