@@ -79,8 +79,14 @@ class PlayerDlgBar(window.Wnd):
 		self._parent.HookMessage(self.OnFloatStatus, WM_FLOATSTATUS)
 		self.createResourceItems(attributes)
 		CBRS_GRIPPER = 0x00400000
+
+		# width, height increments (for pixel level adjustments)
+		default_size_incr = 0, 0
+
 		self.CreateWindowIndirect(parent, self.makeTemplate(), 
-			afxres.CBRS_SIZE_DYNAMIC | CBRS_GRIPPER | afxres.CBRS_FLOAT_MULTI, Preferences.IDW_TOOLBAR_PLAYER_PANEL)
+			afxres.CBRS_SIZE_DYNAMIC | CBRS_GRIPPER | afxres.CBRS_FLOAT_MULTI, 
+			Preferences.IDW_TOOLBAR_PLAYER_PANEL, default_size_incr)
+
 		self.EnableDocking(afxres.CBRS_ALIGN_ANY);
 		parent.EnableDocking(afxres.CBRS_ALIGN_ANY);
 		self.ShowWindow(win32con.SW_HIDE)
@@ -120,7 +126,7 @@ class PlayerDlgBar(window.Wnd):
 				
 	def OnFloatStatus(self, params):
 		self.eraseClose()
-			
+										
 	def destroy(self):
 		self.DestroyWindow()
 		self._parent = None
