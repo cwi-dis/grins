@@ -55,10 +55,17 @@ class AttrDlgBar(DlgBar):
 		parent.HookCommand(self.OnReset,grinsRC.IDUC_RESET)
 		self._change_cb=change_cb
 		self._reset_cb=reset_cb
+		self._focus_cb=None
 
 	# Response to reset button
 	def OnReset(self,id,code):
 		apply(self._reset_cb,())
+
+	# callback to pass focus
+	def SetFocusCb(self,cb):
+		self._focus_cb=cb;
+	def PassFocus(self):
+		if self._focus_cb:self._focus_cb()
 
 # Dialog bar to edit string attributes
 class StringAttrDlgBar(AttrDlgBar):
@@ -72,6 +79,8 @@ class StringAttrDlgBar(AttrDlgBar):
 	def OnEdit(self,id,code):
 		if code==win32con.EN_CHANGE:
 			apply(self._change_cb,(self._attrval.gettext(),))
+		elif code==win32con.EN_KILLFOCUS:
+			self.PassFocus()
 
 # Dialog bar to edit options attributes
 class OptionsAttrDlgBar(AttrDlgBar):
@@ -81,11 +90,14 @@ class OptionsAttrDlgBar(AttrDlgBar):
 		self._options=components.ComboBox(self,grinsRC.IDC_COMBO1)
 		self._options.attach_to_parent()
 		parent.HookCommand(self.OnChangeOption,grinsRC.IDC_COMBO1)
+	
 	# Response to combo selection change
 	def OnChangeOption(self,id,code):
 		if code==win32con.CBN_SELCHANGE:
 			apply(self._change_cb,(self._options.getvalue(),))
-
+		elif code==win32con.CBN_KILLFOCUS:
+			self.PassFocus()
+			
 # Dialog bar to edit file attributes
 class FileAttrDlgBar(AttrDlgBar):
 	# Class constructor. Calls base constructor and associates controlst with ids
@@ -100,6 +112,8 @@ class FileAttrDlgBar(AttrDlgBar):
 	def OnEdit(self,id,code):
 		if code==win32con.EN_CHANGE:
 			apply(self._change_cb,(self._attrval.gettext(),))
+		elif code==win32con.EN_KILLFOCUS:
+			self.PassFocus()
 	# Response to button browse
 	def OnBrowse(self,id,code):
 		if self._browsecb:
@@ -137,15 +151,27 @@ class StdDlgBar(window.Wnd):
 	def OnCancel(self,id,code):self.call('Cancel')
 
 # Implementation of the AttrEditDialog needed by the core system
-# The implementation is based on the framework class ListView				
+# The implementation is based on the framework class CListView				
 class AttrEditForm(docview.ListView):
-	
+	# class variables to store user preferences
+	last_cx=None
+	last_cy=None
+	colWidthList=(132, 96, 82, 400)
+
 	# Class constructor. Calls base constructor and nullify members
 	def __init__(self,doc):
 		docview.ListView.__init__(self,doc)
 		self._title='Properties'
 		self._attriblist=None
 		self._cbdict=None
+
+	# Change window style attributes before it is created
+	def PreCreateWindow(self, csd):
+		csd=self._obj_.PreCreateWindow(csd)
+		cs=win32mu.CreateStruct(csd)
+		if AttrEditForm.last_cx:cs.cx=AttrEditForm.last_cx
+		if AttrEditForm.last_cy:cs.cy=AttrEditForm.last_cy
+		return cs.to_csd()
 
 	# Creates the actual OS window
 	def createWindow(self,parent):
@@ -160,7 +186,8 @@ class AttrEditForm(docview.ListView):
 			(style & ~commctrl.LVS_TYPEMASK) | commctrl.LVS_SINGLESEL | commctrl.LVS_REPORT | commctrl.LVS_SHOWSELALWAYS)
 		self.SetExStyle(commctrl.LVS_EX_FULLROWSELECT)
 		
-		header_list=[("Property",100),("Current Value",120),("Default",100),("Explanation",400),]
+		l=AttrEditForm.colWidthList
+		header_list=[("Property",l[0]),("Current Value",l[1]),("Default",l[2]),("Explanation",l[3]),]
 		self.InsertListHeader(header_list)
 		self.FillAttrList()
 
@@ -169,9 +196,10 @@ class AttrEditForm(docview.ListView):
 		self._attr_type=None
 		self.SetStdDlgBar()
 		self.GetParent().HookNotify(self.OnNotifyItemChanged,commctrl.LVN_ITEMCHANGED)
-		self.GetParent().HookNotify(self.setFocusToDlg,commctrl.NM_CLICK)
 		self.SelectItem(0)
-		return 0
+
+		# use tab to set focus
+		self.HookKeyStroke(self.onTabKey,9)    #tab
 
 	# Response to a list control selection change
 	def OnNotifyItemChanged(self,nm, nmrest):
@@ -186,10 +214,9 @@ class AttrEditForm(docview.ListView):
 				self.selecteditem = None
 
 	# Response to keyboard input
-	def OnKeyDown(self,params):
-		msg=win32mu.Win32Msg(params)
-		print params
-		# set focus to dlg on Tab and Enter
+	# set focus to dlg on Tab
+	def onTabKey(self,key):
+		self._dlgBar.SetFocus();
 
 	# Helper function to set the extented style of the list control
 	def SetExStyle(self,or_style):
@@ -226,7 +253,9 @@ class AttrEditForm(docview.ListView):
 		self._dlgBar=EditDlgBar(frame,self.UpdateValue,self.OnReset)
 		self._attr_type=t
 		frame.RecalcLayout()
-
+		# use tab to set focus
+		self._dlgBar.SetFocusCb(self.SetFocus) 
+	
 	# Date tranfer from the list to the edit area
 	def ItemToEditor(self):
 		sel=self.selecteditem
@@ -260,9 +289,7 @@ class AttrEditForm(docview.ListView):
 		else: # all other types
 			d._attrname.settext(attrname)
 			d._attrval.settext(attrval)
-	
-	def setFocusToDlg(self, nm=None, nmrest=None):
-		self._dlgBar.SetFocus();
+		self.SetFocus()
 
 	# Updates a list item text			
 	def UpdateValue(self,str):
@@ -307,8 +334,10 @@ class AttrEditForm(docview.ListView):
 	# cmif general interface
 	# Called by the core system to close this window
 	def close(self):
+		self.savegeometry()
 		if hasattr(self,'GetParent'):
 			self.GetParent().DestroyWindow()
+
 	# Called by the core system to set the title of this window
 	def settitle(self,title):
 		self._title=title
@@ -331,11 +360,22 @@ class AttrEditForm(docview.ListView):
 	def hide(self):
 		self.ShowWindow(win32con.SW_HIDE)
 
+	# hold user preferences for size and columns width in class variables
+	def savegeometry(self):
+		l,t,r,b=self.GetParent().GetWindowRect()
+		AttrEditForm.last_cx=r-l
+		AttrEditForm.last_cy=b-t
+		f=self.GetColumnWidth
+		AttrEditForm.colWidthList=(f(0),f(1),f(2),f(3))
+	def getcreatesize(self):
+		return AttrEditForm.last_cx,AttrEditForm.last_cy
+
 	# Part of the closing mechanism
 	# the parent frame delegates the responcibility to us
 	# we must decide what to do (OK,Cancel,..)
 	# interpret it as a Cancel for now (we should ask, save or not)
 	def OnClose(self):
+		self.savegeometry()
 		self.call('Cancel')
 
 	# Helper to call a callback given its string id
