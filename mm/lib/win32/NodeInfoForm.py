@@ -283,6 +283,11 @@ class NodeInfoForm(docview.FormView,components.ControlsDict):
 		for entry in self._ext_group._support.keys():
 			self.__dict__[entry]= self._ext_group._support[entry]		
 
+	# Creates the actual OS window
+	def createWindow(self,parent):
+		self._parent=parent
+		self.CreateWindow(parent)
+
 	# Called after the window has been created. It creates the  helper bars 
 	def OnInitialUpdate(self):
 		frame=self.GetParent()

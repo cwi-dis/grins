@@ -147,6 +147,11 @@ class AttrEditForm(docview.ListView):
 		self._attriblist=None
 		self._cbdict=None
 
+	# Creates the actual OS window
+	def createWindow(self,parent):
+		self._parent=parent
+		self.CreateWindow(parent)
+
 	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
 		hwnd = self._obj_.GetSafeHwnd()
