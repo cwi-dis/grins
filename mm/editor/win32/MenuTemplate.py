@@ -163,7 +163,7 @@ MENUBAR=(
 
 
 	('&Linking', (
-		(LIGHT, ENTRY, 'C&reate simple anchor', None, CREATEANCHOR),
+		(LIGHT, ENTRY, 'C&reate whole node anchor', None, CREATEANCHOR),
 		(LIGHT, ENTRY, '&Finish hyperlink to selection', None, FINISH_LINK),
 ##		(SMIL, ENTRY, '&Anchors...', 'T', ANCHORS),
 		(SMIL, SEP,),
@@ -298,7 +298,7 @@ POPUP_HVIEW_LEAF = (
 		(LIGHT, ENTRY, 'P&lay node', None, PLAYNODE),
 		(LIGHT, ENTRY, 'Play &from node', None, PLAYFROM),
 		(LIGHT, SEP,),
-		(LIGHT, ENTRY, 'Create si&mple anchor', None, CREATEANCHOR),
+		(LIGHT, ENTRY, 'Create &whole node anchor', None, CREATEANCHOR),
 		(LIGHT, ENTRY, 'Finish &hyperlink to selection', None, FINISH_LINK),
 		(LIGHT, SEP,),
 ##		(SMIL, ENTRY, '&Info...', None, INFO),
@@ -439,7 +439,7 @@ POPUP_CVIEW_NODE = (
 		(LIGHT, ENTRY, '&Play node', None, PLAYNODE),
 		(LIGHT, ENTRY, 'Play from &node', None, PLAYFROM),
 		(LIGHT, SEP,),
-		(LIGHT, ENTRY, 'Create si&mple anchor', None, CREATEANCHOR),
+		(LIGHT, ENTRY, 'Create &whole node anchor', None, CREATEANCHOR),
 		(LIGHT, ENTRY, 'Finish hyperlin&k to selection...', None, FINISH_LINK),
 		(LIGHT, ENTRY, 'Create &syncarc from selection...', None, FINISH_ARC),
 		(LIGHT, SEP,),
