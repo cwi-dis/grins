@@ -331,7 +331,8 @@ class HierarchyView(HierarchyViewDialog):
 		if fntype in MMNode.leaftypes and fnode.GetChannelType() != 'animate':
 			commands = commands + self.animatecommands[2:3]
 		if fntype == 'ext':
-			commands = commands + self.rpconvertcommands
+			if fnode.GetComputedMimeType() == 'image/vnd.rn-realpix':
+				commands = commands + self.rpconvertcommands
 
 		# Enable "paste" commands depending on what is in the clipboard.
 		t, n = self.editmgr.getclip()
