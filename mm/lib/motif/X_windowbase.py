@@ -351,6 +351,7 @@ class _MenubarSupport(_ToolTip):
 		self.__widgetmap = {}	# mapping of command to list of widgets
 		self.__accelmap = {}	# mapping of command to list of keys
 		self.__dynamicmenu = {}
+		self.__togglelables = {}
 		_ToolTip.__init__(self)
 
 	def close(self):
@@ -359,6 +360,7 @@ class _MenubarSupport(_ToolTip):
 		del self.__widgetmap
 		del self.__accelmap
 		del self.__dynamicmenu
+		del self.__togglelables
 		_ToolTip.close(self)
 
 	def set_commandlist(self, list):
@@ -378,8 +380,6 @@ class _MenubarSupport(_ToolTip):
 					for w in self.__widgetmap.get(c, []):
 						w.SetSensitive(0)
 						self._deltthandler(w)
-				for key in self.__accelmap.get(c, []):
-					del self._accelerators[key]
 			# then add new commands
 			for cmd in list:
 				c = cmd.__class__
@@ -388,8 +388,13 @@ class _MenubarSupport(_ToolTip):
 						w.SetSensitive(1)
 						if cmd.help:
 							self._addtthandler(w, cmd.help)
-				for key in self.__accelmap.get(c, []):
-					self._accelerators[key] = cmd.callback
+		# reassign callbacks for accelerators
+		for c in oldlist:
+			for key in self.__accelmap.get(c, []):
+				del self._accelerators[key]
+		for cmd in list:
+			for key in self.__accelmap.get(cmd.__class__, []):
+				self._accelerators[key] = cmd.callback
 		self.__commandlist = newlist
 		self.__commanddict = newdict
 
@@ -433,11 +438,102 @@ class _MenubarSupport(_ToolTip):
 		for widget in self.__widgetmap.get(command, []):
 			if widget.set != onoff:
 				widget.ToggleButtonSetState(onoff, 0)
+				label = self.__togglelables.get(widget)
+				if label is not None:
+					widget.labelString = label[widget.ToggleButtonGetState()]
 		
 	def __menu_callback(self, widget, client_data, call_data):
 		callback = self.__commanddict.get(client_data)
+		label = self.__togglelables.get(widget)
+		if label is not None:
+			widget.labelString = label[widget.ToggleButtonGetState()]
 		if callback is not None and callback.callback is not None:
 			apply(apply, callback.callback)
+
+	__pixmaptypes = (
+		'label',
+		'labelInsensitive',
+		'select',
+		'selectInsensitive',
+		'arm',
+		)
+
+	def __create_button(self, parent, entry):
+		label, callback = entry[:2]
+		btype = 'p'
+		initial = 0
+		if len(entry) > 2:
+			btype = entry[2]
+			if type(btype) is TupleType:
+				btype, initial = btype
+		if btype == 't':
+			widgettype = Xm.ToggleButton
+			callbacktype = 'valueChangedCallback'
+			attrs = {'set': initial}
+			if type(label) is DictType and label.has_key('select'):
+				attrs['indicatorOn'] = 0
+		else:
+			widgettype = Xm.PushButton
+			callbacktype = 'activateCallback'
+			attrs = {}
+		attrs['sensitive'] = 0
+		if self.__accelmap.has_key(callback):
+			attrs['acceleratorText'] = string.join(self.__accelmap[callback], '|')
+		button = parent.CreateManagedWidget('button', widgettype, attrs)
+		button.AddCallback(callbacktype, self.__menu_callback, callback)
+		if not self.__widgetmap.has_key(callback):
+			self.__widgetmap[callback] = []
+		self.__widgetmap[callback].append(button)
+		if type(label) is StringType:
+			button.labelString = label
+			return
+		if type(label) is TupleType:
+			if btype != 't' or len(label) != 2:
+				raise error, 'bad label for menu button'
+			button.labelString = label[initial]
+			button.indicatorOn = 0
+			button.fillOnSelect = 0
+			self.__togglelables[button] = label
+			return
+		attrs = {'labelType': Xmd.PIXMAP,
+			 'marginHeight': 0,
+			 'marginWidth': 0}
+		import imgconvert
+		depth = toplevel._imgformat.descr['align'] / 8
+		# calculate background RGB values in case (some)
+		# images are transparent
+		bg = button.background
+		if self._visual.c_class == X.PseudoColor:
+			r, g, b = self._colormap.QueryColor(bg)[1:4]
+		else:
+			s, m = splash._colormask(self._visual.red_mask)
+			r = int(float((bg >> s) & m) / (m+1) * 256)
+			s, m = splash._colormask(self._visual.green_mask)
+			g = int(float((bg >> s) & m) / (m+1) * 256)
+			s, m = splash._colormask(self._visual.blue_mask)
+			b = int(float((bg >> s) & m) / (m+1) * 256)
+		for pmtype in self.__pixmaptypes:
+			rdr = label.get(pmtype)
+			if rdr is None:
+				continue
+			if self.__pixmapcache.has_key(rdr):
+				pixmap = self.__pixmapcache[rdr]
+			else:
+				rdr = imgconvert.stackreader(toplevel._imgformat, rdr)
+				if hasattr(rdr, 'transparent'):
+					rdr.colormap[rdr.transparent] = r, g, b
+				data = rdr.read()
+				pixmap = toplevel._main.CreatePixmap(rdr.width,
+								     rdr.height)
+				ximage = self._visual.CreateImage(
+					self._visual.depth, X.ZPixmap, 0, data,
+					rdr.width, rdr.height,
+					depth * 8, rdr.width * depth)
+				pixmap.CreateGC({}).PutImage(ximage, 0, 0, 0, 0,
+							     rdr.width, rdr.height)
+				self.__pixmapcache[label[pmtype]] = pixmap
+			attrs[pmtype + 'Pixmap'] = pixmap
+		button.SetValues(attrs)
 
 	def _create_shortcuts(self, shortcuts):
 		for key, c in shortcuts.items():
@@ -460,13 +556,7 @@ class _MenubarSupport(_ToolTip):
 ## 					'menuLabel', Xm.Label,
 ## 					{'labelString': entry})
 ## 				continue
-			btype = 'p'		# default is pushbutton
-			initial = 0
-			labelString, callback = entry[:2]
-			if len(entry) > 2:
-				btype = entry[2]
-				if type(btype) is TupleType:
-					btype, initial = btype
+			label, callback = entry[:2]
 			if type(callback) is ListType or \
 			   callback.dynamiccascade:
 				submenu = menu.CreatePulldownMenu('submenu',
@@ -476,9 +566,9 @@ class _MenubarSupport(_ToolTip):
 					 'orientation': Xmd.VERTICAL})
 				button = menu.CreateManagedWidget(
 					'submenuLabel', Xm.CascadeButton,
-					{'labelString': labelString,
+					{'labelString': label,
 					 'subMenuId': submenu})
-				if labelString == 'Help':
+				if label == 'Help':
 					menu.menuHelpWidget = button
 				if type(callback) is ListType:
 					self._create_menu(submenu, callback)
@@ -488,30 +578,9 @@ class _MenubarSupport(_ToolTip):
 						widgetmap[callback] = []
 					widgetmap[callback].append(button)
 			else:
-				attrs = {'labelString': labelString,
-					 'sensitive': 0}
-				if self.__accelmap.has_key(callback):
-					attrs['acceleratorText'] = string.join(self.__accelmap[callback], '|')
-				if btype == 't':
-					attrs['set'] = initial
-					button = menu.CreateManagedWidget('menuToggle',
-							Xm.ToggleButton, attrs)
-					cbfunc = 'valueChangedCallback'
-				else:
-					button = menu.CreateManagedWidget('menuLabel',
-							Xm.PushButton, attrs)
-					cbfunc = 'activateCallback'
-				button.AddCallback(cbfunc,
-						   self.__menu_callback,
-						   callback)
-				if not widgetmap.has_key(callback):
-					widgetmap[callback] = []
-				widgetmap[callback].append(button)
+				self.__create_button(menu, entry)
 
-	def _create_toolbar(self, tb, list, vertical, visual, colormap):
-		import imgformat, imgconvert
-		depth = toplevel._imgformat.descr['align'] / 8
-		widgetmap = self.__widgetmap
+	def _create_toolbar(self, tb, list, vertical):
 		for entry in list:
 			if entry is None:
 				if vertical:
@@ -523,80 +592,7 @@ class _MenubarSupport(_ToolTip):
 					Xm.SeparatorGadget,
 					{'orientation': orientation})
 				continue
-			label, callback = entry[:2]
-			btype = 'p'
-			initial = 0
-			if len(entry) > 2:
-				btype = entry[2]
-				if type(btype) is TupleType:
-					btype, initial = btype
-			if btype == 't':
-				widgettype = Xm.ToggleButton
-				callbacktype = 'valueChangedCallback'
-				attrs = {'set': initial}
-				if type(label) is DictType and \
-				   label.has_key('select'):
-					attrs['indicatorOn'] = 0
-			else:
-				widgettype = Xm.PushButton
-				callbacktype = 'activateCallback'
-				attrs = {}
-			attrs['sensitive'] = 0
-			button = tb.CreateManagedWidget(
-				'tbutton', widgettype, attrs)
-			button.AddCallback(callbacktype,
-					   self.__menu_callback,
-					   callback)
-			if not widgetmap.has_key(callback):
-				widgetmap[callback] = []
-			widgetmap[callback].append(button)
-			if type(label) is StringType:
-				button.labelString = label
-				continue
-			attrs = {'labelType': Xmd.PIXMAP,
-				 'marginHeight': 0,
-				 'marginWidth': 0}
-			pixmaptypes = (
-				'label',
-				'labelInsensitive',
-				'select',
-				'selectInsensitive',
-				'arm',
-				)
-			# calculate background RGB values in case
-			# (some) images are transparent
-			bg = button.background
-			if visual.c_class == X.PseudoColor:
-				r, g, b = colormap.QueryColor(bg)[1:4]
-			else:
-				s, m = splash._colormask(visual.red_mask)
-				r = int(float((bg >> s) & m) / (m+1) * 256)
-				s, m = splash._colormask(visual.green_mask)
-				g = int(float((bg >> s) & m) / (m+1) * 256)
-				s, m = splash._colormask(visual.blue_mask)
-				b = int(float((bg >> s) & m) / (m+1) * 256)
-			for pmtype in pixmaptypes:
-				rdr = label.get(pmtype)
-				if rdr is None:
-					continue
-				if self.__pixmapcache.has_key(rdr):
-					pixmap = self.__pixmapcache[rdr]
-				else:
-					rdr = imgconvert.stackreader(toplevel._imgformat, rdr)
-					if hasattr(rdr, 'transparent'):
-						rdr.colormap[rdr.transparent] = r, g, b
-					data = rdr.read()
-					pixmap = toplevel._main.CreatePixmap(rdr.width,
-									     rdr.height)
-					ximage = visual.CreateImage(
-						visual.depth, X.ZPixmap, 0, data,
-						rdr.width, rdr.height,
-						depth * 8, rdr.width * depth)
-					pixmap.CreateGC({}).PutImage(ximage, 0, 0, 0, 0,
-								     rdr.width, rdr.height)
-					self.__pixmapcache[label[pmtype]] = pixmap
-				attrs[pmtype + 'Pixmap'] = pixmap
-			button.SetValues(attrs)
+			self.__create_button(tb, entry)
 
 class _Window(_MenubarSupport):
 	# Instances of this class represent top-level windows.  This
@@ -818,8 +814,7 @@ class _Window(_MenubarSupport):
 			void = fr.CreateManagedWidget('toolframe', Xm.Frame,
 						      frattrs)
 			self._toolbar = tb
-			self._create_toolbar(tb, toolbar, toolbarvertical,
-					     self._visual, self._colormap)
+			self._create_toolbar(tb, toolbar, toolbarvertical)
 		if canvassize is not None and \
 		   (menubar is None or (w > 0 and h > 0)):
 			form = form.CreateScrolledWindow('scrolledWindow',
