@@ -8,8 +8,10 @@ from AnchorDefs import *
 
 class VideoChannel(ChannelWindowThread):
 	attrs = ['bucolor', 'hicolor', 'scale', 'project_videotype', 'project_targets']
-	node_attrs = Channel.ChannelWindowAsync.node_attrs + \
-		      ['clipbegin', 'clipend', 'project_audiotype', 'project_videotype', 'project_targets']
+	node_attrs = Channel.ChannelWindowAsync.node_attrs + [
+		'clipbegin', 'clipend',
+		'project_audiotype', 'project_videotype', 'project_targets',
+		'project_perfect', 'project_mobile']
 	if CMIF_MODE:
 		node_attrs = node_attrs + attrs
 	else:
