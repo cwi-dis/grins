@@ -137,6 +137,12 @@ Control = LightWeightControl
 class Button(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
+	def setstate(self, f):
+		self.sendmessage(win32con.BM_SETSTATE,f)
+	def getstate(self):
+		return self.sendmessage(win32con.BM_GETSTATE)
+	def ispushed(self):
+		return win32con.BST_PUSHED & self.getstate()
 
 # RadioButton control class
 class RadioButton(Control):
