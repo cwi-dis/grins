@@ -353,9 +353,9 @@ class Channel:
 			print 'Channel.play_1('+`self`+')'
 		if not self.syncplay:
 			if self.armed_duration > 0:
-				self._qid = self._scheduler.enter(\
-					  self.armed_duration, 0, \
-					  self.playdone, 0)
+				self._qid = self._scheduler.enter(
+					  self.armed_duration, 0,
+					  self.playdone, (0,))
 			else:
 				self.playdone(0)
 		else:
