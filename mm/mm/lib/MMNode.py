@@ -10,6 +10,8 @@ from Hlinks import Hlinks
 import MMurl
 import settings
 
+import grins.DOM.Core
+
 class MMNodeContext:
 	def __init__(self, nodeclass):
 		self.nodeclass = nodeclass
@@ -497,9 +499,9 @@ class MMNode:
 		return None
 
 	def _get_attributes(self):
-		namedNodeMap = NamedNodeMap()
+		namedNodeMap = grins.DOM.Core.NamedNodeMap()
 		for a in self.attrdict.items() :
-			newAttribute = Attr(a[0],a[1]) 
+			newAttribute = grins.DOM.Core.Attr(a[0],a[1]) 
 			namedNodeMap.setNamedItem(newAttribute)
 		return namedNodeMap     
 
