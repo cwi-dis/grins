@@ -800,20 +800,32 @@ class SMILXhtmlSmilWriter(SMIL):
 				
 	def writeEmptyRegion(self, regionName):
 		path = self.getRegionPath(regionName)
-		pushed = 0
-		if path:
-			lch = path[len(path)-1]
-			name = self.ch2name[lch]
-			divlist = []
-			divlist.append(('id', name ))
-			regstyle = self.getRegionStyle(regionName)
-			self.writetag('div', divlist)
-			self.push()
+		if not path:
+			return
+
+		# region (div) attr list
+		divlist = []
+
+		# find/compose/set region id
+		lch = path[len(path)-1]
+		name = self.ch2name[lch]
+		if self.ids_written.get(name):
+			self.ids_written[name] = self.ids_written[name] + 1
+			regionid = name + '%d' % self.ids_written[name]
+		else:
 			self.ids_written[name] = 1
-			pushed = pushed + 1
-		while pushed:
-			self.pop()
-			pushed = pushed -1
+			regionid = name
+		divlist.append(('id', regionid))
+
+		# apply region style and fill attribute
+		regstyle = self.getRegionStyle(regionName)
+		if regstyle is not None:
+			divlist.append(('style', regstyle))
+		divlist.append(('class', 'time'))
+							
+		# finally write div
+		self.writetag('div', divlist)
+		self.closehtmltag()
 
 	def writeanimatenode(self, node, root, targetElement=None):
 		attrlist = []
