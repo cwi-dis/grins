@@ -20,7 +20,9 @@ class Region(base_window.Window):
 		# create the window
 		self.create(parent, coordinates, units, z, transparent, bgcolor)
 		if self._topwindow:
-			self._canvas = self._topwindow.LRtoDR(self._canvas, round = 1)
+			rc = self.getwindowpos()
+			x, y, w, h = self._topwindow.LRtoDR(rc, round = 1)
+			self._canvas = 0, 0, w, h
 						
 	def __repr__(self):
 		return '<Region instance at %x>' % id(self)
@@ -98,7 +100,8 @@ class Region(base_window.Window):
 			if bgcolor:
 				brush = wingdi.CreateSolidBrush(bgcolor)
 				old_brush = dc.SelectObject(brush)
-				dc.Rectangle(ltrb)
+				x, y, w, h = xywh_dst
+				dc.Rectangle((x, y, x+w, y+h))
 				dc.SelectObject(old_brush)
 				wingdi.DeleteObject(brush)
 			self._active_displist._render(dc, ltrb, xywh_dst, start=1)
@@ -110,7 +113,8 @@ class Region(base_window.Window):
 		elif self._transparent == 0 and self._bgcolor:
 			brush = wingdi.CreateSolidBrush(self._bgcolor)
 			old_brush = dc.SelectObject(brush)
-			dc.Rectangle(ltrb)
+			x, y, w, h = xywh_dst
+			dc.Rectangle((x, y, x+w, y+h))
 			dc.SelectObject(old_brush)
 			wingdi.DeleteObject(brush)
 
@@ -123,6 +127,7 @@ class Region(base_window.Window):
 		ltrb = self.getClipDR(dc)
 		if ltrb is None:
 			return
+		xywh_dst = self.getDR()
 		if self._active_displist:
 			entry = self._active_displist._list[0]
 			bgcolor = None
@@ -133,10 +138,11 @@ class Region(base_window.Window):
 			if bgcolor:
 				brush = wingdi.CreateSolidBrush(bgcolor)
 				old_brush = dc.SelectObject(brush)
-				dc.Rectangle(ltrb)
+				x, y, w, h = xywh_dst
+				dc.Rectangle((x, y, x+w, y+h))
 				dc.SelectObject(old_brush)
 				wingdi.DeleteObject(brush)
-			self._active_displist._render(dc, ltrb, self.getDR(), start = 1)
+			self._active_displist._render(dc, ltrb, xywh_dst, start = 1)
 			if self._showing:
 				brush =  wingdi.CreateSolidBrush((255, 0, 0))
 				dc.FrameRect(ltrb, brush)
@@ -145,7 +151,8 @@ class Region(base_window.Window):
 		elif self._transparent == 0 and self._bgcolor:
 			brush = wingdi.CreateSolidBrush(self._bgcolor)
 			old_brush = dc.SelectObject(brush)
-			dc.Rectangle(ltrb)
+			x, y, w, h = xywh_dst
+			dc.Rectangle((x, y, x+w, y+h))
 			dc.SelectObject(old_brush)
 			wingdi.DeleteObject(brush)
 
