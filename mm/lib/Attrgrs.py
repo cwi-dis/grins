@@ -251,6 +251,7 @@ attrgrs=(
 		'project_audiotype',
 		'project_mobile',
 		'project_perfect',
+		'project_convert',
 		]},
 
 	{'name':'convert4',
@@ -260,6 +261,7 @@ attrgrs=(
 		'project_audiotype',
 		'project_mobile',
 		'project_perfect',
+		'project_convert',
 		]},
 
 	{'name':'convert3',
@@ -275,6 +277,13 @@ attrgrs=(
 	'attrs':[
 		'project_targets',
 		'project_audiotype',
+		]},
+
+	{'name':'convert1',
+	'title':'Conversion',
+	'attrs':[
+		'project_convert',
+		'project_quality',
 		]},
 
 	{'name':'clip',
