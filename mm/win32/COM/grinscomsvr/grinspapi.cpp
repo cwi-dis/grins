@@ -203,6 +203,20 @@ ComModule_AdviceSetDur(ComModuleObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char ComModule_AdviceSetFrameRate__doc__[] =
+""
+;
+static PyObject *
+ComModule_AdviceSetFrameRate(ComModuleObject *self, PyObject *args)
+{
+	int id;
+	int fr;
+	if(!PyArg_ParseTuple(args, "ii", &id, &fr))
+		return NULL;
+	self->pModule->adviceSetFrameRate(id, fr);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
 
 static struct PyMethodDef ComModule_methods[] = {
 	{"RegisterClassObjects", (PyCFunction)ComModule_RegisterClassObjects, METH_VARARGS, ComModule_RegisterClassObjects__doc__},
@@ -214,6 +228,7 @@ static struct PyMethodDef ComModule_methods[] = {
 	{"AdviceClosePeerWnd", (PyCFunction)ComModule_AdviceClosePeerWnd, METH_VARARGS, ComModule_AdviceClosePeerWnd__doc__},
 	{"AdviceSetCursor", (PyCFunction)ComModule_AdviceSetCursor, METH_VARARGS, ComModule_AdviceSetCursor__doc__},
 	{"AdviceSetDur", (PyCFunction)ComModule_AdviceSetDur, METH_VARARGS, ComModule_AdviceSetDur__doc__},
+	{"AdviceSetFrameRate", (PyCFunction)ComModule_AdviceSetFrameRate, METH_VARARGS, ComModule_AdviceSetFrameRate__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
