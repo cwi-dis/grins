@@ -41,6 +41,9 @@ from GenFormView import GenFormView
 import DropTarget
 import IconMixin
 
+
+HIDE_TOPSIBLING = 0
+
 class _LayoutView2(GenFormView):
 	def __init__(self,doc,bgcolor=None):
 		GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT_T2)
@@ -463,13 +466,13 @@ class _LayoutView2(GenFormView):
 		d2lscale = self._layout.getDeviceToLogicalScale()
 		d2lscale = d2lscale - 0.1
 		if d2lscale < 0.1 : d2lscale = 0.1
-		self._layout.setDeviceToLogicalScale(d2lscale)
+		self._layout.updateScale(d2lscale)
 
 	def zoomOut(self):
 		d2lscale = self._layout.getDeviceToLogicalScale()
 		d2lscale = d2lscale + 0.1
 		if d2lscale>10.0: d2lscale = 10.0
-		self._layout.setDeviceToLogicalScale(d2lscale)
+		self._layout.updateScale(d2lscale)
 
 	def addPreviewButtons(self):
 		self._iconplay = win32ui.GetApp().LoadIcon(grinsRC.IDI_PLAY)
@@ -852,11 +855,18 @@ class LayoutManager(LayoutManagerBase):
 		self._selectedList = []
 
 		# decor
-		self._blackBrush = Sdk.CreateBrush(win32con.BS_SOLID, 0, 0)
-		self._selPen = Sdk.CreatePen(win32con.PS_SOLID, 1, win32api.RGB(0,0,255))
-		self._selPenDot = Sdk.CreatePen(win32con.PS_DOT, 1, win32api.RGB(0,0,255))
-		self._selPathPen = Sdk.CreatePen(win32con.PS_SOLID, 1, win32api.RGB(255,127,80))
+		self._blackPen = Sdk.CreatePen(win32con.PS_SOLID, 1, win32api.RGB(0,0,0))
+		self._hiddenPen = Sdk.CreatePen(win32con.PS_DOT, 1, win32api.RGB(0,0,0))
+		self._hiddenSelectedPen = Sdk.CreatePen(win32con.PS_DOT, 1, win32api.RGB(0,0,255))
+		self._selectedPen = Sdk.CreatePen(win32con.PS_SOLID, 1, win32api.RGB(0,0,255))
+		self._pathPen = Sdk.CreatePen(win32con.PS_SOLID, 1, win32api.RGB(128,128,128))
+		self._hiddenPathPen = Sdk.CreatePen(win32con.PS_DOT, 1, win32api.RGB(128,128,128))
+		self._selectedPathPen = Sdk.CreatePen(win32con.PS_SOLID, 1, win32api.RGB(0,0,255))
+		self._hiddenSelectedPathPen = Sdk.CreatePen(win32con.PS_DOT, 1, win32api.RGB(0,0,255))
 
+		self._blackBrush = Sdk.CreateBrush(win32con.BS_SOLID, 0, 0)		
+		self._handlePathBrush = win32ui.CreateBrush(win32con.BS_SOLID, 0, 0)
+		
 		self.selInc = 0
 			
 	# allow to create a LayoutManager instance before the onInitialUpdate of dialog box
@@ -873,16 +883,21 @@ class LayoutManager(LayoutManagerBase):
 	
 	def OnDestroy(self, params):
 		LayoutManagerBase.OnDestroy(self, params)
-		if self._blackBrush:
-			Sdk.DeleteObject(self._blackBrush)
-			self._blackBrush = 0
-		if self._selPen:
-			Sdk.DeleteObject(self._selPen)
-			self._selPen = 0
-		if self._selPenDot:
-			Sdk.DeleteObject(self._selPenDot)
-			self._selPenDot = 0
-					
+		for pen in (self._blackBrush, self._blackPen, self._hiddenPen, self._selectedPen, self._hiddenSelectedPen, \
+					self._pathPen, self._hiddenPathPen, self._selectedPathPen, \
+					self._hiddenSelectedPathPen):
+			if pen:
+				Sdk.DeleteObject(pen)
+		self._blackBrush = 0
+		self._hiddenPen = 0
+		self._selectedPen = 0
+		self._hiddenSelectedPen = 0
+		self._pathPen = 0
+		self._hiddenPathPen = 0
+		self._selectedPathPen = 0
+		self._HiddenSelectedPathPen = 0
+		self._handlePathBrush = 0
+		
 	#
 	# winlayout.MSDrawContext listener interface
 	#
@@ -912,9 +927,7 @@ class LayoutManager(LayoutManagerBase):
 	#
 	#
 	#
-	def onDSelChanged(self, selections):
-		if len(selections) == 1 and isinstance(selections[0], winlayout.Polyline):
-			return
+	def onDSelChanged(self, selections):											
 		self._selectedList = selections
 		if self._listener != None:
 			if not self.selInc:
@@ -945,35 +958,29 @@ class LayoutManager(LayoutManagerBase):
 
 
 	def onDSelMove(self, selections):
-		if len(selections) == 1 and isinstance(selections[0], winlayout.Polyline):
-			return
 		if self._listener != None:
 			self._listener.onGeomChanging(selections)		
 			
 	def onDSelResize(self, selection):
-		if isinstance(selection, winlayout.Polyline):
-			return
 		if self._listener != None:
 			self._listener.onGeomChanging([selection, ])		
 
 	def onDSelMoved(self, selections):
-		if len(selections) == 1 and isinstance(selections[0], winlayout.Polyline):
-			return
 		if self._listener != None:
 			self._listener.onGeomChanged(selections)		
 
 	def onDSelResized(self, selection):
-		if isinstance(selection, winlayout.Polyline):
-			return
 		if self._listener != None:
 			self._listener.onGeomChanged([selection, ])		
 
 	def onDSelProperties(self, selection): 
 		if not selection: return
-		if isinstance(selection, winlayout.Polyline):
-			index, prop = self._viewport._polyline.insertPoint(self.LPtoNP(self._lbuttondblclk))
-			if index>0:
-				self.GetParent()._slider.insertKeyTimeFromPoint(index, prop)
+		if isinstance(selection, Polyline):
+			# do nothing for now
+			pass
+#			index, prop = self._viewport._polyline.insertPoint(self.LPtoNP(self._lbuttondblclk))
+#			if index>0:
+#				self.GetParent()._slider.insertKeyTimeFromPoint(index, prop)
 		else:
 			selection.onProperties()
 			
@@ -994,6 +1001,8 @@ class LayoutManager(LayoutManagerBase):
 		for shape in self._selectedList:
 			if shape.inside(point):
 				return shape
+			elif shape._relatedShape and shape._relatedShape.inside(point):
+				return shape._relatedShape
 		
 		if self._viewport:
 			shape = self._viewport.getMouseTarget(point)
@@ -1040,10 +1049,10 @@ class LayoutManager(LayoutManagerBase):
 	#
 	#  Scaling related
 	#
-	def setDeviceToLogicalScale(self, d2lscale):
+	def updateScale(self, d2lscale):
 		self._device2logical = d2lscale
 		if self._viewport:
-			self._viewport.setDeviceToLogicalScale(d2lscale)
+			self._viewport.updateScale(d2lscale)
 		self._parent.showScale(d2lscale)
 		self.updateCanvasSize() 
 		self.InvalidateRect(self.GetClientRect())
@@ -1071,7 +1080,6 @@ class LayoutManager(LayoutManagerBase):
 		if sc<1.0: sc = 1
 		return sc
 	
-
 	#  OnRButtonDown popup menu
 	def OnRButtonDown(self, params):
 		# simulate a left click to select the object
@@ -1121,83 +1129,24 @@ class LayoutManager(LayoutManagerBase):
 			# os window not alive
 			pass
 
+	
 	# called by base class OnDraw or OnPaint
 	def paintOn(self, dc):
 		# fill background
 		lc, tc, rc, bc = dc.GetClipBox()
 		dc.FillSolidRect((lc, tc, rc, bc), win32mu.RGB(self._bgcolor or (255,255,255)))
-
+			
 		# draw objects on dc
 		if self._viewport:
 			self._viewport._draw3drect(dc, self._hasfocus)
-			self._viewport.paintOn(dc)
-			self.drawPolyline(dc)
-			self.drawTracker(dc)
+			self._viewport.paintContentOn(dc)
+			self._viewport.paintBorderOn(dc, clipRgn=[])
+			self.paintTrakersOn(dc)
 
-	def drawTracker(self, dc):
-		v = self._viewport
-		xv, yv, wv, hv = v.LRtoDR(v.getwindowpos(), round=1)
-		ltrbv = xv, yv, xv+wv, yv+hv
-
-
+	def paintTrakersOn(self, dc):
 		for shape in self._drawContext._selections:
-			if isinstance(shape, winlayout.Polyline):
-				self.drawPolylineTracker(dc, shape)
-				continue
-			wnd = shape
-			rc = wnd.LRtoDR(wnd.getwindowpos(), round=1)
-			l, t, r, b = wnd.ltrb(rc)
-
-			hsave = dc.SaveDC()
-			dc.ExcludeClipRect(ltrbv)
-			oldpen = dc.SelectObjectFromHandle(self._selPenDot)
-			win32mu.DrawRectanglePath(dc, (l, t, r-1, b-1))
-			dc.SelectObjectFromHandle(oldpen)
-			dc.RestoreDC(hsave)
-
-			hsave = dc.SaveDC()
-			dc.IntersectClipRect(ltrbv)
-			oldpen = dc.SelectObjectFromHandle(self._selPen)
-			win32mu.DrawRectanglePath(dc, (l, t, r-1, b-1))
-			dc.SelectObjectFromHandle(oldpen)
-			dc.RestoreDC(hsave)
-
-			nHandles = wnd.getDragHandleCount()		
-			for ix in range(nHandles):
-				x, y, w, h = wnd.getDragHandleRect(ix)
-				dc.FillSolidRect((x, y, x+w, y+h), win32api.RGB(255,127,80))
-				dc.FrameRectFromHandle((x, y, x+w, y+h), self._blackBrush)
-
-	def drawPolylineTracker(self, dc, polyline):
-		# draw polyline
-		oldpen = dc.SelectObjectFromHandle(self._selPathPen)
-		points = polyline.getDevicePoints()
-		dc.Polyline(points)
-		dc.SelectObjectFromHandle(oldpen)
-
-		# draw polyline handles
-		nHandles = polyline.getDragHandleCount()		
-		for ix in range(1,nHandles+1):
-			x, y, w, h = polyline.getDragHandleRect(ix)
-			dc.FillSolidRect((x, y, x+w, y+h), win32api.RGB(255,127,80))
-			dc.FrameRectFromHandle((x, y, x+w, y+h), self._blackBrush)
-
-	def drawPolyline(self, dc):
-		polyline = self._viewport._polyline
-		if not polyline: return
-		# draw polyline
-		oldpen = dc.SelectObjectFromHandle(self._selPenDot)
-		points = polyline.getDevicePoints()
-		dc.Polyline(points)
-		dc.SelectObjectFromHandle(oldpen)
-
-		# draw polyline handles
-		nHandles = polyline.getDragHandleCount()		
-		for ix in range(1,nHandles+1):
-			x, y, w, h = polyline.getDragHandleRect(ix)
-			dc.FillSolidRect((x, y, x+w, y+h), win32api.RGB(0,0,0))
-			dc.FrameRectFromHandle((x, y, x+w, y+h), self._blackBrush)
-
+			shape.paintTrakersOn(dc)
+		
 	def hilight(self, f):
 		self._hasfocus = f
 		self.InvalidateRect(self.GetClientRect())	
@@ -1222,94 +1171,102 @@ class UserEventMng:
 			
 ###########################
 
-class Viewport(win32window.Window, UserEventMng):
-	def __init__(self, name, context, attrdict, d2lscale):
+class Shape:
+	def __init__(self, context):
+		self._ctx = context
+		self._relatedShape = None
+		
+	# method responsible to paint borders
+	# that method paint first hidden borders, then visible borders
+	def paintBorderOn(self, dc, rc=None, clipRgn=[], exclRgn=[]):
+		self._isSelected = 0
+		# XXX to optimize
+		for shape in self._ctx._drawContext._selections:
+			if shape is self:
+				self._isSelected = 1
+				break
+
+		# XXX note: it would be probably more efficient to create a 'real' Windows region to
+		# manage clipping. Unfortunaltly it doesn't work very well during painting (the UI is refreshed correctly only when
+		# you release the mouse button) for a raison I don't know.
+		newClipRgn = clipRgn[:]	
+		newClipRgn.append(self.getClipRect())
+
+		newExclRgn = exclRgn[:]
+		if HIDE_TOPSIBLING:
+			topSibling = self.getTopSibling()
+			for sib in topSibling:
+				sx, sy, sw, sh = self.LRtoDR(sib.getwindowpos(), round=1)
+				newExclRgn.append((sx, sy, sx+sw, sy+sh))
+
+		hsave = dc.SaveDC()
+		self.paintHiddenBorderOn(dc, rc)		
+		dc.RestoreDC(hsave)
+
+		hsave = dc.SaveDC()
+		for rect in newClipRgn:
+			dc.IntersectClipRect(rect)
+		if HIDE_TOPSIBLING:
+			for rect in newExclRgn:
+				dc.ExcludeClipRect(rect)
+		self.paintVisibleBorderOn(dc, rc)		
+		dc.RestoreDC(hsave)
+		
+		for w in self._polyList:
+			w.paintBorderOn(dc, newClipRgn, newExclRgn)
+
+		L = self._subwindows[:]
+		L.reverse()
+		length = len(L)
+		for index in range(length):
+			L[index].paintBorderOn(dc, rc, newClipRgn, newExclRgn)
+
+	# that method may be overrided. Just define it here for readibility issue
+	def paintVisibleBorderOn(self, dc, rc=None):
+		pass
+	
+	# that method may be overrided.	Just define it here for readibility issue
+	def paintHiddenBorderOn(self, dc, rc=None):
+		pass
+
+	# that method may be overrided.	Just define it here for readibility issue
+	def getClipRect(self):
+		return (0, 0, 0, 0)
+	
+	def getTopSibling(self):
+		parent = self._parent
+		if parent is not None:
+			sibling = parent._subwindows
+			length = len(sibling)
+			for index in range(length):
+				if sibling[index] is self:
+					return sibling[:index]
+
+		return []
+
+class RectShape(win32window.Window, Shape, UserEventMng):
+	def __init__(self, name, context, attrdict):
 		self._attrdict = attrdict
 		self._name = name
-		self._ctx = context
-		self._polyline = None
+		self._polyList = []
 		self.isSelected = 0
+		self._showname = 0
+		Shape.__init__(self, context)
 		win32window.Window.__init__(self)
 		UserEventMng.__init__(self)
-		self._uidx, self._uidy = 8, 8
-		self.setDeviceToLogicalScale(d2lscale)
-
-		self._cycaption = 0 #win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
-		self._cycaptionlog = 0 # int(self._device2logical*self._cycaption+0.5)
-
-		x, y, w, h = attrdict.get('wingeom')
-		units = attrdict.get('units')
-		z = 0
-		transparent = attrdict.get('transparent')
-		bgcolor = attrdict.get('bgcolor')
-		if transparent == None:
-			if bgcolor != None:
-				transparent = 0
-			else:
-				transparent = 1
-
-		self.create(None, (self._uidx, self._uidy, w, h), units, z, transparent, bgcolor)
-		self.setDeviceToLogicalScale(d2lscale)
-
-		# adjust some variables
-		self._topwindow = self
-
-		# disp list of this window
-		# use shortcut instead of render 
-		self._active_displist = self.newdisplaylist()
-
-		self._showname = 1
-
-		self.center()
-
-		# begin test code
-		# this code should be executed by a region to show its path
-#		points = [ (0,0), (100, 200), (300,100)]
-#		polyline = winlayout.Polyline(self, points)
-#		self._topwindow.setCurrentPolyline(polyline)
-		# end test code
-
-	def center(self):
-		x, y, w, h = self._rectb
-		layout = self._ctx
-		vw, vh = layout.GetClientRect()[2:]
-		vw, vh = self.DPtoLP((vw, vh))
-		x = (vw - w)/2
-		y = (vh - h)/2
-		if x<8: x=8
-		if y<8: y=8
-		self._rectb = x, y, w, h
-	
-	def setCurrentPolyline(self, polyline):
-		self._polyline = polyline
-		 	
-	# overide the default newdisplaylist method defined in win32window
-	def newdisplaylist(self, bgcolor = None):
-		if bgcolor is None:
-			if not self._transparent:
-				bgcolor = self._bgcolor
-		return win32window._ResizeableDisplayList(self, bgcolor)
-
-	def close(self):
-		if self._active_displist:
-			self._active_displist.close()
-
-	# 
-	# interface implementation: function called from an external module
-	#
-
-	# return the current geometry
-	def getGeom(self):
-		x, y, w, h = self._rectb
-		if w<1: w=1
-		if h<1: h=1
-		self._rectb = x,y,w,h
-		return 0, 0, int(w+0.5), int(h+0.5)
-
+		
 	# add a sub region	
 	def addRegion(self, attrdict, name):
 		rgn = Region(self, name, self._ctx, attrdict, self._device2logical)
 		return rgn
+
+	def addPolyline(self, pointList, relatedShape):
+		poly = Polyline(self, self._ctx, self._device2logical, pointList)
+		self._polyList.append(poly)
+		if relatedShape is not None:
+			relatedShape._relatedShape = poly
+		poly._relatedShape = relatedShape
+		return poly
 
 	# remove a sub region
 	def removeRegion(self, region):
@@ -1332,7 +1289,205 @@ class Viewport(win32window.Window, UserEventMng):
 		# do not forget to close region
 		# important resources like images will not be freed 
 		region.close()
-					
+
+	# remove a polyline
+	def removePolyline(self, poly):
+		# update the selection
+		selectChanged = 0
+		for ind in range(len(self._ctx._selectedList)):
+			if self._ctx._selectedList[ind] is poly:
+				del self._ctx._selectedList[ind]
+				selectChanged = 1
+				break
+		if selectChanged:
+			self._ctx._drawContext.selectShapes(self._ctx._selectedList)
+
+		# remove the links
+		for ind in range(len(self._polyList)):
+			if self._polyList[ind] is poly:
+				del self._polyList[ind]
+				break
+
+		for ind in range(len(self._parent._polyList)):
+			if self._parent._polyList[ind] is poly:
+				del self._parent._polyList[ind]
+				break
+
+		if poly._relatedShape is not None:
+			poly._relatedShape._relatedShape = None
+			poly._relatedShape = None
+		
+	# shape content. may be replaced by displaylist ???
+	def showName(self, bv):
+		self._showname = bv
+		self._ctx.update()
+
+	# overide the default newdisplaylist method defined in win32window
+	def newdisplaylist(self, bgcolor = None):
+		if bgcolor is None:
+			if not self._transparent:
+				bgcolor = self._bgcolor
+		return win32window._ResizeableDisplayList(self, bgcolor)
+
+	def initDisplayList(self):
+		# disp list of this window
+		# use shortcut instead of render 
+		self._active_displist = self.newdisplaylist()
+
+	def hasmedia(self):
+		displist = self._active_displist
+		if displist:
+			for entry in displist._list:
+				if entry[0] == 'image':
+					return 1
+		return 0	
+
+	def setImage(self, filename, fit, mediadisplayrect = None):
+		if self._active_displist != None:
+			self._active_displist.newimage(filename, fit, mediadisplayrect)
+
+	def drawbox(self, box):
+		self._active_displist.drawbox(box, units=UNIT_PXL)
+
+	def close(self):
+		if self._active_displist:
+			self._active_displist.close()
+
+	def insideCaption(self, point):
+		return 0
+		
+	def getMouseTarget(self, point):
+		for w in self._subwindows:
+			target = w.getMouseTarget(point)
+			if target:
+				return target
+		if self.inside(point) or self.insideCaption(point):
+			return self
+		return None
+
+	def updateScale(self, d2lscale):
+		win32window.Window.setDeviceToLogicalScale(self, d2lscale)
+
+		for w in self._subwindows:
+			w.updateScale(d2lscale)
+		for w in self._polyList:
+			w.updateScale(d2lscale)
+
+	def paintContentOn(self, dc, rc=None):
+		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
+		ltrb = l, t, r, b = x, y, x+w, y+h
+
+		hsave = dc.SaveDC()
+		dc.IntersectClipRect(ltrb)
+		
+		x0, y0 = dc.SetWindowOrg((-l,-t))
+		if self._active_displist:
+			self._active_displist._render(dc, rc)
+		dc.SetWindowOrg((x0,y0))
+
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
+			w.paintContentOn(dc, rc)
+
+		dc.RestoreDC(hsave)
+
+	# that method may be overrided.	Just define it here for readibility issue
+	def getClipRect(self):
+		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
+		return (x, y, x+w, y+h)
+
+	# method responsible to paint border when visible state
+	# in that case: the clipping region is correctly defined for the dc in parameter.
+	# Note that the clipping region is set from Shape.painBorderOn method and may be complex
+	def paintVisibleBorderOn(self, dc, rc=None):
+		if self._isSelected:			
+			oldpen = dc.SelectObjectFromHandle(self._ctx._selectedPen)
+		else:
+			oldpen = dc.SelectObjectFromHandle(self._ctx._blackBrush)
+			
+		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
+		l, t, r, b = x, y, x+w-1, y+h-1
+			
+		win32mu.DrawRectanglePath(dc, (l, t, r, b))
+		dc.SelectObjectFromHandle(oldpen)
+
+	# method responsible to paint border when hidden state
+	# in that case: the clipping region is correctly defined for the dc in parameter
+	# Note that the clipping region is set from Shape.painBorderOn method and may be complex
+	def paintHiddenBorderOn(self, dc, rc=None):
+		if self._isSelected:			
+			oldpen = dc.SelectObjectFromHandle(self._ctx._hiddenSelectedPen)
+		else:
+			oldpen = dc.SelectObjectFromHandle(self._ctx._hiddenPen)
+
+		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
+		l, t, r, b = x, y, x+w-1, y+h-1
+			
+		win32mu.DrawRectanglePath(dc, (l, t, r, b))
+		dc.SelectObjectFromHandle(oldpen)
+
+	def paintTrakersOn(self, dc):
+		hsave = dc.SaveDC()
+		nHandles = self.getDragHandleCount()		
+		for ix in range(nHandles):
+			x, y, w, h = self.getDragHandleRect(ix)
+			dc.FillSolidRect((x, y, x+w, y+h), win32api.RGB(255,127,80))
+			dc.FrameRectFromHandle((x, y, x+w, y+h), self._ctx._blackBrush)
+		dc.RestoreDC(hsave)
+		
+class Viewport(RectShape):
+	def __init__(self, name, context, attrdict, d2lscale):
+		RectShape.__init__(self, name, context, attrdict)
+		self._uidx, self._uidy = 8, 8
+
+		self._cycaption = 0 #win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
+		self._cycaptionlog = 0 # int(self._device2logical*self._cycaption+0.5)
+
+		x, y, w, h = attrdict.get('wingeom')
+		units = attrdict.get('units')
+		z = 0
+		transparent = attrdict.get('transparent')
+		bgcolor = attrdict.get('bgcolor')
+		if transparent == None:
+			if bgcolor != None:
+				transparent = 0
+			else:
+				transparent = 1
+
+		self.create(None, (self._uidx, self._uidy, w, h), units, z, transparent, bgcolor)
+		self.setDeviceToLogicalScale(d2lscale)
+
+		# adjust some variables
+		self._topwindow = self
+
+		self.initDisplayList()
+
+		self.center()
+
+	def center(self):
+		x, y, w, h = self._rectb
+		layout = self._ctx
+		vw, vh = layout.GetClientRect()[2:]
+		vw, vh = self.DPtoLP((vw, vh))
+		x = (vw - w)/2
+		y = (vh - h)/2
+		if x<8: x=8
+		if y<8: y=8
+		self._rectb = x, y, w, h
+	
+	# 
+	# interface implementation: function called from an external module
+	#
+
+	# return the current geometry
+	def getGeom(self):
+		x, y, w, h = self._rectb
+		if w<1: w=1
+		if h<1: h=1
+		self._rectb = x,y,w,h
+		return 0, 0, int(w+0.5), int(h+0.5)
+
 	def setAttrdict(self, attrdict):
 		# print 'setAttrdict', attrdict
 		newBgcolor = attrdict.get('bgcolor')
@@ -1349,27 +1504,11 @@ class Viewport(win32window.Window, UserEventMng):
 				self.updatebgcolor(newBgcolor)
 
 		self._ctx.update()
-
-	# shape content. may be replaced by displaylist ???
-	def showName(self, bv):
-		self._showname = bv
-		self._ctx.update()
 	
-	def hasmedia(self):
-		return 0 # ignore trace image
-				
-	def setImage(self, filename, fit, mediadisplayrect = None):
-		if self._active_displist != None:
-			self._active_displist.newimage(filename, fit, mediadisplayrect)
 	#
 	#  end interface implementation
 	#
 	
-#	def createRegions(self):
-		# create the regions of this viewport
-#		parentNode = self._ctx._viewports
-#		self.__createRegions(self, parentNode, self._device2logical)
-
 	def getwindowpos(self, rel=None):
 		x, y, w, h = self._rectb
 		return int(x+0.5), int(y+0.5), int(w+0.5), int(h+0.5)
@@ -1380,11 +1519,8 @@ class Viewport(win32window.Window, UserEventMng):
 	def pop(self, poptop=1):
 		pass
 	
-	# override win32window.Window method
-	def setDeviceToLogicalScale(self, d2lscale):
-		win32window.Window.setDeviceToLogicalScale(self, d2lscale)
-		if self._polyline:
-			self._polyline.setDeviceToLogicalScale(d2lscale)
+	def updateScale(self, d2lscale):
+		RectShape.updateScale(self, d2lscale)
 		self.center()
 
 	def insideCaption(self, point):
@@ -1395,45 +1531,6 @@ class Viewport(win32window.Window, UserEventMng):
 			return 1
 		return 0
 		
-		if self._polyline and self._polyline.inside(point):
-				return self._polyline
-
-	def getMouseTarget(self, point):
-		if self._polyline and self._polyline.inside(point):
-			return self._polyline
-		for w in self._subwindows:
-			target = w.getMouseTarget(point)
-			if target:
-				return target
-		if self.inside(point) or self.insideCaption(point):
-			return self
-		return None
-	
-	def getClipRgn(self, rel=None):
-		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
-		rgn = win32ui.CreateRgn()
-		rgn.CreateRectRgn((x,y,x+w,y+h))
-		return rgn
-		
-	def paintOn(self, dc, rc=None):
-		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
-		ltrb = l, t, r, b = x, y, x+w, y+h
-
-		hsave = dc.SaveDC()
-		dc.IntersectClipRect(ltrb)
-
-		x0, y0 = dc.SetWindowOrg((-l,-t))
-		if self._active_displist:
-			self._active_displist._render(dc, rc)
-		dc.SetWindowOrg((x0,y0))
-
-		L = self._subwindows[:]
-		L.reverse()
-		for w in L:
-			w.paintOn(dc, rc)
-
-		dc.RestoreDC(hsave)
-
 	def _draw3drect(self, dc, hilight=0):
 		hsave = dc.SaveDC()
 		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
@@ -1464,17 +1561,9 @@ class Viewport(win32window.Window, UserEventMng):
 				
 ###########################
 
-class Region(win32window.Window, UserEventMng):
+class Region(RectShape):
 	def __init__(self, parent, name, context, attrdict, d2lscale):
-		self._name = name
-		self._attrdict = attrdict
-		self._showname = 1
-		self._ctx = context		
-		self.isSelected = 0
-
-		win32window.Window.__init__(self)
-		UserEventMng.__init__(self)
-		self.setDeviceToLogicalScale(d2lscale)
+		RectShape.__init__(self, name, context, attrdict)
 
 		x, y, w, h = attrdict.get('wingeom')
 		units = attrdict.get('units')
@@ -1487,72 +1576,15 @@ class Region(win32window.Window, UserEventMng):
 			else:
 				transparent = 1
 		self.create(parent, (x, y, w, h), units, z, transparent, bgcolor)
+		self.setDeviceToLogicalScale(d2lscale)
 		
-		# disp list of this window
-		# use shortcut instead of render 
-		self._active_displist = self.newdisplaylist()
-
+		self.initDisplayList()
+		
 		# allow to determinate if the region is moving
 		self._isMoving = 0
 		
 		# allow to determinate if the region is resizing
 		self._isResizing = 0
-
-	# overide the default newdisplaylist method defined in win32window
-	def newdisplaylist(self, bgcolor = None):
-		if bgcolor is None:
-			if not self._transparent:
-				bgcolor = self._bgcolor
-		return win32window._ResizeableDisplayList(self, bgcolor)
-	
-	def close(self):
-		if self._active_displist:
-			self._active_displist.close()
-
-	def paintOn(self, dc, rc=None):
-		ltrb = l, t, r, b = self.ltrb(self.LRtoDR(self.getwindowpos(), round=1))
-
-		hsave = dc.SaveDC()
-		dc.IntersectClipRect(ltrb)
-
-		x0, y0 = dc.SetWindowOrg((-l,-t))
-		if self._active_displist:
-			self._active_displist._render(dc, rc)
-		dc.SetWindowOrg((x0,y0))
-
-		L = self._subwindows[:]
-		L.reverse()
-		for w in L:
-			w.paintOn(dc, rc)
-
-		if self._showname:
-			dc.SetBkMode(win32con.TRANSPARENT)
-			dc.DrawText(self._name, ltrb, win32con.DT_SINGLELINE|win32con.DT_CENTER|win32con.DT_VCENTER)
-
-		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
-		dc.FrameRectFromHandle(ltrb, br)
-		Sdk.DeleteObject(br)
-
-		dc.RestoreDC(hsave)
-
-	def getClipRgn(self, rel=None):
-		x, y, w, h = self.LRtoDR(self.getwindowpos(), round=1)
-		rgn = win32ui.CreateRgn()
-		rgn.CreateRectRgn((x,y,x+w,y+h))
-		if rel==self: return rgn
-		prgn = self._parent.getClipRgn(rel)
-		rgn.CombineRgn(rgn,prgn,win32con.RGN_AND)
-		prgn.DeleteObject()
-		return rgn
-
-	def getMouseTarget(self, point):
-		for w in self._subwindows:
-			target = w.getMouseTarget(point)
-			if target:
-				return target
-		if self.inside(point):
-			return self
-		return None
 
 	# 
 	# interface implementation: function called from an external module
@@ -1569,33 +1601,7 @@ class Region(win32window.Window, UserEventMng):
 		if y < 0: y = y-0.5
 		else: y = y+0.5
 		return int(x), int(y), int(w+0.5), int(h+0.5)
-
-	# add a sub region
-	def addRegion(self, attrdict, name):
-		rgn = Region(self, name, self._ctx, attrdict, self._device2logical)
-		return rgn
-
-	# remove a sub region
-	def removeRegion(self, region):
-		# update the selection
-		selectChanged = 0
-		for ind in range(len(self._ctx._selectedList)):
-			if self._ctx._selectedList[ind] is region:
-				del self._ctx._selectedList[ind]
-				selectChanged = 1
-				break
-		if selectChanged:
-			self._ctx._drawContext.selectShapes(self._ctx._selectedList)
 		
-		# remove the link with the parent
-		for ind in range(len(self._subwindows)):
-			if self._subwindows[ind] is region:
-				del self._subwindows[ind]
-				break
-		# do not forget to close region
-		# important resources like images will not be freed 
-		region.close()
-
 	def setAttrdict(self, attrdict):
 		newBgcolor = attrdict.get('bgcolor')
 		oldBgcolor = self._attrdict.get('bgcolor')
@@ -1615,30 +1621,83 @@ class Region(win32window.Window, UserEventMng):
 
 		self._ctx.update()
 
-	# shape content. may be replaced by displaylist ???
-	def showName(self, bv):
-		self._showname = bv
-		self._ctx.update()
+class Polyline(winlayout.Polyline, Shape, UserEventMng):
+	def __init__(self, parent, context, d2lscale, pointList):
+		self._ctx = context		
+		self.isSelected = 0
+		self._parent = parent
+		self._polyList = []
+		self._subwindows = []
 
-	def hasmedia(self):
-		displist = self._active_displist
-		if displist:
-			for entry in displist._list:
-				if entry[0] == 'image':
-					return 1
-		return 0	
-
-	def setImage(self, filename, fit, mediadisplayrect = None):
-		if self._active_displist != None:
-			self._active_displist.newimage(filename, fit, mediadisplayrect)
-
-	def drawbox(self, box):
-		self._active_displist.drawbox(box, units=UNIT_PXL)
+		Shape.__init__(self, context)
+		winlayout.Polyline.__init__(self, self._parent, pointList)
+		UserEventMng.__init__(self)
+		self.setDeviceToLogicalScale(d2lscale)
 		
-	# 
-	# end interface implementation
-	#
+	def updateScale(self, d2lscale):
+		self.setDeviceToLogicalScale(d2lscale)
 
+	# that method may be overrided.	Just define it here for readibility issue
+	def getClipRect(self):
+		x, y, w, h = self.LRtoDR(self._parent.getwindowpos(), round=1)
+		return (x, y, x+w, y+h)
+
+	# that method may be overrided. Just define it here for readibility issue
+	def paintVisibleBorderOn(self, dc, rc=None):
+		if self._isSelected:			
+			oldpen = dc.SelectObjectFromHandle(self._ctx._selectedPathPen)
+		else:
+			oldpen = dc.SelectObjectFromHandle(self._ctx._pathPen)
+		points = self.getDevicePoints()
+		dc.Polyline(points)
+
+		self.__paintPoints(dc)
+		
+	# that method may be overrided.	Just define it here for readibility issue
+	def paintHiddenBorderOn(self, dc, rc=None):
+		if self._isSelected:			
+			oldpen = dc.SelectObjectFromHandle(self._ctx._hiddenSelectedPathPen)
+		else:
+			oldpen = dc.SelectObjectFromHandle(self._ctx._hiddenPathPen)
+		points = self.getDevicePoints()
+		dc.Polyline(points)
+
+		self.__paintPoints(dc)
+
+	def __paintPoints(self, dc):
+		hsave = dc.SaveDC()
+		nHandles = self.getDragHandleCount()
+		dc.SelectObjectFromHandle(self._ctx._blackBrush)
+		dc.SelectObjectFromHandle(self._ctx._blackPen)
+		for ix in range(1,nHandles+1):
+			x, y, w, h = self.getDragHandleRect(ix)
+			dc.Ellipse((x+1, y+1, x+6, y+6))
+		dc.RestoreDC(hsave)
+		
+	def paintTrakersOn(self, dc):
+		hsave = dc.SaveDC()
+		nHandles = self.getDragHandleCount()
+		dc.SelectObject(self._ctx._handlePathBrush)
+		for ix in range(1,nHandles+1):
+			x, y, w, h = self.getDragHandleRect(ix)
+			dc.FillSolidRect((x, y, x+w, y+h), win32api.RGB(0,0,0))
+			dc.FrameRectFromHandle((x, y, x+w, y+h), self._ctx._blackBrush)
+		dc.RestoreDC(hsave)
+
+	def getMouseTarget(self, point):
+		if self.inside(point):
+			return self
+		return None
+
+	# return the current geometry
+	def getGeom(self):
+		pList = []	
+		pointList = self.getDevicePoints()
+		px, py, pw, ph = self.LRtoDR(self._parent.getwindowpos(), round=1)
+		for x,y in pointList:
+			x,y = x-px,y-py
+			pList.append(self.DPtoLP((x,y)))
+		return pList
 
 
  

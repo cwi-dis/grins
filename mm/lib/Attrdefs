@@ -651,6 +651,8 @@
 (origin (enum parent element) parent 'Origin' default
 	'Coordinates origin' normal (g2 qt smil10 smil2 cmif))
 
+(showAnimationPath (bool) 1 'showAnimationPath' default
+	'Show animation path' normal (smil2))
 
 # time manipulations
 
