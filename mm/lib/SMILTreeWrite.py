@@ -31,13 +31,13 @@ class IndentedFile:
 		self.fp = fp
 		self.level = 0
 		self.bol = 1
-		
+
 	def push(self):
 		self.level = self.level + 2
-		
+
 	def pop(self):
 		self.level = self.level - 2
-		
+
 	def write(self, data):
 		lines = string.split(data, '\n')
 		if not lines:
@@ -59,16 +59,16 @@ class IndentedFile:
 					self.fp.write(' '*self.level)
 				self.bol = 0
 			self.fp.write(line)
-			
+
 	def writeline(self, data):
 		self.write(data)
-		
+
 	def writelines(self, data):
 		self.write(string.join(data, '\n'))
-		
+
 	def close(self):
 		self.fp.close()
-		
+
 
 
 # Write a node to a CMF file, given by filename
@@ -121,7 +121,7 @@ def getduration(writer, node, attr):
 		if duration[-4:] == '.000':
 			duration = duration[:-4]
 		return duration + 's'
-		
+
 def getsyncarc(writer, node, isend):
 	allarcs = node.GetRawAttrDef('synctolist', [])
 	arc = None
@@ -225,7 +225,7 @@ def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
 	      node.GetRawAttrDef('name', '<unnamed>'),\
 	      node.GetUID()
 	return '%.3fs' % delay
-	
+
 def getterm(writer, node):
 	terminator = node.GetRawAttrDef('terminator', 'LAST')
 	if terminator == 'LAST':
@@ -344,7 +344,7 @@ class SMILWriter(SMIL):
 		if len(self.top_levels) > 1:
 			print '** Document uses multiple toplevel channels'
 			self.uses_cmif_extension = 1
-		
+
 		dir, file = os.path.split(filename) # get parent dir
 		file, ext = os.path.splitext(file) # and base name
 		rel = file + '.dir'	# relative name of data directory
@@ -567,9 +567,9 @@ class SMILWriter(SMIL):
 			self.fp.write(attrs)
 		self.fp.pop()
 		self.fp.write('</layout>\n')
-			
-			
-			
+
+
+
 	def writenode(self, x, root = 0):
 		"""Write a node (possibly recursively)"""
 		type = x.GetType()
