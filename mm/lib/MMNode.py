@@ -18,6 +18,7 @@ import string, os
 import MMStates
 import Bandwidth
 import Duration
+import AnimationData
 import re
 import parseutil
 
@@ -2320,7 +2321,7 @@ class MMNode(MMTreeElement):
 		self.reinit(recurse = 0)
 		self.reset()
 
-		self._animationData = []
+		self._animationData = AnimationData.AnimationData(self)
 
 	def reinit(self, recurse = 1):
 		self.looping_body_self = None
@@ -5036,14 +5037,14 @@ class MMNode(MMTreeElement):
 
 	def computeAnimationData(self):
 		# XXX to do: update animation data according to animation nodes
-		animationData = self._animationData
-		return animationData
+		self._animationData.readData()
+		return self._animationData
 
 	def getAnimationData(self):
 		return self._animationData
 	
 	def applyAnimationData(self, editmgr):
-		animationData = self._animationData
+		self._animationData.applyData(editmgr)
 		# XXX to do: destroy the current animation nodes (if exist) for this instance 
 		# XXX and create the new animation nodes according to animationData
 		
