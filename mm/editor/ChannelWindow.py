@@ -15,7 +15,6 @@ class ChannelWindow() = GLDialog():
 	def show(self):
 		if self.wid <> 0: return
 		GLDialog.show(self)
-		self.get_geometry() # Make sure self.last_geometry is set
 		# Use RGB mode
 		gl.RGBmode()
 		gl.gconfig()
@@ -34,6 +33,7 @@ class ChannelWindow() = GLDialog():
 		self.last_geometry = h, v, width, height
 	#
 	def save_geometry(self):
+		self.get_geometry() # Make sure last_geometry is up-to-date
 		if self.last_geometry:
 			h, v, width, height = self.last_geometry
 			# XXX transaction!

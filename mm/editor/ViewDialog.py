@@ -17,7 +17,9 @@ class ViewDialog():
 		self.last_geometry = h, v, width, height
 	#
 	def save_geometry(self):
-		if self.last_geometry = None: return
+		self.get_geometry()
+		if self.last_geometry = None:
+			return
 		name = self.geom_name
 		h, v, width, height = self.last_geometry
 		# XXX need transaction here!
