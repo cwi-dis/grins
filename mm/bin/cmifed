@@ -62,7 +62,7 @@ PYTHONPATH=$PYTHONPATH:$CMIF/lib
 PYTHONPATH=$PYTHONPATH:$CMIF/video
 if [ -d $CMIF/pylib ]
 then
-	for dir in `find $CMIF/pylib -type d -print`
+	for dir in `find $CMIF/pylib -type d ! -name CVS -print`
 	do
 		PYTHONPATH=$PYTHONPATH:$dir
 	done
