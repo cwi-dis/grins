@@ -170,7 +170,7 @@ def getduration(node):
 	try:
 		alist = node.GetRawAttr('anchorlist')
 	except NoSuchAttrError:
-		return d
+		alist = None
 	if alist: # Not None and not []
 		for a in alist:
 			if a[A_TYPE] in (ATYPE_PAUSE, ATYPE_ARGS):
