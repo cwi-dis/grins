@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Gz /MD /W3 /Gy /I "..\..\classes\base" /I "..\..\include" /I "..\..\..\wmsdk\wmfsdk\include" /D DBG=0 /D WINVER=0x400 /D _X86_=1 /D "_DLL" /D "_MT" /D "_WIN32" /D "WIN32" /D "STRICT" /D "INC_OLE2" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /FR /Oxs /GF /D_WIN32_WINNT=-0x0400 /c
+# ADD CPP /nologo /Gz /MD /W3 /Gy /I "..\common" /I "..\..\classes\base" /I "..\..\include" /I "..\..\..\wmsdk\wmfsdk\include" /D DBG=0 /D WINVER=0x400 /D _X86_=1 /D "_DLL" /D "_MT" /D "_WIN32" /D "WIN32" /D "STRICT" /D "INC_OLE2" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /FR /Oxs /GF /D_WIN32_WINNT=-0x0400 /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -71,7 +71,7 @@ LINK32=link.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Gz /MDd /W3 /Z7 /Gy /I "..\..\classes\base" /I "..\..\include" /I "..\..\..\wmsdk\wmfsdk\include" /D "INC_OLE2" /D "STRICT" /D _WIN32_WINNT=0x0400 /D "WIN32" /D "_WIN32" /D "_MT" /D "_DLL" /D _X86_=1 /D WINVER=0x0400 /D DBG=1 /D "DEBUG" /D "_DEBUG" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /Oid /c
+# ADD CPP /nologo /Gz /MDd /W3 /Z7 /Gy /I "..\common" /I "..\..\classes\base" /I "..\..\include" /I "..\..\..\wmsdk\wmfsdk\include" /D "INC_OLE2" /D "STRICT" /D _WIN32_WINNT=0x0400 /D "WIN32" /D "_WIN32" /D "_MT" /D "_DLL" /D _X86_=1 /D WINVER=0x0400 /D DBG=1 /D "DEBUG" /D "_DEBUG" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /Oid /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -89,10 +89,13 @@ LINK32=link.exe
 
 # Name "vid2wm - Win32 Release"
 # Name "vid2wm - Win32 Debug"
+# Begin Group "common files"
+
+# PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\vid2wm.cpp
-DEP_CPP_VID2W=\
+SOURCE=..\common\wmwriter.cpp
+DEP_CPP_WMWRI=\
 	"..\..\..\wmsdk\wmfsdk\include\asferr.h"\
 	"..\..\..\wmsdk\wmfsdk\include\nserror.h"\
 	"..\..\..\wmsdk\wmfsdk\include\wmsbuffer.h"\
@@ -128,7 +131,29 @@ DEP_CPP_VID2W=\
 	"..\..\classes\base\wxdebug.h"\
 	"..\..\classes\base\wxlist.h"\
 	"..\..\classes\base\wxutil.h"\
+	"..\common\wmwriter.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\wmwriter.h
+# End Source File
+# End Group
+# Begin Group "source files"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\vid2wm.cpp
+DEP_CPP_VID2W=\
+	"..\..\..\wmsdk\wmfsdk\include\asferr.h"\
+	"..\..\..\wmsdk\wmfsdk\include\nserror.h"\
+	"..\..\..\wmsdk\wmfsdk\include\wmsbuffer.h"\
+	"..\..\..\wmsdk\wmfsdk\include\wmsdk.h"\
+	"..\..\..\wmsdk\wmfsdk\include\wmsdkidl.h"\
 	".\vid2wm.h"\
+	
+NODEP_CPP_VID2W=\
 	".\wmwriter.h"\
 	
 # End Source File
@@ -144,21 +169,6 @@ SOURCE=.\vid2wm.h
 
 SOURCE=.\vid2wm.rc
 # End Source File
-# Begin Source File
-
-SOURCE=.\wmwriter.cpp
-DEP_CPP_WMWRI=\
-	"..\..\..\wmsdk\wmfsdk\include\asferr.h"\
-	"..\..\..\wmsdk\wmfsdk\include\nserror.h"\
-	"..\..\..\wmsdk\wmfsdk\include\wmsbuffer.h"\
-	"..\..\..\wmsdk\wmfsdk\include\wmsdk.h"\
-	"..\..\..\wmsdk\wmfsdk\include\wmsdkidl.h"\
-	".\wmwriter.h"\
-	
-# End Source File
-# Begin Source File
-
-SOURCE=.\wmwriter.h
-# End Source File
+# End Group
 # End Target
 # End Project
