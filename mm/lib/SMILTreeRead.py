@@ -2111,24 +2111,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ctx.channeldict[name] = ch
 			ctx.channelnames.append(name)
 			ctx.channels.append(ch)
-			# old 03-07-2000
-#			ch['type'] = chtype
-			# end old
-			# new 03-07-2000
-			chtype = attrdict.get('type')
-			ch['type'] = 'layout'
-			# end new
 
-			# old 03-07-2000
-#			if not self.__region2channel.has_key(region):
-#				self.__region2channel[region] = []
-#			self.__region2channel[region].append(ch)
-
-			# self.__fillchannel(ch, attrdict, chtype)
-			# end old
-			# new 03-07-2000
-			self.__fillchannel(ch, attrdict, 'layout')
-			# end new
+			chtype = 'layout'
+			# the layout channel may has a sub type. This sub type is useful to restreint its sub-channel types
+			# by default a layout channel may contain different types of sub-channels.
+			chsubtype = attrdict.get('type')
+			
+			ch['type'] = chtype
+			ch['subtype'] = chsubtype
+			self.__fillchannel(ch, attrdict, chtype)
 
 	def FixChannel(self, node):
 		if node.GetType() not in leaftypes:
