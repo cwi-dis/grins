@@ -320,7 +320,7 @@ class NodeInfo(NodeInfoDialog):
 	def browserfile_callback(self, pathname):
 		import urllib, os
 		if os.path.isabs(pathname):
-			cwd = self.wrapper.toplevel.dirname
+			cwd = self.toplevel.dirname
 			if not cwd:
 				cwd = os.getcwd()
 			if os.path.isdir(pathname):
