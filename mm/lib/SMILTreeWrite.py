@@ -839,6 +839,7 @@ smil_attrs=[
 	("readIndex", lambda writer, node:getcmifattr(writer, node, "readIndex", 0), "readIndex"),
 	("begin", lambda writer, node: getsyncarc(writer, node, 0), None),
 	("dur", getduration, "duration"),
+	("project_default_duration", lambda writer, node: getduration(writer, node, 'project_default_duration'), "project_default_duration"),
 	("min", getmin, "min"),
 	("max", getmax, "max"),
 	("end", lambda writer, node: getsyncarc(writer, node, 1), None),

@@ -1310,6 +1310,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict[attr] = p
 				except string.atof_error:
 					self.syntax_error('bad %s attribute' % attr)
+			elif attr == 'project_default_duration':
+				if val == 'indefinite':
+					attrdict['project_default_duration'] = -1
+				else:
+					try:
+						attrdict['project_default_duration'] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
+					except parseutil.error, msg:
+						self.syntax_error(msg)
 			elif attr == 'collapsed':
 				if val == 'true':
 					node.collapsed = 1
