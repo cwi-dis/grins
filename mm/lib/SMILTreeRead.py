@@ -2022,6 +2022,7 @@ def ReadFileContext(url, context, printfunc = None):
 	context.setbaseurl(baseurl)
 	context.baseurlset = 0
 	data = u.read()
+	u.close()
 	p.feed(data)
 	p.close()
 	root = p.GetRoot()
