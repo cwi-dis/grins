@@ -64,7 +64,7 @@ def needtimes(node):
 
 def do_times(node):
 	import time
-	t0 = time.millitimer()
+	t0 = time.time()
 	print 'do_times...'
 	
 	# These globals are used only while in do_times();
@@ -92,15 +92,15 @@ def do_times(node):
 			  '(ignoring sync arcs and trying again)')
 		prep1(node)
 		_do_times_work(node)
-	t1 = time.millitimer()
+	t1 = time.time()
 	propdown(node, node.t1)
-	t2 = time.millitimer()
+	t2 = time.time()
 
 	node.initial_arms = initial_arms
 
-	print 'done in', (t2-t0) * 0.001, 'sec.'
-	print '(of which', getd_times*0.001, 'sec. in getduration()',
-	print 'and', (t2-t1)*0.001, 'sec. in propdown)'
+	print 'done in', round(t2-t0, 3), 'sec.'
+	print '(of which', round(getd_times, 3), 'sec. in getduration()',
+	print 'and', round(t2-t1, 3), 'sec. in propdown)'
 
 def _do_times_work(node):
 	pt = pseudotime().init(0.0)
@@ -124,13 +124,13 @@ def getinitial(node):
 def prepare(node):
 	import time
 	print '\tprepare...'
-	t0 = time.millitimer()
+	t0 = time.time()
 	prep1(node)
-	t1 = time.millitimer()
+	t1 = time.time()
 	prep2(node, node)
-	t2 = time.millitimer()
-	print '\tdone in', (t1-t0) * 0.001, '+', (t2-t1) * 0.001,
-	print '=', (t2-t0) * 0.001, 'sec'
+	t2 = time.time()
+	print '\tdone in', round(t1-t0, 3), '+', round(t2-t1, 3),
+	print '=', round(t2-t0, 3), 'sec'
 	if node.counter[HD] <> 0:
 		raise CheckError, 'head of node has dependencies!?!'
 
@@ -270,11 +270,11 @@ def decrement(q, delay, node, side):
 		node.t0t1_inherited = 1
 	elif side == HD:
 		import time
-		t0 = time.millitimer()
+		t0 = time.time()
 		dt = getduration(node)
 		node.t0t1_inherited = (dt == 0 and len(node.deps[TL]) <= 1)
 			# Don't mess if it has timing deps
-		t1 = time.millitimer()
+		t1 = time.time()
 		global getd_times
 		getd_times = getd_times + (t1-t0)
 		id = q.enter(dt, 0, decrement, (q, 0, node, TL))
