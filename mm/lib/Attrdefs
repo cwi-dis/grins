@@ -62,7 +62,7 @@
 	'Start delay of node' normal (all))
 
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
-	'Color used for background of window' channel (g2))
+	'Color used for background of window' channel (all))
 #(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 #	'Color used for background of window. Overriden by "transparent".' channel light)
 
