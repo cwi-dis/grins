@@ -55,7 +55,7 @@ MENUBAR=(
 		(FLAG_ALL, SPECIAL, 'Open documents', 'documents'),
 		(FLAG_ALL, SPECIAL, 'Open windows', 'windows'),
 		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'View source', None, SOURCE),
+		(FLAG_ALL, ENTRY, 'View source', None, SOURCEVIEW),
 		(FLAG_ALL, ENTRY, 'View help page', '?', HELP))))
 
 

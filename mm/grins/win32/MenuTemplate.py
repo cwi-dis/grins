@@ -56,7 +56,7 @@ MENUBAR=(
 
 
 	('&View', (
-		(FLAG_ALL, TOGGLE, '&Source', None, SOURCE),)),
+		(FLAG_ALL, TOGGLE, '&Source', None, SOURCEVIEW),)),
 
 	('&Play', (
 		(FLAG_ALL, ENTRY, '&Play\tCtrl+P', 'P', PLAY),

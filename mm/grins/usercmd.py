@@ -53,7 +53,7 @@ class TRACE(_CommandBase):
 	help = 'DEBUG: toggle trace flag'
 class DEBUG(_CommandBase):
 	help = 'DEBUG: enter Python debugger'
-class SOURCE(_CommandBase):
+class SOURCEVIEW(_CommandBase):
 	help = 'Show source'
 class EXIT(_CommandBase):
 	help = 'Exit GRiNS'
