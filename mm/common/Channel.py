@@ -1080,14 +1080,19 @@ class Channel:
 		return MMAttrdefs.getattr(node, 'loop')
 
 	def gettransition(self, node, which, animated=0):
-		trclass = MMAttrdefs.getattr(node, which, animated)
-		if not trclass:
+		import Transitions
+		trclasses = MMAttrdefs.getattr(node, which, animated)
+		if not trclasses:
 			return None
 		transitions = node.context.transitions
-		if not transitions.has_key(trclass):
-			self.errormsg(node, 'Unknown transition name: %s\n'%trclass)
-			return None
-		return transitions[trclass]
+		for trclass in trclasses:
+			if transitions.has_key(trclass):
+				if Transitions.IsImplemented(transitions[trclass]):
+					return transitions[trclass]
+##			else:
+##				# Shouldn't happen, I think.
+##				self.errormsg(node, 'Unknown transition name: %s\n'%trclass)
+		return None
 
 	def parsecount(self, val, node, attr):
 		global clock_val
