@@ -645,6 +645,19 @@ class _CmifPlayerView(_CmifView):
 		if self._islocked: return
 		rcBack = self.GetClientRect()
 		rcFront = self.ClientToScreen(rcBack)
+		if self._frontBuffer.IsLost():
+			if not self._frontBuffer.Restore():
+				# we can't do anything for this
+				# system is busy with video memory
+				return 
+		if self._backBuffer.IsLost():
+			if not self._backBuffer.Restore():
+				# and for this either
+				# system should be out of memory
+				return 
+			else:
+				# OK, backBuffer resored, paint it
+				self.paint()
 		self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
 	
 	# copy from win32window
