@@ -75,6 +75,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Drawing optimisations
 		self.drawing = 0	# A lock to prevent recursion in the draw() method of self.
 		self.redrawing = 0	# A lock to prevent recursion in redraw()
+		self.need_refresh = 1	# Whether to refresh the whole scene graph, for example when a node is added / deleted / moved.
 		self.need_resize = 1	# Whether the tree needs to be resized. Implies need_redraw
 		self.need_redraw = 1	# Whether the scene graph needs redrawing.
 
@@ -1057,14 +1058,19 @@ class HierarchyView(HierarchyViewDialog):
 		self.selected_widget = None
 		self.focusnode = None
 
+		print "TODO: Optimisation in the HierarchyView here: refreshing scene graph on each commit."
 		self.refresh_scene_graph()
+		
 		focustype, focusobject = self.editmgr.getglobalfocus()
 		if focustype is None and focusobject is None:
 			self.editmgr.setglobalfocus('MMNode', self.root)
 		else:
 			self.globalfocuschanged(focustype, focusobject, redraw = 0)
-		if self.need_redraw:
-			self.draw()
+		#if type == 'STRUCTURE_CHANGED':	# for example, something was deleted or added
+		#	self.need_resize = 1
+		#elif type == 'ATTRS_CHANGED': # for example, a new event was added.
+		#	self.need_redraw = 1 
+		self.draw()
 
 	def kill(self):
 		self.destroy()
@@ -1704,29 +1710,125 @@ class HierarchyView(HierarchyViewDialog):
 		if not em.transaction():
 			return -1
 		
+		# Hyperlinks..
+		#--------------
+		# 1. Find all hyperlinks pointing to child.
+		hlinks = parent.context.hyperlinks # of type "HLinks"
+		childanchors = MMAttrdefs.getattr(child, 'anchorlist')
+		parentanchors = MMAttrdefs.getattr(parent, 'anchorlist')
+		print "DEBUG: childanchors are: ", childanchors
+		print "DEBUG: parentanchors are: ", parentanchors 
+		print "DEBUG: hlinks are: ", hlinks
+		addtoparentlinks = []
+##		# 2. Change them to parent.
+		for i in childanchors:
+			# If the anchor is a source, the parent should have it.
+			if len(hlinks.findsrclinks(i)) > 0:
+				addtoparentlinks.append(i)
+			else:
+				for j in hlinks.finddstlinks(i):
+					# We have an anchor pointing to the child node.
+					# it needs to point to the parent.
+					# j is an anchor.
+					print "DEBUG: looking at: ", j
+			# else, the anchor is a destination. The other end of the anchor needs to be redirected.
+			
+
+
+		# Events..
+		#-------------
+		# 1. Search through the whole tree looking for events. Don't forget that I'm also in the tree.
+		# 2. Any events pointing to the child should now point to it's parent.
+		# This doesn't affect the child or the parent.
+
+		print "TODO: check for events between the child and the parent."
+		
+		nodes = self.find_events_to_node(child, self.root) # This is a list of nodes containing events to this node.
+		for n in nodes:		# Find all events and change their destination.
+			assert isinstance(n, MMNode.MMNode)
+			newbeginlist = []
+			print "DEBUG: oldbeginlist for ", n, " is: ", MMAttrdefs.getattr(n, 'beginlist')
+			for s in MMAttrdefs.getattr(n, 'beginlist'):
+				assert isinstance(s, MMNode.MMSyncArc)
+				if s.dstnode is child:
+					# Simple: s.dstnode=parent, however:
+					newsyncarc = s.copy({s.refnode().GetUID():parent.GetUID()})					
+					#newsyncarc = s.copy()
+					#newsyncarc.srcnode = parent
+					#newsyncarc=MMNode.MMSyncArc(parent, s.action, srcnode=s.srcnode, srcanchor=s.srcanchor,
+					#				    channel=s.channel, event=s.event, marker=s.marker,
+					#				    wallclock=s.wallclock, accesskey=s.accesskey, delay=s.delay)
+					newbeginlist.append(newsyncarc)
+				else:
+					newbeginlist.append(s)
+			newendlist = []
+			for s in MMAttrdefs.getattr(n, 'endlist'):
+				assert isinstance(s, MMNode.MMSyncArc)
+				if s.dstnode is child:
+					newsyncarc = s.copy({s.refnode().GetUID():parent.GetUID()})
+					#newsyncarc=MMNode.MMSyncArc(parent, s.action, srcnode=s.srcnode, srcanchor=s.srcanchor,
+					#				    channel=s.channel, event=s.event, marker=s.marker,
+					#				    wallclock=s.wallclock, accesskey=s.accesskey, delay=s.delay)
+					newendlist.append(newsyncarc)
+				else:
+					newendlist.append(s)
+			print "DEBUG: new begin list is: ", newbeginlist
+			em.setnodeattr(n, 'beginlist', newbeginlist)
+			em.setnodeattr(n, 'endlist', newendlist)
+
+		# Jack say's don't use a stack; use recursion.
+##		currentnodes = [parent.context.root]
+##		while len(currentnodes) > 0:
+##			tail = currentnodes[1:]
+##			print "DEBUG: tail is: ", tail
+##			assert isinstance(tail, MMNode.MMNode)
+##			currentnodes = currentnodes[:len(currentnodes)-1]
+
+##			beginevents = MMAttrdefs.getattr(tail, 'beginlist')
+##			for index in range(0, len(beginevents)):
+##				if beginevents[index].dstnode == child:
+##					b = beginevents[index]
+##					newsyncarc=MMNode.MMSyncArc(parent, b.action, srcnode=b.srcnode, srcanchor=b.srcanchor,
+##									    channel=b.channel, event=b.event, marker=b.marker,
+##									    wallclock=b.wallclock, accesskey=b.accesskey, delay=b.delay)
+##					em.delsyncarc(tail, 'beginlist', b)
+##					em.addsyncarc(tail, 'beginlist', newsyncarc)
+##			endevents = MMAttrdefs.getattr(tail, 'endlist')
+##			for index in range(0, len(endevents)):
+##				assert isinstance(endevents[index], MMNode.MMSyncArc)
+##				assert isinstance(endevents[index].dstnode, MMNode.MMNode)
+##				if endevents[index].dstnode == child:
+##					b = endevents[index]
+##					newsyncarc=MMNode.MMSyncArc(parent, b.action, srcnode=b.srcnode, srcanchor=b.srcanchor,
+##									    channel=b.channel, event=b.event, marker=b.marker,
+##									    wallclock=b.wallclock, accesskey=b.accesskey, delay=b.delay)
+##					em.delsyncarc(tail, 'endlist', b)
+##					em.addsyncarc(tail, 'endlist', newsyncarc)
+##			if tail.children:
+##				currentnodes = currentnodes + children
+
 		childattrs = child.attrdict
 		myattrs = parent.attrdict
 		conflicts = []		# A list of conflicting keys.
 
 		# Or maybe it would be better to simply replace self with the child.
 		for ck, cv in childattrs.items():
-			if myattrs.has_key(ck) and ck not in ['name']:
+			if myattrs.has_key(ck) and ck not in ['name', 'beginlist', 'endlist']:
 				conflicts.append(ck)
 			else:
 				em.setnodeattr(parent, ck, cv)
 		# TODO: work through all the attributes.
 		print "DEBUG: conflicts are: ", conflicts
 
-		type = child.type
-
 		# Lastly, delete the child node.
 		em.delnode(child)
 
 		em.setnodetype(parent, type) # This cannot be done until the child has been deleted.
-		em.commit()
+		print "DEBUG: committing now (after merge)."
 
-		self.need_recalc = 1; self.need_redraw = 1
-		self.draw()
+		self.need_resize = 1
+		em.commit()		# This does a redraw.
+
 
 
 ##	def merge_child(self):
@@ -1747,10 +1849,34 @@ class HierarchyView(HierarchyViewDialog):
 ##		self.need_recalc = 1
 ##		self.draw()
 
+	def find_events_to_node(self, node, current):
+		# /Recursively/ find all event pointing to node, starting from current.
+		# Jack told me that iteration is a bad thing.
+		assert isinstance(node, MMNode.MMNode)
+		assert isinstance(current, MMNode.MMNode)
+		return_me = []
+		appended = 0
+		beginlist = MMAttrdefs.getattr(current, 'beginlist')
+		for s in beginlist:
+			assert isinstance(s, MMNode.MMSyncArc)
+			if s.dstnode is node and not appended:
+				appended = 1
+				return_me.append(node)
+		endlist = MMAttrdefs.getattr(current, 'endlist')
+		for s in endlist:
+			assert isinstance(s, MMNode.MMSyncArc)
+			if s.dstnode is node and not appended:
+				appended = 1
+				return_me.append(node)
+				
+		for c in current.children:
+			return_me = return_me + self.find_events_to_node(node, c)
+		return return_me
+		
+
 	def popup_error(self, message):
 		# I should have done this a long time ago.
 		windowinterface.showmessage(message, mtype="error", parent=self.window)
 
 def expandnode(node):
-	# Bad hack. I shouldn't refer to private attrs of a node.
 	node.collapsed = 0

@@ -1597,6 +1597,32 @@ class MMSyncArc:
 			ts = ''
 		return '<%s instance %x, from %s to %s%s%s>' % (self.__class__.__name__, id(self), src, dst, ts, path)
 
+	def copy(self, uidremap):
+		# return a copy of self.
+		if self.isstart:
+			action = 'begin'
+		elif self.ismin:
+			action = 'min'
+		elif self.isdur:
+			action = 'dur'
+		else:
+			action = 'end'
+
+		uid = self.dstnode.uid
+		if uidremap.has_key(uid):
+			dstnode = self.context.mapuid(uidremap[uid])
+		srcnode = self.srcnode
+		if isinstance(srcnode, MMNode):
+			# if it's a string or None, we just copy
+			uid = srcnode.uid
+			if uidremap.has_key(uid):
+				srcnode = self.context.mapuid(uidremap[uid])
+
+		return MMSyncSelf(dstnode, action, srcnode,
+				self.srcanchor, self.channel, self.event,
+				self.marker, self.wallclock,
+				self.accesskey, self.delay)
+
 	def refnode(self):
 		node = self.dstnode
 		pnode = node.GetSchedParent()
