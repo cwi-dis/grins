@@ -331,7 +331,13 @@ class HierarchyView(HierarchyViewDialog):
 			children = node.GetChildren()
 			if children:
 				type = children[0].GetType()
+		if where <> 0:
+			layout = MMAttrdefs.getattr(parent, 'layout')
+		else:
+			layout = MMAttrdefs.getattr(node, 'layout')
 		node = self.root.context.newnode(type)
+		if not layout and self.toplevel.layoutview.curlayout is not None:
+			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
 		if self.insertnode(node, where):
 			import NodeInfo
 			NodeInfo.shownodeinfo(self.toplevel, node, new = 1)

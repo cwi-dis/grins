@@ -1,0 +1,261 @@
+# $Id$
+#
+# Attribute definitions
+# ---------------------
+#
+# Each definition is a 7-tuple enclosed in parenthes:
+# (attrname, typedef, defaultvalue, labeltext, displayername, helptext,
+#  inheritance)
+#
+# Attributes with names starting with _ are for caching only, these
+# are only written to the .cmc file, not to the .cmif file.
+#
+# The typedef is used to determine how to parse the default value,
+# with the provision that tuples, lists and dictionaries must
+# be surrounded by an extra pair of parentheses.
+#
+# The helptext should be one line explaining what the attribute is for.
+#
+# Inheritance can be one of four names: (raw, normal, inherited, channel).
+# Values 'raw', 'normal' and 'inherited' mean that node.GetRawAttr(),
+# node.GetAttr() or node.GetInherAttr(), respectively, should be used to
+# get this type of attribute.  The value 'channel' is the same as
+# 'inherited', but means that the default can also be gotten from
+# the channel attributes.  (For the time being, inheritance is optional,
+# defaulting to 'normal'.)
+#
+# A definition need not be wholly contained in a single input line;
+# blank lines and comments may be inserted freely.
+
+(align (string) 'left' 'Alignment' default
+	'Alignment of short datasets' channel)
+
+(anchorlist (list (enclosed (tuple (any) (int) (enclosed (list (any))))))
+	() 'Anchors' hidden 'List of anchors on this node' raw)
+
+(arm_duration (float) -1.0 'Arm duration' hidden
+	'Time needed to arm this event before displaying' raw)
+
+(axis (tuple (float) (float)) (-1.0 -1.0) 'Axis' default
+	'Draw axis if >0, specifies tick-interval' channel)
+
+(bag_index (name) undefined 'Choice index' childnodename
+	'Name of child auto-started when choice node plays' normal)
+
+(base_window (name) 'undefined' 'Channel base window' basechannelname
+	'Name of window in which channelwin is created' raw)
+
+(base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
+	'Border offset' default 'Position/size in percent of base window' channel)
+
+(transparent (int) 0 'Transparent' transparency
+	'Determines transparency of window' raw)
+
+(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
+	'Color used for text/images in window' channel)
+
+(bgimg (string) '' 'Background image' file
+	'Background image for window' channel)
+
+(textalign (string) 'center' 'Alignment' default
+	'Alignment of text in window' channel)
+
+(border (int) 1 'Channel border' default
+	'Determines whether channel window has a border (1=yes)' raw)
+
+(center (bool) 1 'Center image' default
+	'Determines whether image is centered' channel)
+
+(channel (name) undefined 'Channel' channelname
+	'Name of channel used to render this node/subtree' inherited)
+
+(channellist (list (enclosed (tuple (name) (attrdict)))) ()
+	'Channel List' hidden
+	'Channels used in this document (root node only)')
+
+(clipbegin (string) '' 'Clip begin' default
+	'Start of range of frames to be played' channel)
+
+(clipend (string) '' 'Clip end' default
+	'End of range of frames to be played' channel)
+
+(comment (string) '' 'Comment' default
+	 'An arbitrary comment string, not interpreted' raw)
+
+(crop (tuple (float) (float) (float) (float)) (0 0 0 0) 'Image crop' default
+    'Crop image.  Values are fractions to crop from top, bottom, left, right.'
+	channel)
+
+(cview_winpos  (tuple (float) (float)) (-1 -1) 'Time chart winpos' hidden
+	 'Window position for Time chart view' raw)
+
+(cview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
+	 'Window size for Time chart view' raw)
+
+(drawbox (bool) 1 'Draw anchor boxes' default
+	'Draw anchors as boxes' channel)
+
+(duration (float) 0.0 'Duration' default
+	'Duration of a node/subtree (in seconds)' normal)
+
+(fgcolor (tuple (int) (int) (int)) (0 0 0) 'Foreground color' color
+	'Color used for background of window' channel)
+
+(file (string) '/dev/null' 'File' file
+	'File name for external node' channel)
+
+(font (string) 'Times-Roman' 'Font' font
+	'Font used to display text' channel)
+
+(gtype (string) 'line' 'Graphtype' default
+	'Type of graph: bar, line, hline' channel)
+
+(hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' color
+	'Color used for highlighted anchors in window' channel)
+
+(bucolor (tuple (int) (int) (int)) (255 0 0) 'Button color' color
+	'Color used for anchors in window' channel)
+
+(hview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
+	 'Window position for hierarchy view' raw)
+
+(hview_winsize (tuple (float) (float)) (115.234375 115.234375) 'Hierarchy winsize' hidden
+	 'Window size for hierarchy view' raw)
+
+(hyperlinks (list (enclosed (tuple (enclosed (tuple (string) (any)))
+                                   (enclosed (tuple (string) (any)))
+				   (int) (int)))) ()
+	'Hyperlink list' hidden
+	'Hyperlinks within this document (root node only)' raw)
+
+(layout (name) '' 'Layout' layoutname
+	'Layout for this node and its descendants' inherited)
+
+(layouts (list (enclosed (tuple (name) (list (name))))) () 'Layouts list'
+	hidden 'List of layouts within this document (root node only)' raw)
+
+(links_winpos  (tuple (float) (float)) (-1 -1) 'Link edit window position' hidden
+	 'Position of link edit window' raw)
+
+(links_winsize  (tuple (float) (float)) (146.923828125 132.51953125) 'Link edit window size' hidden
+	 'Size of link edit window' raw)
+
+(loop (int) 1 'Loop' default
+	'Number of times the node should loop (0 is infinite)' raw)
+
+(macprog (string) '' 'Mac program signature' default
+	'4-byte application signature (mac only)' channel)
+
+(mcgroup (string) '' 'Multicast group' default
+	'IP Multicast group address to listen to' raw)
+
+(mcttl (int) 3 'Multicast TTL' default
+	'TTL for outgoing multicast messages' raw)
+
+(mimetype (string) '' 'MIME type' default
+	'MIME type of media object' raw)
+
+(name (name) '' 'Node name' default
+	'Name given to a node' raw)
+
+(noanchors (bool) 0 'Ignore anchors' default
+	'Ignore anchors and other HTML tags' channel)
+
+(nonlocal (bool) 0 'Remote only' default
+	'Ignore incoming messages from local machine' raw)
+
+(player_winpos (tuple (float) (float)) (-1 -1) 'Player winpos' hidden
+	 'Window position for player control panel' raw)
+
+(player_winsize (tuple (float) (float)) (83.544921875 46.09375) 'Player winsize' hidden
+	 'Window size for player control panel' raw)
+
+(port (int) 7000 'UDP port' default
+	'UDP port for external hyperjumps' raw)
+
+(pointsize (float) 0 'Point size' default
+	'Point size of text displayed in window' channel)
+
+(popup (bool) 1 'Popup on play' default
+	'Determines whether channel pops up upon playing a node' raw)
+
+(queuesize (float) 0 'Queue size' default
+	'Audio playback queue size' channel)
+
+(scale (float) 0.0 'Scale factor' default
+	'Image magnification (0.0 means fit in window)' channel)
+
+(scalefilter (name) '' 'Scaling filter' default
+	'Name of filter used after image scaling' channel)
+
+(style (list (name)) () 'Style(s)' default
+	'List of style names that apply to this node/subtree' raw)
+
+(style_winpos (tuple (float) (float)) (-1 -1) 'Style editor winpos' hidden
+	 'Window position for style editor' raw)
+
+(style_winsize (tuple (float) (float)) (86.42578125 92.1875) 'Style editor winsize' hidden
+	 'Window size for style editor' raw)
+
+(styledict (namedict (attrdict)) () 'Style Dictionary' hidden
+	'Styles used in this document (root node only)')
+
+# This is the real sync arc data structure, on the destination!!!
+(synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
+	() 'SyncTo list' hidden
+	'List of sync arcs ending at this node' raw)
+
+(terminator (name) 'LAST' 'Terminator child' termnodename
+	'Name of child that terminates parallel node' normal)
+
+(toplevel_winpos (tuple (float) (float)) (-1 -1) 'Top level winpos' hidden
+	 'Window position for top level menu' raw)
+
+(toplevel_winsize (tuple (float) (float)) (31.689453125 72.021484375) 'Top level winsize' hidden
+	 'Window size for top level menu' raw)
+
+(type (name) null 'Channel type' channeltype
+	'Channel type (channel dictionary only)' raw)
+
+(unixprog (string) '' 'Unix program name' default
+	'Application name (unix only)' channel)
+
+(units (int) 0 'Units' units
+	'Units for top-level windows' raw)
+
+(video (bool) 0 'Video output' default
+	'Do image smoothing for video output' channel)
+
+(visible (bool) 1 'Channel visibility' default
+	'Determines visibility of channel' raw)
+
+(wanturl (bool) 0 'Pass URL' default
+	'Pass URL to program (otherwise pass filename)' channel)
+	
+(winpos (tuple (float) (float)) (-1 -1) 'Window position' hidden
+	'Initial window position (x, y) (x axis pointing down!)' raw)
+
+(winprog (string) '' 'Windows program name' default
+	'Application name (windows only)' channel)
+
+(winsize (tuple (float) (float)) (0 0) 'Window size' hidden
+	'Initial window size (width, height)' raw)
+
+(z (int) 0 'Z order' default
+	'Z order' normal)
+
+# SMIL system test attributes
+(system_bitrate (int) 0 'System bitrate' default
+	'System bitrate' raw)
+(system_captions (bool) 0 'System captions' default
+	'System captions' raw)
+(system_language (string) '' 'System language' default
+	'System language' raw)
+(system_overdub_or_caption (string) '' 'System overdub or caption' default
+	'System overdub or caption' raw)
+(system_required (string) '' 'System required' default
+	'System required' raw)
+(system_screen_size (tuple (int) (int)) (0 0) 'System screen size' default
+	'System screen size' raw)
+(system_screen_depth (int) 0 'System screen depth' default
+	'System screen depth' raw)

@@ -95,7 +95,7 @@ class ChannelView(ChannelViewDialog):
 		self.waiting = 0
 		self.last_geometry = None
 		self.toplevel = toplevel
-		self.root = self.toplevel.root
+		self.root = toplevel.root
 		self.viewroot = None
 		self.context = self.root.context
 		self.editmgr = self.context.editmgr
@@ -105,6 +105,10 @@ class ChannelView(ChannelViewDialog):
 		self.showarcs = 1
 		self.placing_channel = 0
 		self.thumbnails = 0
+		self.layouts = [('All channels', ())]
+		for name in self.context.layouts.keys():
+			self.layouts.append((name, (name,)))
+		self.curlayout = None
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		ChannelViewDialog.__init__(self)
 		self.delayed_drawarcs_id = None
@@ -175,6 +179,12 @@ class ChannelView(ChannelViewDialog):
 		pass
 
 	def commit(self):
+		self.layouts = [('All channels', ())]
+		for name in self.context.layouts.keys():
+			self.layouts.append((name, (name,)))
+		if self.curlayout is not None and \
+		   not self.context.layouts.has_key(self.curlayout):
+			self.curlayout = None
 		if self.future_focus is not None:
 			focus = self.future_focus
 			self.future_focus = None
@@ -230,6 +240,12 @@ class ChannelView(ChannelViewDialog):
 
 	def canvascall(self, code):
 		self.window.setcanvassize(code)
+
+	def layoutcall(self, name = None):
+		curlayout = self.curlayout
+		self.curlayout = name
+		if curlayout != name:
+			self.resize()
 
 	def redraw(self):
 		if self.new_displist:
@@ -338,10 +354,18 @@ class ChannelView(ChannelViewDialog):
 	# Return list of currently visible channels
 
 	def visiblechannels(self):
+		layout = {}
+		for ch in self.context.layouts.get(self.curlayout, self.context.channels):
+			layout[ch.name] = 0
 		if self.showall:
-			return self.context.channels
+			channels = self.context.channels
 		else:
-			return self.usedchannels
+			channels = self.usedchannels
+		ret = []
+		for ch in channels:
+			if layout.has_key(ch.name):
+				ret.append(ch)
+		return ret
 
 	# Recalculate the set of objects we should be drawing
 
@@ -645,7 +669,7 @@ class ChannelView(ChannelViewDialog):
 
 	# Create a new channel
 	# XXXX Index is obsolete!
-	def newchannel(self, index):
+	def newchannel(self, index, chtype = None):
 		if self.visiblechannels() <> self.context.channels:
 			windowinterface.showmessage(
 				  "You can't create a new channel\n" +
@@ -666,6 +690,14 @@ class ChannelView(ChannelViewDialog):
 			return		# Not possible at this time
 		editmgr.rollback()
 		from ChannelMap import commonchanneltypes, otherchanneltypes
+		if chtype is not None:
+			if chtype not in commonchanneltypes + otherchanneltypes:
+				windowinterface.showmessage(
+					'Unknown channel type in newchannel',
+					mtype = 'error')
+				return
+			self.select_cb(chtype)
+			return
 		prompt = 'Select channel type, then place channel:'
 		list = []
 		for name in commonchanneltypes + otherchanneltypes:
@@ -677,8 +709,9 @@ class ChannelView(ChannelViewDialog):
 	def select_cb(self, name):
 		self.placing_channel = PLACING_NEW
 		self.placing_type = name
-		windowinterface.setcursor('stop')
-		self.window.setcursor('channel')
+		self.finish_channel(1.0, 1.0)
+## 		windowinterface.setcursor('stop')
+## 		self.window.setcursor('channel')
 
 	def copychannel(self, name):
 		if self.visiblechannels() <> self.context.channels:
@@ -766,6 +799,9 @@ class ChannelView(ChannelViewDialog):
 				# multiple root windows
 				root_layout = ''
 		    editmgr.addchannel(name, index, self.placing_type)
+		    if self.curlayout and self.context.layouts.has_key(self.curlayout):
+			layoutchannels = self.context.layouts[self.curlayout]
+			layoutchannels.append(self.context.channeldict[name])
 		elif placement_type == PLACING_COPY:
 		    editmgr.copychannel(name, index, self.placing_orig)
 		else:
@@ -827,7 +863,7 @@ class GO(GOCommand):
 
 		self.menutitle = 'Base ops'
 		self.commandlist = [
-			CLOSE_WINDOW(callback = (self.mother.hide, ())),
+			CLOSE_WINDOW(callback = (mother.hide, ())),
 			CANVAS_HEIGHT(callback = (self.canvascall,
 					(windowinterface.DOUBLE_HEIGHT,))),
 			CANVAS_WIDTH(callback = (self.canvascall,
@@ -837,12 +873,13 @@ class GO(GOCommand):
 			NEW_CHANNEL(callback = (self.newchannelcall, ())),
 			NEXT_MINIDOC(callback = (self.nextminicall, ())),
 			PREV_MINIDOC(callback = (self.prevminicall, ())),
-			ANCESTORS(callback = self.mother.setviewrootcb),
-			SIBLINGS(callback = self.mother.setviewrootcb),
-			DESCENDANTS(callback = self.mother.setviewrootcb),
-			TOGGLE_UNUSED(callback = (self.mother.toggleshow, ())),
-			THUMBNAIL(callback = (self.mother.thumbnailcall, ())),
-			TOGGLE_ARCS(callback = (self.mother.togglearcs, ())),
+			ANCESTORS(callback = mother.setviewrootcb),
+			SIBLINGS(callback = mother.setviewrootcb),
+			DESCENDANTS(callback = mother.setviewrootcb),
+			TOGGLE_UNUSED(callback = (mother.toggleshow, ())),
+			THUMBNAIL(callback = (mother.thumbnailcall, ())),
+			TOGGLE_ARCS(callback = (mother.togglearcs, ())),
+			LAYOUTS(callback = mother.layoutcall),
 			]
 		import Help
 		if Help.hashelp():
@@ -924,8 +961,8 @@ class GO(GOCommand):
 	def canvascall(self, code):
 		self.mother.canvascall(code)
 
-	def newchannelcall(self):
-		self.mother.newchannel(self.newchannelindex())
+	def newchannelcall(self, chtype = None):
+		self.mother.newchannel(self.newchannelindex(), chtype)
 
 	def nextminicall(self):
 		mother = self.mother

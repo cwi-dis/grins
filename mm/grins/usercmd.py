@@ -1,5 +1,7 @@
+__version__ = "$Id$"
+
 #
-# Commands, editor version
+# Commands, player version
 #
 
 class _CommandBase:
@@ -65,8 +67,6 @@ class MAGIC_PLAY(_CommandBase):
 	help = 'Continue when paused, pause when playing, play when stopped'
 class CHANNELS(_DynamicCascade):
 	help = 'Toggle channels on/off'
-class CALCTIMING(_CommandBase):
-	help = 'Recalculate document timing'
 class CRASH(_CommandBase):
 	help = 'DEBUG: Force a crash'
 class SCHEDDUMP(_CommandBase):

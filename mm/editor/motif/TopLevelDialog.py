@@ -10,6 +10,7 @@ class TopLevelDialog:
 			('Player', PLAYERVIEW, 't'),
 			('Hierarchy view', HIERARCHYVIEW, 't'),
 			('Channel view', CHANNELVIEW, 't'),
+			('Layout view', LAYOUTVIEW, 't'),
 			('Hyperlinks', LINKVIEW, 't'),
 			('Source...', SOURCE),
 			('Save', SAVE),

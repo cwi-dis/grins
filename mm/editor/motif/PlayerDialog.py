@@ -34,8 +34,7 @@ class PlayerDialog:
 				]),
 			('Channels', CHANNELS),
 			('Options', [
-				('Calculate timing', CALCTIMING),
-				('Keep Channel View in sync', SYNCCV),
+				('Keep Channel View in sync', SYNCCV, 't'),
 				('Dump scheduler data', SCHEDDUMP),
 				]),
 			],
@@ -105,6 +104,7 @@ class PlayerDialog:
 			commandlist = self.stoplist)
 		if self.__channels:
 			self.setchannels(self.__channels)
+		w.set_toggle(SYNCCV, self.sync_cv)
 
 	def hide(self):
 		"""Hide the control panel."""
