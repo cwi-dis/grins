@@ -1275,8 +1275,8 @@ class _ScrollMixin:
 		w, h = self._rect[2:]
 		x, y = box[:2]
 		if len(box) > 2:
-			w, h = box[2:]
-			x1, y1 = x+w, y+h
+			wbox, hbox = box[2:]
+			x1, y1 = x+wbox, y+hbox
 			self._scrollto(self._barx, x1, w)
 			self._scrollto(self._bary, y1, h)
 		self._scrollto(self._barx, x, w)
