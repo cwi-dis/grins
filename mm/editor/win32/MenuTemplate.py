@@ -52,8 +52,8 @@ MENUBAR=(
 			(FLAG_SMIL_1_0, ENTRY, 'Publish for &SMIL 2.0 and upload...', None, UPLOAD_SMIL),
 			((features.EXPORT_QT,), ENTRY, 'Publish for &QuickTime...', None, EXPORT_QT),
 			((features.EXPORT_QT,), ENTRY, 'Pu&blish for QuickTime and upload...', None, UPLOAD_QT),
-			(FLAG_G2|FLAG_PRO, ENTRY, 'Publish for &Real...', None, EXPORT_G2),
-			(FLAG_G2|FLAG_PRO, ENTRY, 'Publish for Real and &upload...', None, UPLOAD_G2),
+			(FLAG_G2|FLAG_PRO, ENTRY, 'Publish for &RealONE...', None, EXPORT_G2),
+			(FLAG_G2|FLAG_PRO, ENTRY, 'Publish for RealONE and &upload...', None, UPLOAD_G2),
 			# TODO: These should not appear on all versions of GRiNS!
 			(0, ENTRY, 'Publish for &Windows Media...', None, EXPORT_WMP), # mjvdg 11-oct-2000
 			(0, ENTRY, 'Publish for Windows &Media and upload...', None, UPLOAD_WMP),
@@ -629,8 +629,8 @@ MAIN_FRAME_POPUP = (
 		(FLAG_ALL, SEP,),
 		((features.EXPORT_QT,), ENTRY, 'Publish for &QuickTime...', None, EXPORT_QT),
 		((features.EXPORT_QT,), ENTRY, 'Pu&blish for QuickTime and upload...', None, UPLOAD_QT),
-		((features.EXPORT_REAL,), ENTRY, 'Publish for &Real...', None, EXPORT_G2),
-		((features.EXPORT_REAL,), ENTRY, 'Pu&blish for Real and upload...', None, UPLOAD_G2),
+		((features.EXPORT_REAL,), ENTRY, 'Publish for &RealONE...', None, EXPORT_G2),
+		((features.EXPORT_REAL,), ENTRY, 'Pu&blish for RealONE and upload...', None, UPLOAD_G2),
 		((features.EXPORT_QT, features.EXPORT_REAL,), SEP,),
 		(FLAG_ALL, ENTRY, '&Document Properties...', None, PROPERTIES),
 		(FLAG_DBG, SEP,),

@@ -24,7 +24,7 @@ feature_set = [
 	ADVANCED_PROPERTIES,
 	]
 
-version = 'pro'                         # I'm not sure here.. mjvdg
+version = 'pro'
 compatibility = Boston
 compatibility_short = 'SMIL2'
 cmif = 0
