@@ -69,9 +69,7 @@ class LinkEdit(ViewDialog):
 			  ('From Channel view focus', (self.menu_callback,
 						(self.left, M_TCFOCUS))),
 			  ('From Hierarchy view focus', (self.menu_callback,
-						(self.left, M_BVFOCUS))),
-			  ('Keep list', (self.menu_callback,
-					 (self.left, M_KEEP)))]
+						(self.left, M_BVFOCUS)))]
 			 )],
 			top = None, left = None, right = None)
 		self.left.anchoredit_show = win1.ButtonRow(
