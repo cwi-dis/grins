@@ -192,6 +192,17 @@ class _LayoutView2(GenFormView):
 			self.EnableCmd(cmd.__class__,1)
 			contextcmds[id]=cmd
 
+	# apply changement when the control lose the focus. As the 'KILLFOCUS' event may be called
+	# too late, this method can be called by the high level code
+	def flushChangement(self):
+		if self.lastModifyCtrlField != None:
+			value = self[self.lastModifyCtrlField].gettext()
+			listener = self.__listeners.get(self.lastModifyCtrlField)
+			if listener != None:
+				listener.onFieldCtrl(self.lastModifyCtrlField, value)
+			self.lastModifyCtrlField = None
+			return
+
 	#
 	# User input dispatch method 
 	# i.e response to WM_COMMAND
@@ -205,13 +216,8 @@ class _LayoutView2(GenFormView):
 		nmsg=msg.getnmsg()
 
 		if id==win32con.IDOK or nmsg == win32con.EN_KILLFOCUS:
-			if self.lastModifyCtrlField != None:
-				value = self[self.lastModifyCtrlField].gettext()
-				listener = self.__listeners.get(self.lastModifyCtrlField)
-				if listener != None:
-					listener.onFieldCtrl(self.lastModifyCtrlField, value)
-				self.lastModifyCtrlField = None
-				return
+			self.flushChangement()
+			return
 				
 		# delegate combo box notifications to handler
 		if nmsg==win32con.LBN_SELCHANGE:

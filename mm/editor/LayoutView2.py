@@ -866,6 +866,10 @@ class LayoutView2(LayoutViewDialog2):
 					self.applyBgColor(nodeRef, newbg, transparent)
 
 	def editProperties(self, nodeRef):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		nodeType = self.getNodeType(nodeRef)
 		if nodeType in (TYPE_REGION, TYPE_VIEWPORT):
 			# allow to choice attributes
@@ -1082,12 +1086,24 @@ class LayoutView2(LayoutViewDialog2):
 				elif nodeType == TYPE_MEDIA:
 					self.editmgr.setnodeattr(nodeRef, attrName, attrValue)
 			self.editmgr.commit()
+
+	# apply some command which are automaticly applied when a control lost the focus
+	# it avoids some recursives transactions and some crashes
+	def flushChangement(self):
+		# currently, some widget on dialog box generate the 'LOSTFOCUS' event too late. Thus, the new values are
+		# applied too late For example, only when the dialog property box is open. So, it causes some crashes.
+		# this code force to apply the new value before any new operation
+		self.dialogCtrl.flushChangement()
 		
 	#
 	# Alignment/Distribute commands
 	#
 	
 	def onAlignLeft(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if debugAlign: print 'align left : ',self.currentSelectedNodeList
 		if len(self.currentSelectedNodeList) <= 1:
 			return
@@ -1118,6 +1134,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 				
 	def onAlignCenter(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if debugAlign: print 'align center : ',self.currentSelectedNodeList
 		if len(self.currentSelectedNodeList) <= 1:
 			return
@@ -1150,6 +1170,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 
 	def onAlignRight(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if debugAlign: print 'align right : ',self.currentSelectedNodeList
 		if len(self.currentSelectedNodeList) <= 1:
 			return
@@ -1181,6 +1205,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 
 	def onAlignTop(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if debugAlign: print 'align top : ',self.currentSelectedNodeList
 		if len(self.currentSelectedNodeList) <= 1:
 			return
@@ -1211,6 +1239,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 
 	def onAlignMiddle(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if debugAlign: print 'align middle : ',self.currentSelectedNodeList
 		if len(self.currentSelectedNodeList) <= 1:
 			return
@@ -1243,6 +1275,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 
 	def onAlignBottom(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if debugAlign: print 'align bottom : ',self.currentSelectedNodeList
 		if len(self.currentSelectedNodeList) <= 1:
 			return
@@ -1274,6 +1310,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 
 	def onDistributeHorizontally(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if debugAlign: print 'distribute horizontally : ',self.currentSelectedNodeList
 		nodeNumber = len(self.currentSelectedNodeList)
 		if nodeNumber <= 1:
@@ -1314,6 +1354,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 
 	def onDistributeVertically(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if debugAlign: print 'distribute vertically : ',self.currentSelectedNodeList
 		nodeNumber = len(self.currentSelectedNodeList)
 		if nodeNumber <= 1:
@@ -1375,18 +1419,34 @@ class LayoutView2(LayoutViewDialog2):
 			self.editProperties(self.currentSelectedNodeList[0])
 						
 	def onSelectBgColor(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if self.currentSelectedNodeList != None:
 			self.selectBgColor(self.currentSelectedNodeList[0])
 
 	def onSendBack(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if self.currentSelectedNodeList != None:
 			self.sendBack(self.currentSelectedNodeList[0])
 
 	def onBringFront(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if self.currentSelectedNodeList != None:
 			self.bringFront(self.currentSelectedNodeList[0])
 
 	def onShowEditBackground(self, value):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if self.currentSelectedNodeList != None:
 			nodeRef = self.currentSelectedNodeList
 			nodeType = self.getNodeType(self.currentSelectedNodeList[0])
@@ -1403,6 +1463,10 @@ class LayoutView2(LayoutViewDialog2):
 				self.applyEditorPreference(nodeRef, list)
 
 	def onDelNode(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if self.currentSelectedNodeList != None:
 			nodeType = self.getNodeType(self.currentSelectedNodeList[0])
 			if nodeType == TYPE_VIEWPORT:
@@ -1411,10 +1475,18 @@ class LayoutView2(LayoutViewDialog2):
 				self.delRegion(self.currentSelectedNodeList[0])
 
 	def onNewRegion(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		if self.currentSelectedNodeList != None:
 			self.newRegion(self.currentSelectedNodeList[0])
 
 	def onNewViewport(self):
+		# apply some command which are automaticly applied when a control lost the focus
+		# it avoids some recursives transactions and some crashs
+		self.flushChangement()
+		
 		self.newViewport()
 
 	def newRegion(self, parentRef):
