@@ -303,7 +303,7 @@ static int DoExtension(FILE *fd, int label)
 		Gif89.inputFlag	=(buf[0]>>1)		&0x1;
 		Gif89.delayTime	=LM_to_uint(buf[1],buf[2]);
 		if ((buf[0]&0x1)!=0)
-			Gif89.transparent=buf[3];
+			Gif89.transparent=(UCHAR)buf[3];
 	
 		while (GetDataBlock(fd,(UCHAR *)buf)!=0);
 		return FALSE;
