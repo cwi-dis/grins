@@ -441,7 +441,6 @@ def getfitatt(writer, node, attr):
 	return fit
 
 def getbgcoloratt(writer, node, attr):
-	import ChannelMap
 	if not ChannelMap.isvisiblechannel(node.GetChannelType()):
 		return None	
 	try:
@@ -1166,8 +1165,6 @@ class SMILWriter(SMIL):
 		self.calctransitionnames(node)
 
 		self.ch2name = {}
-		self.top_levels = []
-		self.__subchans = {}
 		self.calcchnames1(node)
 
 		self.uid2name = {}
@@ -1181,9 +1178,6 @@ class SMILWriter(SMIL):
 		self.aid2name = {}
 		self.anchortype = {}
 		self.calcanames(node)
-
-		if len(self.top_levels) > 1:
-			self.smilboston = 1
 
 		self.syncidscheck(node)
 
@@ -1508,17 +1502,9 @@ class SMILWriter(SMIL):
 			if not self.ids_used.has_key(name):
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
-			if ch.has_key('base_window'):
-				pch = ch['base_window']
-				if not self.__subchans.has_key(pch):
-					self.__subchans[pch] = []
-				self.__subchans[pch].append(ch)
 			if not ch.has_key('base_window') and \
 			   ch['type'] not in ('sound', 'null'):
 				# top-level channel with window
-				self.top_levels.append(ch)
-				if not self.__subchans.has_key(ch.name):
-					self.__subchans[ch.name] = []
 				if not self.__title:
 					self.__title = ch.name
 			# also check if we need to use the CMIF extension
@@ -1534,10 +1520,16 @@ class SMILWriter(SMIL):
 		"""Calculate unique names for channels; second pass"""
 		context = node.GetContext()
 		channels = context.channels
-		if self.top_levels:
-			top0 = self.top_levels[0].name
-		else:
-			top0 = None
+		top0 = None
+		for ch in context.getviewports():
+			if ChannelMap.isvisiblechannel(ch['type']):
+				if top0 is None:
+					# first top-level channel
+					top0 = ch.name
+				else:
+					# second top-level, must be SMIL 2.0
+					self.smilboston = 1
+					break
 		for ch in channels:
 			if not self.ch2name.has_key(ch):
 				name = identify(ch.name)
@@ -1549,14 +1541,10 @@ class SMILWriter(SMIL):
 				name = nn
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
-			if not ch.has_key('base_window') and \
-			   ch['type'] in ('sound', 'null') and top0:
-				self.__subchans[top0].append(ch)
 			# check for SMIL 2.0 feature: hierarchical regions
 			if not self.smilboston and \
-			   not ch in self.top_levels and \
-			   self.__subchans.get(ch.name):
-				for sch in self.__subchans[ch.name]:
+			   ch.GetParent() is not None:
+				for sch in ch.GetChildren():
 					if sch['type'] == 'layout':
 						self.smilboston = 1
 						break
@@ -1643,7 +1631,7 @@ class SMILWriter(SMIL):
 		if self.smilboston:
 			self.__writeRegPoint()		
 		channels = self.root.GetContext().channels
-		for ch in self.top_levels:
+		for ch in self.root.GetContext().getviewports():
 			attrlist = []
 			if ch['type'] == 'layout':
 				attrlist.append(('id', self.ch2name[ch]))
@@ -1696,18 +1684,17 @@ class SMILWriter(SMIL):
 				self.writeregion(ch)
 				self.pop()
 			else:
+				# not smilboston implies one top-level
 				self.writetag('root-layout', attrlist, ch)
-		if not self.smilboston:	# implies one top-level
-			for ch in self.top_levels:
 				self.writeregion(ch)
 		self.pop()
 
 	def writeregion(self, ch):
 		mtype, xtype = mediatype(ch['type'], error=1)
 		if ch['type'] == 'layout' and \
-		   not ch.has_key('base_window'):
+		   ch.GetParent() is None:
 			# top-level layout channel has been handled
-			for sch in self.__subchans[ch.name]:
+			for sch in ch.GetChildren():
 				self.writeregion(sch)
 			return
 		attrlist = [('id', self.ch2name[ch])]
@@ -1853,7 +1840,7 @@ class SMILWriter(SMIL):
 			if not cmif_chan_attrs_ignore.has_key(key):
 				attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
 		self.writetag('region', attrlist, ch)
-		subchans = self.__subchans.get(ch.name)
+		subchans = ch.GetChildren()
 		
 		# new 03-07-2000
 		# cnt sub layoutchannel number --> to allow to close the tag if no element inside
@@ -2451,9 +2438,6 @@ class SMILWriter(SMIL):
 		i = self.__generate_number
 		self.__generate_number = self.__generate_number + 1
 		return self.__generate_basename + `i` + '.rt'
-
-	def getsubchans(self):
-		return self.__subchans
 
 htmlnamechars = string.letters + string.digits + '_.'
 namechars = htmlnamechars + '-'
