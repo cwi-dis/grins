@@ -2029,6 +2029,13 @@ class TimelineWidget(MMWidgetDecoration):
 				displist.drawline(COLCOLOR, [(left, line_y), (right, line_y)])
 				length = length - (right - left)
 		displist.usefont(f_timescale)
+		if t0 == t2:
+			if t0 < 60:
+				label = fmtfloat(t0)
+			else:
+				label = '%02d:%02.2d'%(int(t0)/60, int(t0)%60)
+			displist.centerstring(min, label_top, max, label_bot, label)
+			return
 		labelwidth = displist.strsize('000:00 ')[0]
 		halflabelwidth = labelwidth / 2
 		lastlabelpos = x - halflabelwidth - 1
