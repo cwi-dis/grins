@@ -99,6 +99,9 @@ CommandUI(EXIT)
 #
 # Player view commands
 #
+CommandUI(TB_PLAY,IDUC_PLAY)
+CommandUI(TB_PAUSE,IDUC_PAUSE)
+CommandUI(TB_STOP,IDUC_STOP)
 CommandUI(PLAY,IDUC_PLAY)
 CommandUI(PAUSE,IDUC_PAUSE)
 CommandUI(STOP,IDUC_STOP)
