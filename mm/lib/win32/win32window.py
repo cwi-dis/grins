@@ -2054,14 +2054,20 @@ class Viewport(Region):
 ##########################
 class ViewportContext:
 	def __init__(self, wnd, w, h, units, bgcolor):
+		
 		# make viewport context size acceptable by wmf
-		wp, hp = self.__getWMPViewport(w, h)
+		# until we know the rule for the aspect ratio
+		# apply only the 16 boundaries rule
+		# on my machine 4:3 always works best
+		# but on Dick's this ratio is 3:4
+		#wp, hp = self.__getWMPViewport(w, h, 4, 3)
+		wp, hp = self.__getBoundaries16(w, h)
+		
 		self._viewport = Viewport(self, (wp-w)/2, (hp-h)/2, w, h, bgcolor)
-		w, h = wp, hp
-		self._rect = 0, 0, w, h
+		self._rect = 0, 0, wp, hp
 
 		self._wnd = wnd
-		self._bgcolor = (0, 0, 0) # should be black for WMP
+		self._bgcolor = (0, 0, 0) # should be always black for WMP
 
 		# set a slow timer so that we get some progress feedback
 		# when nothing is changing in the viewport
@@ -2073,12 +2079,12 @@ class ViewportContext:
 		ddsd = ddraw.CreateDDSURFACEDESC()
 		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
 		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
-		ddsd.SetSize(w,h)
+		ddsd.SetSize(wp, hp)
 		self._backBuffer = self._ddraw.CreateSurface(ddsd)
 		self._pxlfmt = self._backBuffer.GetPixelFormat()
 
 		self._ddbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
-		self._backBuffer.BltFill((0, 0, w, h), self._ddbgcolor)
+		self._backBuffer.BltFill((0, 0, wp, hp), self._ddbgcolor)
 
 	def onTimer(self, params):
 		self._viewport.update()
@@ -2149,16 +2155,23 @@ class ViewportContext:
 		dds.BltFill((0, 0, w, h), self._ddbgcolor)
 		return dds
 
+	def __getBoundaries16(self, w, h):
+		wp = (w/16)*16
+		if w % 16 !=0: wp = wp + 16
+		hp = (h/16)*16
+		if h % 16 !=0: hp = hp + 16
+		return wp, hp
+
 	# return covering rectangle with
 	# 1. 16 pixels boundaries
-	# 2. w:h=4:3 aspect ratio
-	def __getWMPViewport(self, w, h):
-		n1 = int(h/12.0+0.5)
+	# 2. wr:hr(=4:3) aspect ratio
+	def __getWMPViewport(self, w, h, wr=4, hr=3):
+		n1 = int((wr*h)/float(hr*16.0)+0.5)
 		n2 = int(w/16.0+0.5)
 		if n1>n2: n=n1
 		else: n=n2
-		while (3*n % 4)!=0: n = n + 1
-		m = (3*n)/4
+		while (hr*n % wr)!=0: n = n + 1
+		m = (hr*n)/wr
 		return n*16, m*16
 
 #############################
