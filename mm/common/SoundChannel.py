@@ -174,6 +174,9 @@ class SoundChannel(Channel):
 		if self.dummy_event_id:
 			self.player.cancel(self.dummy_event_id)
 			self.dummy_event_id = None
+		if not self.node:
+			# apparantly someone has already called stop()
+			return
 		Channel.done(self, arg)
 		
 	#
