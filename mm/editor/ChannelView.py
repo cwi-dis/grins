@@ -1587,7 +1587,7 @@ class ChannelBox(GO, ChannelBoxCommand):
 			self.ctype = channel['type']
 		except KeyError:
 			self.ctype = '???'
-
+		
 		self.menutitle = 'Channel %s ops' % self.name
 		ChannelBoxCommand.__init__(self)
 
@@ -1597,12 +1597,16 @@ class ChannelBox(GO, ChannelBoxCommand):
 		GO.mkcommandlist(self)
 		self.commandlist = self.commandlist + [
 			ATTRIBUTES(callback = (self.attrcall, ())),
-			DELETE(callback = (self.delcall, ())),
 			MOVE_CHANNEL(callback = (self.movecall, ())),
 			COPY_CHANNEL(callback = (self.copycall, ())),
 			TOGGLE_ONOFF(callback = (self.channel_onoff, ())),
 			HIGHLIGHT(callback = (self.highlight, ())),
 			UNHIGHLIGHT(callback = (self.unhighlight, ())),
+			]
+		# if not root layout
+		if self.ctype != 'layout':
+			self.commandlist = self.commandlist + [	
+			DELETE(callback = (self.delcall, ()))
 			]
 
 	def channel_onoff(self):
@@ -1808,9 +1812,7 @@ class NodeBox(GO, NodeBoxCommand):
 			xname = MMAttrdefs.getattr(xnode, 'name')
 			if not xname:
 				xname = '#' + xnode.GetUID()
-			if xside in (0, 1):
-				xside = begend[xside]
-			arcmenu.append(('From %s of node "%s" to %s of self' % (xside, xname, begend[yside]), (xnode, xside, delay, yside)))
+			arcmenu.append(('From %s of node "%s" to %s of self' % (begend[xside], xname, begend[yside]), (xnode, xside, delay, yside)))
 		self.menutitle = 'Node %s ops' % self.name
 		NodeBoxCommand.__init__(self, mother, node)
 
