@@ -15,7 +15,8 @@ XRANGE = (1.0-2*XBORDER)
 YRANGE = (1.0-2*YBORDER)
 
 class GraphChannel(ChannelWindow):
-	node_attrs = ChannelWindow.node_attrs + ['gtype', 'fgcolor', 'align']
+	node_attrs = ChannelWindow.node_attrs + ['gtype', 'fgcolor', 'align',
+						 'axis']
 
 	def init(self, name, attrdict, scheduler, ui):
 		return ChannelWindow.init(self, name, attrdict, scheduler, ui)
@@ -35,7 +36,7 @@ class GraphChannel(ChannelWindow):
 		toks = self.tokenizestring(str)
 		self.parsetokens(toks)
 		# XXXX For lines
-		maxx = maxy = 0.0
+		maxy = 0.0
 		miny = 999999999.0
 		length = 1
 		for d in self.datapoints:
@@ -50,6 +51,9 @@ class GraphChannel(ChannelWindow):
 			miny = miny - 0.5
 			maxy = maxy + 0.5
 		leftalign = (MMAttrdefs.getattr(node, 'align') == 'left')
+		axis_x, axis_y = MMAttrdefs.getattr(node, 'axis')
+		if axis_y >= 0:
+			miny, maxy = min(miny, 0), max(maxy, 0)
 		for d in self.datapoints:
 			if len(d) < length:
 				d2 = [None]*(length-len(d))
@@ -58,6 +62,10 @@ class GraphChannel(ChannelWindow):
 				else:
 					d[:0] = d2
 		self.ranges = (0, length-1, miny, maxy)
+		if axis_x > 0:
+			self.do_xaxis(axis_x)
+		if axis_y > 0:
+			self.do_yaxis(axis_y)
 		tp = MMAttrdefs.getattr(node, 'gtype')
 		if tp == 'line':
 			self.do_line(node)
@@ -68,6 +76,34 @@ class GraphChannel(ChannelWindow):
 		else:
 			self.errormsg('Unknown graphtype '+tp)
 		return 1
+
+	def do_xaxis(self, step):
+		minx, maxx, miny, maxy = self.ranges
+		xstepsize = XRANGE / (maxx-minx)
+		ystepsize = YRANGE / (maxy-miny)
+		y = maxy*ystepsize
+		y = y+YOFF
+		self.armed_display.drawline((0,0,0), [(XOFF, y),
+						      (1.0-XOFF, y)])
+		i = minx
+		while i <= maxx:
+			self.armed_display.drawline((0,0,0),
+				[(i*xstepsize+XOFF, y),
+				 (i*xstepsize+XOFF, y+0.025)])
+			i = i + step
+
+	def do_yaxis(self, step):
+		minx, maxx, miny, maxy = self.ranges
+		xstepsize = XRANGE / (maxx-minx)
+		ystepsize = YRANGE / (maxy-miny)
+		x = XOFF
+		self.armed_display.drawline((0,0,0),[(x, YOFF), (x, 1.0-YOFF)])
+		i = miny
+		while i <= maxy:
+			self.armed_display.drawline((0,0,0),
+				[(x, i*ystepsize+YOFF),
+				 (x-0.025, i*ystepsize+YOFF)])
+			i = i + step
 
 	def do_line(self, node):
 		minx, maxx, miny, maxy = self.ranges
