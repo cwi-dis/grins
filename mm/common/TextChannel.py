@@ -96,6 +96,13 @@ class TextChannel(ChannelWindow):
 			raise CheckError, \
 				'gettext on wrong node type: ' +`node.type`
 
+	def defanchor(self, node, anchor):
+		# Anchors don't get edited in the TextChannel.  You
+		# have to edit the text to change the anchor.  We
+		# don't want a message, though, so we provide our own
+		# defanchor() method.
+		return anchor
+
 # Convert an anchor to a set of boxes.
 def map_parpos_to_linepos(parno, charno, last, curlines, partoline):
 	# This works only if parno and charno are valid

@@ -194,15 +194,15 @@ class Selecter:
 			rv = self.context.hyperlinks.findsrclinks(aid)
 			destlist = destlist + rv
 		if not destlist:
+			self.toplevel.setready()
 			if not pause_anchor:
 				dialogs.showmessage( \
 				'No hyperlink source at this anchor')
-			self.toplevel.setready()
 			return 0
 		if len(destlist) > 1:
+			self.toplevel.setready()
 			dialogs.showmessage( \
 				'Sorry, multiple links not supported')
-			self.toplevel.setready()
 			return 0
 		# XXX This assumes all links have this lay-out!
 		anchor1, anchor2, dir, type = destlist[0]
@@ -212,8 +212,8 @@ class Selecter:
 		try:
 			seek_node = self.context.mapuid(dest_uid)
 		except NoSuchUIDError:
-			dialogs.showmessage('Dangling hyperlink selected')
 			self.toplevel.setready()
+			dialogs.showmessage('Dangling hyperlink selected')
 			return 0
 		#if self.ui.play_all_bags:
 		#	seek_node = seek_node.FirstMiniDocument()

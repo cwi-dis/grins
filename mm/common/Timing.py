@@ -87,9 +87,9 @@ def do_times(node):
 	try:
 		void = node.t1
 	except AttributeError:
-		import fl
-		fl.show_message('WARNING: circular timing dependencies.', \
-			  '(ignoring sync arcs and trying again)', '')
+		import dialogs
+		dialogs.showmessage('WARNING: circular timing dependencies.\n'+\
+			  '(ignoring sync arcs and trying again)')
 		prep1(node)
 		_do_times_work(node)
 	t1 = time.millitimer()
