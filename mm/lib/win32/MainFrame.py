@@ -127,6 +127,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self._peerdocid = 0
 		self._peerviewports = {}
 
+		#
+		self._viewCreationListeners = []
+
 	# Create the OS window and set the toolbar	
 	def createOsWnd(self,title):
 		strclass=self.registerwndclass()
@@ -1183,6 +1186,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			f = ChildFrame(view, not view.isResizeable())
 			f.Create(appview[strid]['title'],None,self,0)
 		self.MDIActivate(f)
+		self.updateViewCreationListeners(view, strid)
 	
 	# Adds to the view interface some common attributes
 	def add_common_interface(self, viewobj, strid):
@@ -1191,6 +1195,25 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		viewobj._title = appview[strid]['title']
 		cmd =  appview[strid]['cmd']
 		viewobj._closecmdid = usercmdui.usercmd2id(cmd)
+
+	###########################################
+	# Experimental view creation notification interface
+	# Registered listeners are notified when a view is created
+
+	def addViewCreationListener(self, listener):
+		if not hasattr(listener, 'onViewCreated'):
+			print 'object', listener, 'should implement method onViewCreated'
+			return
+		if listener not in self._viewCreationListeners:
+			self._viewCreationListeners.append(listener)
+
+	def removeViewCreationListener(self, listener):
+		if listener in self._viewCreationListeners:
+			self._viewCreationListeners.remove(listener)
+
+	def updateViewCreationListeners(self, view, strid):
+		for listener in self._viewCreationListeners:
+			listener.onViewCreated(self, view, strid)
 
 ################################################
 # The ChildFrame purpose is to host the views in its client area
@@ -1331,3 +1354,4 @@ class SplitterBrowserChildFrame(ChildFrame):
 			self._view.OnClose()
 		else:
 			self.DestroyWindow()
+ 

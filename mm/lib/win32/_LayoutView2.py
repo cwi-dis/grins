@@ -89,6 +89,9 @@ class _LayoutView2(GenFormView):
 		
 		# org positions
 		self.__orgctrlpos = {}
+		
+		# flag to request anchors page
+		self._showAnchorsPage = 0
 								
 	# special initialization because previous control is not managed like any another component
 	# allow to have a handle on previous component from an external module
@@ -315,19 +318,30 @@ class _LayoutView2(GenFormView):
 			self.OnZoomIn(id, code)
 		elif id == usercmd2id(CANVAS_ZOOM_OUT):
 			self.OnZoomOut(id, code)
+		elif id == usercmd2id(CREATEANCHOR):
+			self._parent.getMDIFrame().addViewCreationListener(self)
+			self._showAnchorsPage = 1
+			self.onUserCmd(usercmd2id(ATTRIBUTES))
 		else:
 			cmd=None
 			contextcmds = self._activecmds
 			if contextcmds.has_key(id):
 				cmd = contextcmds[id]
-			if cmd is not None and cmd.callback is not None:
-				apply(apply,cmd.callback)
+				if cmd is not None and cmd.callback is not None:
+					apply(apply, cmd.callback)
 
 	def showScale(self, d2lscale):
 		t=components.Static(self,grinsRC.IDC_LAYOUT_SCALE)
 		t.attach_to_parent()
 		str = fmtfloat(d2lscale, prec=1)
 		t.settext('Scale 1 : %s' % str)
+
+	def onViewCreated(self, frame, view, strid):
+		if strid == 'attr_edit':
+			if self._showAnchorsPage:
+				view.setcurattrbyname('.anchorlist')
+			frame.removeViewCreationListener(self)
+			self._showAnchorsPage = 0
 
 	#
 	# Zoom in/out
