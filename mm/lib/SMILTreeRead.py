@@ -144,6 +144,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'a': (self.start_a, self.end_a),
 			'anchor': (self.start_anchor, self.end_anchor),
 			'area': (self.start_area, self.end_area),
+			'animate': (self.start_animate, self.end_animate),
+			'set': (self.start_set, self.end_set),
+			'animateMotion': (self.start_animatemotion, self.end_animatemotion),
+			'animateColor': (self.start_animatecolor, self.end_animatecolor),
 			}
 		xmllib.XMLParser.__init__(self)
 		self.__seen_smil = 0
@@ -2217,6 +2221,38 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_area(self):
 		self.end_anchor()
+
+	def start_animate(self, attributes):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('animate not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
+
+	def end_animate(self):
+		pass
+
+	def start_set(self, attributes):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('set not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
+
+	def end_set(self):
+		pass
+
+	def start_animatemotion(self, attributes):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('animateMotion not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
+
+	def end_animatemotion(self):
+		pass
+
+	def start_animatecolor(self, attributes):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('animateColor not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
+
+	def end_animatecolor(self):
+		pass
 
 	# other callbacks
 
