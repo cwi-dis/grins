@@ -11,6 +11,6 @@
     </layout>
   </head>
   <body>
-    <text region="NEW1Real-Text" src="news.rt" dur="indefinite"/>
+    <text region="NEW1Real-Text" src="news.rt"/>
   </body>
 </smil>

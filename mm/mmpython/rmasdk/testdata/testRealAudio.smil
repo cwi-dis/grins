@@ -11,6 +11,6 @@
     </layout>
   </head>
   <body>
-    <audio id="Real-Audio" region="RealAudioChannel" src="thanks3.ra" repeat="indefinite"/>
+    <audio id="Real-Audio" region="RealAudioChannel" src="thanks3.ra"/>
   </body>
 </smil>

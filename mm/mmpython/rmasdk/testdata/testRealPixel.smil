@@ -11,6 +11,6 @@
     </layout>
   </head>
   <body>
-    <img region="NEW1-image" src="fadein.rp" dur="indefinite"/>
+    <img region="NEW1-image" src="fadein.rp"/>
   </body>
 </smil>
