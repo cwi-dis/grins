@@ -39,11 +39,14 @@ def _restorefontinfo(wid, (font, face, mode, size, spextra)):
 
 
 _pt2mm = 25.4 / 72			# 1 inch == 72 points == 25.4 mm
-
+_POINTSIZEOFFSET=+1
 _fontmap = {
-	  'Times-Roman': ('Times', 0),
-	  'Times-Italic': ('Times', _qd_italic),
-	  'Times-Bold': ('Times', _qd_bold),
+##	  'Times-Roman': ('Times', 0),
+##	  'Times-Italic': ('Times', _qd_italic),
+##	  'Times-Bold': ('Times', _qd_bold),
+	  'Times-Roman': ('New York', 0),
+	  'Times-Italic': ('New York', _qd_italic),
+	  'Times-Bold': ('New York', _qd_bold),
 
 	  'Utopia': ('New York', 0),
 	  'Utopia-Italic': ('New York', _qd_italic),
@@ -56,6 +59,9 @@ _fontmap = {
 	  'Helvetica': ('Helvetica', 0),
 	  'Helvetica-Bold': ('Helvetica', _qd_bold),
 	  'Helvetica-Oblique': ('Helvetica', _qd_italic),
+##	  'Helvetica': ('Geneva', 0),
+##	  'Helvetica-Bold': ('Geneva', _qd_bold),
+##	  'Helvetica-Oblique': ('Geneva', _qd_italic),
 
 	  'Courier': ('Courier', 0),
 	  'Courier-Bold': ('Courier', _qd_bold),
@@ -75,7 +81,7 @@ class findfont:
 			raise error, 'Font not found: '+fontname
 		self._fontnum = Fm.GetFNum(_fontmap[fontname][0])
 		self._fontface = _fontmap[fontname][1]
-		self._pointsize = pointsize
+		self._pointsize = pointsize + _POINTSIZEOFFSET
 		self._inited = 0
 		
 	def _getinfo(self):
