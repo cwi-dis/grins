@@ -660,7 +660,7 @@ class BandwidthComputeDialog(DialogWindow):
 		self._settext(ITEM_BANDWIDTH_STALLCOUNT, 'Computing...')
 		self._settext(ITEM_BANDWIDTH_PREROLL, 'Computing...')
 		self._settext(ITEM_BANDWIDTH_MESSAGE2, '')
-##		self.mustwait = 0
+		self.mustwait = 0
 		self.calback = None
 		ctl = self._wid.GetDialogItemAsControl(ITEM_BANDWIDTH_OK)
 		ctl.DeactivateControl()
