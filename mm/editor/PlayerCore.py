@@ -75,8 +75,6 @@ class PlayerCore(Selecter):
 			self.pause(0)
 		self.stopped()
 		self.showstate()
-		if self.continuous:
-			self.play()
 	#
 	def playsubtree(self, node):
 		self.toplevel.setwaiting()

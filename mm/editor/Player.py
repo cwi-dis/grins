@@ -47,7 +47,6 @@ class Player(ViewDialog, PlayerCore):
 		self.play_all_bags = 0
 		self.pause_minidoc = 1
 		self.sync_cv = 1
-		self.continuous = 0
 		self.toplevel = toplevel
 		self.set_timer = toplevel.set_timer
 		self.showing = 0
@@ -236,7 +235,6 @@ class Player(ViewDialog, PlayerCore):
 
 	def cc_stop(self):
 ##		self.stopbutton.lcol = MYBLUE
-		self.continuous = 0
 		self.stop()
 		if self.pausing:
 			self.pause(0)
@@ -278,8 +276,6 @@ class Player(ViewDialog, PlayerCore):
 			raise 'Crash requested by user'
 		elif i == 8:
 			self.scheduler.dump()
-		elif i == 9:
-			self.continuous = (not self.continuous)
 		else:
 			print 'Player: Option menu: funny choice', i
 		self.makeomenu()
@@ -384,12 +380,6 @@ class Player(ViewDialog, PlayerCore):
 		menu.append('', '   Crash CMIF', (self.omenu_callback, (7,)))
 		menu.append('', '   Dump scheduler data',
 			    (self.omenu_callback, (8,)))
-		if not self.continuous:
-			menu.append('', '   Continuous play',
-				    (self.omenu_callback, (9,)))
-		else:
-			menu.append('', '\xa4 Continuous play',
-				    (self.omenu_callback, (9,)))
 		self.subwin[1].create_menu('Options', menu)
 			
 	def makemenu(self):
