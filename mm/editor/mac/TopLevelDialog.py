@@ -42,3 +42,6 @@ class TopLevelDialog:
 ##		if rv < 0: return 2
 ##		if rv > 0: return 0
 ##		return 1
+
+	def setcommands(self, commandlist):
+		self.window.set_commandlist(commandlist)
