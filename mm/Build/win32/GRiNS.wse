@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=4095474663
+  File Checksum=2162442796
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1369,6 +1369,41 @@ item: If/While Statement
   Variable=COMPONENTS
   Value=A
   Flags=00001010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Msvcrt40.dll
+  Destination=%SYS32%\Msvcrt40.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=c:\Winnt\System32\Olepro32.dll
+  Destination=%SYS32%\Olepro32.dll
+  Flags=0001001010000011
+end
+item: Install File
+  Source=c:\Winnt\System32\Oleaut32.dll
+  Destination=%SYS32%\Oleaut32.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=c:\Winnt\System32\Msvcrt.dll
+  Destination=%SYS32%\Msvcrt.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=c:\Winnt\System32\Msvcp60.dll
+  Destination=%SYS32%\Msvcp60.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=c:\Winnt\System32\Msvcirt.dll
+  Destination=%SYS32%\Msvcirt.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=c:\Winnt\System32\mfc42.dll
+  Destination=%SYS32%\mfc42.dll
+  Flags=0001001010000011
 end
 item: Install File
   Source=e:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
