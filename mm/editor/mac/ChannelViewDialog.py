@@ -76,7 +76,6 @@ class NodeBoxCommand:
 
 		c.append(UserCmd.FINISH_ARC, (self.newsyncarccall, ()))
 		c.append(UserCmd.FINISH_LINK, (self.hyperlinkcall, ()))
-		c.append(None)
 		c.append(UserCmd.INFO, (self.infocall, ()))
 		c.append(UserCmd.ATTRIBUTES, (self.attrcall, ()))
 		c.append(UserCmd.CONTENT, (self.editcall, ()))
