@@ -95,7 +95,7 @@ TARGET=		python
 PYTHON=		python
 
 # Add more -I and -D options here
-CFLAGS=		$(OPT) -I$(INCLUDEPY) -I$(LIBPL) $(DEFS)
+CFLAGS=		$(OPT) -I$(INCLUDEPY) -I$(EXECINCLUDEPY) $(DEFS)
 
 # These two variables can be set in Setup to merge extensions.
 # See example[23].
@@ -113,8 +113,11 @@ MODLIBS=	_MODLIBS_
 
 VERSION=	@VERSION@
 CC=		@CC@
+LINKCC=		@LINKCC@
+SGI_ABI=	@SGI_ABI@
 OPT=		@OPT@
 LDFLAGS=	@LDFLAGS@
+LDLAST=		@LDLAST@
 DEFS=		@DEFS@
 LIBS=		@LIBS@
 LIBM=		@LIBM@
@@ -125,12 +128,17 @@ SO=		@SO@
 LDSHARED=	@LDSHARED@
 CCSHARED=	@CCSHARED@
 LINKFORSHARED=	@LINKFORSHARED@
+#@SET_CCC@
 
 # Install prefix for architecture-independent files
 prefix=		/usr/local
 
 # Install prefix for architecture-dependent files
 exec_prefix=	$(prefix)
+
+# Uncomment the following two lines for AIX
+#LINKCC= 	$(LIBPL)/makexp_aix $(LIBPL)/python.exp "" $(LIBRARY); $(PURIFY) $(CC)
+#LDSHARED=	$(LIBPL)/ld_so_aix $(CC) -bI:$(LIBPL)/python.exp
 
 # === Fixed definitions ===
 
@@ -148,7 +156,9 @@ SCRIPTDIR=	$(prefix)/lib
 BINLIBDEST=	$(LIBDIR)/python$(VERSION)
 LIBDEST=	$(SCRIPTDIR)/python$(VERSION)
 INCLUDEPY=	$(INCLUDEDIR)/python$(VERSION)
+EXECINCLUDEPY=	$(exec_installdir)/include/python$(VERSION)
 LIBP=		$(exec_installdir)/lib/python$(VERSION)
+DESTSHARED=	$(BINLIBDEST)/site-packages
 
 LIBPL=		$(LIBP)/config
 
@@ -158,11 +168,18 @@ MAKESETUP=	$(LIBPL)/makesetup
 MAKEFILE=	$(LIBPL)/Makefile
 CONFIGC=	$(LIBPL)/config.c
 CONFIGCIN=	$(LIBPL)/config.c.in
-SETUP=		$(LIBPL)/Setup
+SETUP=		$(LIBPL)/Setup.thread $(LIBPL)/Setup.local $(LIBPL)/Setup
 
 SYSLIBS=	$(LIBM) $(LIBC)
 
 ADDOBJS=	$(LIBPL)/python.o config.o
+
+# Portable install script (configure doesn't always guess right)
+INSTALL=	$(LIBPL)/install-sh -c
+# Shared libraries must be installed with executable mode on some systems;
+# rather than figuring out exactly which, we always give them executable mode.
+# Also, making them read-only seems to be a good idea...
+INSTALL_SHARED=	${INSTALL} -m 555
 
 # === Fixed rules ===
 
@@ -178,9 +195,19 @@ sharedmods:	$(SHAREDMODS)
 # Build a static Python binary containing our extension modules
 static:		$(TARGET)
 $(TARGET):	$(ADDOBJS) lib.a $(PYTHONLIBS) Makefile $(BASELIB)
-		$(CC) $(LDFLAGS) $(ADDOBJS) lib.a $(PYTHONLIBS) \
+		$(LINKCC) $(LDFLAGS) $(LINKFORSHARED) \
+		 $(ADDOBJS) lib.a $(PYTHONLIBS) \
 		 $(LINKPATH) $(BASELIB) $(MODLIBS) $(LIBS) $(SYSLIBS) \
-		 -o $(TARGET)
+		 -o $(TARGET) $(LDLAST)
+
+install:	sharedmods
+		if test ! -d $(DESTSHARED) ; then \
+			mkdir $(DESTSHARED) ; else true ; fi
+		-for i in X $(SHAREDMODS); do \
+			if test $$i != X; \
+			then $(INSTALL_SHARED) $$i $(DESTSHARED)/$$i; \
+			fi; \
+		done
 
 # Build the library containing our extension modules
 lib.a:		$(MODOBJS)
@@ -224,8 +251,11 @@ sedscript:	$(MAKEFILE)
 	 -e '2s%.*%# $H%p' \
 	 -e '/^VERSION=/s/^VERSION=[ 	]*\(.*\)/s%@VERSION[@]%\1%/p' \
 	 -e '/^CC=/s/^CC=[ 	]*\(.*\)/s%@CC[@]%\1%/p' \
+	 -e '/^CCC=/s/^CCC=[ 	]*\(.*\)/s%#@SET_CCC[@]%CCC=\1%/p' \
+	 -e '/^LINKCC=/s/^LINKCC=[ 	]*\(.*\)/s%@LINKCC[@]%\1%/p' \
 	 -e '/^OPT=/s/^OPT=[ 	]*\(.*\)/s%@OPT[@]%\1%/p' \
 	 -e '/^LDFLAGS=/s/^LDFLAGS=[ 	]*\(.*\)/s%@LDFLAGS[@]%\1%/p' \
+	 -e '/^LDLAST=/s/^LDLAST=[      ]*\(.*\)/s%@LDLAST[@]%\1%/p' \
 	 -e '/^DEFS=/s/^DEFS=[ 	]*\(.*\)/s%@DEFS[@]%\1%/p' \
 	 -e '/^LIBS=/s/^LIBS=[ 	]*\(.*\)/s%@LIBS[@]%\1%/p' \
 	 -e '/^LIBM=/s/^LIBM=[ 	]*\(.*\)/s%@LIBM[@]%\1%/p' \
@@ -235,10 +265,12 @@ sedscript:	$(MAKEFILE)
 	 -e '/^SO=/s/^SO=[ 	]*\(.*\)/s%@SO[@]%\1%/p' \
 	 -e '/^LDSHARED=/s/^LDSHARED=[ 	]*\(.*\)/s%@LDSHARED[@]%\1%/p' \
 	 -e '/^CCSHARED=/s/^CCSHARED=[ 	]*\(.*\)/s%@CCSHARED[@]%\1%/p' \
+	 -e '/^SGI_ABI=/s/^SGI_ABI=[ 	]*\(.*\)/s%@SGI_ABI[@]%\1%/p' \
 	 -e '/^$L=/s/^$L=[ 	]*\(.*\)/s%@$L[@]%\1%/p' \
 	 -e '/^$P=/s/^$P=\(.*\)/s%^$P=.*%$P=\1%/p' \
 	 -e '/^$E=/s/^$E=\(.*\)/s%^$E=.*%$E=\1%/p' \
 	 $(MAKEFILE) >sedscript
+	echo "/^#@SET_CCC@/d" >>sedscript
 	echo "/^installdir=/s%=.*%=	$(installdir)%" >>sedscript
 	echo "/^exec_installdir=/s%=.*%=$(exec_installdir)%" >>sedscript
 	echo "/^srcdir=/s%=.*%=		$(srcdir)%" >>sedscript
