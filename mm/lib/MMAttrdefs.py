@@ -129,7 +129,7 @@ def usetypedef(typedef, mapping):
 		arg = []
 		for td in rest:
 			arg.append(usetypedef(td, mapping))
-	elif type in ('list', 'dict', 'namedict', 'enclosed'):
+	elif type in ('list', 'dict', 'namedict', 'enclosed', 'optenclosed'):
 		arg = usetypedef(rest, mapping)
 	return func, arg
 
