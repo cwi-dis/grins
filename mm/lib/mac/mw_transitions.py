@@ -142,6 +142,8 @@ class TransitionEngine:
 		mustredraw is true we should do the recalc even if the transition hasn't advanced."""
 		if self.running:
 			self.value = float(time.time() - self.starttime) / self.duration
+			if self.value >= 0.5:
+				pass # DBG
 			if self.value >= 1.0:
 				self._cleanup()
 				return
@@ -169,6 +171,8 @@ class TransitionEngine:
 		src_active = self.window._mac_getoswindowpixmap(1)
 		src_passive = self.window._mac_getoswindowpixmap(2)
 		self.window._mac_setwin(0)
+		print 'TRANS', src_active, src_passive, dst, self.window
+		print 'TRANSARGS', self.currentparameters
 		Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 		Qd.RGBForeColor((0, 0, 0))
 		self.transitiontype._updatebitmap(self.currentparameters, src_active, src_passive, dst)
