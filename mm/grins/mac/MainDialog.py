@@ -16,8 +16,10 @@ the dialog window is closed in some other way, the callback
 self.close_callback is also called.
 
 """
-import UserCmd
+import usercmd
 import os
+import macfs
+import MMurl
 
 class MainDialog:
 	def __init__(self, title):
@@ -32,45 +34,23 @@ class MainDialog:
 		"""
 
 		import windowinterface
-		cmdlist = [
-			(UserCmd.OPEN_URL, (self.__openURL_callback, ())),
-			(UserCmd.OPEN_FILE, (self.__openfile_callback, ())),
-			(UserCmd.TRACE, (self.trace_callback, ())),
-			(UserCmd.DEBUG, (self.debug_callback, ())),
-			(UserCmd.CONSOLE, (self.console_callback, ())),
-			(UserCmd.EXIT, (self.close_callback, ()))]
-		self.__window = w = windowinterface.windowgroup(title, cmdlist, globalgroup=1)
+		if __debug__:
+			self.commandlist.append(
+					usercmd.CONSOLE(callback=(self.console_callback, ())))
+		self.__window = w = windowinterface.windowgroup(title, self.commandlist, globalgroup=1)
+		windowinterface.installaehandler('aevt', 'oapp', self._ae_openapp)
+		windowinterface.installaehandler('aevt', 'quit', self._ae_quit)
+		windowinterface.installaehandler('aevt', 'odoc', self._ae_opendoc)
 
-	def __openURL_callback(self):
+	def open_callback(self):
 		import windowinterface
-		windowinterface.InputDialog('Open location', '',
-					    self.open_callback)
-
-	def __openfile_callback(self):
-		import windowinterface
-		windowinterface.FileDialog('Open file', os.curdir, '*.smil', '',
-					   self.__filecvt, None, 1)
-
-	def __filecvt(self, filename):
-		import os, MMurl
-		if os.path.isabs(filename):
-			cwd = os.getcwd()
-			if os.path.isdir(filename):
-				dir, file = filename, os.curdir
-			else:
-				dir, file = os.path.split(filename)
-			# XXXX maybe should check that dir gets shorter!
-			while len(dir) > len(cwd):
-				dir, f = os.path.split(dir)
-				file = os.path.join(f, file)
-			if dir == cwd:
-				filename = file
-		self.open_callback('file:'+MMurl.pathname2url(filename))
+		windowinterface.InputURLDialog('Open location', '',
+					    self.openURL_callback)
 
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
 	# this class).
-	def open_callback(self, url):
+	def openURL_callback(self, url):
 		pass
 
 	def close_callback(self):
@@ -85,3 +65,20 @@ class MainDialog:
 	def console_callback(self):
 		import quietconsole
 		quietconsole.revert()
+
+	def _ae_openapp(self, *args, **kwargs):
+		pass
+		
+	def _ae_opendoc(self, aliases, **kwargs):
+		for alias in aliases:
+			try:
+				fss, changed = alias.Resolve()
+			except macfs.error, arg:
+				windowinterface.message("Cannot resolve: %s"%str(arg))
+				return
+			pathname = fss.as_pathname()
+			url = MMurl.pathname2url(pathname)
+			self.openURL_callback(url)
+		
+	def _ae_quit(self, *args, **kwargs):
+		self.close_callback()
