@@ -16,7 +16,7 @@ import settings
 import MMStates
 
 debugtimer = 0
-debugevents = 1
+debugevents = 0
 
 # Priorities for the various events:
 N_PRIO = 6
@@ -698,7 +698,7 @@ class Scheduler(scheduler):
 				self.remove_terminate(sctx, arg)
 			if action == SR.SCHED_STOPPING:
 				if arg.scheduled_children:
-					print 'not stopping',`arg`
+					if debugevents: print 'not stopping',`arg`
 					return
 				arg.playing = MMStates.PLAYED
 				for ch in arg.children:
