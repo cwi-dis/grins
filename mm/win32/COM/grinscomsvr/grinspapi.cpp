@@ -154,6 +154,65 @@ ComModule_AdviceSetCursor(ComModuleObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char ComModule_AdviceSetDur__doc__[] =
+""
+;
+static PyObject *
+ComModule_AdviceSetDur(ComModuleObject *self, PyObject *args)
+{
+	int id;
+	double dur;
+	if(!PyArg_ParseTuple(args, "id", &id, &dur))
+		return NULL;
+	self->pModule->adviceSetDur(id, dur);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char ComModule_AdviceSetPos__doc__[] =
+""
+;
+static PyObject *
+ComModule_AdviceSetPos(ComModuleObject *self, PyObject *args)
+{
+	int id;
+	double pos;
+	if(!PyArg_ParseTuple(args, "id", &id, &pos))
+		return NULL;
+	self->pModule->adviceSetPos(id, pos);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char ComModule_AdviceSetSpeed__doc__[] =
+""
+;
+static PyObject *
+ComModule_AdviceSetSpeed(ComModuleObject *self, PyObject *args)
+{
+	int id;
+	double speed;
+	if(!PyArg_ParseTuple(args, "id", &id, &speed))
+		return NULL;
+	self->pModule->adviceSetSpeed(id, speed);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char ComModule_AdviceSetState__doc__[] =
+""
+;
+static PyObject *
+ComModule_AdviceSetState(ComModuleObject *self, PyObject *args)
+{
+	int id, st;
+	if(!PyArg_ParseTuple(args, "ii", &id, &st))
+		return NULL;
+	self->pModule->adviceSetState(id, st);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 
 static struct PyMethodDef ComModule_methods[] = {
 	{"RegisterClassObjects", (PyCFunction)ComModule_RegisterClassObjects, METH_VARARGS, ComModule_RegisterClassObjects__doc__},
@@ -162,6 +221,10 @@ static struct PyMethodDef ComModule_methods[] = {
 	{"SetListener", (PyCFunction)ComModule_SetListener, METH_VARARGS, ComModule_SetListener__doc__},
 	{"AdviceSetSize", (PyCFunction)ComModule_AdviceSetSize, METH_VARARGS, ComModule_AdviceSetSize__doc__},
 	{"AdviceSetCursor", (PyCFunction)ComModule_AdviceSetCursor, METH_VARARGS, ComModule_AdviceSetCursor__doc__},
+	{"AdviceSetDur", (PyCFunction)ComModule_AdviceSetDur, METH_VARARGS, ComModule_AdviceSetDur__doc__},
+	{"AdviceSetPos", (PyCFunction)ComModule_AdviceSetPos, METH_VARARGS, ComModule_AdviceSetPos__doc__},
+	{"AdviceSetSpeed", (PyCFunction)ComModule_AdviceSetSpeed, METH_VARARGS, ComModule_AdviceSetSpeed__doc__},
+	{"AdviceSetState", (PyCFunction)ComModule_AdviceSetState, METH_VARARGS, ComModule_AdviceSetState__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 

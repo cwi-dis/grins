@@ -43,6 +43,8 @@ HRESULT CoRegisterGRiNSPlayerAutoClassObject(IClassFactory* pIFactory, LPDWORD  
 #define WM_USER_UPDATE WM_USER+8
 #define WM_USER_MOUSE_CLICKED WM_USER+9
 #define WM_USER_MOUSE_MOVED WM_USER+10
+#define WM_USER_SETPOS WM_USER+11
+#define WM_USER_SETSPEED WM_USER+12
 
 class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 	{
@@ -89,16 +91,25 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 	GRiNSPlayerAuto(GRiNSPlayerComModule *pModule);
 	~GRiNSPlayerAuto();
 	HWND getListener() {return m_pModule->getListenerHwnd();}
+
 	void adviceSetSize(int w, int h){m_width=w;m_height=h;}
 	void adviceSetCursor(char *cursor){memcpy(m_cursor, cursor, strlen(cursor)+1);}
+	void adviceSetDur(double dur){m_dur=dur;}
+	void adviceSetPos(double pos){m_curpos=pos;}
+	void adviceSetSpeed(double speed){m_speed=speed;}
+	void adviceSetState(int st){m_state=st;}
 	
 	private:
 	long m_cRef;
 	GRiNSPlayerComModule *m_pModule;
 
+	enum {STOPPED, PAUSING, PLAYING};
 	
 	HWND m_hWnd;
 	int m_width, m_height;
+	double m_dur, m_curpos; // in secs
+	double m_speed; 
+	int m_state;
 	char m_cursor[32];
 	};
 
@@ -124,9 +135,44 @@ void GRiNSPlayerAutoAdviceSetCursor(int id, char *cursor)
 		p->adviceSetCursor(cursor);
 		}
 	}
+void GRiNSPlayerAutoAdviceSetDur(int id, double dur)
+	{
+	if(id!=0)
+		{
+		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
+		p->adviceSetDur(dur);
+		}
+	}
+void GRiNSPlayerAutoAdviceSetPos(int id, double pos)
+	{
+	if(id!=0)
+		{
+		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
+		p->adviceSetPos(pos);
+		}
+	}
+
+void GRiNSPlayerAutoAdviceSetSpeed(int id, double speed)
+	{
+	if(id!=0)
+		{
+		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
+		p->adviceSetSpeed(speed);
+		}
+	}
+
+void GRiNSPlayerAutoAdviceSetState(int id, int st)
+	{
+	if(id!=0)
+		{
+		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
+		p->adviceSetState(st);
+		}
+	}
 
 GRiNSPlayerAuto::GRiNSPlayerAuto(GRiNSPlayerComModule *pModule)
-:	m_cRef(1), m_pModule(pModule), m_hWnd(0), m_width(0), m_height(0)
+:	m_cRef(1), m_pModule(pModule), m_hWnd(0), m_width(0), m_height(0),
+	m_dur(0), m_curpos(0), m_speed(1), m_state(STOPPED)
 	{
 	adviceSetCursor("arrow");
 	m_pModule->lock();
@@ -185,7 +231,7 @@ HRESULT __stdcall GRiNSPlayerAuto::update()
 
 HRESULT __stdcall GRiNSPlayerAuto::getState(/* [out] */ int __RPC_FAR *pstate)
 	{
-	*pstate = 0;
+	*pstate = m_state;
 	return S_OK;
 	}
 
@@ -198,29 +244,31 @@ HRESULT __stdcall GRiNSPlayerAuto::getSize(/* [out] */ int __RPC_FAR *pw, /* [ou
 
 HRESULT __stdcall GRiNSPlayerAuto::getDuration(/* [out] */ double __RPC_FAR *pdur)
 	{
-	*pdur = -1;
+	*pdur = m_dur;
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::getTime(/* [out] */ double __RPC_FAR *pt)
 	{
-	*pt = 0;
+	*pt = m_curpos;
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::setTime(/* [in] */ double t)
 	{
+	PostMessage(getListener(), WM_USER_SETPOS, WPARAM(this), LPARAM(1000.0*t));	
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::getSpeed(/* [out] */ double __RPC_FAR *ps)
 	{
-	*ps = 1;
+	*ps = m_speed;
 	return S_OK;
 	}
 
 HRESULT __stdcall GRiNSPlayerAuto::setSpeed(/* [in] */ double s)
 	{
+	PostMessage(getListener(), WM_USER_SETSPEED, WPARAM(this), LPARAM(1000.0*s));	
 	return S_OK;
 	}
 
