@@ -17,7 +17,7 @@
 # form			the form
 # showing		true when the form is shown
 # width, height		form dimensions
-# title			window title
+# title			window title (better use settitle() method though)
 # last_geometry		the window's geometry when last hidden, or None
 #
 # The Dialog class also defines cancel_button, restore_button,
@@ -33,15 +33,15 @@ from FL import *
 import glwindow
 
 
-class BasicDialog((glwindow.glwindow)):
+class BasicDialog(glwindow.glwindow):
 	#
 	# Initialization.
 	# Derived classes must extend this method.
 	# XXX Shouldn't have (width, height) argument?
 	#
 	def init(self, (width, height, title)):
-		self.width = width
-		self.height = height
+		self.width = int(width)
+		self.height = int(height)
 		self.title = title
 		self.showing = 0
 		self.last_geometry = None
@@ -76,6 +76,12 @@ class BasicDialog((glwindow.glwindow)):
 		glwindow.unregister(self)
 		self.form.hide_form()
 		self.showing = 0
+	#
+	def settitle(self, title):
+		self.title = title
+		if self.showing:
+			gl.winset(self.form.window)
+			gl.wintitle(self.title)
 	#
 	def is_showing(self):
 		return self.showing
@@ -189,7 +195,7 @@ class Dialog(BasicDialog):
 	#
 
 
-class GLDialog((glwindow.glwindow)):
+class GLDialog(glwindow.glwindow):
 	#
 	def init(self, title):
 		self.title = title
@@ -217,6 +223,12 @@ class GLDialog((glwindow.glwindow)):
 	#
 	def is_showing(self):
 		return self.wid <> 0
+	#
+	def settitle(self, title):
+		self.title = title
+		if self.wid <> 0:
+			gl.winset(self.wid)
+			gl.wintitle(self.title)
 	#
 	def get_geometry(self):
 		if self.wid == 0: return
