@@ -20,6 +20,12 @@ import Timing
 HD, TL = 0, 1
 
 
+# Control Panel dimensions
+
+CPWIDTH = 300
+CPHEIGHT = 100
+
+
 # The channel map is in a separate module for easy editing.
 
 from ChannelMap import channelmap
@@ -41,12 +47,14 @@ from ChannelMap import channelmap
 # asking for a file name should not be done with a modal dialog -- a
 # modeless file selector (which may remain open between uses) is better.
 #
-# To add multiple players, the loop in run(), calling glwindow.check(),
+# To add multiple players, the loop in run(), calling glwindow.mainloop(),
 # must be moved to a central place, which implements a real-time queue.
 # Player objects must calculate the expected real-time delay to their
 # next event and post an event in the RT queue for that time.
 # When the expected time changes (e.g., pause is pressed), they should
 # cancel the original event and post a new one.  Etc.
+# XXX BECAUSE OF THIS, CREATING A SECOND PLAYER CURRENTLY DOESN'T WORK;
+# XXX THIS BREAKS THE "RESTORE" COMMAND!
 
 class Player() = scheduler():
 	#
@@ -59,6 +67,7 @@ class Player() = scheduler():
 		# Initialize the player
 		self.root = root
 		self.playing = 0
+		self.abcontrol = ()
 		# Make the channel objects -- this pops up windows...
 		self.channels = {}
 		self.channelnames = []
@@ -141,24 +150,19 @@ class Player() = scheduler():
 			delay = delay / self.rate
 		self.timerobject.set_timer(delay)
 	#
-	# This version of run() busy-waits when there is nothing to do.
+	# This version of run() blocks when there is nothing to do.
 	# It never returns!
 	# XXX Hence destroying and then re-creating this view doesn't work.
 	#
 	def run(self):
 		self.updatetimer()
-		while 1:
-			obj = fl.do_forms()
-			if obj = EVENT:
-				glwindow.dispatch(fl.qread())
-			else:
-				print 'Object without callback!'
+		glwindow.mainloop()
 	#
 	# User interface.
 	#
 	def makecpanel(self):
 		#
-		cpanel = fl.make_form(FLAT_BOX, 300, 100)
+		cpanel = fl.make_form(FLAT_BOX, CPWIDTH, CPHEIGHT)
 		#
 		# The play, pause and stop buttons are inactive buttons
 		# (used for display) covered by invisible buttons
@@ -188,7 +192,12 @@ class Player() = scheduler():
 			cpanel.add_button(INOUT_BUTTON,x,y,w,h, 'Faster')
 		self.fastbutton.set_call_back(self.fast_callback, None)
 		#
-		x, y, w, h = 0, 0, 298, 48
+		x, y, w, h = 200, 0, 98, 48
+		self.abbutton = \
+			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, 'A-B')
+		self.abbutton.set_call_back(self.ab_callback, None)
+		#
+		x, y, w, h = 0, 0, 198, 48
 		self.statebutton = \
 			cpanel.add_button(NORMAL_BUTTON,x,y,w,h, '')
 		self.statebutton.boxtype = FLAT_BOX
@@ -243,6 +252,8 @@ class Player() = scheduler():
 				# Extra heavy duty reset
 				self.resettimer()
 				self.resetchannels()
+				if self.setcurrenttime_callback:
+					self.setcurrenttime_callback(0.0)
 			else:
 				self.stop()
 		self.showstate()
@@ -251,6 +262,31 @@ class Player() = scheduler():
 		if obj.pushed:
 			self.faster()
 		self.showstate()
+	#
+	def ab_callback(self, (obj, arg)):
+		if self.abcontrol:
+			text = `self.abcontrol`
+			if text[:1] = '(' and text[-1:] = ')':
+				text = text[1:-1]
+		else:
+			text = ''
+		text = fl.show_input('New (A,B) times:', text)
+		if not text:
+			self.abcontrol = ()
+		else:
+			try:
+				ab = eval(text)
+				if ab = ():
+					self.abcontrol = ()
+				else:
+					# Do a little type checking...
+					a, b = ab
+					a = a + 0.0
+					b = b + 0.0
+					self.abcontrol = a, b
+			except:
+				import gl
+				gl.ringbell()
 	#
 	def state_callback(self, (obj, arg)):
 		self.showstate()
@@ -367,11 +403,16 @@ class Player() = scheduler():
 		for cname in self.channelnames:
 			self.channels[cname].reset()
 	#
+	def stopchannels(self):
+		for cname in self.channelnames:
+			self.channels[cname].stop()
+	#
 	# Playing algorithm.
 	#
 	def start_playing(self):
 		self.resettimer()
 		self.resetchannels()
+		Timing.calctimes(self.root)
 		Timing.prepare(self.root)
 		self.root.counter[HD] = 1
 		self.decrement(0, self.root, HD)
@@ -379,30 +420,46 @@ class Player() = scheduler():
 	#
 	def stop_playing(self):
 		self.setrate(0.0) # Stop the clock
+		self.stopchannels() # Tell the channels to quit it
 		self.queue[:] = [] # Erase all events with brute force!
 		self.updatetimer()
 		Timing.cleanup(self.root) # Collect some garbage
 		self.playing = 0
 	#
 	def decrement(self, (delay, node, side)):
-		if delay > 0:
+		if self.abcontrol:
+			a, b = self.abcontrol
+			doit = (a <= node.t0 <= b)
+		else:
+			doit = 1
+		if delay > 0 and doit: # Sync arc contains delay
 			id = self.enter(delay, 0, self.decrement, \
 						(0, node, side))
 			return
 		x = node.counter[side] - 1
 		node.counter[side] = x
 		if x > 0:
-			return
+			return # Wait for other sync arcs
 		if x < 0:
 			raise RuntimeError, 'counter below zero!?!?'
 		if node.GetType() not in ('seq', 'par'):
 			if side = HD:
-				chan = self.getchannel(node)
-				chan.play(node, self.decrement, (0, node, TL))
+				if doit:
+					chan = self.getchannel(node)
+					chan.play(node, self.decrement, \
+						  (0, node, TL))
+					if self.setcurrenttime_callback:
+						self.setcurrenttime_callback \
+								(node.t0)
+				else:
+					dummy = self.enter(0.0, 0, \
+						self.decrement, (0, node, TL))
 		for arg in node.deps[side]:
 			self.decrement(arg)
 		if node.GetParent() = None and side = TL:
 			# The whole tree is finished -- stop playing.
+			if self.setcurrenttime_callback:
+				self.setcurrenttime_callback(node.t1)
 			self.stop()
 	#
 	# Channel access utilities.
