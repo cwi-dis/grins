@@ -1934,25 +1934,23 @@ END
 
 IDD_EDITATTR_EVENTLIST DIALOGEX 0, 0, 300, 164
 STYLE WS_CHILD
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     LISTBOX         IDC_EVENTLIST,6,8,234,52,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "New",IDC_NEWBUTTON,245,8,46,14
     PUSHBUTTON      "Delete",IDC_DELETEBUTTON,245,30,46,14
     CONTROL         "Delay",IDC_RDELAY,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP,13,83,34,10
-    CONTROL         "Node",IDC_RNODE,"Button",BS_AUTORADIOBUTTON,13,93,33,10
+                    WS_GROUP,13,87,34,10
+    CONTROL         "Node",IDC_RNODE,"Button",BS_AUTORADIOBUTTON,13,97,33,10
     CONTROL         "Top layout",IDC_RLAYOUT,"Button",BS_AUTORADIOBUTTON,13,
-                    113,49,10
+                    107,49,10
     CONTROL         "Indefinite",IDC_RINDEFINITE,"Button",BS_AUTORADIOBUTTON,
-                    67,83,45,10
+                    67,87,45,10
     CONTROL         "Access key",IDC_RACCESSKEY,"Button",BS_AUTORADIOBUTTON,
-                    67,93,53,10
+                    67,97,53,10
     CONTROL         "Wallclock",IDC_RWALLCLOCK,"Button",BS_AUTORADIOBUTTON,
-                    67,103,45,10
-    CONTROL         "Marker",IDC_RMARKER,"Button",BS_AUTORADIOBUTTON,67,113,
-                    38,10
+                    67,107,45,10
     EDITTEXT        IDC_THINGVALUE,173,72,95,14,ES_AUTOHSCROLL | WS_GROUP
     PUSHBUTTON      "...",IDC_THINGBUTTON,268,73,13,12
     COMBOBOX        IDC_EVENTTYPE,174,90,109,71,CBS_DROPDOWNLIST | 
@@ -1965,7 +1963,7 @@ BEGIN
     LTEXT           "Event:",IDC_STATIC,150,92,22,8
     LTEXT           "",IDC_THINGNAME,118,75,54,8,0,WS_EX_RIGHT
     LTEXT           "Cause:",IDC_STATIC,43,72,64,7
-    LTEXT           "Repeat:",IDC_STATIC,217,111,26,8
+    LTEXT           "Repeat:",IDC_REPEATLABEL,217,111,26,8
 END
 
 IDD_ASSETSBAR DIALOG DISCARDABLE  0, 0, 253, 33
@@ -2305,25 +2303,23 @@ END
 
 IDD_EDITATTR_EVENTLIST2 DIALOGEX 0, 0, 300, 164
 STYLE WS_CHILD
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     LISTBOX         IDC_EVENTLIST,6,5,234,35,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "New",IDC_NEWBUTTON,245,5,46,14
     PUSHBUTTON      "Delete",IDC_DELETEBUTTON,245,26,46,14
     CONTROL         "Delay",IDC_RDELAY,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP,13,60,34,10
-    CONTROL         "Node",IDC_RNODE,"Button",BS_AUTORADIOBUTTON,13,70,33,10
-    CONTROL         "Top layout",IDC_RLAYOUT,"Button",BS_AUTORADIOBUTTON,13,
-                    90,49,10
+                    WS_GROUP,14,63,34,10
+    CONTROL         "Node",IDC_RNODE,"Button",BS_AUTORADIOBUTTON,14,73,33,10
+    CONTROL         "Top layout",IDC_RLAYOUT,"Button",BS_AUTORADIOBUTTON,14,
+                    83,49,10
     CONTROL         "Indefinite",IDC_RINDEFINITE,"Button",BS_AUTORADIOBUTTON,
-                    67,60,45,10
+                    68,63,45,10
     CONTROL         "Access key",IDC_RACCESSKEY,"Button",BS_AUTORADIOBUTTON,
-                    67,70,53,10
+                    68,73,53,10
     CONTROL         "Wallclock",IDC_RWALLCLOCK,"Button",BS_AUTORADIOBUTTON,
-                    67,80,45,10
-    CONTROL         "Marker",IDC_RMARKER,"Button",BS_AUTORADIOBUTTON,67,90,
-                    38,10
+                    68,83,45,10
     EDITTEXT        IDC_THINGVALUE,176,49,95,14,ES_AUTOHSCROLL | WS_GROUP
     PUSHBUTTON      "...",IDC_THINGBUTTON,271,50,13,12
     COMBOBOX        IDC_EVENTTYPE,177,67,109,71,CBS_DROPDOWNLIST | 
@@ -2340,7 +2336,7 @@ BEGIN
     LTEXT           "Event:",IDC_STATIC,153,69,22,8
     LTEXT           "",IDC_THINGNAME,118,52,54,8,0,WS_EX_RIGHT
     LTEXT           "Cause:",IDC_STATIC,43,49,64,7
-    LTEXT           "Repeat:",IDC_STATIC,220,88,26,8
+    LTEXT           "Repeat:",IDC_REPEATLABEL,220,88,26,8
     LTEXT           "Restart node:",IDC_RESTARTNODEL,11,115,49,7
     LTEXT           "Restart default:",IDC_RESTARTDEFAULTL,154,115,49,7
     GROUPBOX        "Restart",IDC_EVENTLASSOO2,6,103,290,27,0,0,

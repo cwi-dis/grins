@@ -1264,6 +1264,7 @@ class EventCtrl(AttrCtrl):
 		self._resultwidget = components.Edit(self._wnd, grinsRC.IDC_EVENTLASSOO)
 		self._offsetwidget = components.Edit(self._wnd, grinsRC.IDC_EDITOFFSET)
 		self._repeatwidget = components.Edit(self._wnd, grinsRC.IDC_EDITREPEAT)
+		self._repeatlabel = components.Static(self._wnd, grinsRC.IDC_REPEATLABEL)
 
 		# Keep state for the event drop-down
 		self._old_eventlist = None
@@ -1277,7 +1278,6 @@ class EventCtrl(AttrCtrl):
 			g.IDC_RINDEFINITE: 'indefinite',
 			g.IDC_RACCESSKEY: 'accesskey',
 			g.IDC_RWALLCLOCK: 'wallclock',
-			g.IDC_RMARKER: 'marker',
 			}
 		self._radiobuttonwidgets = {}
 		
@@ -1297,6 +1297,7 @@ class EventCtrl(AttrCtrl):
 		self._resultwidget.attach_to_parent()
 		self._offsetwidget.attach_to_parent()
 		self._repeatwidget.attach_to_parent()
+		self._repeatlabel.attach_to_parent()
 		self.__init_radiobuttons()
 
 		# Top half of window.
@@ -1467,15 +1468,28 @@ class EventCtrl(AttrCtrl):
 	def set_repeatwidget(self):
 		# Only for event widgets or markers.
 		if not self._eventstruct:
+			self._repeatlabel.settext("")
 			self._repeatwidget.settext("")
 			self._repeatwidget.enable(0)
 		else:
-			i = self._eventstruct.get_repeat()
-			if i:
-				self._repeatwidget.settext(`i`)
-				self._repeatwidget.enable(1)
-			
-			
+			event = self._eventstruct.get_event()
+			if event == 'repeat':
+				i = self._eventstruct.get_repeat()
+				if i:
+					self._repeatlabel.settext("Repeat:")
+					self._repeatwidget.settext(`i`)
+					self._repeatwidget.enable(1)
+			elif event == 'marker':
+				i = self._eventstruct.get_marker()
+				if i:
+					self._repeatlabel.settext("Marker:")
+					self._repeatwidget.settext(i)
+					self._repeatwidget.enable(1)				
+			else:
+				self._repeatlabel.settext("")
+				self._repeatwidget.settext("")
+				self._repeatwidget.enable(0)
+
 
 	def _listcallback(self, id, code):
 		if code != win32con.CBN_SELCHANGE:
@@ -1532,14 +1546,15 @@ class EventCtrl(AttrCtrl):
 			self.selected_radiobutton = newcause
 	def _repeatwidgetcallback(self, id, code):
 		if code == win32con.EN_KILLFOCUS and self._eventstruct:
-			if self._eventstruct.get_repeat():
+			e = self._eventstruct.get_event()
+			if e == 'repeat':
 				try:
 					self._eventstruct.set_repeat(int(self._repeatwidget.gettext()))
 				except ValueError:
 					win32dialog.showmessage("Repeat must be a number!", parent=self._wnd._form)
 					return
-			else:
-				print "TODO: media marker."
+			elif e=='marker':
+				self._eventstruct.set_marker(self._repeatwidget.gettext())
 			self.update()
 
 	def _thingbuttoncallback(self, id, code):

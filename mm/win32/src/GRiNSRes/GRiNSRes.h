@@ -634,6 +634,7 @@
 #define IDC_TOPLAYOUTIDL                1434
 #define IDC_REGIONNAMEV                 1435
 #define IDC_TOPLAYOUTIDV                1435
+#define IDC_REPEATLABEL                 1436
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -722,7 +723,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        414
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1436
+#define _APS_NEXT_CONTROL_VALUE         1437
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
