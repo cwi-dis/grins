@@ -180,8 +180,9 @@ class PlayerCore(Scheduler):
 			self.channels[name].check_visible()
 		# (4) Update menu
 		self.makemenu()
-		if chchanged:
-			self.toplevel.channelview.channels_changed()
+		## Not needed (this is only used inside commit!)
+		##if chchanged:
+		##	self.toplevel.channelview.channels_changed()
 	#
 	def showchannels(self):
 		for name in self.channelnames:

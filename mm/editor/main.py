@@ -62,7 +62,8 @@ def main():
 		if opt == '-n':
 			Channel.disable_prearm()
 		if opt == '-h':
-			TopLevel.sethelpdir(arg)
+			import Help
+			Help.sethelpdir(arg)
 	#
 	for fn in files:
 		top = TopLevel.TopLevel().init(fn)

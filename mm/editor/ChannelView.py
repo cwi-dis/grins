@@ -314,6 +314,7 @@ class ChannelView(ViewDialog, GLDialog):
 
 	def getshape(self):
 		gl.reshapeviewport()
+		self.width, self.height = gl.getsize()
 		x0, x1, y0, y1 = gl.getviewport()
 		width, height = x1-x0, y1-y0
 		MASK = 20
@@ -321,7 +322,6 @@ class ChannelView(ViewDialog, GLDialog):
 		gl.scrmask(x0, x1, y0, y1)
 		gl.ortho2(-MASK-0.5, width+MASK-0.5, \
 			  height+MASK-0.5, -MASK-0.5)
-		self.width, self.height = width, height
 		self.channelbottom = 4 * f_fontheight
 		self.nodetop = 5 * f_fontheight
 
