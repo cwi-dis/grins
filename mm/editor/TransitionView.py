@@ -62,7 +62,7 @@ class TransitionView(TransitionViewDialog):
 		if not self.editmgr.transaction():
 			return
 		name = self._findfreename()
-		self.editmgr.addtransition(name, {'trytpe':'fade', 'startProgress': 0.0, 'endProgress': 1.0,})
+		self.editmgr.addtransition(name, {'trtype':'fade', 'startProgress': 0.0, 'endProgress': 1.0,})
 		self.editmgr.commit()
 		AttrEdit.showtransitionattreditor(self.toplevel, name)
 		
