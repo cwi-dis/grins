@@ -11,7 +11,7 @@ A_ARGS = 2
 # XXX These cannot really be changed, much code relies on these values
 
 # Types:
-ATYPE_WHOLE  = 0	# The whole node is the anchor
+ATYPE_DEST  = 0	# The whole node is the anchor
 ATYPE_AUTO   = 1	# Auto-firing anchor (fires when the node is done)
 ATYPE_NORMAL = 2	# Normal (e.g. e box drawn in the window)
 ATYPE_PAUSE  = 3	# Pausing (same plus player pauses until choice made)
@@ -20,8 +20,8 @@ ATYPE_COMP   = 4	# Composite anchor (args are other anchors)
 ATYPE_ARGS   = 5	# Pausing, with arguments
 
 # whole-node (destination only) anchors types
-WholeAnchors = (ATYPE_WHOLE, ATYPE_AUTO, ATYPE_COMP)
-DestOnlyAnchors = (ATYPE_WHOLE, ATYPE_COMP)
+WholeAnchors = (ATYPE_DEST, ATYPE_AUTO, ATYPE_COMP)
+DestOnlyAnchors = (ATYPE_DEST, ATYPE_COMP)
 
 #
 # This is a (temporary) routine to modify anchor lists so all anchor id's
