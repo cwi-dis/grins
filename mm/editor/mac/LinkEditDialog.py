@@ -58,9 +58,10 @@ ITEM_RIGHT_ATITLE=7
 ITEM_RIGHT_NODE=8
 ITEM_RIGHT_NODESELECT=9
 ITEM_RIGHT_ALIST=10
+ITEM_RIGHT_ADDEXT=18
 ITEM_RIGHT_PUSH=11
 ITEM_RIGHT_AEDIT=12
-ITEMLIST_RIGHT=ITEMrange(ITEM_RIGHT_ALIST, ITEM_RIGHT_AEDIT)
+ITEMLIST_RIGHT=ITEMrange(ITEM_RIGHT_ALIST, ITEM_RIGHT_AEDIT)+[ITEM_RIGHT_ADDEXT]
 ITEMLIST_RIGHT_BUTTONS=ITEMrange(ITEM_RIGHT_PUSH, ITEM_RIGHT_AEDIT)
 
 ITEM_LINKS_TITLE=13
@@ -70,7 +71,7 @@ ITEM_LINKS_EDIT=16
 ITEM_LINKS_DELETE=17
 ITEMLIST_LINKS=ITEMrange(ITEM_LINKS_TITLE, ITEM_LINKS_DELETE)
 
-ITEM_BROWSER_BALLOONHELP=18
+ITEM_BROWSER_BALLOONHELP=19
 ITEMLIST_BROWSER_ALL=ITEMrange(ITEM_LEFT_ATITLE, ITEM_BROWSER_BALLOONHELP)
 
 
@@ -125,10 +126,12 @@ class LinkBrowserDialog(windowinterface.MACDialog):
 		self._leftlist = self._window.ListWidget(ITEM_LEFT_ALIST)
 		self._rightlist = self._window.ListWidget(ITEM_RIGHT_ALIST)
 		self._linklist = self._window.ListWidget(ITEM_LINKS_LLIST)
+##		self._rightlist.setcellsize(1024, 0) XXXX does not work...
 		
 		# Create the menus
 		self._leftmenu = windowinterface.FullPopupMenu(menu1)
 		self._rightmenu = windowinterface.FullPopupMenu(menu2)
+		self.addexternalsetsensitive(0)
 		
 	def _close_window(self, *dummies):
 		self.delete_callback()
@@ -150,11 +153,19 @@ class LinkBrowserDialog(windowinterface.MACDialog):
 		elif item == ITEM_RIGHT_ALIST:
 ##			self._listclick(event, self._rightlist, self.anchor_browser_callback,
 ##					(self._right_client_data,))
+			double = self._rightlist.lastclickwasdouble()
+			print 'Double:', `double`
+			if double:
+				data = self._rightlist.getselectvalue()
+				if data:
+					windowinterface.showmessage(data)
 			self.anchor_browser_callback(self._right_client_data)
 		elif item == ITEM_RIGHT_PUSH:
 			self.show_callback(self._right_client_data)
 		elif item == ITEM_RIGHT_AEDIT:
 			self.anchoredit_callback(self._right_client_data)
+		elif item == ITEM_RIGHT_ADDEXT:
+			self.add_external_callback()
 		
 		elif item == ITEM_LINKS_LLIST:
 ##			self._listclick(event, self._linklist, self.link_browser_callback, ())
@@ -354,6 +365,9 @@ class LinkBrowserDialog(windowinterface.MACDialog):
 			sensitive or insensitive
 		"""
 		self._setsensitive(ITEMLIST_RIGHT_BUTTONS, sensitive)
+		
+	def addexternalsetsensitive(self, sensitive):
+		self._setsensitive([ITEM_RIGHT_ADDEXT], sensitive)
 
 	# Interface to the middle list and associated buttons.
 	def middlehide(self):

@@ -117,6 +117,13 @@ class _ListWidget(_ControlWidget):
 ##	def __del__(self):
 ##		print 'del', self
 		
+	def setcellsize(self, width, height):
+		self.list.LCellSize((width, height))
+		
+	def lastclickwasdouble(self):
+		return ControlAccessor.GetControlData(self.control, 
+				Controls.kControlListBoxDoubleClickPart, Controls.kControlListBoxDoubleClickTag)
+				
 	def _setcontent(self, fr, to, content):
 		for y in range(fr, to):
 			item = content[y-fr]
