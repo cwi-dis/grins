@@ -125,19 +125,23 @@ class _DisplayList:
 		wnd.update()
 
 	# Render the display list on dc within the region	
-	def _render(self, dc, region):
+	def _render(self, dc, region, clear=1):
 		self._rendered = 1
 
 		clonestart = self._clonestart
 		if not self._cloneof or self._cloneof is not self._window._active_displist:
 			clonestart = 0
-
+		
+		if not clear and clonestart==0:
+			clonestart = 1
+			
 		for i in range(clonestart, len(self._list)):
 			self._do_render(self._list[i],dc, region)
 
 		for b in self._buttons:
 			if b._highlighted:b._do_highlight()
-		
+
+	
 	def close(self):
 		wnd = self._window
 		if wnd is None:
