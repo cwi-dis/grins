@@ -13,21 +13,10 @@ def getintrinsicduration(node, wanterror):
 	if node.GetType() not in ('ext', 'imm'):
 		# catch all for brush, prefetch, etc.
 		return 0
-	try:
-		clipbegin = node.GetClip('clipbegin', 'sec')
-	except ValueError:
-		clipbegin = 0
-	try:
-		clipend = node.GetClip('clipend', 'sec')
-	except ValueError:
-		clipend = 0
 	url = node.GetFile()
 	cache = urlcache.urlcache[url]
 	dur = cache.get('duration')
 	if dur is not None:
-		if clipend:
-			dur = min(dur, clipend)
-		dur = max(dur - clipbegin, 0)
 		return dur
 	# we hadn't cached the duration, do the hard work
 	# first figure out MIME type
@@ -81,9 +70,6 @@ def getintrinsicduration(node, wanterror):
 		# unknown object type
 		dur = 0
 	cache['duration'] = dur
-	if clipend:
-		dur = min(dur, clipend)
-	dur = max(dur - clipbegin, 0)
 	return dur
 
 def get(node, ignoreloop=0, wanterror=0, ignoredur=0):
@@ -95,6 +81,17 @@ def get(node, ignoreloop=0, wanterror=0, ignoredur=0):
 		p0 = node.GetAttrDef('duration', None)
 	if p0 is None:
 		p0 = getintrinsicduration(node, wanterror)
+		try:
+			clipbegin = node.GetClip('clipbegin', 'sec')
+		except ValueError:
+			clipbegin = 0
+		try:
+			clipend = node.GetClip('clipend', 'sec')
+		except ValueError:
+			clipend = 0
+		if clipend:
+			p0 = min(p0, clipend)
+		p0 = max(p0 - clipbegin, 0)
 	if ignoreloop:
 		repeatCount = None
 	else:
