@@ -241,7 +241,10 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		return 0
 
 	# override DropTarget.OnDragOver to protect childs
-	def OnDragOver(self,filename,kbdstate,x,y):
+	def OnDragOver(self,dataobj,kbdstate,x,y):
+		filename=dataobj.GetGlobalData('FileName')
+		if not filename:return DROPEFFECT_NONE
+
 		client=self.GetMDIClient()
 		wnd=client.ChildWindowFromPoint((x,y))
 		
