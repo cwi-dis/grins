@@ -125,6 +125,8 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			self.pause_minidoc = (not self.pause_minidoc)
 		elif i == 7:
 			raise 'Crash requested by user'
+		elif i == 8:
+			self.dump()
 		else:
 			print 'Player: Option menu: funny choice', i
 		self.makeomenu()
@@ -196,6 +198,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		else:
 			self.omenubutton.addto_menu('   autopause minidoc')
 		self.omenubutton.addto_menu('   Crash CMIF')
+		self.omenubutton.addto_menu('   Dump scheduler data')
 
 	def makemenu(self):
 		self.cmenubutton.set_menu('')
