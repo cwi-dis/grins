@@ -13,8 +13,6 @@ import win32con
 
 import math
 
-from fmtfloat import round
-
 class SVGWinGraphics(svggraphics.SVGGraphics):
 	#
 	#  platform toolkit interface
@@ -267,13 +265,6 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		self.endDraw(style, tflist)
 		return hrgn
 
-	def drawPath(self, path, style, tflist, a = 0):
-		self.beginDraw(style, tflist)
-		wingdi.BeginPath(self.hdc)
-		self.drawPathSegList(path._pathSegList)
-		wingdi.EndPath(self.hdc)
-		self.endDraw(style, tflist)
-
 	def drawText(self, text, pos, style, tflist, a = 0):
 		if tflist:
 			tm = self.ctm.copy()
@@ -360,8 +351,42 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		assert len(self._tkstack)>0, 'unpaired save/restore tk'
 		self.tk.setHandles(self._tkstack.pop())
 
+	def drawPath(self, path, style, tflist, a = 0):
+		self.beginDraw(style, tflist)
+		wingdi.BeginPath(self.hdc)
+		oldtf = wingdi.GetWorldTransform(self.hdc)
+		tm = self.ctm.copy()
+		prec = path.getPrecision()
+		if prec>=3:
+			scale = 0.001
+			self._saround = self.scale1000AndRound
+		elif prec==2:
+			scale = 0.01
+			self._saround = self.scale100AndRound
+		elif prec==1:
+			scale = 0.1
+			self._saround = self.scale10AndRound
+		elif prec==0:
+			scale = 1.0
+			self._saround = self.scale1AndRound
+		tm.scale([scale, scale])
+		wingdi.SetWorldTransform(self.hdc, tm.getElements())
+		self.drawPathSegList(path._pathSegList, self._saround)
+		wingdi.EndPath(self.hdc)
+		wingdi.SetWorldTransform(self.hdc, oldtf)
+		self.endDraw(style, tflist)
+		
+	def scale1000AndRound(self, x):
+		return int(math.floor(1000.0*x + 0.5))
+	def scale100AndRound(self, x):
+		return int(math.floor(100.0*x + 0.5))
+	def scale10AndRound(self, x):
+		return int(math.floor(10.0*x + 0.5))
+	def scale1AndRound(self, x):
+		return int(x) # x is actually an int
+
 	# XXX: use PolyDraw to speed up
-	def drawPathSegList(self, pathSegList):
+	def drawPathSegList(self, pathSegList, saround):
 		PathSeg = svgtypes.PathSeg
 		lastX = 0
 		lastY = 0
@@ -379,10 +404,10 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 						print 'assuming abs moveto'
 					if seg._type == PathSeg.SVG_PATHSEG_MOVETO_REL:
 						lastX, lastY = lastX + seg._x, lastY + seg._y
-						wingdi.MoveToEx(self.hdc, (round(lastX), round(lastY)))
+						wingdi.MoveToEx(self.hdc, (saround(lastX), saround(lastY)))
 					else:
 						lastX, lastY = seg._x, seg._y
-						wingdi.MoveToEx(self.hdc, (round(lastX), round(lastY)))
+						wingdi.MoveToEx(self.hdc, (saround(lastX), saround(lastY)))
 				isstart = 0
 			else:
 				if seg._type == PathSeg.SVG_PATHSEG_CLOSEPATH:
@@ -395,55 +420,55 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 				elif seg._type == PathSeg.SVG_PATHSEG_MOVETO_ABS:
 					lastX, lastY = seg._x, seg._y
 					lastC = None
-					wingdi.MoveToEx(self.hdc, (round(lastX), round(lastY)))
+					wingdi.MoveToEx(self.hdc, (saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_MOVETO_REL:
 					if seg._x != 0 or seg._y != 0:
 						lastX, lastY = lastX + seg._x, lastY + seg._y
 						lastC = None
-						wingdi.MoveToEx(self.hdc, (round(lastX), round(lastY)))
+						wingdi.MoveToEx(self.hdc, (saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_ABS:
 					if seg._x != lastX or seg._y != lastY:
 						lastX, lastY = seg._x, seg._y
 						lastC = None
-						wingdi.LineTo(self.hdc, (round(seg._x), round(seg._y)))
+						wingdi.LineTo(self.hdc, (saround(seg._x), saround(seg._y)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_REL:
 					lastX, lastY = lastX + seg._x, lastY + seg._y
 					lastC = None
-					wingdi.LineTo(self.hdc, (round(lastX), round(lastY)))
+					wingdi.LineTo(self.hdc, (saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_ABS:
 					lastX = seg._x
 					lastC = None
-					wingdi.LineTo(self.hdc, (round(lastX), round(lastY)))
+					wingdi.LineTo(self.hdc, (saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_REL:
 					lastX = lastX + seg._x
 					lastC = None
-					wingdi.LineTo(self.hdc, (round(lastX), round(lastY)))
+					wingdi.LineTo(self.hdc, (saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_ABS:
 					lastY = seg._y
 					lastC = None
-					wingdi.LineTo(self.hdc, (round(lastX), round(lastY)))
+					wingdi.LineTo(self.hdc, (saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_REL:
 					lastY = lastY + seg._y
 					lastC = None
-					wingdi.LineTo(self.hdc, (round(lastX), round(lastY)))
+					wingdi.LineTo(self.hdc, (saround(lastX), saround(lastY)))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_ABS:
 					x1, y1, x2, y2, x, y = seg._x1, seg._y1, seg._x2, seg._y2, seg._x, seg._y
-					bl = [(round(x1),round(y1)), (round(x2),round(y2)), (round(x),round(y))]
+					bl = [(saround(x1),saround(y1)), (saround(x2),saround(y2)), (saround(x),saround(y))]
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = seg._x2,seg._y2
 					lastX, lastY = seg._x, seg._y
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_REL:
 					x1, y1, x2, y2, x, y = lastX + seg._x1, lastY + seg._y1, lastX + seg._x2, lastY + seg._y2, lastX + seg._x, lastY + seg._y
-					bl = [(round(x1),round(y1)), (round(x2),round(y2)), (round(x),round(y))]
+					bl = [(saround(x1),saround(y1)), (saround(x2),saround(y2)), (saround(x),saround(y))]
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = lastX + seg._x2,lastY + seg._y2
 					lastX, lastY = lastX + seg._x,lastY + seg._y
@@ -452,7 +477,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					if lastC is None:
 						lastC = lastX, lastY
 					x1, y1 = 2*lastX - lastC[0], 2*lastY - lastC[1]
-					bl = [(round(x1), round(y1)),(round(seg._x2), round(seg._y2)),(round(seg._x), round(seg._y))]
+					bl = [(saround(x1), saround(y1)),(saround(seg._x2), saround(seg._y2)),(saround(seg._x), saround(seg._y))]
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = seg._x2, seg._y2
 					lastX, lastY = seg._x, seg._y
@@ -461,19 +486,19 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					if lastC is None:
 						lastC = lastX, lastY
 					x1, y1 = 2*lastX - lastC[0], 2*lastY - lastC[1]
-					bl = [(round(x1), round(y1)),(round(lastX + seg._x2), round(lastY + seg._y2)),(round(lastX + seg._x), round(lastY + seg._y))]
+					bl = [(saround(x1), saround(y1)),(saround(lastX + seg._x2), saround(lastY + seg._y2)),(saround(lastX + seg._x), saround(lastY + seg._y))]
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = lastX + seg._x2, lastY + seg._y2
 					lastX, lastY = lastX + seg._x, lastY + seg._y
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_ABS:
-					bl = [(round(lastX), round(lastY)),(round(seg._x1), round(seg._y1)),(round(seg._x), round(seg._y))]
+					bl = [(saround(lastX), saround(lastY)),(saround(seg._x1), saround(seg._y1)),(saround(seg._x), saround(seg._y))]
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = seg._x1, seg._y1
 					lastX, lastY = seg._x, seg._y
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_REL:
-					bl = [(round(lastX), round(lastY)),(round(lastX + seg._x1), round(lastY + seg._y1)),(round(lastX + seg._x), round(lastY + seg._y))]
+					bl = [(saround(lastX), saround(lastY)),(saround(lastX + seg._x1), saround(lastY + seg._y1)),(saround(lastX + seg._x), saround(lastY + seg._y))]
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = lastX + seg._x1, lastY + seg._y1
 					lastX, lastY = lastX + seg._x, lastY + seg._y
@@ -482,7 +507,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					if lastC is None:
 						lastC = lastX, lastY
 					nextC = 2*lastX - lastC[0], 2*lastY - lastC[1]
-					bl = [(round(lastX), round(lastY)),(round(nextC[0]), round(nextC[1])),(round(seg._x), round(seg._y))]
+					bl = [(saround(lastX), saround(lastY)),(saround(nextC[0]), saround(nextC[1])),(saround(seg._x), saround(seg._y))]
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = nextC
 					lastX, lastY = seg._x, seg._y
@@ -491,7 +516,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					if lastC is None:
 						lastC = lastX, lastY
 					nextC = 2*lastX - lastC[0], 2*lastY - lastC[1]
-					bl = [(round(lastX), round(lastY)),(round(nextC[0]), round(nextC[1])),(round(lastX+seg._x), round(lastY+seg._y))]
+					bl = [(saround(lastX), saround(lastY)),(saround(nextC[0]), saround(nextC[1])),(saround(lastX+seg._x), saround(lastY+seg._y))]
 					wingdi.PolyBezierTo(self.hdc, bl)
 					lastC = nextC
 					lastX, lastY = lastX+seg._x, lastY+seg._y
@@ -505,7 +530,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					if r1<0: r1 = -r1
 					if r2<0: r2 = -r2
 					if r1 == 0 or r2 == 0:
-						wingdi.LineTo(self.hdc, (round(seg._x), round(seg._y)))
+						wingdi.LineTo(self.hdc, (saround(seg._x), saround(seg._y)))
 					else:
 						if fs:
 							olddir = wingdi.SetArcDirection(self.hdc, win32con.AD_CLOCKWISE)
@@ -527,12 +552,12 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 							rc = -r1, -r2, r1, r2
 							wingdi.Arc(self.hdc, rc, (x1, y1), (x2, y2))
 							wingdi.SetWorldTransform(self.hdc, oldtf)
-							wingdi.MoveToEx(self.hdc, (round(seg._x), round(seg._y)))
+							wingdi.MoveToEx(self.hdc, (saround(seg._x), saround(seg._y)))
 						else:
 							rc = cx-r1, cy-r2, cx+r1, cy+r2
 							x1, y1 = lastX, lastY
 							x2, y2 = seg._x, seg._y
-							wingdi.ArcTo(self.hdc, rc, (round(x1), round(y1)), (round(x2), round(y2)))
+							wingdi.ArcTo(self.hdc, rc, (saround(x1), saround(y1)), (saround(x2), saround(y2)))
 						wingdi.SetArcDirection(self.hdc, olddir)	
 					lastC = None
 					lastX, lastY = seg._x, seg._y
@@ -550,7 +575,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 					if r1<0: r1 = -r1
 					if r2<0: r2 = -r2
 					if r1 == 0 or r2 == 0:
-						wingdi.LineTo(self.hdc, (round(lastX + seg._x), round(lastY + seg._y)))
+						wingdi.LineTo(self.hdc, (saround(lastX + seg._x), saround(lastY + seg._y)))
 					else:
 						if fs:
 							olddir = wingdi.SetArcDirection(self.hdc, win32con.AD_CLOCKWISE)
@@ -570,14 +595,14 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 							tm.applyTfList([('translate',[cx, cy]), ('rotate',[angle,]),])
 							wingdi.SetWorldTransform(self.hdc, tm.getElements())
 							rc = -r1, -r2, r1, r2
-							wingdi.Arc(self.hdc, rc, (round(x1), round(y1)), (round(x2), round(y2)))
+							wingdi.Arc(self.hdc, rc, (saround(x1), saround(y1)), (saround(x2), saround(y2)))
 							wingdi.SetWorldTransform(self.hdc, oldtf)
-							wingdi.MoveToEx(self.hdc, (round(lastX + seg._x), round(lastY + seg._y)))
+							wingdi.MoveToEx(self.hdc, (saround(lastX + seg._x), saround(lastY + seg._y)))
 						else:
 							rc = cx-r1, cy-r2, cx+r1, cy+r2
 							x1, y1 = lastX, lastY
 							x2, y2 = lastX + seg._x, lastY + seg._y
-							wingdi.ArcTo(self.hdc, rc, (round(x1), round(y1)), (round(x2), round(y2)))
+							wingdi.ArcTo(self.hdc, rc, (saround(x1), saround(y1)), (saround(x2), saround(y2)))
 						wingdi.SetArcDirection(self.hdc, olddir)
 					lastC = None
 					lastX, lastY = lastX + seg._x, lastY + seg._y
