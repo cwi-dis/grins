@@ -1032,17 +1032,6 @@ class MMSyncArc:
 		# self.marker is not None:
 		return refnode.happenings[('marker', self.marker)] + atimes[0] + self.delay
 
-	def cancel(self, sched):
-		try:
-			sched.cancel(self.qid)
-		except ValueError:
-			pass
-		self.qid = None
-		for a in self.deparcs:
-			a.cancel(sched)
-			a.depends = None
-		self.deparcs = []
-
 class MMNode_body:
 	"""Helper for looping nodes"""
 	helpertype = "looping"
