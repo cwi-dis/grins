@@ -74,6 +74,8 @@ class BlockView(ViewDialog, BasicDialog):
 		self.form.unfreeze_form ()
 	def rollback(self):
 		pass
+	def kill(self):
+		self.destroy()
 	#
 	# new makes an object of type 'blockview'
 	#
@@ -344,10 +346,7 @@ class BlockView(ViewDialog, BasicDialog):
 		if self.commanddict.has_key (key) :
 			self.commanddict[key](self)
 		else :
-			if fl.show_question ('Unknown command',key, \
-						'Do you want help?'):
-			    self.toplevel.help.givehelp('Hierarchy', \
-					'Commands')
+			gl.ringbell()
 
 	def _openclose_callback (self, (obj, node)) :
 		if node.bv_toosmall: return
@@ -414,14 +413,13 @@ class BlockView(ViewDialog, BasicDialog):
 def helpfunc (bv) :
 	bv.toplevel.help.givehelp('Hierarchy')
 
-import AttrEdit
-
 def attreditfunc (bv) :
+	import AttrEdit
 	AttrEdit.showattreditor (bv.focus)
 
-import NodeEdit
 
 def conteditfunc (bv) :
+	import NodeEdit
 	NodeEdit.showeditor (bv.focus)
 
 
@@ -511,7 +509,10 @@ def _doInsertNode (bv, after, cb) :
 	bv.changing_node = parent
 	node.context.editmgr.commit()
 	bv.changing_node = None
-	if not cb: NodeInfo.shownodeinfo(newnode)
+	if not cb:
+		import NodeInfo
+		NodeInfo.shownodeinfo(newnode)
+
 def InsertBeforeNode(bv):
 	_doInsertNode(bv, 0, 0)
 def CInsertBeforeNode(bv):
@@ -547,7 +548,9 @@ def _InsertChildNode (bv,cb) :
 	bv.focus = newnode
 	parent.context.editmgr.commit()
 	bv.changing_node = None
-	if not cb: NodeInfo.shownodeinfo(newnode)
+	if not cb:
+		import NodeInfo
+		NodeInfo.shownodeinfo(newnode)
 
 def InsertChildNode(bv):
 	_InsertChildNode(bv,0)
@@ -592,10 +595,10 @@ def zoomfunc (bv) :
 	bv.form.unfreeze_form ()
 	bv.rootview = node
 
-import NodeInfo
 
 def infofunc(bv):
 	node = bv.focus
+	import NodeInfo
 	NodeInfo.shownodeinfo(node)
 
 def playfunc(bv):
