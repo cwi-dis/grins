@@ -55,8 +55,9 @@ class MainDialog:
 				GRINS_WEB(callback = (self.grins_web_callback, ('http://www.oratrix.com/GRiNS/index.html',))))
 		import windowinterface
 		# register events for all frame wnds
+		windowinterface.register_event(WMEVENTS.PasteFile, self.pastefile, None)
+		windowinterface.register_event(WMEVENTS.DragFile, self.dropeffect, None)
 		windowinterface.register_event(WMEVENTS.DropFile, self.dropfile, None)
-		windowinterface.register_event(WMEVENTS.PasteFile, self.dropfile, None)
 		windowinterface.createmainwnd(title,
 			adornments = self.adornments,
 			commandlist = self.commandlist)
@@ -83,6 +84,22 @@ class MainDialog:
 			self.openURL_callback(url)
 		else:
 			windowinterface.showmessage('Incorrect filetype for drop/paste')
+	
+	def pastefile(self, arg, window, event, value):
+		x,y,filename=value
+		url=self.__path2url(filename)
+		self.openURL_callback(url)
+		
+	def dropeffect(self, dummy, window, event, params):
+		x,y,filename=value
+		url=self.__path2url(filename)
+		import mimetypes, windowinterface
+		mimetype = mimetypes.guess_type(url)[0]
+		if mimetype in ('application/smil', 'application/x-grins-cmif'):
+			return windowinterface.DROPEFFECT_MOVE
+		else:
+			return windowinterface.DROPEFFECT_NONE
+
 
 	def set_recent_list(self, list):
 		import windowinterface
