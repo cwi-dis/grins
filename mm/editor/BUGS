@@ -5,6 +5,8 @@
 
 ------------------------------ BUGS -------------------------------
 
+when the root is a leaf, modifying it crashes in BlockView line 83.
+
 node/channel attr editors: when clicking OK, if the window size
 changes (because the list of defined attributes changes), the new
 window pops up for a nanosecond and then disappears again
