@@ -27,7 +27,7 @@ namespace jpeg
 	{
 	typedef jpeg_error_mgr* (*std_error_fn)(jpeg_error_mgr *err);
 	typedef void  (*CreateDecompress_fn)(j_decompress_ptr cinfo, int version, size_t structsize);
-	typedef void (*stdio_src_fn)(j_decompress_ptr cinfo, FILE * infile);
+	typedef void (*stdio_src_fn)(j_decompress_ptr cinfo, HANDLE infile);
 	typedef int (*read_header_fn)(j_decompress_ptr cinfo, boolean require_image);
 	typedef void (*calc_output_dimensions_fn)(j_decompress_ptr cinfo);
 	typedef boolean (*start_decompress_fn)(j_decompress_ptr cinfo);
@@ -144,7 +144,7 @@ DIBSurf* JpgDecoder::decode()
 	jpeg::create_decompress(&cinfo);
 
 	// Specify data source for decompression
-	jpeg::stdio_src(&cinfo, (FILE *) m_mf.get_handle());
+	jpeg::stdio_src(&cinfo, m_mf.get_handle());
 
 	// Read file header, set default decompression parameters
 	int res = jpeg::read_header(&cinfo, TRUE);
