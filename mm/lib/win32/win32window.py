@@ -29,6 +29,7 @@ class Window:
 		self._showing = None
 		self._curcursor = ''
 		self._isvisible = 1
+		self._convcolor = None
 
 	def __repr__(self):
 		return '<Window instance at %x>' % id(self)
@@ -36,6 +37,7 @@ class Window:
 	def fgcolor(self, color):
 		r, g, b = color
 		self._fgcolor = r, g, b
+		self._convcolor = None
 
 	def bgcolor(self, color):
 		r, g, b = color
@@ -685,8 +687,8 @@ class Window:
 
 ########################################
 
-# regions, 
-import win32ui, win32con
+# regions, RGB 
+import win32ui, win32con, win32api
 
 import win32transitions
 
@@ -895,6 +897,11 @@ class SubWindow(Window):
 
 	def __paintOnDDS(self, dds, rel=None):
 		x, y, w, h = self.getwindowpos(rel)
+		if self._transparent == 0:
+			if self._convcolor == None:
+				r, g, b = self._bgcolor
+				self._convcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+			dds.BltFill((x, y, x+w, y+h), self._convcolor)
 		if self._active_displist:
 			hdc = dds.GetDC()
 			dc = win32ui.CreateDCFromHandle(hdc)
@@ -996,6 +1003,9 @@ class SubWindow(Window):
 		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
 		x2, y2, w2, h2 = self.getwindowpos()
 		
+		# XXX: if any subwindow in the tree
+		# has an oswnd should be moved also
+
 		self._topwindow.update()
 
 	def updatezindex(self, z):
