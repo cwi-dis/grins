@@ -26,7 +26,8 @@ class TimeMapper:
 		# recalculate mapping so that collisions stay same
 		# size but between collisions we give proportinately
 		# more/fewer pixels to times
-		if __debug__ and DEBUG: print 'setoffset',offset,width
+		if __debug__:
+			if DEBUG: print 'setoffset',offset,width
 		coll = 0
 		for pxl in self.collisiondict.values():
 			coll = coll + pxl
@@ -40,14 +41,15 @@ class TimeMapper:
 			for t in self.times:
 				self.minpos[t] = int((self.minpos[t] - coll) * factor + .5) + coll + off
 				coll = coll + self.collisiondict[t]
-			if __debug__ and DEBUG:
-				print 'MINPOS'
-				for t in self.times:
-					print (t, self.minpos[t])
-				print 'RANGES'
-				for t in self.times:
-					print t, self.minpos[t], self.collisiondict[t], self.minpos[t] + self.collisiondict[t]
-				print self.minpos
+			if __debug__:
+				if DEBUG:
+					print 'MINPOS'
+					for t in self.times:
+						print (t, self.minpos[t])
+					print 'RANGES'
+					for t in self.times:
+						print t, self.minpos[t], self.collisiondict[t], self.minpos[t] + self.collisiondict[t]
+					print self.minpos
 			self.range = self.minpos[self.times[0]], self.minpos[self.times[-1]] + self.collisiondict[self.times[-1]]
 		else:
 			# not enough pixels given to fit collisions,
@@ -58,7 +60,8 @@ class TimeMapper:
 	def adddependency(self, t0, t1, minpixeldistance, node):
 		if not self.collecting:
 			raise Error, 'Adding dependency while not collecting data anymore'
-		if __debug__ and DEBUG: print 'adddependency',t0,t1,minpixeldistance,node
+		if __debug__:
+			if DEBUG: print 'adddependency',t0,t1,minpixeldistance,node
 		self.dependencies.append((t1, t0, minpixeldistance))
 		self.collisiondict[t0] = 0
 		self.collisiondict[t1] = 0
@@ -66,14 +69,16 @@ class TimeMapper:
 	def addcollision(self, time, minpixeldistance):
 		if not self.collecting:
 			raise Error, 'Adding collision while not collecting data anymore'
-		if __debug__ and DEBUG: print 'addcollision',time,minpixeldistance
+		if __debug__:
+			if DEBUG: print 'addcollision',time,minpixeldistance
 		self.collisions.append((time, minpixeldistance))
 		self.collisiondict[time] = 0
 
 	def addstalltime(self, time, stalltime, stalltype='stall'):
 		if not self.collecting:
 			raise Error, 'Adding stilltime while not collecting data anymore'
-		if __debug__ and DEBUG: print 'addstalltime',time,stalltime,stalltype
+		if __debug__:
+			if DEBUG: print 'addstalltime',time,stalltime,stalltype
 		oldstalltime, oldstalltype = self.stalldict.get(time, (0, None))
 		stalltime = oldstalltime + stalltime
 		# XXXX Adding is not correct for different types of stalls
@@ -85,20 +90,22 @@ class TimeMapper:
 		min_pixels_per_second = self.min_pxl_per_sec
 		if not self.collecting:
 			raise Error, 'Calculate called while not collecting data'
-		if __debug__ and DEBUG: print 'calculate',realtime,min_pixels_per_second
+		if __debug__:
+			if DEBUG: print 'calculate',realtime,min_pixels_per_second
 		self.collecting = 0
 		self.dependencies.sort()
-		if __debug__ and DEBUG:
-			print 'DEPENDENCIES'
-			for item in self.dependencies:
-				print item
-			print 'COLLISIONS'
-			self.collisions.sort()
-			for item in self.collisions:
-				print item
-			print 'STALLS'
-			for item in self.stalldict.items():
-				print item
+		if __debug__:
+			if DEBUG:
+				print 'DEPENDENCIES'
+				for item in self.dependencies:
+					print item
+				print 'COLLISIONS'
+				self.collisions.sort()
+				for item in self.collisions:
+					print item
+				print 'STALLS'
+				for item in self.stalldict.items():
+					print item
 		for time, pixels in self.collisions:
 			oldpixels = self.collisiondict[time]
 			if pixels > oldpixels:
@@ -112,8 +119,8 @@ class TimeMapper:
 ##			min_pixels_per_second = int(min_pixels_per_second+0.5)
 		elif min_pixels_per_second == 0:
 			min_pixels_per_second = 2
-		if __debug__ and DEBUG:
-			print 'min pxl per sec:',min_pixels_per_second
+		if __debug__:
+			if DEBUG: print 'min pxl per sec:',min_pixels_per_second
 		for time, (stalltime, stalltype) in self.stalldict.items():
 			stallpixels = stalltime * min_pixels_per_second
 			if stallpixels > self.collisiondict[time]:
@@ -131,13 +138,14 @@ class TimeMapper:
 			minpos = minpos + self.collisiondict[t] + 1
 			prev_t = t
 		self.dependencies.sort()
-		if __debug__ and DEBUG:
-			print 'MINPOS'
-			for t in self.times:
-				print (t, self.minpos[t])
-			print 'DEPENDENCIES NOW'
-			for item in self.dependencies:
-				print item
+		if __debug__:
+			if DEBUG:
+				print 'MINPOS'
+				for t in self.times:
+					print (t, self.minpos[t])
+				print 'DEPENDENCIES NOW'
+				for item in self.dependencies:
+					print item
 ##		pushover = {}
 		for t1, t0, pixels in self.dependencies:
 			t0maxpos = self.minpos[t0] + self.collisiondict[t0]
@@ -150,14 +158,15 @@ class TimeMapper:
 ##		for time in self.times:
 ##			curpush = curpush + pushover.get(time, 0)
 ##			self.minpos[time] = self.minpos[time] + curpush
-		if __debug__ and DEBUG:
-			print 'MINPOS'
-			for t in self.times:
-				print (t, self.minpos[t])
-			print 'RANGES'
-			for t in self.times:
-				print t, self.minpos[t], self.collisiondict[t], self.minpos[t] + self.collisiondict[t]
-			print self.minpos
+		if __debug__:
+			if DEBUG:
+				print 'MINPOS'
+				for t in self.times:
+					print (t, self.minpos[t])
+				print 'RANGES'
+				for t in self.times:
+					print t, self.minpos[t], self.collisiondict[t], self.minpos[t] + self.collisiondict[t]
+				print self.minpos
 		self.range = self.minpos[self.times[0]], self.minpos[self.times[-1]] + self.collisiondict[self.times[-1]]
 		if realtime:
 			return min_pixels_per_second
@@ -250,7 +259,8 @@ class TimeMapper:
 		pos = self.minpos[time]
 		if align == 'right':
 			pos = pos + self.collisiondict[time]
-		if __debug__ and DEBUG: print 'time2pixel',time,align,'->',pos,self.__pixel2pixel(pos)
+		if __debug__:
+			if DEBUG: print 'time2pixel',time,align,'->',pos,self.__pixel2pixel(pos)
 		return self.__pixel2pixel(pos)
 
 	def interptime2pixel(self, time, align='left'):
