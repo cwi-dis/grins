@@ -11,8 +11,41 @@ EMPTY = "(seq '1' ((channellist) (hyperlinks) (styledict)))"
 # List of currently open toplevel windows
 opentops = []
 
+_trace_depth = 0
+_curframe = None
+def dispatch(frame, event, arg):
+	global _trace_depth, _curframe
+	code = frame.f_code
+	funcname = code.co_name
+	if not funcname:
+		funcname = '<lambda>'
+	filename = code.co_filename
+	event = event[0]
+	lineno = frame.f_lineno
+	plineno = ''
+	if event == 'c':
+		_trace_depth = _trace_depth + 1
+		e = ' '*_trace_depth + '>'
+		if lineno == -1:
+			code = code.co_code
+			if ord(code[0]) == 127:	# SET_LINENO
+				lineno = ord(code[1]) | ord(code[2]) << 8
+		pframe = frame.f_back
+		if pframe:
+			plineno = ' (%d)' % pframe.f_lineno
+	elif event == 'r':
+		e = ' '*_trace_depth + '<'
+		_trace_depth = _trace_depth - 1
+	else:
+		e = ' '*_trace_depth + 'E'
+		if frame is not _curframe:
+			_trace_depth = _trace_depth - 1
+	print '%s %s:%d %s%s' % (e, filename,lineno,funcname,plineno)
+	_curframe = frame
+
 class TopLevel(ViewDialog):
 	def __init__(self, main, filename, new_file):
+		self._tracing = 0
 		ViewDialog.init(self, 'toplevel_')
 		self.showing = 0
 		self.select_fdlist = []
@@ -53,7 +86,8 @@ class TopLevel(ViewDialog):
 			 ('Restore', (self.restore_callback, ())),
 			 ('Close', (self.close_callback, ())),
 			 None,
-			 ('Debug', (self.debug_callback, ()))])
+			 ('Debug', (self.debug_callback, ())),
+			 ('Trace', (self.trace_callback, ()))])
 ##			 ('Help', (self.help_callback, ()))])
 		self.showing = 1
 
@@ -305,6 +339,27 @@ class TopLevel(ViewDialog):
 	def debug_callback(self):
 		import pdb
 		pdb.set_trace()
+
+	def trace_callback(self):
+		global _trace_depth
+		import sys
+		if self._tracing:
+			sys.setprofile(None)
+			self._tracing = 0
+		else:
+			try:
+				raise 'xyzzy'
+			except:
+				frame = sys.exc_traceback.tb_frame
+			while frame.f_code.co_name != 'trace_callback':
+				frame = frame.f_back
+			d = 0
+			while frame:
+				d = d + 1
+				frame = frame.f_back
+			_trace_depth = d
+			self._tracing = 1
+			sys.setprofile(dispatch)
 
 	def help_callback(self):
 		import Help
