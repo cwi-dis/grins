@@ -1663,7 +1663,7 @@ class MMSyncArc:
 		if self.delay is None:
 			return 0	# indefinite
 		if self.accesskey is not None:
-			return 0	# event hasn't happened
+			return self.dstnode.GetSchedRoot().eventhappened((None, 'accesskey', self.accesskey))
 		if self.wallclock is not None:
 			# if there is a schedule context it's resolved
 			return sctx is not None
