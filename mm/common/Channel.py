@@ -79,7 +79,7 @@ class Channel:
 		self._highlighted = None
 		self._in_modeless_resize = 0
 		self.nopop = 0
-		self.syncarm = settings.noprearm
+		self.syncarm = 0
 		self.syncplay = 0
 		self.is_layout_channel = 0
 		self.seekargs = None
@@ -479,17 +479,11 @@ class Channel:
 		if debug:
 			print 'Channel.play_0('+`self`+','+`node`+')'
 		if self._armed_node is not node:
-			if settings.noprearm:
-				self.arm(node)
-			else:
-				raise error, 'node was not the armed node '+`self,node`
+			raise error, 'node was not the armed node '+`self,node`
 		if self._playstate != PIDLE:
 			raise error, 'play not idle on '+self._name
 		if self._armstate != ARMED:
-			if settings.noprearm:
-				self.arm(node)
-			else:
-				raise error, 'arm not ready'
+			raise error, 'arm not ready'
 		self._playcontext = self._armcontext
 		self._playstate = PLAYING
 		self._played_node = node
@@ -1169,16 +1163,16 @@ class ChannelWindow(Channel):
 ##		menu = []
 		if pchan:
 ##			if hasattr(self._player, 'editmgr'):
-##				menu.append('', 'raise', (self.popup, ()))
-##				menu.append('', 'lower', (self.popdown, ()))
+##				menu.append(('', 'raise', (self.popup, ())))
+##				menu.append(('', 'lower', (self.popdown, ())))
 ##				menu.append(None)
-##				menu.append('', 'select in timeline view',
-##					    (self.focuscall, ()))
+##				menu.append(('', 'select in timeline view',
+##					     (self.focuscall, ())))
 ##				menu.append(None)
-##				menu.append('', 'highlight',
-##					    (self.highlight, ()))
-##				menu.append('', 'unhighlight',
-##					    (self.unhighlight, ()))
+##				menu.append(('', 'highlight',
+##					     (self.highlight, ())))
+##				menu.append(('', 'unhighlight',
+##					     (self.unhighlight, ())))
 			transparent = self._attrdict.get('transparent', 0)
 			self._curvals['transparent'] = (transparent, 0)
 			z = self._attrdict.get('z', 0)
@@ -1197,8 +1191,8 @@ class ChannelWindow(Channel):
 						units = units)
 ##			if hasattr(self._player, 'editmgr'):
 ##				menu.append(None)
-##				menu.append('', 'resize',
-##					    (self.resize_window, (pchan,)))
+##				menu.append(('', 'resize',
+##					     (self.resize_window, (pchan,))))
 		else:
 			# no basewindow, create a top-level window
 			adornments = self._player.get_adornments(self)
@@ -1222,8 +1216,8 @@ class ChannelWindow(Channel):
 					units = units, adornments = adornments,
 					commandlist = self.commandlist)
 ##			if hasattr(self._player, 'editmgr'):
-##				menu.append('', 'select in timeline view',
-##					    (self.focuscall, ()))
+##				menu.append(('', 'select in timeline view',
+##					     (self.focuscall, ())))
 		if self._attrdict.has_key('bgcolor'):
 			self.window.bgcolor(self._attrdict['bgcolor'])
 		if self._attrdict.has_key('fgcolor'):
@@ -1413,7 +1407,7 @@ class ChannelWindow(Channel):
 				self.armed_display.fgcolor(self.getbucolor(node))
 			else:
 				self.armed_display.fgcolor(bgcolor)
-			b = self.armed_display.newbutton((0.0, 0.0, 1.0, 1.0), times = armed_anchor[A_TIMES])
+			b = self.armed_display.newbutton((0.0, 0.0, 1.0, 1.0))
 			b.hiwidth(3)
 			b.hicolor(self.gethicolor(node))
 			self.armed_display.fgcolor(fgcolor)
