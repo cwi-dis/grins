@@ -23,31 +23,39 @@
  */
 typedef _INTERFACE  IUnknown			    IUnknown;
 typedef _INTERFACE  IRMABuffer			    IRMABuffer;
-typedef _INTERFACE  IRMAKeyedListIterator	    IRMAKeyedListIterator;
-typedef _INTERFACE  IRMAUniquelyKeyedList	    IRMAUniquelyKeyedList;
+typedef _INTERFACE  IRMAKeyValueList		    IRMAKeyValueList;
+typedef _INTERFACE  IRMAKeyValueListIter            IRMAKeyValueListIter;
+typedef _INTERFACE  IRMAKeyValueListIterOneKey      IRMAKeyValueListIterOneKey;
+typedef _INTERFACE  IRMAValues			    IRMAValues;
+typedef _INTERFACE  IRMAOptions			    IRMAOptions;
+
+/* Note : GUIDS 3101 - 3107 are deprecated. */
 
 /****************************************************************************
  * 
  *  Interface:
  *
- *	IRMAKeyedListIterator
+ *	IRMAKeyValueList
  *
  *  Purpose:
  *
- *	Iterator for KeyedLists
+ *	Stores a list of strings, where strings are keyed by not necessarily
+ *      unique keys.
  *	
  *
- *  IRMAKeyedListIterator:
+ *  IRMAKeyValueList:
  *
- *	{0x00003100-0901-11d1-8B06-00A024406D59}
+ *	{0x00003108-0901-11d1-8B06-00A024406D59}
  *
  */
-DEFINE_GUID(IID_IRMAKeyedListIterator,   0x00003100, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
+DEFINE_GUID(IID_IRMAKeyValueList, 0x00003108, 0x901, 0x11d1, 
+	    0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
+#define CLSID_IRMAKeyValueList IID_IRMAKeyValueList
 
 #undef  INTERFACE
-#define INTERFACE   IRMAKeyedListIterator
+#define INTERFACE   IRMAKeyValueList
 
-DECLARE_INTERFACE_(IRMAKeyedListIterator, IUnknown)
+DECLARE_INTERFACE_(IRMAKeyValueList, IUnknown)
 {
     /*
      *	IUnknown methods
@@ -60,122 +68,110 @@ DECLARE_INTERFACE_(IRMAKeyedListIterator, IUnknown)
 
     STDMETHOD_(ULONG32,Release)	(THIS) PURE;
 
-    /************************************************************************
+    /*
+     * Regular methods
+     */
+
+     /************************************************************************
      *	Method:
-     *	    IRMAKeyedListIterator::
+     *	    IRMAKeyValueList::AddKeyValue
      *	Purpose:
-     *	    This function is called to set the context for the plugin.
-     *
+     *      Add a new key/value tuple to our list of strings.  You can have
+     *      multiple strings for the same key.
      */
+    STDMETHOD(AddKeyValue)	(THIS_
+				const char* pKey,
+				IRMABuffer* pStr) PURE;
 
-    /* step forward */
-    STDMETHOD(Next) (THIS) PURE;
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValueList::GetIter
+     *	Purpose:
+     *      Return an iterator that allows you to iterate through all the 
+     *      key/value tuples in our list of strings.
+     */
+    STDMETHOD(GetIter)		(THIS_
+				REF(IRMAKeyValueListIter*) pIter) PURE;
 
-    /* step backward */
-    STDMETHOD(Previous) (THIS) PURE;
 
-    /* find next matching key */
-    STDMETHOD(FindNext) (THIS) PURE;
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValueList::GetIterOneKey
+     *	Purpose:
+     *      Return an iterator that allows you to iterate through all the 
+     *      strings for a particular key.
+     */
+    STDMETHOD(GetIterOneKey)	(THIS_
+				const char* pKey,
+				REF(IRMAKeyValueListIterOneKey*) pIter) PURE;
 
-    /* return TRUE if iterator is at beginning of list */
-    STDMETHOD_(BOOL, AtBeginning) (THIS) PURE;
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValueList::AppendAllListItems
+     *	Purpose:
+     *      Append all the key/string tuples from another list to this list.
+     *      (You can have duplicate keys.)
+     */
+    STDMETHOD(AppendAllListItems)   (THIS_
+				    IRMAKeyValueList* pList) PURE;
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValueList::KeyExists
+     *	Purpose:
+     *      See whether any strings exist for a particular key.
+     */
+    STDMETHOD_(BOOL,KeyExists)  (THIS_
+				const char* pKey) PURE;
 
-    /* return TRUE if iterator is one past the last node in the list */
-    STDMETHOD_(BOOL, AtEnd) (THIS) PURE;
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValueList::CreateObject
+     *	Purpose:
+     *      Create an empty object that is the same class as the current object.
+     */
+    STDMETHOD(CreateObject)	(THIS_
+				REF(IRMAKeyValueList*) pNewList) PURE;
 
-    /* insert key/value pair before current position 
-     * if the last parameter is not NULL it returns 
-     * a new iterator set at the new value */
-    STDMETHOD(Insert)
-    (
-	THIS_ 
-	const char* pKey,
-	IUnknown* pValue,
-	IRMAKeyedListIterator** ppIteratorEnd
-    ) PURE;
-
-    /* insert the specified list of nodes from another list before 
-     * current position in this list (includes pIteratorBegin through
-     * the node before pIteratorEnd, since End always means one past
-     * the last node) */
-    STDMETHOD(InsertSpan)
-    (
-	THIS_ 
-	IRMAKeyedListIterator* pIteratorBegin,
-	IRMAKeyedListIterator* pIteratorEnd
-    ) PURE;
-
-    /* removes current node and its key */
-    STDMETHOD(Remove) (THIS) PURE;
-
-    /* Remove the nodes specified from this list. (includes 
-     * the current node through the node before pIteratorEnd, 
-     * since End always means one past the last node) */
-    STDMETHOD(RemoveSpan)
-    (
-	THIS_ 
-	IRMAKeyedListIterator* pIteratorEnd
-    ) PURE;
-
-    /* get current node key */
-    STDMETHOD_(const char*, GetKey) (THIS) PURE;
-
-    /* get current node key as a buffer */
-    STDMETHOD(GetKeyAsBuffer) (THIS_ REF(IRMABuffer*) pKey) PURE;
-
-    /* get current node value */
-    STDMETHOD(GetValue) (THIS_ REF(IUnknown*) pValue) PURE;
-    
-    /* set current node value */
-    STDMETHOD(SetValue) (THIS_ IUnknown* pValue) PURE;
-
-    /* get current node key and value */
-    STDMETHOD(GetCurrent)
-    (
-	THIS_ 
-	REF(const char*) pKey,
-	REF(IUnknown*) pValue
-    ) PURE;
-
-    /* return IUnknown of list being iterated */
-    STDMETHOD(GetList) (THIS_ REF(IUnknown*) pList) PURE;
-
-    /* return TRUE if iterator is at the same position of the 
-      same list */
-    STDMETHOD_(BOOL, AtSamePosition) (THIS_ IRMAKeyedListIterator*) PURE;
-
-    /* return TRUE if iterator is at the same node of the same list
-     * this private version is called by the public version.  The
-     * UINT32 it passes in contains impl specific instance and position
-     * data.  (ex. some hash of the current node pointer) 	*/
-    STDMETHOD_(BOOL, _AtSamePositionPrivate) (THIS_ UINT32) PURE;
-
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValueList::ImportValues.
+     *	Purpose:
+     *      Import all the strings from an IRMAValues object into this object.
+     *      If this object also supports IRMAValues, it should also import the 
+     *      ULONGs and Buffers.  You can have duplicate keys, and old data is 
+     *      left untouched.
+     */
+    STDMETHOD(ImportValues)	(THIS_
+				IRMAValues* pValues) PURE;
 };
+
 
 /****************************************************************************
  * 
  *  Interface:
  *
- *	IRMAUniquelyKeyedList
+ *	IRMAKeyValueListIter
  *
  *  Purpose:
  *
- *	UniquelyKeyedList
+ *	Iterate over all the items in a CKeyValueList.
+ *      Call IRMAKeyValueList::GetIter to create an iterator.
  *	
  *
- *  IRMAUniquelyKeyedList:
+ *  IRMAKeyValueListIter:
  *
- *	{0x00003101-0901-11d1-8B06-00A024406D59}
+ *	{0x00003109-0901-11d1-8B06-00A024406D59}
  *
  */
-DEFINE_GUID(IID_IRMAUniquelyKeyedList,   0x00003101, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
+DEFINE_GUID(IID_IRMAKeyValueListIter,   0x00003109, 0x901, 0x11d1, 
+	    0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
 
-#define CLSID_IRMAUniquelyKeyedList IID_IRMAUniquelyKeyedList
+#define CLSID_IRMAKeyValueListIter IID_IRMAKeyValueListIter
 
 #undef  INTERFACE
-#define INTERFACE   IRMAUniquelyKeyedList
+#define INTERFACE   IRMAKeyValueListIter
 
-DECLARE_INTERFACE_(IRMAUniquelyKeyedList, IUnknown)
+DECLARE_INTERFACE_(IRMAKeyValueListIter, IUnknown)
 {
     /*
      *	IUnknown methods
@@ -189,54 +185,60 @@ DECLARE_INTERFACE_(IRMAUniquelyKeyedList, IUnknown)
     STDMETHOD_(ULONG32,Release)	(THIS) PURE;
 
 
-    /* returns number of nodes in list */
-    STDMETHOD_(UINT32, GetSize)(THIS) PURE;
+    /*
+     * Regular methods
+     */
 
-    /* return iterator set to the first node in the list */
-    STDMETHOD(Begin) (THIS_ REF(IRMAKeyedListIterator*)) PURE;
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValueListIter::GetNextPair
+     *	Purpose:
+     *      Each call to this method returns one key/value tuple from your
+     *      list of strings.  Strings are returned in same order that they
+     *      were inserted.
+     */
+    STDMETHOD(GetNextPair)	(THIS_
+				REF(const char*) pKey,
+				REF(IRMABuffer*) pStr) PURE;
 
-    /* return iterator set to one past the last node in 
-     * the list */
-    STDMETHOD(End) (THIS_ REF(IRMAKeyedListIterator*)) PURE;
-
-    /* return iterator set to first node of list 
-     * with key == pKey */
-    STDMETHOD(FindFirst)
-    (
-	THIS_
-	const char* pKey,
-	REF(IRMAKeyedListIterator*)
-    ) PURE;
-
-    /* remove all nodes with this key */
-    STDMETHOD(Remove) (THIS_ const char* pKey) PURE;
-
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValueListIter::ReplaceCurr
+     *	Purpose:
+     *      Replaces the value in the key/value tuple that was returned 
+     *      in the last call to GetNextPair with a new string.
+     */
+    STDMETHOD(ReplaceCurr)	(THIS_
+				IRMABuffer* pStr) PURE;
 };
+
 
 /****************************************************************************
  * 
  *  Interface:
  *
- *	IRMAUniquelyKeyedIList
+ *	IRMAKeyValueListIterOneKey
  *
  *  Purpose:
  *
- *	UniquelyKeyedList(CaseInsensitive)
+ *	Iterate over all the items in a CKeyValueList that match a particular key.
+ *      Call IRMAKeyValueList::GetIterOneKey to create an iterator.
  *	
  *
- *  IRMAUniquelyKeyedIList:
+ *  IRMAKeyValueListIterOneKey:
  *
- *	{0x00003102-0901-11d1-8B06-00A024406D59}
+ *	{0x00003110-0901-11d1-8B06-00A024406D59}
  *
  */
-DEFINE_GUID(IID_IRMAUniquelyKeyedIList,   0x00003102, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
+DEFINE_GUID(IID_IRMAKeyValueListIterOneKey,   0x00003110, 0x901, 0x11d1, 
+	    0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
 
-#define CLSID_IRMAUniquelyKeyedIList IID_IRMAUniquelyKeyedIList
+#define CLSID_IRMAKeyValueListIterOneKey IID_IRMAKeyValueListIterOneKey
 
 #undef  INTERFACE
-#define INTERFACE   IRMAUniquelyKeyedIList
+#define INTERFACE   IRMAKeyValueListIterOneKey
 
-DECLARE_INTERFACE_(IRMAUniquelyKeyedIList, IUnknown)
+DECLARE_INTERFACE_(IRMAKeyValueListIterOneKey, IUnknown)
 {
     /*
      *	IUnknown methods
@@ -250,54 +252,62 @@ DECLARE_INTERFACE_(IRMAUniquelyKeyedIList, IUnknown)
     STDMETHOD_(ULONG32,Release)	(THIS) PURE;
 
 
-    /* returns number of nodes in list */
-    STDMETHOD_(UINT32, GetSize)(THIS) PURE;
+    /*
+     * Regular methods
+     */
 
-    /* return iterator set to the first node in the list */
-    STDMETHOD(Begin) (THIS_ REF(IRMAKeyedListIterator*)) PURE;
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValueListIterOneKey::GetNextString
+     *	Purpose:
+     *      Each call to this method returns one string that matches the 
+     *      key for this iterator.  Strings are returned in same order that they
+     *      were inserted.
+     *      
+     */
+    STDMETHOD(GetNextString)	(THIS_
+				REF(IRMABuffer*) pStr) PURE;
 
-    /* return iterator set to one past the last node in 
-     * the list */
-    STDMETHOD(End) (THIS_ REF(IRMAKeyedListIterator*)) PURE;
-
-    /* return iterator set to first node of list 
-     * with key == pKey */
-    STDMETHOD(FindFirst)
-    (
-	THIS_
-	const char* pKey,
-	REF(IRMAKeyedListIterator*)
-    ) PURE;
-
-    /* remove all nodes with this key */
-    STDMETHOD(Remove) (THIS_ const char* pKey) PURE;
-
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValueListIterOneKey::ReplaceCurr
+     *	Purpose:
+     *      Replaces the value in the key/value tuple that was referenced
+     *      in the last call to GetNextString with a new string.
+     *      
+     */
+    STDMETHOD(ReplaceCurr)	(THIS_
+				IRMABuffer* pStr) PURE;
 };
+
 
 /****************************************************************************
  * 
  *  Interface:
  *
- *	IRMAKeyedList
+ *	IRMAOptions
  *
  *  Purpose:
  *
- *	KeyedList(CaseSensitive)
+ *	This is a generic options interface, implemented by any object to
+ *	allow its options to be read and set by another component of the
+ *	system.
  *	
  *
- *  IRMAKeyedList:
+ *  IRMAOptions:
  *
- *	{0x00003103-0901-11d1-8B06-00A024406D59}
+ *	{0x00003111-0901-11d1-8B06-00A024406D59}
  *
  */
-DEFINE_GUID(IID_IRMAKeyedList,   0x00003103, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
+DEFINE_GUID(IID_IRMAOptions,   0x00003111, 0x901, 0x11d1, 
+	    0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
 
-#define CLSID_IRMAKeyedList IID_IRMAKeyedList
+#define CLSID_IRMAOptions IID_IRMAOptions
 
 #undef  INTERFACE
-#define INTERFACE   IRMAKeyedList
+#define INTERFACE   IRMAOptions
 
-DECLARE_INTERFACE_(IRMAKeyedList, IUnknown)
+DECLARE_INTERFACE_(IRMAOptions, IUnknown)
 {
     /*
      *	IUnknown methods
@@ -311,238 +321,60 @@ DECLARE_INTERFACE_(IRMAKeyedList, IUnknown)
     STDMETHOD_(ULONG32,Release)	(THIS) PURE;
 
 
-    /* returns number of nodes in list */
-    STDMETHOD_(UINT32, GetSize)(THIS) PURE;
-
-    /* return iterator set to the first node in the list */
-    STDMETHOD(Begin) (THIS_ REF(IRMAKeyedListIterator*)) PURE;
-
-    /* return iterator set to one past the last node in 
-     * the list */
-    STDMETHOD(End) (THIS_ REF(IRMAKeyedListIterator*)) PURE;
-
-    /* return iterator set to first node of list 
-     * with key == pKey */
-    STDMETHOD(FindFirst)
-    (
-	THIS_
-	const char* pKey,
-	REF(IRMAKeyedListIterator*)
-    ) PURE;
-
-    /* remove all nodes with this key */
-    STDMETHOD(Remove) (THIS_ const char* pKey) PURE;
-
-};
-
-/****************************************************************************
- * 
- *  Interface:
- *
- *	IRMAKeyedIList
- *
- *  Purpose:
- *
- *	KeyedList(CaseInsensitive)
- *	
- *
- *  IRMAKeyedIList:
- *
- *	{0x00003104-0901-11d1-8B06-00A024406D59}
- *
- */
-DEFINE_GUID(IID_IRMAKeyedIList,   0x00003104, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
-
-#define CLSID_IRMAKeyedIList IID_IRMAKeyedIList
-
-#undef  INTERFACE
-#define INTERFACE   IRMAKeyedIList
-
-DECLARE_INTERFACE_(IRMAKeyedIList, IUnknown)
-{
     /*
-     *	IUnknown methods
+     * Regular methods
      */
-    STDMETHOD(QueryInterface)	(THIS_
-				REFIID riid,
-				void** ppvObj) PURE;
 
-    STDMETHOD_(ULONG32,AddRef)	(THIS) PURE;
-
-    STDMETHOD_(ULONG32,Release)	(THIS) PURE;
-
-
-    /* returns number of nodes in list */
-    STDMETHOD_(UINT32, GetSize)(THIS) PURE;
-
-    /* return iterator set to the first node in the list */
-    STDMETHOD(Begin) (THIS_ REF(IRMAKeyedListIterator*)) PURE;
-
-    /* return iterator set to one past the last node in 
-     * the list */
-    STDMETHOD(End) (THIS_ REF(IRMAKeyedListIterator*)) PURE;
-
-    /* return iterator set to first node of list 
-     * with key == pKey */
-    STDMETHOD(FindFirst)
-    (
-	THIS_
-	const char* pKey,
-	REF(IRMAKeyedListIterator*)
-    ) PURE;
-
-    /* remove all nodes with this key */
-    STDMETHOD(Remove) (THIS_ const char* pKey) PURE;
-
-};
-
-
-/****************************************************************************
- * 
- *  Interface:
- *
- *	IRMAUtilities
- *
- *  Purpose:
- *
- *	Utilities
- *	
- *
- *  IRMAUtilities:
- *
- *	{0x00003105-0901-11d1-8B06-00A024406D59}
- *
- */
-DEFINE_GUID(IID_IRMAUtilities,   0x00003105, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
-
-#undef  INTERFACE
-#define INTERFACE   IRMAUtilities
-
-DECLARE_INTERFACE_(IRMAUtilities, IUnknown)
-{
-    /*
-     *	IUnknown methods
+     /************************************************************************
+     *	Method:
+     *	    IRMAOptions::GetOptions
+     *	Purpose:
+     *      This method returns a list of the options supported by this
+     *	    particular object, along with the value currently set for each
+     *	    option. Enumerate the members of the returned IRMAValues object
+     *	    to discover what options a component supports and the type of
+     *	    each of those options. The value for each name-value pair is
+     *	    the current setting for that option.
+     *      
      */
-    STDMETHOD(QueryInterface)	(THIS_
-				REFIID riid,
-				void** ppvObj) PURE;
+    STDMETHOD(GetOptions)	(THIS_
+				REF(IRMAValues*) pOptions) PURE;
 
-    STDMETHOD_(ULONG32,AddRef)	(THIS) PURE;
-
-    STDMETHOD_(ULONG32,Release)	(THIS) PURE;
-
-    /* IRMAUtilities methods */
-
-    /* return a deep copy of this object initialized
-     * to the same state (as close as possible) */
-    STDMETHOD(Copy) (THIS_ REF(IUnknown*) pUnknown) PURE;
-
-    /* return a Human readable CString describing
-     * the current state of this object  
-     * (per darrens request) */
-    STDMETHOD(Dump) (THIS_ REF(IRMABuffer*) pBuffer) PURE;
-
-
-};
-
-/****************************************************************************
- * 
- *  Interface:
- *
- *	IRMAUINT32
- *
- *  Purpose:
- *
- *	Contain a UINT32
- *	
- *
- *  IRMAUINT32:
- *
- *	{0x00003106-0901-11d1-8B06-00A024406D59}
- *
- */
-DEFINE_GUID(IID_IRMAUINT32,   0x00003106, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
-
-#define CLSID_IRMAUINT32 IID_IRMAUINT32
-
-#undef  INTERFACE
-#define INTERFACE   IRMAUINT32
-
-DECLARE_INTERFACE_(IRMAUINT32, IUnknown)
-{
-    /*
-     *	IUnknown methods
+     /************************************************************************
+     *	Method:
+     *	    IRMAOptions::SetOptionULONG32
+     *	Purpose:
+     *      Sets the value of a ULONG32 option. The return value indicates
+     *	    whether or not the SetOptionULONG32 call succeeded.
+     *      
      */
-    STDMETHOD(QueryInterface)	(THIS_
-				REFIID riid,
-				void** ppvObj) PURE;
+    STDMETHOD(SetOptionULONG32)	(THIS_
+				const char* pName,
+				ULONG32 ulValue) PURE;
 
-    STDMETHOD_(ULONG32,AddRef)	(THIS) PURE;
-
-    STDMETHOD_(ULONG32,Release)	(THIS) PURE;
-
-    /* IRMAUINT32 methods */
-
-    /* set the UINT32 value of this object */
-    STDMETHOD(Set)		(THIS_ const UINT32 ulValue) PURE;
-
-    /* return the UINT32 value of this object */
-    STDMETHOD_(UINT32, GetValue)	(THIS) PURE;
-
-};
-
-/****************************************************************************
- * 
- *  Interface:
- *
- *	IRMACString
- *
- *  Purpose:
- *
- *	Contain a IRMACString
- *	
- *
- *  IRMACString:
- *
- *	{0x00003107-0901-11d1-8B06-00A024406D59}
- *
- */
-DEFINE_GUID(IID_IRMACString,   0x00003107, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
-
-#define CLSID_IRMACString IID_IRMACString
-
-#undef  INTERFACE
-#define INTERFACE   IRMACString
-
-DECLARE_INTERFACE_(IRMACString, IUnknown)
-{
-    /*
-     *	IUnknown methods
+     /************************************************************************
+     *	Method:
+     *	    IRMAOptions::SetOptionCString
+     *	Purpose:
+     *      Sets the value of a CString option. The return value indicates
+     *	    whether or not the SetOptionCString call succeeded.
+     *      
      */
-    STDMETHOD(QueryInterface)	(THIS_
-				REFIID riid,
-				void** ppvObj) PURE;
+    STDMETHOD(SetOptionCString)	(THIS_
+				const char* pName,
+				IRMABuffer* pValue) PURE;
 
-    STDMETHOD_(ULONG32,AddRef)	(THIS) PURE;
-
-    STDMETHOD_(ULONG32,Release)	(THIS) PURE;
-
-    /* IRMACString methods */
-
-    /* set the CString value of this object */
-    STDMETHOD(Set)		(THIS_ const char* pValue) PURE;
-
-    /* return the CString value of this object */
-    STDMETHOD_(const char*, GetValue)	(THIS) PURE;
-
-    /* set the CString value of this object 
-     * from a Buffer */
-    STDMETHOD(FromBuffer)	(THIS_ IRMABuffer* pBuffer) PURE;
-
-    /* return the CString value of this object 
-     * in a Buffer */
-    STDMETHOD(AsBuffer)	(THIS_ REF(IRMABuffer*) pBuffer) PURE;
-
+     /************************************************************************
+     *	Method:
+     *	    IRMAOptions::SetOptionBuffer
+     *	Purpose:
+     *      Sets the value of a Buffer option. The return value indicates
+     *	    whether or not the SetOptionBuffer call succeeded.
+     *      
+     */
+    STDMETHOD(SetOptionBuffer)	(THIS_
+				const char* pName,
+				IRMABuffer* pValue) PURE;
 };
 
 

@@ -19,9 +19,6 @@
 #define _RMAPCKTS_H_
 
 // Define IRMAUtilities
-// $Private
-#include "rmavalue.h"
-// $EndPrivate
 
 /* ASMFlags in IRMAPacket */
 #define RMA_ASM_SWITCH_ON	 0x01
@@ -268,4 +265,87 @@ DECLARE_INTERFACE_(IRMAValues, IUnknown)
 					REF(IRMABuffer*) pPropertyValue) PURE;
 };
 
+
+/****************************************************************************
+ * 
+ *  Interface:
+ *
+ *	IRMAValuesRemove
+ *
+ *  Purpose:
+ *
+ *      This interface is to add Remove methods to a class that supports 
+ *      IRMAValues.  All classes that support this interface will also 
+ *      support IRMAValues.
+ *   
+ *  
+ *
+ *  IID_IRMAValuesRemove:
+ *
+ *	{00001303-0901-11d1-8B06-00A024406D59}
+ *
+ */
+DEFINE_GUID(IID_IRMAValuesRemove, 0x00001303, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 
+			0xa0, 0x24, 0x40, 0x6d, 0x59);
+
+/*
+ *  The IRMACommonClassFactory does not support creating an instance
+ *  of this object.
+ */
+
+#undef  INTERFACE
+#define INTERFACE   IRMAValuesRemove
+
+DECLARE_INTERFACE_(IRMAValuesRemove, IUnknown)
+{
+    /*
+     *	IUnknown methods
+     */
+    STDMETHOD(QueryInterface)	(THIS_
+				REFIID riid,
+				void** ppvObj) PURE;
+
+    STDMETHOD_(ULONG32,AddRef)	(THIS) PURE;
+
+    STDMETHOD_(ULONG32,Release)	(THIS) PURE;
+
+    /*
+     * IRMAValuesRemove methods
+     */
+
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValuesRemove::Remove
+     *	Purpose:
+     *      Remove all items matching pKey.  (If you know what datatype you saved
+     *      the key as, use the specific method.)
+     */
+    STDMETHOD(Remove)	     (const char* pKey) PURE;
+    
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValuesRemove::RemoveULONG32
+     *	Purpose:
+     *      Remove all ULONG32 items matching pKey. 
+     */
+    STDMETHOD(RemoveULONG32) (const char* pKey) PURE;
+    
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValuesRemove::RemoveBuffer
+     *	Purpose:
+     *      Remove all Buffer items matching pKey. 
+     */
+    STDMETHOD(RemoveBuffer)  (const char* pKey) PURE;
+    
+     /************************************************************************
+     *	Method:
+     *	    IRMAKeyValuesRemove::RemoveCString
+     *	Purpose:
+     *      Remove all CString items matching pKey. 
+     */
+    STDMETHOD(RemoveCString) (const char* pKey) PURE;
+};
+
 #endif /* _RMAPCKTS_H_ */
+
