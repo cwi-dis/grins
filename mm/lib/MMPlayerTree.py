@@ -275,23 +275,27 @@ def gen_prearms(node):
 	# Create per-channel list of prearms
 	#
 	prearmlists = {}
+	prearmlists_uid = {}
 	for ch in channelnames:
 		prearmlists[ch] = []
-	GenAllPrearms(node, prearmlists)
+		prearmlists_uid[ch] = []
+	GenAllPrearms(node, prearmlists, prearmlists_uid)
 	node.EndPruneTree()
+	node.prearmlists = prearmlists_uid
 	Timing.needtimes(node)
 	return prearmlists
 
-def GenAllPrearms(node, prearmlists):
+def GenAllPrearms(node, prearmlists, prearmlists_uid):
 	nodetype = node.GetType()
 	if nodetype == 'bag':
 		return
 	if nodetype in leaftypes:
 		chan = MMAttrdefs.getattr(node, 'channel')
 		prearmlists[chan].append((SR.PLAY_ARM, node.uid))
+		prearmlists_uid[chan].append((SR.PLAY_ARM, node))
 		return
 	for child in node.wtd_children:
-		GenAllPrearms(child, prearmlists)
+		GenAllPrearms(child, prearmlists, prearmlists_uid)
 
 # this gets called very often so had better be as fast as possible
 def mapuid(context, uid):
