@@ -136,7 +136,7 @@ def GetSize(url, target=0, attrs = {}, convert = 1):
 	except IOError:
 		raise Error, 'Media item does not exist'
 	tmp = None
-	if target and hdrs.maintype == 'image' and convert:
+	if target and hdrs.maintype == 'image' and hdrs.subtype != 'svg-xml' and convert:
 		import tempfile
 		tmp = tempfile.mktemp('.jpg')
 		dir, file = os.path.split(tmp)
