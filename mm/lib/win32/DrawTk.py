@@ -1,16 +1,11 @@
 __version__ = "$Id$"
 
 """ @win32doc|DrawTk
-A general and extensible win32 drawing toolkit
-In its current version although it has a general
-and extensible structure the tools and the objects 
-implemeted support only drawing/resizing/selecting rectangles
-needed by the cmif application
-The base classes defined in this module are the DrawTool,and DrawObj.
+The basic classes defined in this module are the DrawTool and the DrawObj.
 The SelectTool and the RectTool are extensions to the DrawTool
-The DrawRect is one extension to the DrawObj
+The DrawRect is an extension to the DrawObj
 The DrawTk is a utility class 
-The DrawLayer is a mixin class for windows that want to offer drawing facilities
+The DrawLayer is a mixin class for windows
 """
 
 # Win32 Drawing Toolkit
@@ -108,7 +103,7 @@ class SelectTool(DrawTool):
 			view.ReleaseDC(dc)
 
 		drawTk.lastPoint = local
-		DrawTool.onLButtonDown(self,view,flags, point);
+		DrawTool.onLButtonDown(self,view,flags, point)
 
 	def onLButtonDblClk(self,view,flags,point):
 		if (flags & win32con.MK_SHIFT) != 0:
@@ -171,8 +166,10 @@ class SelectTool(DrawTool):
 			if drawTk.selectMode == DrawTk.SM_MOVE:
 				position.moveByPt(delta)
 				drawObj.moveTo(position,view)
+				if delta.x+delta.y:view.SetDrawObjDirty(1)
 			elif drawTk.ixDragHandle != 0:
 				drawObj.moveHandleTo(drawTk.ixDragHandle,local,view)
+				view.SetDrawObjDirty(1)
 
 		drawTk.lastPoint = local
 
@@ -571,6 +568,7 @@ class DrawLayer:
 		self._grid=1
 		self._gridColor=(0, 0, 128)
 		self._active=1
+		self._drawObjIsDirty=0
 
 	# std view stuff
 	def OnUpdate(self,viewSender,hint=None,hintObj=None):
@@ -840,3 +838,9 @@ class DrawLayer:
 
 	def DeleteContents(self):
 		self._objects=[]
+
+	def SetDrawObjDirty(self,f):
+		self._drawObjIsDirty=f
+
+	def IsDrawObjDirty(self):
+		return self._drawObjIsDirty
