@@ -100,7 +100,7 @@ MENUBAR=(
 		(ENTRY, 'Send focus to other views', 'F', PUSHFOCUS),
 		(DYNAMICCASCADE, 'Select syncarc', SYNCARCS),
 		(SEP,),
-		(TOGGLE, 'Display unused channels', 'T', TOGGLE_UNUSED),
+		(TOGGLE, 'Display unused channels', None, TOGGLE_UNUSED),
 		(TOGGLE, 'Display sync arcs', None, TOGGLE_ARCS),
 		(TOGGLE, 'Display image thumbnails', None, THUMBNAIL),
 		(SEP,),
