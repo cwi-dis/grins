@@ -63,7 +63,7 @@ gl.defcursor(_WATCH, _watch*8)
 gl.curorigin(_WATCH, 8, 8)
 
 class _Toplevel:
-	def init(self):
+	def __init__(self):
 		if debug: print 'TopLevel.init('+`self`+')'
 		self._parent_window = None
 		self._subwindows = []
@@ -71,7 +71,6 @@ class _Toplevel:
 		self._bgcolor = _DEF_BGCOLOR
 		self._cursor = ''
 		self._win_lock = None
-		return self
 
 	def close(self):
 		if debug: print 'Toplevel.close()'
@@ -118,13 +117,14 @@ class _Toplevel:
 
 
 class _Event:
-	def init(self):
+	def __init__(self):
 		if debug: print 'Event.init('+`self`+')'
 		self._queue = []
 		self._curwin = None
 		self._savemouse = None
 		self._savex = None
-		return self
+		self._fdlist = []
+		self._winfd = gl.qgetfd()
 
 	def _qdevice(self):
 		if debug: print 'Event.qdevice()'
@@ -148,12 +148,63 @@ class _Event:
 		if debug: print 'Event._readevent()'
 		if not mayblock():
 			raise error, 'won\'t block in _readevent()'
-		dev, val = fl_or_gl.qread()
-		return self._dispatch(dev, val)
+		self._readeventtimeout(None)
 
+	def _readeventtimeout(self, timeout):
+		import select
+		if debug: print 'Event._readeventtimeout('+`timeout`+')'
+		if timeout != None and timeout > 0 and not mayblock():
+			raise error, 'won\'t block in _readeventtimeout()'
+		fdlist = [self._winfd] + self._fdlist
+		if timeout == None:
+			ifdlist, ofdlist, efdlist = select.select(fdlist,
+				  [], [])
+		else:
+			ifdlist, ofdlist, efdlist = select.select(fdlist,
+				  [], [], timeout)
+		for fd in ifdlist:
+			if fd in self._fdlist:
+				self.entereventunique(None, FileEvent, fd)
+		while fl_or_gl.qtest():
+			dev, val = fl_or_gl.qread()
+			self._dispatch(dev, val)
+
+	def _getevent(self, timeout):
+		import time
+		if debug > 1: print 'Event._getevent('+`timeout`+')'
+		t0 = time.millitimer()
+		if self._queue:
+			timeout = 0	# force collecting events w/out waiting
+		while 1:
+			if timeout != None:
+				t1 = time.millitimer()
+				timeout = timeout - float(t1 - t0) / 1000.0
+				if timeout < 0:
+					timeout = 0
+				t0 = t1
+			self._readeventtimeout(timeout)
+			for winkey in _window_list.keys():
+				win = _window_list[winkey]
+				if win._must_redraw:
+					win._redraw()
+			if self._queue:
+				return 1
+			if timeout != None and timeout <= 0:
+				return 0
+			if not mayblock():
+				raise error, 'won\'t block in _getevent()'
+
+	def _doevent(self, dev, val):
+		if debug: print 'Event._doevent'+`dev,val`
+		self._dispatch(dev, val)
+		for winkey in _window_list.keys():
+			win = _window_list[winkey]
+			if win._must_redraw:
+				win._redraw()
+		
 	def _dispatch(self, dev, val):
 		if (dev, val) == (0, 0):
-			return None
+			return
 ##		print 'dispatch',
 ##		if _dev_map.has_key(dev):
 ##			print _dev_map[dev],
@@ -175,10 +226,10 @@ class _Event:
 						_toplevel._win_lock.release()
 					if (w, h) != (win._width, win._height):
 						win._resize()
-						return None
+						return
 ##			else:
 ##				print 'redraw event for unknown window '+`val`
-			return None
+			return
 		elif dev == DEVICE.INPUTCHANGE:
 			self._savemouse = None
 			if val == 0:
@@ -188,23 +239,24 @@ class _Event:
 				self._curwin = None
 			else:
 				self._curwin = _window_list[val]
-			return None
+			return
 		elif dev == DEVICE.KEYBD:
 			self._savemouse = None
 			if gl.getvaluator(DEVICE.LEFTALTKEY) or \
 				  gl.getvaluator(DEVICE.RIGHTALTKEY):
 				val = val + 128
-			return self._curwin, KeyboardInput, chr(val)
+			self.enterevent(self._curwin, KeyboardInput, chr(val))
+			return
 		elif dev in (DEVICE.LEFTMOUSE, DEVICE.MIDDLEMOUSE, DEVICE.RIGHTMOUSE):
 			self._savemouse = dev, val
-			return None
+			return
 		elif dev == DEVICE.MOUSEX:
 			self._savex = val
-			return None
+			return
 		elif dev == DEVICE.MOUSEY:
 			if not self._curwin or not self._savemouse:
 ##				print 'mouse event when not in known window'
-				return None
+				return
 			y = val
 			dev, val = self._savemouse
 			x = self._savex
@@ -239,61 +291,38 @@ class _Event:
 					dev = Mouse2Press
 				else:
 					dev = Mouse2Release
-			return self._curwin, dev, (x, y, buttons)
+			self.enterevent(self._curwin, dev, (x, y, buttons))
+			return
 		elif dev in (DEVICE.MOUSEX, DEVICE.MOUSEY):
 			raise error, 'got mouse position event'
 		elif dev in (DEVICE.WINSHUT, DEVICE.WINQUIT):
-			return self._curwin, WindowExit, None
+			self.enterevent(self._curwin, WindowExit, None)
+			return
 ##		else:
 ##			print 'huh!',`dev,val`
-		return self._curwin, dev, val
+		self.enterevent(self._curwin, dev, val)
 
-	def _getevent(self, block):
-		if debug > 1: print 'Event._getevent('+`block`+')'
-		if mayblock():
-			qtest = fl_or_gl.qtest()
-		else:
-			qtest = 0
-		while 1:
-			while qtest:
-				event = self._readevent()
-				if event:
-					self._queue.append(event)
-				qtest = fl_or_gl.qtest()
-			for winkey in _window_list.keys():
-				win = _window_list[winkey]
-				if win._must_redraw:
-					win._redraw()
-			if self._queue:
-				return 1
-			if not block:
-				return 0
-			if not mayblock():
-				raise error, 'won\'t block in _getevent()'
-			qtest = 1	# block on next round
-
-	def _doevent(self, dev, val):
-		if debug: print 'Event._doevent'+`dev,val`
-		event = self._dispatch(dev, val)
-		for winkey in _window_list.keys():
-			win = _window_list[winkey]
-			if win._must_redraw:
-				win._redraw()
-		if event:
-			self._queue.append(event)
-		
 	def enterevent(self, win, event, arg):
 		if debug: print 'Event.enterevent'+`win,event,arg`
 		self._queue.append((win, event, arg))
 
-	def readevent(self):
-		if debug: print 'Event.readevent()'
-		dummy = self._getevent(1)
-		event = self._queue[0]
-		del self._queue[0]
-		if debug > 1: print 'Event.readevent returns',`event`
-		return event
+	def entereventunique(self, win, event, arg):
+		if debug: print 'Event.entereventunique'+`win,event,arg`
+		if (win, event, arg) not in self._queue:
+			self._queue.append((win, event, arg))
 
+	def readevent(self):
+		return self.readevent_timeout(None)
+
+	def readevent_timeout(self, timeout):
+		if debug: print 'Event.readevent_timeout()'
+		if self._getevent(timeout):
+			event = self._queue[0]
+			del self._queue[0]
+			return event
+		else:
+			return None
+		
 	def testevent(self):
 		if debug > 1: print 'Event.testevent()'
 		return self._getevent(0)
@@ -318,13 +347,26 @@ class _Event:
 	def waitevent(self):
 		if debug: print 'Event.waitevent()'
 		# Wait for an event to occur, but don't return it.
-		dummy = self._getevent(1)
+		self.waitevent_timeout(None)
+
+	def waitevent_timeout(self, timeout):
+		if debug: print 'Event.waitevent_timeout()'
+		dummy = self._getevent(timeout)
+
+	def setfd(self, fd):
+		if fd not in self._fdlist:
+			self._fdlist.append(fd)
+
+	def rmfd(self, fd):
+		if fd in self._fdlist:
+			self._fdlist.remove(fd)
 
 	def getfd(self):
+		raise error, 'don\'t use getfd()'
 		return gl.qgetfd()
 			
 class _Font:
-	def init(self, fontname, size):
+	def __init__(self, fontname, size):
 		self._font = _findfont(fontname, size)
 		self._baseline, self._fontheight, = self._fontparams()
 		self._fontname = fontname
@@ -332,7 +374,6 @@ class _Font:
 		self._closed = 0
 ##		self._pointsize = float(self.fontheight()) * 72.0 / 25.4
 ##		print '_Font().init() pointsize:',size,self._pointsize
-		return self
 
 ##	def __repr__(self):
 ##		return '<_Font instance, font=' + self._fontname + ', ps=' + \
@@ -380,7 +421,7 @@ class _Font:
 		return baseline, fontheight
 
 class _Button:
-	def init(self, dispobj, x, y, w, h):
+	def __init__(self, dispobj, x, y, w, h):
 ##		print 'create',`self`
 		if debug: print 'Button.init()'
 		self._dispobj = dispobj
@@ -399,7 +440,6 @@ class _Button:
 		d.append(gl.linewidth, self._linewidth)
 		d.append(gl.recti, self._coordinates)
 		dispobj._buttonlist.append(self)
-		return self
 
 ##	def __del__(self):
 ##		print 'delete',`self`
@@ -474,7 +514,7 @@ class _Button:
 # Display List.  A window may have several display lists.  When the
 # list is rendered, it becomes the active display list.
 class _DisplayList:
-	def init(self, window):
+	def __init__(self, window):
 		self._window = window	# window to which this belongs
 ##		print 'create',`self`
 		if debug: print 'DisplayList.init'+`self,window`
@@ -492,7 +532,6 @@ class _DisplayList:
 		self._curpos = 0, 0
 		self._xpos = 0
 		window._displaylists.append(self)
-		return self
 
 ##	def __del__(self):
 ##		print 'delete',`self`
@@ -506,8 +545,6 @@ class _DisplayList:
 			return
 		for button in self._buttonlist[:]:
 			button.close()
-		if self._font:
-			self._font.close()
 		window = self._window
 		window._displaylists.remove(self)
 		if window._active_display_list == self:
@@ -552,7 +589,7 @@ class _DisplayList:
 		if debug: print `self`+'.clone()'
 		if self.is_closed():
 			raise error, 'displaylist already closed'
-		new = _DisplayList().init(self._window)
+		new = _DisplayList(self._window)
 		new._displaylist = self._displaylist[:]
 		new._fgcolor = self._fgcolor
 		new._bgcolor = self._bgcolor
@@ -587,7 +624,7 @@ class _DisplayList:
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
 		x, y, w, h = coordinates
-		button = _Button().init(self, x, y, w, h)
+		button = _Button(self, x, y, w, h)
 		return button
 
 	def drawbox(self, *coordinates):
@@ -781,7 +818,7 @@ class _DisplayList:
 				  self._window._convert_coordinates(x, y, 0, 0)
 			d.append(gl.cmov2, (x0, y0))
 			d.append(fm.prstr, str)
-			self._curpos = x + float(self._font._font.getstrwidth(\
+			self._curpos = x + float(self._font._font.getstrwidth(
 				  str)) / self._window._width, y
 			x = self._xpos
 			y = y + self._fontheight
@@ -806,8 +843,8 @@ class _Window:
 		y0 = int(float(y0)/_mscreenheight*_screenheight+0.5)
 		x1 = int(float(x1)/_mscreenwidth*_screenwidth+0.5)
 		y1 = int(float(y1)/_mscreenheight*_screenheight+0.5)
-		gl.prefposition(x0 - wmcorr_x, x1 - wmcorr_x, \
-			  _screenheight - y1 - 1 + wmcorr_y, \
+		gl.prefposition(x0 - wmcorr_x, x1 - wmcorr_x,
+			  _screenheight - y1 - 1 + wmcorr_y,
 			  _screenheight - y0 - 1 + wmcorr_y)
 		if title == None:
 			gl.noborder()
@@ -964,7 +1001,7 @@ class _Window:
 			_toplevel._win_lock.release()
 
 	def newdisplaylist(self, *bgcolor):
-		list = _DisplayList().init(self)
+		list = _DisplayList(self)
 		if len(bgcolor) == 1 and type(bgcolor[0]) == type(()):
 			bgcolor = bgcolor[0]
 		if len(bgcolor) == 3:
@@ -1381,16 +1418,16 @@ def _findfont(fontname, size):
 	return f
 
 _fontcache = {}
-_fontmap = { \
-	  'Times-Roman':	'Times-Roman', \
-	  'Times-Italic':	'Times-Italic', \
-	  'Times-Bold':		'Times-Bold', \
-	  'Utopia-Bold':	'Utopia-Bold', \
-	  'Palatino-Bold':	'Palatino-Bold', \
+_fontmap = {
+	  'Times-Roman':	'Times-Roman',
+	  'Times-Italic':	'Times-Italic',
+	  'Times-Bold':		'Times-Bold',
+	  'Utopia-Bold':	'Utopia-Bold',
+	  'Palatino-Bold':	'Palatino-Bold',
 	  }
 
-_toplevel = _Toplevel().init()
-_event = _Event().init()
+_toplevel = _Toplevel()
+_event = _Event()
 
 # Interface routines for the top level.
 def newwindow(x, y, w, h, title):
@@ -1408,11 +1445,17 @@ def getsize():
 def readevent():
 	return _event.readevent()
 
+def readevent_timeout(timeout):
+	return _event.readevent_timeout(timeout)
+
 def pollevent():
 	return _event.pollevent()
 
 def waitevent():
 	_event.waitevent()
+
+def waitevent_timeout(timeout):
+	_event.waitevent_timeout(timeout)
 
 def peekevent():
 	return _event.peekevent()
@@ -1423,11 +1466,17 @@ def testevent():
 def enterevent(win, event, arg):
 	_event.enterevent(win, event, arg)
 
+def setfd(fd):
+	_event.setfd(fd)
+
+def rmfd(fd):
+	_event.rmfd(fd)
+
 def getfd():
 	return _event.getfd()
 
 def findfont(fontname, pointsize):
-	return _Font().init(fontname, pointsize)
+	return _Font(fontname, pointsize)
 
 def beep():
 	gl.ringbell()

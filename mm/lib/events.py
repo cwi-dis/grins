@@ -8,7 +8,6 @@ class _Events:
 		self._timers = []
 		self._callbacks = {}
 		self._windows = {}
-		self._winfd = windowinterface.getfd()
 		self._select_fdlist = []
 		self._select_dict = {}
 		self._timenow = float(time.millitimer()) / 1000
@@ -76,6 +75,12 @@ class _Events:
 		if self._modal:
 			if event != ResizeWindow:
 				return 0
+		if event == FileEvent:
+			if self._select_dict.has_key(value):
+				e = windowinterface.readevent()
+				func, arg = self._select_dict[value]
+				apply(func, arg)
+				return 1
 		if window and window.is_closed():
 			return 0
 		for w in [window, None]:
@@ -111,25 +116,16 @@ class _Events:
 		while 1:
 			if self.testevent():
 				return windowinterface.readevent()
-			if self._timers or self._select_fdlist:
-				if self._timers:
-					(t, arg, tid) = self._timers[0]
-					t0 = time.millitimer()
-				else:
-					t = 0
-				wtd = [self._winfd] + self._select_fdlist
-				ifdlist, ofdlist, efdlist = select.select(\
-					  wtd, [], [], t)
-				for fd in ifdlist:
-					if fd in self._select_fdlist:
-						(cb, a) = self._select_dict[fd]
-						apply(cb, a)
-				if self._timers:
-					t1 = time.millitimer()
-					dt = float(t1 - t0) / 1000
-					self._timers[0] = (t - dt, arg, tid)
+			if self._timers:
+				(t, arg, tid) = self._timers[0]
+				t0 = time.millitimer()
 			else:
-				windowinterface.waitevent()
+				t = None
+			windowinterface.waitevent_timeout(t)
+			if self._timers:
+				t1 = time.millitimer()
+				dt = float(t1 - t0) / 1000
+				self._timers[0] = (t - dt, arg, tid)
 
 	def remove_window_callbacks(self, window):
 		# called when window closes
@@ -166,10 +162,12 @@ class _Events:
 		if cb == None:
 			self._select_fdlist.remove(fd)
 			del self._select_dict[fd]
+			windowinterface.rmfd(fd)
 			return
 		if not self._select_dict.has_key(fd):
 			self._select_fdlist.append(fd)
 		self._select_dict[fd] = (cb, arg)
+		windowinterface.setfd(fd)
 
 	def startmodal(self):
 		self._modal = 1
@@ -190,7 +188,7 @@ def Events():
 
 # The interface functions.
 def settimer(sec, arg):
-	_event_instance.settimer(sec, arg)
+	return _event_instance.settimer(sec, arg)
 
 def enterevent(win, event, arg):
 	_event_instance.enterevent(win, event, arg)

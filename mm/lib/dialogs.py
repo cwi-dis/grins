@@ -88,6 +88,7 @@ class Dialog:
 		buttonwidth = len(self.buttons) * mw
 		buttonheight = self.buttonlines * bh
 		sw, sh = font.strsize(INTERBUTTONGAP)
+		font.close()
 		buttonwidth = buttonwidth + (len(self.buttons) - 1) * sw
 		if buttonwidth > width:
 			width = buttonwidth
@@ -104,7 +105,7 @@ class Dialog:
 		if mx < 0:
 			mx = 0
 		if mx + winwidth > scrwidth:
-			mx = scrwindth - winwidth
+			mx = scrwidth - winwidth
 		my = my - winheight / 2
 		if my < 0:
 			my = 0
