@@ -201,10 +201,20 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if not self.__rc:
 				self.playdone(0, start_time)
 				return
-			if self.__windowless_real_rendering:
-				res =self.__rc.playit(node,windowless=1,start_time=start_time)
-			else:
-				res = self.__rc.playit(node, self._getoswindow(), self._getoswinpos(), start_time = start_time)
+			try:
+				if self.__windowless_real_rendering:
+					res =self.__rc.playit(node,windowless=1,start_time=start_time)
+				else:
+					res = self.__rc.playit(node, self._getoswindow(), self._getoswinpos(), start_time = start_time)
+			except RealChannel.error, msg:
+				import windowinterface, MMAttrdefs
+				name = MMAttrdefs.getattr(node, 'name')
+				if not name:
+					name = '<unnamed node>'
+## Don't call this.  The ErrorOccurred callback is called which produces the error message.
+##				windowinterface.showmessage('Error while starting to play node %s on channel %s:\n%s' % (name, self._name, msg), mtype = 'warning')
+				self.playdone(0, start_time)
+				return
 			if not res:
 				import windowinterface, MMAttrdefs
 				name = MMAttrdefs.getattr(node, 'name')
@@ -213,7 +223,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				chtype = self.__class__.__name__[:-7] # minus "Channel"
 				windowinterface.showmessage('No playback support for %s on this system\n'
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
-				self.playdone(0, node,start_time)
+				self.playdone(0, start_time)
 		else:
 			if not self.__mc:
 				self.playdone(0, start_time)

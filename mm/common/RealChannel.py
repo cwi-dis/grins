@@ -152,14 +152,20 @@ class RealChannel:
 		if realenginedebug:
 			print 'RealChannel.playit', self, `url`
 		self._playargs = (node, window, winpossize, url, windowless, start_time)
-		self.__rmaplayer.OpenURL(url)
+		try:
+			self.__rmaplayer.OpenURL(url)
+		except rma.error:
+			raise error, "Cannot open file: `%s'" % url
 		
 		t0 = self.__channel._scheduler.timefunc()
 		if t0 > start_time:
 			self.__spark = 1
 		else:
 			self.__spark = 0
-			self.__rmaplayer.Begin()
+			try:
+				self.__rmaplayer.Begin()
+			except rma.error:
+				raise error, "Cannot open file: `%s'" % url
 		self.__engine.startusing()
 		self.__using_engine = 1
 		return 1
