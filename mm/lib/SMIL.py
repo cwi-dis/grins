@@ -331,6 +331,7 @@ class SMIL:
 				'width':None,
 				GRiNSns+' ' 'showEditBackground':None,
 				GRiNSns+' ' 'editBackground':None,
+				GRiNSns+' ' 'showEditBgMode':None,
 				GRiNSns+' ' 'traceImage':None,
 				GRiNSns+' ' 'collapsed':None,
 				RP9ns+' ' 'resizeBehavior':None,
@@ -345,6 +346,7 @@ class SMIL:
 			      # edit preferences of new layout view
 			      GRiNSns+' ' 'showEditBackground':None,
 			      GRiNSns+' ' 'editBackground':None,
+			      GRiNSns+' ' 'showEditBgMode':None,
 			      GRiNSns+' ' 'traceImage':None,
 			      GRiNSns+' ' 'collapsed':None,
 			      RP9ns+' ' 'resizeBehavior':None,
@@ -378,6 +380,7 @@ class SMIL:
 			   # edit preferences of new layout view
 			   GRiNSns+' ' 'showEditBackground':None,
 			   GRiNSns+' ' 'editBackground':None,
+			   GRiNSns+' ' 'isDefault':None,
 			},
 		'regPoint': {'bottom':None,
 			     'customTest':None,
