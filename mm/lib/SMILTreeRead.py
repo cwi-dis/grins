@@ -1921,6 +1921,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			name = layout_name # only for anonymous root-layout
 		ctx = self.__context
 		layout = MMNode.MMChannel(ctx, name, 'layout')
+
+		if settings.activeFullSmilCss:
+			# to do: use a newRegion instead newRootNode which shoud be removed
+			layout.cssId = self.__context.cssResolver.newRootNode()
+		
 		if not self.__region2channel.has_key(top):
 			self.__region2channel[top] = []
 		self.__region2channel[top].append(layout)
@@ -1985,6 +1990,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				ch['winpos'] = (xCurrent, yCurrent)
 				xCurrent = xCurrent+20
 				yCurrent = yCurrent+20
+
+				if settings.activeFullSmilCss:
+					width, height = ch['winsize']
+					self.__context.cssResolver.setRootSize(ch.cssId, width, height)
 				continue
 			# old 03-07-2000
 			#if ch.has_key('base_window'):
@@ -2085,13 +2094,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ch['units'] = attrdict['units']; del attrdict['units']
 		else:
 			# keep all original constraints
-			# if a value is not specified, it is translated to a None value (=auto in CSS)
-			ch['left'] = attrdict.get('left',None)
-			ch['width'] = attrdict.get('width',None)
-			ch['right'] = attrdict.get('right',None)
-			ch['top'] = attrdict.get('top',None)
-			ch['height'] = attrdict.get('height',None)
-			ch['bottom'] = attrdict.get('bottom',None)
+			# if a value is not specified,  it's a CSS auto value
+			if mtype == 'layout':
+				if attrdict.has_key('left'): ch['left'] = attrdict['left']; del attrdict['left']
+				if attrdict.has_key('width'): ch['width'] = attrdict['width']; del attrdict['width']
+				if attrdict.has_key('right'): ch['right'] = attrdict['right']; del attrdict['right']
+				if attrdict.has_key('top'): ch['top'] = attrdict['top']; del attrdict['top']
+				if attrdict.has_key('height'): ch['height'] = attrdict['height']; del attrdict['height']
+				if attrdict.has_key('bottom'): ch['bottom'] = attrdict['bottom']; del attrdict['bottom']
+
+				self.__context.cssResolver.setRawAttrPos(ch.getCssId(),
+							ch.get('left'), ch.get('width'), ch.get('right'),
+							ch.get('top'), ch.get('height'), ch.get('bottom'))
 										
 		fit = attrdict['fit']; del attrdict['fit']
 		if fit == 'hidden':
