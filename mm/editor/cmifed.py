@@ -135,6 +135,10 @@ class Main(MainDialog):
 		windowinterface.setwaiting()
 		from MMExc import MSyntaxError
 		import TopLevel
+		for top in self.tops:
+			if top.is_document(url):
+				windowinterface.showmessage("%s is already open"%url)
+				return
 		try:
 			top = TopLevel.TopLevel(self, url, 0)
 		except IOError:
