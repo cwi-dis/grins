@@ -2309,8 +2309,8 @@ class DialogWindow(_Window):
 		self.addwidget(item, widget)
 		return widget
 		
-	def AreaWidget(self, item, callback=None):
-		widget = mw_widgets._AreaWidget(self._wid, item, callback)
+	def AreaWidget(self, item, callback=None, scaleitem=None):
+		widget = mw_widgets._AreaWidget(self._wid, item, callback, scaleitem)
 		self.addwidget(item, widget)
 		return widget
 	
