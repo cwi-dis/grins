@@ -712,6 +712,59 @@ ui_window_print_client(PyObject *self, PyObject *args)
 	RETURN_NONE;
 }
 
+static PyObject *
+ui_window_register_drop_target(PyObject *self, PyObject *args)
+{
+	CHECK_NO_ARGS(args);
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd) return NULL;
+
+	// register drop target
+	//pWnd->m_dropTarget.Register(pWnd);
+	
+	RETURN_NONE;
+}
+static PyObject *
+ui_window_revoke_drop_target(PyObject *self, PyObject *args)
+{
+	CHECK_NO_ARGS(args);
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd) return NULL;
+
+	// register drop target
+	//pWnd->m_dropTarget.Revoke();
+	
+	RETURN_NONE;
+}
+
+static PyObject *
+ui_window_do_drag_drop(PyObject *self, PyObject *args)
+{
+	int cf; // clipboard format 
+	char *pszData;
+	if (!PyArg_ParseTuple(args,"is:DoDragDrop",&cf,&pszData))
+		return NULL;
+	
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd) return NULL;
+
+	CLIPFORMAT cfPrivate=(CLIPFORMAT)cf;
+	DROPEFFECT dropEffect = DROPEFFECT_NONE;
+	HGLOBAL hGlobal=GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE,lstrlen(pszData)+1);
+	LPSTR lpGMem=(LPSTR)GlobalLock(hGlobal);
+	lstrcpy(lpGMem,pszData);
+	GlobalUnlock(hGlobal);
+
+	COleDataSource oleDataSource;
+	COleDataSource::FlushClipboard();
+	oleDataSource.CacheGlobalData(cfPrivate,hGlobal);
+	GUI_BGN_SAVE;
+	dropEffect=oleDataSource.DoDragDrop();
+	GUI_END_SAVE;
+	GlobalFree(hGlobal);
+	return Py_BuildValue("i", dropEffect);
+}
+
 // SubclassDlgItem
 
 ///////////////////////
@@ -736,7 +789,11 @@ ui_window_print_client(PyObject *self, PyObject *args)
 	{"SubclassWindow",ui_window_subclass_window,1},\
 	{"ScrollWindow",ui_window_scroll_window,1},\
 	{"PrintClient",ui_window_print_client,1},\
-	{"ValidateRect",ui_window_validate_rect,1},
+	{"ValidateRect",ui_window_validate_rect,1},\
+	{"RegisterDropTarget",ui_window_register_drop_target,1},\
+	{"RevokeDropTarget",ui_window_revoke_drop_target,1},\
+	{"DoDragDrop",ui_window_do_drag_drop,1}, 
+
 
 
 
