@@ -23,6 +23,13 @@ methods also.
 __version__ = "$Id$"
 
 
+""" @win32doc|AttrEditorDialog
+This class represents the interface between the AttrEditor platform independent
+class and its implementation AttrEditorForm in lib/win32/AttrEditorForm.py which 
+implements the actual dialog.
+
+"""
+
 class AttrEditorDialog:
 	def __init__(self, title, attriblist):
 		"""Create the AttrEditor dialog.
