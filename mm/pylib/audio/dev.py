@@ -4,23 +4,23 @@ Error = 'audio.dev.Error'
 
 import sys
 
-if sys.platform in ('irix4', 'irix5', 'irix6'):
-	import devsgi
-	writer = devsgi.AudioDevSGI
-	del devsgi
-elif sys.platform in ('sunos4', 'sunos5'):
-	import devsun
-	writer = devsun.AudioDevSUN
-	del devsun
+if sys.platform[:4] == 'irix':
+	from audio.devsgi import AudioDevSGI
+	writer = AudioDevSGI
+	del AudioDevSGI
+elif sys.platform[:5] == 'sunos':
+	from audio.devsun import AudioDevSUN
+	writer = AudioDevSUN
+	del AudioDevSUN
 elif sys.platform == 'mac':
-	import devmac
-	writer = devmac.AudioDevMAC
-	del devmac
+	from audio.devmac import AudioDevMAC
+	writer = AudioDevMAC
+	del AudioDevMAC
 elif sys.platform == 'win32':
-	import devwin
-	writer = devwin.AudioDevWin
-	del devwin
+	from audio.devwin import AudioDevWin
+	writer = AudioDevWin
+	del AudioDevWin
 else:
-	raise ImportError, 'No module named audio.dev'
+	raise ImportError('No module named audio.dev')
 
 del sys
