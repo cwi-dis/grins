@@ -76,7 +76,7 @@ def prdtdtable(x, dtd):
 			print '<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % (attr, atype, default)
 	print '</table></body></html>'
 
-def prdtd(x):
+def prdtd(x, dtd):
 	taglist = x.elems.keys()
 	taglist.sort()
 	for tag in taglist:
@@ -94,7 +94,7 @@ def prdtd(x):
 			print '\t%s %s %s' % (attr.encode('utf-8'), attype.encode('utf-8'), atvalue.encode('utf-8'))
 		print '>'
 
-def main(dtd = "http://www.w3.org/AudioVideo/Group/DTD/SMIL20.dtd"):
+def main(dtd = "http://www.w3.org/AudioVideo/Group/DTD/SMIL20.dtd", func = prdtdtable):
 	x = fxmllib.CheckXMLParser()
 	try:
 		x.parse('''<?xml version="1.0" encoding="latin-1" standalone="no"?>
@@ -110,12 +110,17 @@ def main(dtd = "http://www.w3.org/AudioVideo/Group/DTD/SMIL20.dtd"):
 			print info.text[i:j]
 			print ' '*(info.offset-i)+'^'
 		return
-	prdtdtable(x, dtd)
-##	prdtd(x)
+	func(x, dtd)
 
 if __name__ == '__main__':
-	import sys
-	if len(sys.argv) > 1:
-		main(sys.argv[1])
+	import sys, getopt
+
+	opts, args = getopt.getopt(sys.argv[1:], 'dt')
+	if ('-d','') in opts:
+		func = prdtd
 	else:
-		main()
+		func = prdtdtable
+	if len(args) > 0:
+		main(args[0], func = func)
+	else:
+		main(func = func)
