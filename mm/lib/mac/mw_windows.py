@@ -837,6 +837,14 @@ class _CommonWindow:
 		else:
 			func(arg, self, ResizeWindow, None)
 		
+	def _redraw_now(self, rgn):
+		"""Do a redraw of the specified region now. Escalated to our toplevel
+		window, because we really need this region (so there may be bits from
+		siblings or ancestors there)"""
+		if self._parent is None:
+			return
+		self._parent._redraw_now(rgn)
+		
 	def _redraw(self, rgn=None):
 		"""Set clipping and color, redraw, redraw children"""
 		if self._parent is None:
@@ -890,10 +898,10 @@ class _CommonWindow:
 	def _do_redraw(self):
 		"""Do actual redraw"""
 		if self._active_displist:
-##			print 'DBG: redraw from displaylist', self, self._drawing_wid, self._onscreen_wid
+			print 'DBG: redraw from displaylist', self, self._drawing_wid, self._onscreen_wid
 			self._active_displist._render()
 		elif self._frozen:
-##			print 'DBG: redraw from frozen', self, self._drawing_wid, self._onscreen_wid
+			print 'DBG: redraw from frozen', self, self._drawing_wid, self._onscreen_wid
 			self._mac_setwin(0)
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 			Qd.RGBForeColor((0, 0, 0))
@@ -903,10 +911,10 @@ class _CommonWindow:
 			Qd.CopyBits(src, dst, rect, rect, QuickDraw.srcCopy, None)
 			self._mac_setwin() # Don't think this is needed...
 		elif self._transparent == 0 or self._istoplevel:
-##			print 'DBG: redraw erase', self, self._drawing_wid, self._onscreen_wid
+			print 'DBG: redraw erase', self, self._drawing_wid, self._onscreen_wid
 			Qd.EraseRect(self.qdrect())
-##		else:
-##			print 'DBG: redraw none at all', self, self._drawing_wid, self._onscreen_wid
+		else:
+			print 'DBG: redraw none at all', self, self._drawing_wid, self._onscreen_wid
 			
 	def _mac_setwin(self, which=None):
 		"""Start drawing (by upper layer) in this window"""
@@ -1272,13 +1280,21 @@ class _CommonWindow:
 		if self._transition:
 			print 'Multiple Transitions!'
 			return
-		self._drawing_gworld, self._drawing_wid, self._drawing_bitmap = self._create_offscreen_wid(1)
-		# XXXX should probably skip this if the window is transparent and empty
 		if self._frozen == 'transition':
 			# We are frozen, so we have already saved the contents
 			self._frozen = None
 		else:
+			##copybits = (self._transparent != 0)
+			Qd.SetPort(self._onscreen_wid)
+			updrgn = Qd.NewRgn()
+			Qd.RectRgn(updrgn, self.qdrect())
+			self._redraw_now(updrgn)
+			del updrgn
+			print 'transition creating passive source', self
 			self._extra_gworld, self._extra_wid, self._extra_bitmap = self._create_offscreen_wid(1)
+		print 'transition creating active source', self
+		self._drawing_gworld, self._drawing_wid, self._drawing_bitmap = self._create_offscreen_wid(0)
+		# XXXX should probably skip this if the window is transparent and empty
 		self._transition = mw_transitions.TransitionEngine(self, inout, runit, dict)
 		
 	def endtransition(self):
@@ -1309,11 +1325,13 @@ class _CommonWindow:
 		how='hold' forever,
 		how=None clears a previous how='hold'. This basically means the next
 		close() of a display list does not do an erase."""
-##		print 'DBG: freeze', how
+		print 'DBG: freeze', how, self
 		self._frozen = how
 		if self._frozen:
+			print 'freeze_content creating passive source'
 			self._extra_gworld, self._extra_wid, self._extra_bitmap = self._create_offscreen_wid(1)
 		else:
+			print 'freeze_content clearing passive source'
 			self._extra_gworld = None
 			self._extra_wid = None
 			self._extra_bitmap = None
@@ -1338,6 +1356,7 @@ class _CommonWindow:
 		else:
 			Qd.RGBBackColor(self._bgcolor)
 			Qd.EraseRect(cur_rect)
+			print 'Erase offscreen', cur_rect
 		Qd.RGBBackColor(self._bgcolor)
 		Qd.RGBForeColor(self._fgcolor)
 		Qdoffs.SetGWorld(cur_port, cur_dev)
@@ -2008,6 +2027,13 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		Ctl.UpdateControls(self._onscreen_wid, rgn)
 		_ScrollMixin._redraw(self)
 		
+	def _redraw_now(self, rgn):
+		"""Do a redraw of the specified region now"""
+		self._redraw(rgn)
+		if not rgn:
+			rgn = self._onscreen_wid.GetWindowPort().visRgn
+		Win.ValidRgn(rgn)
+
 	def _activate(self, onoff):
 		_CommonWindow._activate(self, onoff)
 ##		_WindowGroup._activate(self, onoff)
