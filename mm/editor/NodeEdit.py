@@ -7,16 +7,20 @@ import fl
 from FL import *
 import string
 import posix
+import flp
 
 import MMExc
 import MMAttrdefs
 import MMParser
 import MMWrite
 
-import NodeEditForm
-
 error = 'NodeEditorError'
+_LocalError = '_LocalError'
 formdone = 'Form Done'
+
+class Struct(): pass
+_global = Struct()
+_global.formdef = None
 
 channeleditors = {}
 
@@ -59,14 +63,14 @@ class _convert_dialog():
     def init(self, node):
 	self.node = node
 	self.doconvert = 0
-	self.form = NodeEditForm.mk_form_convertform(self)
-	self.errgroup = self.form.bgn_group()
-	dummy = NodeEditForm.mk_form_err(self,self.form)
-	self.form.end_group()
-	self.errgroupshown = 0
-	self.errgroup.hide_object()
+	if _global.formdef = None:
+	    _global.formdef = flp.parse_form('NodeEditForm', 'form')
+	flp.create_full_form(self, _global.formdef)
+	self.err_groupshown = 0
+	self.err_group.hide_object()
 	chname = MMAttrdefs.getattr(node, 'channel')
 	self.input_filename.set_input(_inventname(chname))
+	self.input_filename.set_input_return(1)
 	return self
     def work(self):
 	self.form.show_form(PLACE_MOUSE,FALSE,'')
@@ -78,9 +82,9 @@ class _convert_dialog():
 	self.form.hide_form()
 	return self.doconvert
     def callback_input(self,dummy):
-	if self.errgroupshown:
-	    self.errgroupshown = 0
-	    self.errgroup.hide_object()
+	if self.err_groupshown:
+	    self.err_groupshown = 0
+	    self.err_group.hide_object()
     def callback_cancel(self,dummy):
 	raise formdone
     def callback_browser(self,dummy):
@@ -92,8 +96,8 @@ class _convert_dialog():
     def callback_convert(self,(obj,value)):
 	fn = self.input_filename.get_input()
 	if obj == self.button_convert and _file_exists(fn):
-	    self.errgroup.show_object()
-	    self.errgroupshown = 1
+	    self.err_group.show_object()
+	    self.err_groupshown = 1
 	    return
 	_do_convert(self.node, fn)
 	self.doconvert = 1
@@ -116,20 +120,18 @@ def _merge(f, filename):	# Merge editors file into data structures
 	if len(fields) <> 3:
 	    print 'Bad line in', `filename` + ':', l
 	    continue
-	if not fields[1]:		# Case 1: unlabeled command
-	    if not channeleditors.has_key(fields[0]):
-		channeleditors[fields[0]] = fields[2]
-	    # Otherwise we skip this line, it was done already
-	else:				# Case 2: labeled command
-	    if not channeleditors.has_key(fields[0]):
-		channeleditors[fields[0]] = {fields[1]:fields[2]}
-	    elif not channeleditors[fields[0]].has_key(fields[1]):
-		channeleditors[fields[0]][fields[1]] = fields[2]
+	if not channeleditors.has_key(fields[0]):
+	    channeleditors[fields[0]] = {fields[1]:fields[2]}
+	elif not channeleditors[fields[0]].has_key(fields[1]):
+	    channeleditors[fields[0]][fields[1]] = fields[2]
 
 def _getchtype(node):	# Get channel type for given node
     chname = MMAttrdefs.getattr(node, 'channel')
     context = node.GetContext()
-    return context.channeldict[chname]['type']
+    try:
+	return context.channeldict[chname]['type']
+    except KeyError:
+	raise _LocalError
 
 def _showmenu(menu):	# Show (modal) editor choice dialog
     nkeys = len(menu)+1
@@ -177,7 +179,6 @@ def showeditor(node):
 	gl.ringbell()
 	return
     filename = MMAttrdefs.getattr(node,'file')
-    LocalError = 'LocalError'
     try:
 	chtype = _getchtype(node)
 	editor = channeleditors[chtype]
@@ -186,10 +187,10 @@ def showeditor(node):
 	else:
 	    cmd = _showmenu(editor)
 	    if cmd = None:
-		raise LocalError
+		raise _LocalError
 	cmd = 'file='+filename+' ; '+cmd+' &'
 	void = posix.system(cmd)
-    except LocalError:
+    except _LocalError:
 	gl.ringbell()
 
 # Simple test program. Only tests editor file parsing.
