@@ -18,6 +18,8 @@
 # showing		true when the form is shown
 # width, height		form dimensions
 # title			window title (better use settitle() method though)
+# border		nonzero (default) if the window has a border
+#			(use x.setborder(flag) to change it)
 # last_geometry		the window's geometry when last hidden, or None
 #
 # The Dialog class also defines cancel_button, restore_button,
@@ -45,6 +47,7 @@ class BasicDialog(glwindow.glwindow):
 		self.title = title
 		self.showing = 0
 		self.last_geometry = None
+		self.border = 1
 		self.make_form()
 		return self
 	#
@@ -58,12 +61,12 @@ class BasicDialog(glwindow.glwindow):
 	#
 	def show(self):
 		if self.showing:
-			gl.winset(self.form.window)
+			self.pop()
 			return
 		self.load_geometry()
 		self.fix_geometry()
 		glwindow.setgeometry(self.last_geometry)
-		self.form.show_form(PLACE_FREE, TRUE, self.title)
+		self.form.show_form(PLACE_FREE, self.border, self.title)
 		glwindow.register(self, self.form.window)
 		gl.winset(self.form.window)
 		gl.winconstraints()
@@ -71,25 +74,48 @@ class BasicDialog(glwindow.glwindow):
 		self.showing = 1
 	#
 	def hide(self):
-		if not self.showing: return
-		self.save_geometry()
-		glwindow.unregister(self)
-		self.form.hide_form()
-		self.showing = 0
+		if self.showing:
+			self.save_geometry()
+			glwindow.unregister(self)
+			self.form.hide_form()
+			self.showing = 0
+	#
+	def setwin(self):
+		if self.showing:
+			gl.winset(self.form.window)
+		else:
+			print 'BasicDialog: setwin() of hidden window'
 	#
 	def settitle(self, title):
+		if title == self.title:
+			return
 		self.title = title
 		if self.showing:
 			gl.winset(self.form.window)
 			gl.wintitle(self.title)
 	#
+	def setborder(self, border):
+		if border == self.border:
+			return
+		self.border = border
+		if self.showing:
+			gl.winset(self.form.window)
+			if not self.border:
+				gl.noborder()
+			gl.winconstraints()
+	#
+	def pop(self):
+		if self.showing:
+			gl.winset(self.form.window)
+			gl.winpop()
+	#
 	def is_showing(self):
 		return self.showing
 	#
 	def get_geometry(self):
-		if not self.showing: return
-		gl.winset(self.form.window)
-		self.last_geometry = glwindow.getgeometry()
+		if self.showing:
+			gl.winset(self.form.window)
+			self.last_geometry = glwindow.getgeometry()
 	#
 	def destroy(self):
 		self.hide()
@@ -201,25 +227,36 @@ class GLDialog(glwindow.glwindow):
 		self.title = title
 		self.wid = 0
 		self.last_geometry = None
+		self.border = 1
 		return self
 	#
 	def show(self):
 		if self.wid <> 0:
-			gl.winset(self.wid)
+			self.pop()
 			return
 		self.load_geometry()
 		glwindow.setgeometry(self.last_geometry)
+		if not self.border:
+			gl.noborder()
 		self.wid = gl.winopen(self.title)
+		if not self.border:
+			gl.noborder()
 		gl.winconstraints()
 		glwindow.register(self, self.wid)
 		fl.qdevice(DEVICE.WINSHUT)
 	#
 	def hide(self):
-		if self.wid == 0: return
-		self.save_geometry()
-		glwindow.unregister(self)
-		gl.winclose(self.wid)
-		self.wid = 0
+		if self.wid <> 0:
+			self.save_geometry()
+			glwindow.unregister(self)
+			gl.winclose(self.wid)
+			self.wid = 0
+	#
+	def setwin(self):
+		if self.wid <> 0:
+			gl.winset(self.wid)
+		else:
+			print 'GLDialog: setwin() of hidden window'
 	#
 	def is_showing(self):
 		return self.wid <> 0
@@ -230,10 +267,25 @@ class GLDialog(glwindow.glwindow):
 			gl.winset(self.wid)
 			gl.wintitle(self.title)
 	#
+	def setborder(self, border):
+		if border == self.border:
+			return
+		self.border = border
+		if self.wid <> 0:
+			gl.winset(self.wid)
+			if not self.border:
+				gl.noborder()
+			gl.winconstraints()
+	#
+	def pop(self):
+		if self.wid <> 0:
+			gl.winset(self.wid)
+			gl.winpop()
+	#
 	def get_geometry(self):
-		if self.wid == 0: return
-		gl.winset(self.wid)
-		self.last_geometry = glwindow.getgeometry()
+		if self.wid <> 0:
+			gl.winset(self.wid)
+			self.last_geometry = glwindow.getgeometry()
 	#
 	def destroy(self):
 		self.hide()
