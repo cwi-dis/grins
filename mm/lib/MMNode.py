@@ -1146,7 +1146,7 @@ class MMTreeElement(Owner):
 		
 	def Extract(self):
 		# look at the Owner module for more comments
-		if not self.parent is None: 
+		if self.parent is not None: 
 			parent = self.parent
 			self.parent = None
 			parent.children.remove(self)
