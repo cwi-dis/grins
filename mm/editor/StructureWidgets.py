@@ -75,6 +75,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.node = None
 
 	def adddependencies(self):
+		if not self.mother.timescale:
+			raise 'Should not happen'
 		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
 		tend = t1
 		if t0 != tend:
@@ -82,6 +84,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.mother.timemapper.adddependency(t0, tend, w)
 		
 	def addcollisions(self, mastert0, mastertend):
+		if not self.mother.timescale:
+			raise 'Should not happen'
 		edge = sizes_notime.HEDGSIZE
 		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
 		tend = t1
@@ -113,7 +117,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def select(self):
 		Widgets.Widget.select(self)
 		self.mother.dirty = 1
-##		print 'DBG: selected node t0=%f, t1=%f, t2=%f, download=%f, delay=%f'%self.node.GetTimes('bandwidth')
 		
 	def deselect(self):
 		self.unselect()
@@ -565,11 +568,10 @@ class SeqWidget(StructureObjWidget):
 			medianode = self.children[chindex]
 			w,h = medianode.get_minsize()
 			thisnode_free_width = freewidth_per_child
-			# Give the node the free width.
-			t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
-			tend = t1
 			# First compute pushback bar position
 			if self.mother.timescale:
+				t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
+				tend = t1
 				lmin = self.mother.timemapper.time2pixel(t0)
 				if l < lmin:
 					l = lmin
@@ -607,6 +609,8 @@ class SeqWidget(StructureObjWidget):
 	def adddependencies(self):
 		# Sequence widgets need a special adddependencies, because we want to calculate the
 		# time->pixel mapping without the channelbox and dropbox
+		if not self.mother.timescale:
+			raise 'Should not happen'
 		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
 		tend = t1
 		if t0 != tend:
@@ -616,6 +620,8 @@ class SeqWidget(StructureObjWidget):
 			ch.adddependencies()
 		
 	def addcollisions(self, mastert0, mastertend):
+		if not self.mother.timescale:
+			raise 'Should not happen'
 		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
 		tend = t1
 		maxneededpixel0 = sizes_notime.HEDGSIZE
@@ -910,13 +916,12 @@ class UnseenVerticalWidget(StructureObjWidget):
 			# r = l + w # Wrap the node to it's minimum size.
 			this_l = l
 			this_r = r
-			t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
-			tend = t1
 			if self.mother.timescale:
+				t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
+				tend = t1
 				lmin = self.mother.timemapper.time2pixel(t0)
 				if this_l < lmin:
 					this_l = lmin
-			if self.mother.timescale:
 				rmin = self.mother.timemapper.time2pixel(tend)
 				if this_r < rmin:
 					this_r = rmin
@@ -1034,13 +1039,12 @@ class VerticalWidget(StructureObjWidget):
 			b = t + h + thisnode_free_height
 			this_l = l
 			this_r = r
-			t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
-			tend = t1
 			if self.mother.timescale:
+				t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
+				tend = t1
 				lmin = self.mother.timemapper.time2pixel(t0)
 				if this_l < lmin:
 					this_l = lmin
-			if self.mother.timescale:
 				rmin = self.mother.timemapper.time2pixel(tend)
 				if this_r < rmin:
 					this_r = rmin
@@ -1071,6 +1075,8 @@ class VerticalWidget(StructureObjWidget):
 					i = i + step
 					
 	def addcollisions(self, mastert0, mastertend):
+		if not self.mother.timescale:
+			raise "Should not happen"
 		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
 		tend = t1
 		maxneededpixel0 = 0
@@ -1195,6 +1201,8 @@ class MediaWidget(MMNodeWidget):
 		self.infoicon.moveto((l+self.get_relx(1), t+self.get_rely(2)))
 		# First compute pushback bar position
 		if self.pushbackbar:
+			if not self.mother.timescale:
+				raise "Should not happen"
 			t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
 			if download + begindelay == 0:
 				self.downloadtime_lag_errorfraction = 0
