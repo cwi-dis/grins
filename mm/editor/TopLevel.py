@@ -151,8 +151,7 @@ class TopLevel(ViewDialog):
 	#
 	def play_callback(self):
 		self.setwaiting()
-		self.player.show()
-		self.player.playsubtree(self.root)
+		self.player.show((self.player.playsubtree, (self.root,)))
 		self.setready()
 
 	def view_callback(self, viewno):
@@ -424,8 +423,7 @@ class TopLevel(ViewDialog):
 					'Error: '+`msg`)
 				return 0
 		top.show()
-		top.player.show()
-		top.player.playfromanchor(top.root, aid)
+		top.player.show((top.player.playfromanchor, (top.root, aid)))
 		return 1
 
 	def is_document(self, filename):
