@@ -733,9 +733,9 @@ class TargetAudienceTabPage(MultiTabPage):
 		field = self.fieldlist[0]
 		attr = field._getvalueforpage()
 		targets = string.split(attr, ',')
-		print 'update dbg targets', targets
+##		print 'update dbg targets', targets
 		for t, item in self._value_to_item.items():
-			print 'dbg', item, t, t in targets
+##			print 'dbg', item, t, t in targets
 			self.attreditor._setbutton(self.item0+item, (t in targets))
 
 	def save(self):
@@ -747,7 +747,7 @@ class TargetAudienceTabPage(MultiTabPage):
 		for t, item in self._value_to_item.items():
 			if self.attreditor._getbutton(self.item0+item):
 				targets.append(t)
-		print 'save dbg targets', targets
+##		print 'save dbg targets', targets
 		field._savevaluefrompage(string.join(targets, ','))
 
 class ImageConversionTabPage(MultiTabPage):
@@ -1390,8 +1390,12 @@ class AreaTabPage(MultiDictTabPage):
 		rv = MultiDictTabPage.init_controls(self, item0)
 		self._area = self.attreditor._window.AreaWidget(item0+self.ITEM_PREVIEW, 
 				callback=self._preview_to_labels, scaleitem=item0+self.ITEM_SCALE)
-		self._area.setinfo((0, 0, 640, 480)) # XXX
+		self._area.setinfo(self.getmaxarea())
 		return rv
+		
+	def getmaxarea(self):
+		x0, y0, x1, y1 = Qd.qd.screenBits.bounds
+		return x0, y0, (x1-x0), (y1-y0)
 
 	def do_itemhit(self, item, event):
 		if item-self.item0 in self._checkboxes:
@@ -1454,12 +1458,12 @@ class AreaTabPage(MultiDictTabPage):
 		w = self._getlabelpixel(self.ITEM_W)
 		h = self._getlabelpixel(self.ITEM_H)
 		xywh = self._values_to_pixels((x, y, w, h))
-		print 'area now', xywh
+##		print 'area now', xywh
 		self._area.set(xywh)
 		
 	def _preview_to_labels(self):
 		xywh = self._area.get()
-		print 'get returned', xywh
+##		print 'get returned', xywh
 		x, y, w, h = self._pixels_to_values(xywh)
 		self.attreditor._setlabel(self.item0+self.ITEM_X, `x`)
 		self.attreditor._setlabel(self.item0+self.ITEM_Y, `y`)
@@ -1605,6 +1609,21 @@ class ChannelAreaTabPage(AreaTabPage):
 	def _savexywh(self, x, y, w, h):
 		self._attr_to_field[self._xywhfield]._savevaluefrompage(x+' '+y+' '+w+' '+h)
 		
+	def getmaxarea(self):
+		# This is a hack. We have to find the parent channel and get its dimensions.
+		wrapper = self.attreditor.wrapper
+		channel = wrapper.channel
+		if not channel.has_key('base_window'):
+			x0, y0, x1, y1 = Qd.qd.screenBits.bounds
+			return x0, y0, (x1-x0), (y1-y0)
+		basename = channel['base_window']
+		basechannel = channel.context.channeldict[basename]
+		if basechannel.has_key('winsize'):
+			w, h = basechannel['winsize']
+			return 0, 0, w, h
+		x0, y0, x1, y1 = Qd.qd.screenBits.bounds
+		return x0, y0, (x1-x0), (y1-y0)
+
 class ChannelAreaLiteTabPage(AreaTabPage):
 	TAB_LABEL='Position and Size'
 	

@@ -208,7 +208,7 @@ class _AreaWidget(_ControlWidget):
 	
 	def hittest(self, ctl, (x, y)):
 		try:
-			print "hittest", ctl, x, y
+##			print "hittest", ctl, x, y
 			for i in range(len(self.lurven)):
 				lx0, ly0, lx1, ly1 = self.lurven[i]
 				if lx0 <= x <= lx1 and ly0 <= y <= ly1:
@@ -285,8 +285,8 @@ class _AreaWidget(_ControlWidget):
 		x, y, w, h = self.outerrect
 		fullrect = self.control.GetControlRect()
 		x0, y0, x1, y1 = fullrect
-		print 'outer', x, y, w, h
-		print 'ctl', x0, y0, x1, y1
+##		print 'outer', x, y, w, h
+##		print 'ctl', x0, y0, x1, y1
 		if x0 >= x1 or y0 >= y1:
 			return
 		while scale*(x1-x0) < w:
@@ -297,27 +297,27 @@ class _AreaWidget(_ControlWidget):
 		h_extra = (y1-y0) - h/scale
 		self.rect = (x0+w_extra/2, y0+h_extra/2, x1-w_extra/2, y1-h_extra/2)
 		self.scale = scale
-		print 'self.rect', self.rect
-		print 'scale', self.scale
+##		print 'self.rect', self.rect
+##		print 'scale', self.scale
 		Qd.SetPort(self.wid)
 		Win.InvalRect(fullrect)
 		if self.scaleitem != None:
 			if self.scale == 1:
 				text = ''
 			else:
-				text = '(scale 1:%d)'%self.scale
+				text = '(scale 1:%d, %dx%d)'%(self.scale, w, h)
 			h = self.wid.GetDialogItemAsControl(self.scaleitem)
 			Dlg.SetDialogItemText(h, text)
 
 		
 	def recalclurven(self):
-		print 'ourrect', self.ourrect
+##		print 'ourrect', self.ourrect
 		x0, y0, x1, y1 = self.ourrect
 		self.lurven = []
 		for y in (y0, (y0+y1)/2, y1):
 			for x in (x0, (x0+x1)/2, x1):
 				self.lurven.append((x-2, y-2, x+2, y+2))
-		print 'lurven', self.lurven
+##		print 'lurven', self.lurven
 		
 	def set(self, rect):
 		self.ourrect = self.rect2screen(rect)
