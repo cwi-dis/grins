@@ -66,8 +66,6 @@ class TopLevel(TopLevelDialog):
 		self.filename = url
 		self.source = None
 
-		settings.register(self)
-
 		if askskin:
 			self.read_it_with_skin()
 		else:
@@ -88,6 +86,8 @@ class TopLevel(TopLevelDialog):
 		   hasattr(windowinterface, 'textwindow'):
 			self.commandlist.append(
 				SOURCEVIEW(callback = (self.source_callback, ())))
+
+		settings.register(self)
 
 	# detect the errors/fatal errors
 	# if it's a fatal error, re-raise the error
@@ -117,6 +117,7 @@ class TopLevel(TopLevelDialog):
 		self.setusergroups()
 
 	def destroy(self):
+		settings.unregister(self)
 		if self in self.main.tops:
 			self.main.tops.remove(self)
 		self.destroyplayer()
@@ -329,6 +330,7 @@ class TopLevel(TopLevelDialog):
 		# create a new instance
 		# important: we have to create the new instance before to delete the old one
 		# Thus, if the operation fails we can easily back to the original
+		settings.unregister(self)
 		try:
 			top = TopLevel(self.main, self.url)
 		except IOError:
