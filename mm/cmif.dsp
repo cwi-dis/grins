@@ -988,6 +988,10 @@ SOURCE=.\lib\Hlinks.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\HTMLWrite.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\license.py
 # End Source File
 # Begin Source File
