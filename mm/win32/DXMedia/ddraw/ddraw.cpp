@@ -852,8 +852,13 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->Blt(&rcToFinal,ddsFrom->pI,&rcFromFinal,dwFlags,NULL);
 	Py_END_ALLOW_THREADS
+
 	if (FAILED(hr)){
-		seterror("DirectDrawSurface_Blt", hr);
+		char sz[160];
+		sprintf(sz, "DirectDrawSurface_Blt %d,%d,%d,%d -> %d,%d,%d,%d",
+			rcFromFinal.left, rcFromFinal.top, rcFromFinal.right, rcFromFinal.bottom,
+			rcToFinal.left, rcToFinal.top, rcToFinal.right, rcToFinal.bottom);
+		seterror(sz, hr);
 		return NULL;
 	}
 	Py_INCREF(Py_None);
@@ -1179,6 +1184,23 @@ HRESULT BltBlend8(IDirectDrawSurface *surf,
 	return hr;
 	}
 
+HRESULT GetPixelColor8(IDirectDrawSurface *pI, int x, int y, DWORD *pck)
+	{
+	*pck = 0;
+	DDSURFACEDESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.dwSize=sizeof(desc);
+	HRESULT hr = pI->Lock(0, &desc, DDLOCK_WAIT | DDLOCK_READONLY, 0);
+	if (FAILED(hr))return hr;
+	BYTE* surfpixel=(BYTE*)desc.lpSurface+y*desc.lPitch + x;
+	BYTE r = paletteEntry[*surfpixel].peRed;
+	BYTE g = paletteEntry[*surfpixel].peGreen;
+	BYTE b = paletteEntry[*surfpixel].peBlue;
+	*pck = FindColour(r,g,b);
+	pI->Unlock(0);
+	return S_OK;
+	}
+
 HRESULT BltBlend16(IDirectDrawSurface *surf, 
 					 IDirectDrawSurface *from, IDirectDrawSurface *to, 
 					 float prop, DWORD w, DWORD h)
@@ -1236,6 +1258,20 @@ HRESULT BltBlend16(IDirectDrawSurface *surf,
 	return hr;
 	}
 
+HRESULT GetPixelColor16(IDirectDrawSurface *pI, int x, int y, DWORD *pck)
+	{
+	*pck = 0;
+	DDSURFACEDESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.dwSize=sizeof(desc);
+	HRESULT hr = pI->Lock(0, &desc, DDLOCK_WAIT | DDLOCK_READONLY, 0);
+	if (FAILED(hr))return hr;
+	WORD* surfpixel=(WORD*)((BYTE*)desc.lpSurface+y*desc.lPitch) + x;
+	*pck = DWORD(*surfpixel);
+	pI->Unlock(0);
+	return S_OK;
+	}
+
 HRESULT BltBlend24(IDirectDrawSurface *surf, 
 					 IDirectDrawSurface *from, IDirectDrawSurface *to, 
 					 float prop, DWORD w, DWORD h)
@@ -1283,6 +1319,20 @@ HRESULT BltBlend24(IDirectDrawSurface *surf,
 	from->Unlock(0);
 	to->Unlock(0);
 	return hr;
+	}
+
+HRESULT GetPixelColor24(IDirectDrawSurface *pI, int x, int y, DWORD *pck)
+	{
+	*pck = 0;
+	DDSURFACEDESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.dwSize=sizeof(desc);
+	HRESULT hr = pI->Lock(0, &desc, DDLOCK_WAIT | DDLOCK_READONLY, 0);
+	if (FAILED(hr))return hr;
+	RGBTRIPLE* surfpixel=(RGBTRIPLE*)((BYTE*)desc.lpSurface+y*desc.lPitch) + x;
+	*pck = (surfpixel->rgbtRed<<loREDbit) | (surfpixel->rgbtGreen <<loGREENbit) | (surfpixel->rgbtBlue<<loBLUEbit);
+	pI->Unlock(0);
+	return S_OK;
 	}
 
 HRESULT BltBlend32(IDirectDrawSurface *surf, 
@@ -1339,6 +1389,20 @@ HRESULT BltBlend32(IDirectDrawSurface *surf,
 	from->Unlock(0);
 	to->Unlock(0);
 	return hr;
+	}
+
+HRESULT GetPixelColor32(IDirectDrawSurface *pI, int x, int y, DWORD *pck)
+	{
+	*pck = 0;
+	DDSURFACEDESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.dwSize=sizeof(desc);
+	HRESULT hr = pI->Lock(0, &desc, DDLOCK_WAIT | DDLOCK_READONLY, 0);
+	if (FAILED(hr))return hr;
+	RGBQUAD* surfpixel=(RGBQUAD*)((BYTE*)desc.lpSurface+y*desc.lPitch) + x;
+	*pck = (surfpixel->rgbRed<<loREDbit) | (surfpixel->rgbGreen <<loGREENbit) | (surfpixel->rgbBlue<<loBLUEbit);
+	pI->Unlock(0);
+	return S_OK;
 	}
 
 static char DirectDrawSurface_BltBlend__doc__[] =
@@ -1459,6 +1523,50 @@ DirectDrawSurface_GetColorMatch(DirectDrawSurfaceObject *self, PyObject *args)
 }
 
 
+static char DirectDrawSurface_GetPixelColor__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_GetPixelColor(DirectDrawSurfaceObject *self, PyObject *args)
+{
+	int x, y;
+	if (!PyArg_ParseTuple(args, "(ii)", &x, &y))
+		return NULL;
+
+	HRESULT hr = S_OK;
+	if(IsRectEmpty(&self->rc)){
+		hr = GetSurfaceRect(self->pI, &self->rc);
+		if (FAILED(hr)){
+			seterror("DirectDrawSurface_GetPixelColor:GetSurfaceRect", hr);
+			return NULL;
+			}
+		}
+	DWORD width = self->rc.right - self->rc.left;
+	DWORD height = self->rc.bottom - self->rc.top;
+
+	if(y<0 || y>int(height)-1 || x<0 || x>int(width)-1){
+		//return Py_BuildValue("i",CLR_INVALID);
+		seterror("DirectDrawSurface_GetPixelColor: point out of surface");
+		return NULL;
+		}
+	hr = E_UNEXPECTED;
+	DWORD ck = 0;
+	if (dwRGBBitCount==8)
+		hr = GetPixelColor8(self->pI, x, y, &ck);
+	else if(dwRGBBitCount==16)
+		hr = GetPixelColor16(self->pI, x, y, &ck);
+	else if(dwRGBBitCount==24)
+		hr = GetPixelColor24(self->pI, x, y, &ck);
+	else if(dwRGBBitCount==32)
+		hr = GetPixelColor32(self->pI, x, y, &ck);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_GetPixelColor", hr);
+		return NULL;
+		}
+	return Py_BuildValue("i",ck);
+}
+
+
 static char DirectDrawSurface_BltFill__doc__[] =
 ""
 ;
@@ -1550,7 +1658,6 @@ DirectDrawSurface_Restore(DirectDrawSurfaceObject *self, PyObject *args)
 	int ret = (hr==DD_OK)?1:0;
 	return Py_BuildValue("i",ret);
 	}
-
 
 static char DirectDrawSurface_Blt_RGB32_On_RGB32__doc__[] =
 ""
@@ -2129,6 +2236,7 @@ static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"ReleaseDC", (PyCFunction)DirectDrawSurface_ReleaseDC, METH_VARARGS, DirectDrawSurface_ReleaseDC__doc__},
 	{"SetColorKey", (PyCFunction)DirectDrawSurface_SetColorKey, METH_VARARGS, DirectDrawSurface_SetColorKey__doc__},
 	{"GetColorMatch", (PyCFunction)DirectDrawSurface_GetColorMatch, METH_VARARGS, DirectDrawSurface_GetColorMatch__doc__},
+	{"GetPixelColor", (PyCFunction)DirectDrawSurface_GetPixelColor, METH_VARARGS, DirectDrawSurface_GetPixelColor__doc__},
 	{"GetPixelFormat", (PyCFunction)DirectDrawSurface_GetPixelFormat, METH_VARARGS, DirectDrawSurface_GetPixelFormat__doc__},
 	{"BltBlend", (PyCFunction)DirectDrawSurface_BltBlend, METH_VARARGS, DirectDrawSurface_BltBlend__doc__},
 	{"BltFill", (PyCFunction)DirectDrawSurface_BltFill, METH_VARARGS, DirectDrawSurface_BltFill__doc__},
