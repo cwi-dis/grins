@@ -901,7 +901,6 @@ class KeyTimesSlider(window.Wnd):
 		dlg.HookNotify(self.OnReleaseCapture, commctrl.NM_RELEASEDCAPTURE)
 		
 		self._selected = -1
-		self._prevSelectedRect = None
 		self._dragging = None
 
 	def insertKeyTimeFromPoint(self, index, prop):
@@ -974,10 +973,7 @@ class KeyTimesSlider(window.Wnd):
 				self._dragging = point
 				self._dragfrom = self._keyTimes[index]
 			self._selected = index
-			self._parent.InvalidateRect(rect)
-			if self._prevSelectedRect:
-				self._parent.InvalidateRect(self._prevSelectedRect)
-			self._prevSelectedRect = rect
+			self.updateKeyTimes()
 
 	def onDeselect(self, point, flags):
 		self._dragging = None
