@@ -11,6 +11,7 @@ import MMAttrdefs
 import MMNode
 from HierarchyViewDialog import HierarchyViewDialog
 from usercmd import *
+import os
 
 
 def fix(r, g, b): return r, g, b	# Hook for color conversions
@@ -122,6 +123,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.editmgr = self.root.context.editmgr
 		self.destroynode = None	# node to be destroyed later
 		self.thumbnails = 1
+		from cmif import findfile
+		self.datadir = findfile('Data')
 		HierarchyViewDialog.__init__(self)
 
 	def __repr__(self):
@@ -902,17 +905,24 @@ class Object:
 			# draw thumbnail if enough space
 			if self.mother.thumbnails and \
 			   b1-t1 >= 2*titleheight and \
-			   r-l >= hmargin * 4.5 and \
-			   node.GetChannelType() == 'image':
-				import MMurl
-				try:
-					f = MMurl.urlretrieve(node.context.findurl(MMAttrdefs.getattr(node, 'file')))[0]
-				except IOError:
-					pass
-				else:
-					box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1)/2-titleheight, r-l-2*hmargin, 2*titleheight))
-					d.fgcolor(TEXTCOLOR)
-					d.drawbox(box)
+			   r-l >= hmargin * 4.5:
+				ctype = node.GetChannelType()
+				f = os.path.join(self.mother.datadir, '%s.tiff' % ctype)
+				if ctype == 'image':
+					try:
+						import MMurl
+						f = MMurl.urlretrieve(node.context.findurl(MMAttrdefs.getattr(node, 'file')))[0]
+					except IOError:
+						# f not reassigned!
+						pass
+				if f is not None:
+					try:
+						box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1)/2-titleheight, r-l-2*hmargin, 2*titleheight))
+					except windowinterface.error:
+						pass
+					else:
+						d.fgcolor(TEXTCOLOR)
+						d.drawbox(box)
 		d.fgcolor(TEXTCOLOR)
 		d.centerstring(l, t, r, t1, self.name)
 		# If this is a node with suppressed detail,
