@@ -12,7 +12,6 @@
 #include "resource.h"
 #include "cmifexhelp.h"
 
-#define PyIMPORT  __declspec(dllimport)
 #define PyEXPORT  __declspec(dllexport)
 #define LSIZE	10
 
@@ -30,11 +29,83 @@ BOOL flg=FALSE;
 typedef enum { ARROW, WAIT, HAND, START, G_HAND, U_STRECH,
 			   D_STRECH, L_STRECH, R_STRECH, UL_STRECH, 
 			   UR_STRECH, DR_STRECH, DL_STRECH, PUT} Cursors;
-//PyIMPORT CWnd *GetWndPtr(PyObject *);
 
 HDC hdc=NULL;
 PAINTSTRUCT ps;
 static int nPaint=0;
+
+static HFONT EzCreateFont (HDC hdc, char * szFaceName, int iDeciPtHeight,
+                    int iDeciPtWidth, int iAttributes, BOOL fLogRes)
+{
+	FLOAT      cxDpi, cyDpi ;
+	HFONT      hFont ;
+	LOGFONT    lf ;
+	POINT      pt ;
+	TEXTMETRIC tm ;
+
+	SaveDC (hdc) ;
+
+	SetGraphicsMode (hdc, GM_ADVANCED) ;
+	ModifyWorldTransform (hdc, NULL, MWT_IDENTITY) ;
+	SetViewportOrgEx (hdc, 0, 0, NULL) ;
+	SetWindowOrgEx   (hdc, 0, 0, NULL) ;
+
+	if (fLogRes)
+	{
+		cxDpi = (FLOAT) GetDeviceCaps (hdc, LOGPIXELSX) ;
+		cyDpi = (FLOAT) GetDeviceCaps (hdc, LOGPIXELSY) ;
+	}
+	else
+	{
+		cxDpi = (FLOAT) (25.4 * GetDeviceCaps (hdc, HORZRES) /
+							GetDeviceCaps (hdc, HORZSIZE)) ;
+
+		cyDpi = (FLOAT) (25.4 * GetDeviceCaps (hdc, VERTRES) /
+							GetDeviceCaps (hdc, VERTSIZE)) ;
+	}
+
+	pt.x = (int) (iDeciPtWidth  * cxDpi / 72) ;
+	pt.y = (int) (iDeciPtHeight * cyDpi / 72) ;
+
+	DPtoLP (hdc, &pt, 1) ;
+
+	lf.lfHeight         = - (int) (fabs (pt.y) / 10.0 + 0.5) ;
+	lf.lfWidth          = 0 ;
+	lf.lfEscapement     = 0 ;
+	lf.lfOrientation    = 0 ;
+	lf.lfWeight         = iAttributes & EZ_ATTR_BOLD      ? 700 : 0 ;
+	lf.lfItalic         = iAttributes & EZ_ATTR_ITALIC    ?   1 : 0 ;
+	lf.lfUnderline      = iAttributes & EZ_ATTR_UNDERLINE ?   1 : 0 ;
+	lf.lfStrikeOut      = iAttributes & EZ_ATTR_STRIKEOUT ?   1 : 0 ;
+	lf.lfCharSet        = 0 ;
+	lf.lfOutPrecision   = 0 ;
+	lf.lfClipPrecision  = 0 ;
+	lf.lfQuality        = 0 ;
+	lf.lfPitchAndFamily = 0 ;
+
+	strcpy (lf.lfFaceName, szFaceName) ;
+
+	hFont = CreateFontIndirect (&lf) ;
+
+	if (iDeciPtWidth != 0)
+	{
+		hFont = (HFONT) SelectObject (hdc, hFont) ;
+
+		GetTextMetrics (hdc, &tm) ;
+
+		DeleteObject (SelectObject (hdc, hFont)) ;
+
+		lf.lfWidth = (int) (tm.tmAveCharWidth *
+								fabs (pt.x) / fabs (pt.y) + 0.5) ;
+
+		hFont = CreateFontIndirect (&lf) ;
+	}
+
+	RestoreDC (hdc, -1) ;
+
+	return hFont ;
+}
+
 
 
 //int PyErr_Print (void);
@@ -42,7 +113,7 @@ void CmifExErrorFunc(char *str);
 
 
 
-LRESULT CALLBACK MyWndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK MyWndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
 
 	switch (iMsg)
@@ -450,7 +521,6 @@ static PyObject* py_cmifex_DrawString(PyObject *self, PyObject *args)
 	PyObject *ob = Py_None;
 	CWnd *hCWnd;
 	HDC hdc=NULL;
-	BOOL res;
 	char *string;
 	int top, left;
 	static int times=1;
@@ -471,7 +541,7 @@ static PyObject* py_cmifex_DrawString(PyObject *self, PyObject *args)
 
 	ReleaseDC(hCWnd->m_hWnd, hdc);
 	
-	return Py_BuildValue("i", res);
+	RETURN_NONE;
 } //static PyObject* py_cmifex_DrawString(PyObject *self, PyObject *args)
 
 
@@ -521,7 +591,6 @@ static PyObject* py_cmifex_FillPolygon(PyObject *self, PyObject *args)
 	POINT *pts;
 	CWnd *hCWnd;
 	HDC hdc=NULL;
-	BOOL res;
 	HBRUSH hBrush ;
 	HPEN hPen;
 	int r, g, b, npts_list, polyMode, i;
@@ -571,7 +640,7 @@ static PyObject* py_cmifex_FillPolygon(PyObject *self, PyObject *args)
 	DeleteObject ((HPEN)SelectObject(hdc, hPen)) ;
 	ReleaseDC(hCWnd->m_hWnd, hdc);
 	
-	return Py_BuildValue("i", res);
+	RETURN_NONE;
 } //static PyObject* py_cmifex_FillPolygon(PyObject *self, PyObject *args)
 
 
@@ -582,7 +651,6 @@ static PyObject* py_cmifex_DrawLines(PyObject *self, PyObject *args)
 	POINT *pts;
 	CWnd *hCWnd;
 	HDC hdc=NULL;
-	BOOL res;
 	HPEN hPen;
 	int r, g, b, npts_list, i;
 	static int times=1;
@@ -625,7 +693,7 @@ static PyObject* py_cmifex_DrawLines(PyObject *self, PyObject *args)
 	DeleteObject ((HPEN)SelectObject(hdc, hPen)) ;
 	ReleaseDC(hCWnd->m_hWnd, hdc);
 	
-	return Py_BuildValue("i", res);
+	RETURN_NONE;
 } //static PyObject* py_cmifex_DrawLines(PyObject *self, PyObject *args)
 
 
@@ -634,7 +702,6 @@ static PyObject* py_cmifex_FillRectangle(PyObject *self, PyObject *args)
 	PyObject *ob = Py_None;
 	CWnd *hCWnd;
 	HDC hdc=NULL;
-	BOOL res;
 	HBRUSH hBrush ;
     RECT   rect ;
 	int top, left, right, bottom;
@@ -664,7 +731,7 @@ static PyObject* py_cmifex_FillRectangle(PyObject *self, PyObject *args)
 	ReleaseDC(hCWnd->m_hWnd, hdc);
 	DeleteObject (hBrush) ;
 
-	return Py_BuildValue("i", res);
+	RETURN_NONE;
 } //static PyObject* py_cmifex_FillRectangle(PyObject *self, PyObject *args)
 
 static PyObject* py_cmifex_DrawFontString(PyObject *self, PyObject *args)
