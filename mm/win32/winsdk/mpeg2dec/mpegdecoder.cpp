@@ -129,7 +129,6 @@ void MpegDecoder::write_last_sequence_frame()
 		else
 			write_frame(backward_reference_frame,m_bitstream_framenum-1);
 		}
-	m_last_bitstream_framenumber = m_bitstream_framenum;
 	}
 
 
@@ -222,6 +221,17 @@ void MpegDecoder::get_display_info(display_info& di) const
 	di.mpeg2_flag = (base.MPEG2_Flag != 0);
 	di.progressive_frame = (progressive_frame != 0);
 	di.matrix_coefficients = matrix_coefficients;
+	di.frame_rate = frame_rate_Table[frame_rate_code];
+	}
+
+double MpegDecoder::get_frame_rate() const
+	{
+	return frame_rate_Table[frame_rate_code];
+	}
+
+double MpegDecoder::get_bit_rate() const
+	{
+	return ((double) bit_rate_value) * 400.0;
 	}
 
 void MpegDecoder::finalize_sequence()

@@ -31,7 +31,7 @@ class MpegPlayer : public VideoPlayer
 	virtual void close();
 	virtual int get_width() const;
 	virtual int get_height() const;
-	virtual double get_duration() const;
+	virtual double get_duration();
 	virtual void prepare_playback(surface<color_repr_t> *psurf);
 	virtual void suspend_playback();
 	virtual void resume_playback();
@@ -39,6 +39,8 @@ class MpegPlayer : public VideoPlayer
 	virtual void lock_surface();
 	virtual void unlock_surface();
 	virtual void set_direct_update_box(int x, int y, int w, int h);
+	virtual double get_frame_rate() const;
+	virtual double get_bit_rate() const;
 
 	private:
 	MpegDecoder *decoder;
