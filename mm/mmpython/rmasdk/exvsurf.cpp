@@ -48,6 +48,7 @@ ExampleVideoSurface::ExampleVideoSurface(IUnknown* pContext, ExampleWindowlessSi
     , m_pContext(pContext)
     , m_pSiteWindowless(pSiteWindowless)
     , m_pBitmapInfo(NULL)
+	, m_pPyVideoRenderer(NULL)
 { 
     if (m_pContext)
     {
@@ -163,6 +164,7 @@ ExampleVideoSurface::BeginOptimizedBlt(RMABitmapInfoHeader* pBitmapInfo)
         return res;
     }
 
+	
     switch (pBitmapInfo->biCompression)
     {
       case RMA_RGB3_ID:
@@ -179,13 +181,18 @@ ExampleVideoSurface::BeginOptimizedBlt(RMABitmapInfoHeader* pBitmapInfo)
 	// see if we have new format 
 	if (m_lastBitmapInfo.biWidth != pBitmapInfo->biWidth ||
 	    m_lastBitmapInfo.biHeight != pBitmapInfo->biHeight ||
-	    m_lastBitmapInfo.biHeight != pBitmapInfo->biHeight ||
 	    m_lastBitmapInfo.biBitCount != pBitmapInfo->biBitCount ||
 	    m_lastBitmapInfo.biCompression != pBitmapInfo->biCompression)
 	{
 	    // format has changed since last blit...
 	    //
 	    //
+		if(m_pPyVideoRenderer)
+			{
+			CallerHelper helper("OnFormatChange",m_pPyVideoRenderer);
+			if(helper.HaveHandler())helper.call(pBitmapInfo->biWidth,pBitmapInfo->biHeight,
+				pBitmapInfo->biBitCount, pBitmapInfo->biCompression);
+			}
 
 	    // save settings for comparison next time 
 	    m_lastBitmapInfo.biWidth = pBitmapInfo->biWidth;
@@ -209,9 +216,9 @@ ExampleVideoSurface::OptimizedBlt(UCHAR* pImageBits,
 				      REF(PNxRect) rSrcRect)
 {
     if (!m_pBitmapInfo)
-    {
-	return PNR_UNEXPECTED;
-    }
+		{
+		return PNR_UNEXPECTED;
+		}
 
 
     //
@@ -219,9 +226,14 @@ ExampleVideoSurface::OptimizedBlt(UCHAR* pImageBits,
     // interested in doing that sort of thing
     //
     //
+	if(m_pPyVideoRenderer)
+		{
+		CallerHelper helper("Blt",m_pPyVideoRenderer);
+		if(helper.HaveHandler())helper.call((int)pImageBits);
+		}
 
 
-    printf("ExampleVideoSurface::OptimizedBlt - yeah baby!\n");
+    //printf("ExampleVideoSurface::OptimizedBlt - yeah baby!\n");
 
     return PNR_OK;
  }
