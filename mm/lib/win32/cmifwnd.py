@@ -6,8 +6,6 @@ from types import *
 
 # lib
 import win32ui, win32con, win32api 
-from win32modules import imageex,grinsRC
-from DisplayList import DisplayList
 Sdk = win32ui.GetWin32Sdk()
 
 # utilities
@@ -16,12 +14,15 @@ import win32mu,win32menu
 # constants
 from appcon import *
 from WMEVENTS import *
+from win32modules import imageex
+import grinsRC
 
 # globals 
-toplevel=None # set by AppTopLevel
+import __main__
 
 import  rbtk
 import DrawTk
+from DisplayList import DisplayList
 
 class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 	def __init__(self):
@@ -53,8 +54,8 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		self._canscroll = 0
 
 		self._parent = None
-		self._bgcolor = toplevel._bgcolor
-		self._fgcolor = toplevel._fgcolor
+		self._bgcolor = __main__.toplevel._bgcolor
+		self._fgcolor = __main__.toplevel._fgcolor
 		self._cursor = ''
 
 		# frame wnd indicator if not None
@@ -104,7 +105,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			return 
 		else:
 			if self.IsWindowVisible():
-				self.InvalidateRect()
+				self.update()
 			else:
 				self.ShowWindow(win32con.SW_SHOW)
 			self.pop()
@@ -114,6 +115,9 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			return
 		else:
 			self.ShowWindow(win32con.SW_HIDE)
+	
+	def is_topwindow(self):
+		return self._topwindow == self
 
 	# response to channel highlight
 	def showwindow(self,color=(255,0,0)):
@@ -126,22 +130,31 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 
 	def showwindow_on(self,dc):
 		win32mu.FrameRect(dc,self.GetClientRect(),self._showing)
-		self._display_info(dc)
+		if self._topwindow != self:
+			self._display_info(dc)
+
+	def showwindowEx(self):
+		rgn=win32ui.CreateRgn()
+		rgn.CreateRectRgn(self.GetClientRect())
+		dcx=self.GetDCEx(rgn,win32con.DCX_CACHE|win32con.DCX_CLIPSIBLINGS)
+		win32mu.FrameRect(dcx,self.GetClientRect(),self._showing)
+		if self._topwindow != self:		
+			self._display_info(dcx)
+		self.ReleaseDC(dcx)
+		rgn.DeleteObject()
+		del rgn
 
 	# response to channel unhighlight
 	def dontshowwindow(self):
 		self.showwindow(self._bgcolor)
 		self._showing=None
-		self._filled=None
+		self.update()
+
 	def is_showing(self):
 		return self._showing
 	
 	def _display_info(self,dc):
 		rc=win32mu.Rect(self.GetClientRect())	
-		if not hasattr(self,'_filled'):
-			self._filled=None
-		if self._filled:
-			dc.FillSolidRect(rc.tuple(),win32mu.RGB(self._filled))
 		DrawTk.drawTk.SetSmallFont(dc)
 		if self._showing:
 			old=dc.SetTextColor(win32mu.RGB(self._showing))
@@ -155,40 +168,42 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			old=dc.SetTextColor(old)
 		DrawTk.drawTk.RestoreFont(dc)
 
-	def showwindowf(self,color,f):
-		if f:self._filled=color
-		else:self._filled=None
-		self.update()
-#		rgn=win32ui.CreateRgn()
-#		rgn.CreateRectRgn(self.GetClientRect())
-#		dc=self.GetDCEx(rgn,win32con.DCX_CACHE)
-#		self.PaintOn(dc)
-#		self.ReleaseDC(dc)
-#		rgn.DeleteObject()
-#		del rgn
 
 	def update(self):
-		self.RedrawWindow()
-		self.UpdateWindow()
-		if self._transparent==0 or (self._transparent==-1 and self._active_displist):
-			return # not transparent
-		self.PaintUnderTrasparentSiblings(self.GetClientRect())
+		self.InvalidateParentRect()
+	def InvalidateParentRect(self):
+		if self._topwindow == self:
+			self.InvalidateRect()
+			return
+		l,t,r,b=self.GetClientRect()
+		ptList=[(l,t),(r,b)]
+		[(l,t),(r,b)] = self.MapWindowPoints(self._parent,ptList)
+		self._parent.InvalidateRect((l,t,r,b))
 
 	def close(self):
-		self.arrowcache = {}
-		self.hide()
 		if self._parent is None:
 			return		# already closed
-		self._parent._subwindows.remove(self)
-		self._parent = None
-		for win in self._subwindows[:]:
-			win.close()
+		#print 'closing...',self._title,self
+
+		self.setcursor('arrow')
 		for dl in self._displists[:]:
 			dl.close()
+		for win in self._subwindows[:]:
+			win.close()
+
 		if self._obj_ and self.IsWindow():
+			rc=self.GetClientRect()
+			l,t,r,b=rc
+			ptList=[(l,t),(r,b)]
+			[(l,t),(r,b)] = self.MapWindowPoints(self._topwindow,ptList)
 			self.destroy_menu()
 			self.DestroyWindow()
+			self._topwindow.InvalidateRect((l,t,r,b))
+
+		self._parent._subwindows.remove(self)
+		self._parent = None
 		del self._topwindow
+		del self.arrowcache
 		self._obj_ = None
 
 	def is_closed(self):
@@ -206,20 +221,19 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		else:
 			raise error, 'invalid function'
 
-	def setTransparent(self,enable):
+	def setWndTransparent(self):
 		style = self.GetWindowLong(win32con.GWL_EXSTYLE)
-		if enable:
-			style = style | win32con.WS_EX_TRANSPARENT;
-		else:
-			style = style & ~win32con.WS_EX_TRANSPARENT;
+		style = style | win32con.WS_EX_TRANSPARENT;
 		self.SetWindowLong(win32con.GWL_EXSTYLE,style)
-
-	def isTransparent(self):
+	def setWndNotTransparent(self):
 		style = self.GetWindowLong(win32con.GWL_EXSTYLE)
-		if (style & win32con.WS_EX_TRANSPARENT)!=0:
-			return 1
-		else:
-			return 0
+		style = style & ~win32con.WS_EX_TRANSPARENT;
+		self.SetWindowLong(win32con.GWL_EXSTYLE,style)
+	def isWndTransparent(self):
+		style = self.GetWindowLong(win32con.GWL_EXSTYLE)
+		return (style & win32con.WS_EX_TRANSPARENT)
+	def isNull(self):
+		return (self._transparent in (-1,1) and self._active_displist==None)
 
 	def destroy_menu(self):
 		if self._menu:
@@ -253,9 +267,9 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		#list.append(('','clear',(self.showwindowf,((0,0,0),0))))
 
 		self.destroy_menu()
-		menu = win32ui.CreateMenu()
-		float = win32ui.CreateMenu()
-		win32menu.PopupAppendMenu(menu,float,"menu")
+		menu = win32menu.Menu() 
+		float = win32menu.Menu() 
+		menu.AppendPopup(float,"menu")
 		
 		if title:
 			list = [istr, None] + list
@@ -279,13 +293,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 	def bgcolor(self, color):
 		self._bgcolor = self._convert_color(color)
 
-	def setcursor(self, cursor):
-		if cursor == self._cursor:
-			return
-		win32mu.SetCursor(cursor)
-		self._cursor = cursor
-
-	# box in pixels
+	# relative coordinates of a wnd with respect to its parent
 	def getsizes(self,rc_child=None):
 		if not rc_child:rc=win32mu.Rect(self.GetWindowRect())
 		else: rc=rc_child
@@ -293,11 +301,17 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		return self._relative_coordinates(rc.tuple_ps(),rcParent.tuple_ps())
 	def getsizes100(self):
 		ps=self.getsizes()
-		return float(int(100.0*ps[0])/100.0),float(int(100.0*ps[1])/100.0),float(int(100.0*ps[2])/100.0),float(int(100.0*ps[3])/100.0)
-	# box in relative
-	def getsizes_pix(self,box):
-		rcwnd=win32mu.Rect(self.GetClientRect())
-		return  self._convert_coordinates(box,rcwnd.tuple_ps())
+		return float(int(100.0*ps[0]+0.5)/100.0),float(int(100.0*ps[1]+0.5)/100.0),float(int(100.0*ps[2]+0.5)/100.0),float(int(100.0*ps[3]+0.5)/100.0)
+
+	def get_pixel_coords(self,box):
+		return  self._convert_coordinates(box,self._canvas)
+
+	def get_relative_coords(self,box):
+		return self._relative_coordinates(box,self._canvas)
+	def get_relative_coords100(self,box):
+		ps=self._relative_coordinates(box,self._canvas)
+		return float(int(100.0*ps[0]+0.5)/100.0),float(int(100.0*ps[1]+0.5)/100.0),float(int(100.0*ps[2]+0.5)/100.0),float(int(100.0*ps[3]+0.5)/100.0)
+
 
 	def getgeometry(self, units = UNIT_MM):
 		if self._obj_==None or self.IsWindow()==0:return
@@ -305,6 +319,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			self.GetWindowPlacement()
 		rc=rcNormalPosition
 		x,y,w,h=rc[0],rc[1],rc[2]-rc[0],rc[3]-rc[1]
+		toplevel=__main__.toplevel
 		if units == UNIT_MM:
 			return float(x) / toplevel._pixel_per_mm_x, float(y) / toplevel._pixel_per_mm_y, \
 				   float(w) / toplevel._pixel_per_mm_x, float(h) / toplevel._pixel_per_mm_y
@@ -367,12 +382,16 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		self.onEvent(ev,(x, y, buttons))
 
 	def onLButtonDown(self, params):
-		self.notifyListener('onLButtonDown',params)
+		if self.in_create_box_mode():
+			self.notifyListener('onLButtonDown',params)
+			return
 		msg=win32mu.Win32Msg(params)
 		self.onMouseEvent(msg.pos(),Mouse0Press)
 
 	def onLButtonUp(self, params):
-		self.notifyListener('onLButtonUp',params)
+		if self.in_create_box_mode():
+			self.notifyListener('onLButtonUp',params)
+			return
 		msg=win32mu.Win32Msg(params)
 		self.onMouseEvent(msg.pos(),Mouse0Release)
 
@@ -380,11 +399,10 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		msg=win32mu.Win32Msg(params)
 		xpos,ypos=msg.pos()
 		if self._menu:
-			id = win32menu.FloatMenu(self,self._menu, xpos, ypos)
+			id = self._menu.FloatMenu(self,xpos, ypos)
 			if self._cbld.has_key(id) :
 				callback = self._cbld[id]
 				apply(callback[0], callback[1])
-		self.ReleaseCapture()
 
 	def onLButtonDblClk(self, params):
 		msg=win32mu.Win32Msg(params);pt=msg.pos()
@@ -392,28 +410,36 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		self.onMouseEvent(pt,Mouse0Press)
 
 	def onMouseMove(self, params):
-		self.notifyListener('onMouseMove',params)
-		#if self._cursor!='': return
-		if not self._active_displist: return
-		buttons = []
+		if self.in_create_box_mode():
+			self.notifyListener('onMouseMove',params)
+			return
+		if not self._active_displist:
+			self.setcursor('arrow') 
+			return
 		msg=win32mu.Win32Msg(params)
-		x,y = self._inverse_coordinates(self._DPtoLP(msg.pos()),self._canvas)
+		point=msg.pos()
+		point = self._DPtoLP(point)
+		x,y = self._inverse_coordinates(point,self._canvas)
 		for button in self._active_displist._buttons:
 			if button._inside(x,y):
 				self.setcursor('hand')
 				break
+		else:
+			self.setcursor('arrow')
 
-	def notifyListener(self,key,params):
-		if rbtk._in_create_box==None: return
-		if key=='onLButtonDown':DrawTk.DrawLayer.onLButtonDown(self,params)
-		elif key=='onLButtonUp':DrawTk.DrawLayer.onLButtonUp(self,params)
-		elif key=='onMouseMove':DrawTk.DrawLayer.onMouseMove(self,params)
-		elif key=='OnDraw':DrawTk.DrawLayer.OnDraw(self,params)
-	def in_create_box(self):
-		return rbtk._in_create_box
-	def GetContext(self): 
-		""" Temporal method for rbMode dev"""
-		return self._active_displist
+			
+	def setcursor(self, strid):
+		if strid=='hand':
+			#cursor=Sdk.LoadStandardCursor(win32con.IDC_HAND)
+			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_POINT_HAND)
+		else:
+			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
+		self.SetWndCursor(cursor)
+
+	def SetWndCursor(self,cursor):
+		if cursor!=Sdk.GetCursor():
+			Sdk.SetClassLong(self.GetSafeHwnd(),win32con.GCL_HCURSOR,cursor)
+
 
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
@@ -488,8 +514,12 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		elif how == DOUBLE_SIZE:
 			w = w * 2
 			h = h * 2
-		else: # RESET_CANVAS
+		elif how == FIT_WINDOW:
 			w, h = self._rect[2],self._rect[3]
+		else: # RESET_CANVAS
+			if hasattr(self,'_doc_rect'):
+				w,h=self._doc_rect[2:4]
+
 		self._canvas = (x,y,w,h)
 
 		self._scroll(how)
@@ -527,10 +557,6 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			hdwp=w._resize_wnds_tree(hdwp,xf,yf)
 		Sdk.EndDeferWindowPos(hdwp);
 		self._create_displists_tree()
-		self.LockWindowUpdate()
-		for w in self._subwindows:
-			w._resize_controls()
-		self.UnlockWindowUpdate()
 
 		
 
@@ -565,12 +591,15 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		flags=win32con.SWP_NOACTIVATE|win32con.SWP_NOZORDER
 		hdwp=Sdk.DeferWindowPos(hdwp,self.GetSafeHwnd(),0,\
 			(l,t,w,h),flags)
+
+		# factors for self
+		xf = float(w)/rc.width()
+		yf = float(h)/rc.height()
 		for w in self._subwindows:
 			hdwp=w._resize_wnds_tree(hdwp,xf,yf)
+
 		return hdwp
 	
-	def _resize_controls(self):
-		pass
 
 	def _z_order(self):
 		hdwp = Sdk.BeginDeferWindowPos(8)
@@ -580,18 +609,6 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			hdwp=w._z_order_wnds_tree(hdwp,wa.GetSafeHwnd())
 		Sdk.EndDeferWindowPos(hdwp)
 
-	# reorder self wnd and iteratively 
-	# all its childs, and for the childs all of their childs, etc
-	def _z_order_wnds_tree(self,hdwp,ha):
-		(flags,showCmd,ptMinPosition,ptMaxPosition,rcNormalPosition)=\
-			self.GetWindowPlacement()
-		flags=win32con.SWP_NOMOVE|win32con.SWP_NOSIZE|win32con.SWP_NOACTIVATE
-		hdwp=Sdk.DeferWindowPos(hdwp,self.GetSafeHwnd(),ha,\
-			rcNormalPosition,flags)
-#		wa=self._subwindows[0]
-#		for w in self._subwindows:
-#			hdwp=w._z_order_wnds_tree(hdwp)
-		return hdwp
 
 #=========================================================
 #======= Conversions between relative and pixel coordinates
@@ -655,6 +672,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 
 #====================================== Image
 	def _image_size(self, file):
+		toplevel=__main__.toplevel
 		try:
 			xsize, ysize = toplevel._image_size_cache[file]
 		except KeyError:
@@ -669,6 +687,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
 		# depth: depth of window (and image) in bytes
+		toplevel=__main__.toplevel
 		oscale = scale
 		tw = self._topwindow
 		#format = toplevel._imgformat

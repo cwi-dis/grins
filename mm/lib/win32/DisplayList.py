@@ -46,7 +46,7 @@ class DisplayList:
 		self._win32rgn=None
 		if self._canvas[2]==0 or self._canvas[3]==0:
 			print 'invalid canvas for wnd',window
-			raise error, 'invalid arg'
+			self._canvas=(0,0,10,10)
 		self._hfactor = 1.0/(self._canvas[2]/pixel_per_mm_x)
 		self._vfactor = 1.0/(self._canvas[3]/pixel_per_mm_y)
 
@@ -81,45 +81,16 @@ class DisplayList:
 		for b in self._buttons:
 			b._highlighted = 0	
 		wnd._active_displist = self
-		wnd.RedrawWindow(None,self._win32rgn)
 
-		# or equivalently
-		#dc=wnd.GetDCEx(self._win32rgn,win32con.DCX_CACHE|win32con.DCX_CLIPSIBLINGS)
-		#wnd.PaintOn(dc)
-		#wnd.ReleaseDC(dc)
+		# we set to not transparent in order to 
+		# accomodate windows bug
+		# and preserve z-order
+		if wnd._transparent in (1,-1):
+			wnd.setWndNotTransparent()
+		wnd.pop()
+		wnd.update()
 
-		# if it is not transparent 
-		# nothing remains to be done
-		# (the windows painting machanism is reused) 
-		if wnd._transparent==0 or wnd._transparent==-1:
-			return
-
-		# else
-		# we must paint overlaps of self._win32rgn
-		# with trasparent wnds
-		if not self._win32rgn: return
-		rgnBox=self._win32rgn.GetRgnBox()
-		wnd.PaintUnderTrasparentSiblings(rgnBox)
-		return
-
-		# obsolete now
-		# the wnd (here) is trasparent but
-		# since wnd's client rect was erased
-		# by the top window background (see OnErase mechanism) 
-		# we nust redraw active display lists
-		# for wnds that overlap
-		# here is a rough implementation
-		windows = wnd._topwindow._subwindows[:]
-		windows.remove(wnd)
-		rc=wnd.GetClientRect()
-		lin=[(rc[0],rc[1]),(rc[2],rc[3])]
-		for w in windows:
-			if w._transparent and w._active_displist and w._active_displist._win32rgn:
-				lout=wnd.MapWindowPoints(w,lin)
-				l,t=lout[0];r,b=lout[1]
-				w._do_expose((l,t,r,b),1)
 		
-
 	def _render(self, dc, region, show):
 		self._rendered = 1
 		w = self._window
@@ -290,18 +261,17 @@ class DisplayList:
 		win = self._window
 		for b in self._buttons[:]:
 			b.close()
-		win._displists.remove(self)
+		if self in win._displists:
+			win._displists.remove(self)
 		for d in win._displists:
 			if d._cloneof is self:
 				d._cloneof = None
 		if win._active_displist is self:
 			win._active_displist = None
+			if win._transparent in (1,-1):
+				win.setWndTransparent()
 			win.update()
-			win.RedrawWindow()
-			win.UpdateWindow()
-			if win._transparent!=0:
-				win.PaintUnderTrasparentSiblings(win.GetClientRect())
-
+			win.push()
 		self._window = None
 		if self._win32rgn:
 			self._win32rgn.DeleteObject()
@@ -323,28 +293,13 @@ class DisplayList:
 	def render_now(self):
 		self.render()	
 	
-
-	# obsolete
-	def clear_images(self):
-		dc=self._window.GetDC()
-		for i in range(len(self._list)):
-			if self._list[i][0] == 'image':
-				mask, image, src_x, src_y,dest_x, dest_y,\
-					width, height,rcKeep=self._list[i][1:]	
-				rc=(dest_x, dest_y, dest_x+width, dest_y+height)		
-				dc.FillSolidRect(rc,RGB(self._bgcolor))
-		self._window.ReleaseDC(dc)
-
-	# obsolete
-	def update_boxes(self, wnd):
-		pass
-
-
 	def fgcolor(self, color):
 		self._list.append('fg', color)
 		self._fgcolor = color
 
 	def newbutton(self, coordinates):
+		x, y, w, h = self._convert_coordinates(coordinates)
+		self._update_bbox(x, y, x+w, y+h)
 		return _Button(self, coordinates)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
@@ -361,6 +316,7 @@ class DisplayList:
 		x, y, w, h = self._canvas
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
+
 
 	def _resize_image_buttons(self):
 		type = self._list[1]
@@ -704,34 +660,15 @@ class DisplayList:
 	def _convert_color(self, color):
 		return color 
 
+		
 	# Object support
 	def drawobj(self,obj):
 		self.AddObj(obj)
-
 	def AddObj(self,obj):
 		self._list.append('obj',obj)
-		#l,t,r,b=obj.getbbox()
-		l,t,r,b=self._canvas # since obj can move (invst other)
+		l,t,r,b=obj.getbbox()
 		self._update_bbox(l,t,r,b)
 
-	def RemoveObj(self,obj):
-		for i in range(self._clonestart, len(self._list)):
-			e=self._list[i]
-			if e[0]=='obj' and e[1]==obj:
-				self._list.remove(e)
-
-	def ObjectAt(self,point):
-		"""point is in canvas coordinates"""
-		rect=Rect((point.x,point.y,point.x+1,point.y+1))
-		for i in range(self._clonestart, len(self._list)):
-			e=self._list[i]
-			if e[0]=='obj':
-				if e[1].intersects(rect):
-					return e[1]
-		return None	
-	# temp		
-	def UpdateObj(self,hint,hintObj):
-		self._window.self.OnUpdate(None,hint,hintObj)
 
 ####################################################
 class _Button:
