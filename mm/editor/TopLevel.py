@@ -74,9 +74,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# remote file
 			self.dirname = ''
 		mtype = MMmimetypes.guess_type(base)[0]
-		if mtype in ('application/x-grins-project', 'application/smil',
-##			     'application/x-grins-cmif',
-			     ):
+		if mtype in ('application/x-grins-project', 'application/smil'):
 			self.basename = posixpath.splitext(base)[0]
 		else:
 			self.basename = base
@@ -631,9 +629,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.prune = 1
 		else:
 			filetypes = ['application/x-grins-project', 'application/smil']
-##		import settings
-##		if settings.get('cmif'):
-##			filetypes.append('application/x-grins-cmif')
 		dftfilename = ''
 		if self.filename:
 			utype, host, path, params, query, fragment = urlparse(self.filename)
@@ -1014,9 +1009,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# remote file
 			self.dirname = ''
 		mtype = MMmimetypes.guess_type(base)[0]
-		if mtype in ('application/x-grins-project', 'application/smil',
-##			     'application/x-grins-cmif',
-			     ):
+		if mtype in ('application/x-grins-project', 'application/smil'):
 			self.basename = posixpath.splitext(base)[0]
 		else:
 			self.basename = base
@@ -1056,10 +1049,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if exporting and mimetype != 'application/smil':
 			windowinterface.showmessage('Publish to SMIL (*.smi or *.smil) files only')
 			return
-##		if mimetype == 'application/x-grins-cmif':
-##			if features.lightweight:
-##				windowinterface.showmessage('cannot write CMIF files in this version', mtype = 'error')
-##				return 0
 		if mimetype == 'application/smil':
 			if not exporting:
 				answer = windowinterface.GetOKCancel('You will lose GRiNS specific information by saving your project as SMIL.')
@@ -1076,43 +1065,39 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			pass
 		settings.set('savedir', os.path.dirname(filename))
 		try:
-##			if mimetype == 'application/x-grins-cmif':
-##				import MMWrite
-##				MMWrite.WriteFile(self.root, filename, evallicense=evallicense)
-##			else:
-				if compatibility.QT == features.compatibility:
-					cleanSMIL = 0
-					if mimetype == 'application/smil':
-						grinsExt = 0
-					else:
-						grinsExt = 1
+			if compatibility.QT == features.compatibility:
+				cleanSMIL = 0
+				if mimetype == 'application/smil':
+					grinsExt = 0
 				else:
-					cleanSMIL = (mimetype == 'application/smil')					
-					grinsExt = not cleanSMIL
-					
-				import SMILTreeWrite
-				if exporting:
-					# XXX enabling this currently crashes the application on Windows during video conversion
-					progress = windowinterface.ProgressDialog("Publishing", self.cancel_upload)
-					progress.set('Publishing document...')
-					progress = progress.set
-					exporttype = self.exporttype
-				else:
-					progress = None
-					exporttype = None
-				try:
-					SMILTreeWrite.WriteFile(self.root, filename,
-								cleanSMIL = cleanSMIL,
-								grinsExt = grinsExt,
-								copyFiles = exporting,
-								evallicense=evallicense,
-								progress = progress,
-								convertURLs = 1,
-								convertfiles = exporting and exporttype not in (compatibility.SMIL10, compatibility.Boston),
-								prune = self.prune,
-								compatibility = exporttype)
-				finally:
-					self.prune = 0
+					grinsExt = 1
+			else:
+				cleanSMIL = (mimetype == 'application/smil')					
+				grinsExt = not cleanSMIL
+
+			import SMILTreeWrite
+			if exporting:
+				# XXX enabling this currently crashes the application on Windows during video conversion
+				progress = windowinterface.ProgressDialog("Publishing", self.cancel_upload)
+				progress.set('Publishing document...')
+				progress = progress.set
+				exporttype = self.exporttype
+			else:
+				progress = None
+				exporttype = None
+			try:
+				SMILTreeWrite.WriteFile(self.root, filename,
+							cleanSMIL = cleanSMIL,
+							grinsExt = grinsExt,
+							copyFiles = exporting,
+							evallicense=evallicense,
+							progress = progress,
+							convertURLs = 1,
+							convertfiles = exporting and exporttype not in (compatibility.SMIL10, compatibility.Boston),
+							prune = self.prune,
+							compatibility = exporttype)
+			finally:
+				self.prune = 0
 		except IOError, msg:
 			if exporting:
 				operation = 'Publish'
@@ -1367,12 +1352,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##					# XXXX Not sure about this, this may mess up code in read_it
 ##					self.new_file = 1
 
-##		elif mtype == 'application/x-grins-cmif':
-##			if features.lightweight:
-##				windowinterface.showmessage('cannot read CMIF files in this version', mtype = 'error')
-##				raise Error, filename
-##			import MMRead
-##			self.root = MMRead.ReadFile(filename)
 		else:
 			if sys.platform == 'win32':
 				# XXX: experimental code
@@ -1645,7 +1624,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				mtype = MMmimetypes.guess_type(url)[0]
 				if mtype in ('application/smil',
 					     'application/x-grins-project',
-##					     'application/x-grins-cmif',
 					     ):
 					# in this case, the document is handle by grins
 					top = TopLevel(self.main, url, 0)
