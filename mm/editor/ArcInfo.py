@@ -78,13 +78,13 @@ class ArcInfo(ArcInfoDialog):
 		import SoundChannel # XXX hack! for aiffcache only
 		duration = 0.0
 		markers = []
-		filename = MMAttrdefs.getattr(node, 'file')
-		filename = node.context.findurl(filename)
+		url = MMAttrdefs.getattr(node, 'file')
+		url = node.context.findurl(url)
 		# XXX hack!
 		import SoundChannel
 		try:
-			duration = SoundDuration.get(filename)
-			markers = SoundDuration.getmarkers(filename)
+			duration = SoundDuration.get(url)
+			markers = SoundDuration.getmarkers(url)
 		except IOError:
 			pass
 		options = ['*Begin* (0.0)']
