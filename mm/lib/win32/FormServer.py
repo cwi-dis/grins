@@ -22,10 +22,10 @@ appform={
 import settings
 if not settings.get('lightweight'):
 ##	from NodeInfoForm import NodeInfoForm
-	from AnchorEditForm import AnchorEditForm
+##	from AnchorEditForm import AnchorEditForm
 	from ArcInfoForm import ArcInfoForm
 ##	appform['node_info']={'cmd':-1,'title':'NodeInfo Editor','id':'node_info','obj':None,'class':NodeInfoForm,'freezesize':1}
-	appform['anchor_edit']={'cmd':-1,'title':'Anchor Editor','id':'anchor_edit','obj':None,'class':AnchorEditForm,'freezesize':1}
+##	appform['anchor_edit']={'cmd':-1,'title':'Anchor Editor','id':'anchor_edit','obj':None,'class':AnchorEditForm,'freezesize':1}
 	appform['arc_info']={'cmd':-1,'title':'ArcInfo Editor','id':'arc_info','obj':None,'class':ArcInfoForm,'freezesize':1}
 
 # controls whether to remove or not the minimize button 
