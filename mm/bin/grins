@@ -66,8 +66,10 @@ pythonlib="$pythonsrc/Lib"
 CMIF="$dir"
 export CMIF
 
+PYTHONPATH=$CMIF/$function/motif
 PYTHONPATH=$CMIF/$function
 PYTHONPATH=$PYTHONPATH:$CMIF/common
+PYTHONPATH=$PYTHONPATH:$CMIF/lib/motif
 PYTHONPATH=$PYTHONPATH:$CMIF/lib
 PYTHONPATH=$PYTHONPATH:$CMIF/video
 if [ -d $CMIF/pylib ]
