@@ -396,17 +396,19 @@ def getsrc(writer, node):
 		val = MMurl.unquote(val)
 	return val
 
+def translatecolor(val):
+	if colors.rcolors.has_key(val):
+		return colors.rcolors[val]
+	else:
+		return '#%02x%02x%02x' % val
+
 def getcolor(writer, node):
 	if node.GetChannelType() != 'brush':
 		return None
 	fgcolor = node.GetRawAttrDef('fgcolor', None)
 	if fgcolor is None:
 		return
-	if colors.rcolors.has_key(fgcolor):
-		fgcolor = colors.rcolors[fgcolor]
-	else:
-		fgcolor = '#%02x%02x%02x' % fgcolor
-	return fgcolor
+	return translatecolor(fgcolor)
 
 def getsubregionatt(writer, node, attr):
 	from windowinterface import UNIT_PXL, UNIT_SCREEN
@@ -443,22 +445,14 @@ def getfitatt(writer, node, attr):
 def getbgcoloratt(writer, node, attr):
 	if not ChannelMap.isvisiblechannel(node.GetChannelType()):
 		return None	
-	try:
-		# if transparent, there is no backgroundColor attribute
-		transparent = node.GetRawAttr('transparent', 1)
-		if transparent != 0:
-			return None
-		
-		bgcolor = node.GetRawAttr('bgcolor',None)
-		if colors.rcolors.has_key(bgcolor or (0,0,0)):
-			bgcolor = colors.rcolors[bgcolor or (0,0,0)]
-		else:
-			bgcolor = '#%02x%02x%02x' % (bgcolor or (0,0,0))
-		
-		return bgcolor 
-	except:
-		# no attritute defined. It's a inherit value
+	# if transparent, there is no backgroundColor attribute
+	if node.GetRawAttrDef('transparent', 1):
+		return None
+
+	bgcolor = node.GetRawAttrDef('bgcolor', None)
+	if bgcolor is None:
 		return 'inherit'
+	return translatecolor(bgcolor)
 
 def getcmifattr(writer, node, attr, default = None):
 	val = node.GetRawAttrDef(attr, default)
@@ -834,6 +828,7 @@ smil_attrs=[
 	("clipBegin", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None),
 	("clipEnd", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
 	("sensitivity", getsensitivity),
+	("mediaRepeat", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'mediaRepeat')) or None),
 	("targetElement", lambda writer, node: node.GetRawAttrDef("targetElement", None)),
 	("attributeName", lambda writer, node: node.GetRawAttrDef("attributeName", None)),
 	("attributeType", getattributetype),
@@ -1556,10 +1551,7 @@ class SMILWriter(SMIL):
 				bgcolor = 0,0,0
 			else:
 				bgcolor = 255,255,255
-			if colors.rcolors.has_key(bgcolor):
-				bgcolor = colors.rcolors[bgcolor]
-			else:
-				bgcolor = '#%02x%02x%02x' % bgcolor
+			bgcolor = translatecolor(bgcolor)
 			if self.smilboston:
 				attrlist.append(('backgroundColor', bgcolor))
 			else:
@@ -1682,10 +1674,7 @@ class SMILWriter(SMIL):
 						# transparent==never, so set
 						# background-color if not
 						# transparent
-						if colors.rcolors.has_key(bgcolor or (0,0,0)):
-							bgcolor = colors.rcolors[bgcolor or (0,0,0)]
-						else:
-							bgcolor = '#%02x%02x%02x' % (bgcolor or (0,0,0))
+						bgcolor = translatecolor(bgcolor)
 						attrlist.append(('background-color',
 								 bgcolor))
 						bgcolor = None # skip below
@@ -1704,10 +1693,7 @@ class SMILWriter(SMIL):
 				      bgcolor != (255,255,255)) and
 				     bgcolor != (0,0,0))) and \
 				     (not self.__cleanSMIL or ch['type'] != 'RealText'):
-					if colors.rcolors.has_key(bgcolor):
-						bgcolor = colors.rcolors[bgcolor]
-					else:
-						bgcolor = '#%02x%02x%02x' % bgcolor
+					bgcolor = translatecolor(bgcolor)
 					attrlist.append(('background-color',
 							 bgcolor))
 			# Since background-color="transparent" is the
@@ -1728,10 +1714,7 @@ class SMILWriter(SMIL):
 					# default value
 					bgcolor = None
 				elif bgcolor != None:
-					if colors.rcolors.has_key(bgcolor):
-						bgcolor = colors.rcolors[bgcolor]
-					else:
-						bgcolor = '#%02x%02x%02x' % bgcolor
+					bgcolor = translatecolor(bgcolor)
 
 				if bgcolor != None:					
 					attrlist.append(('backgroundColor', bgcolor))
@@ -1838,10 +1821,7 @@ class SMILWriter(SMIL):
 			attrlist.append(('id', self.transition2name[key]))
 			for akey, aval in val.items():
 				if akey in ('fadeColor', 'borderColor'):
-					if colors.rcolors.has_key(aval):
-						aval = colors.rcolors[aval]
-					else:
-						aval = '#%02x%02x%02x' % aval
+					aval = translatecolor(aval)
 				elif akey[:1] == '_':
 					continue
 				elif akey == 'coordinated':
@@ -1998,15 +1978,7 @@ class SMILWriter(SMIL):
 			# realtext caption node
 			self.writerealpixnode(x, attrlist, mtype)
 		elif type in ('imm', 'ext', 'brush'):
-			children = x.GetChildren()
-			if not children:				
-				self.writemedianode(x, attrlist, mtype)
-			else:
-				self.writetag(mtype, attrlist, x)
-				self.push()
-				for child in x.GetChildren():
-					self.writenode(child)
-				self.pop()
+			self.writemedianode(x, attrlist, mtype)
 		else:
 			raise CheckError, 'bad node type in writenode'
 
@@ -2067,25 +2039,39 @@ class SMILWriter(SMIL):
 
 	def writemedianode(self, x, attrlist, mtype):
 		# XXXX Not correct for imm
-		pushed = 0		# 1 if has whole-node source anchor
+		pushed = 0
 		alist = x.GetRawAttrDef('anchorlist', [])
 
 		if self.uses_qt_namespace:
 			self.writeQTAttributeOnMediaElement(x,attrlist)
 
 		self.writetag(mtype, attrlist, x)
+		fg = x.GetRawAttrDef('fgcolor', None)
+		if fg is not None and mtype == 'text':
+			if not pushed:
+				self.push()
+				pushed = 1
+			self.writetag('param', [('name','fgcolor'),('value',translatecolor(fg))], x)
 		hassrc = 0		# 1 if has source anchors
 		for a in alist:
 			if a.atype in SourceAnchors:
 				hassrc = 1
 				break
 		if hassrc:
-			self.push()
+			if not pushed:
+				self.push()
+				pushed = 1
 			for a in alist:
 				if a.atype in SourceAnchors:
 					self.writelink(x, a)
-			self.pop()
-		for i in range(pushed):
+		children = x.GetChildren()
+		if children:
+			if not pushed:
+				self.push()
+				pushed = 1
+			for child in x.GetChildren():
+				self.writenode(child)
+		if pushed:
 			self.pop()
 
 	def writeanimatenode(self, node):
