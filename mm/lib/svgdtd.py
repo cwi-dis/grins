@@ -205,8 +205,8 @@ class SVG:
 			'viewBox': None,
 			'preserveAspectRatio': None,
 			'zoomAndPan': 'magnify',
-			'x': 0,
-			'y': 0,
+			'x': '0',
+			'y': '0',
 			'contentScriptType': 'text/ecmascript',
 			'contentStyleType': 'text/css',
 			'%presentAttrsAllEx': None,
@@ -639,6 +639,7 @@ class SVG:
              'animate','set','animateMotion','animateColor','animateTransform',
              'color-profile','font-face']
 
+	entities['#document'] = ['svg', ]
 	entities['svg'] = __svg      	
 	entities['g'] = __svg      	
 	entities['defs'] = __svg      	
@@ -707,6 +708,7 @@ class SVG:
 	del __svg
 
 	dataEntities = ['title', 'desc', 'text', ]
+	cdataEntities = ['style', ]
 
 	##############
 	# update element sets with std collections
@@ -723,3 +725,36 @@ class SVG:
 	# cleanup
 	del attrset
 
+
+
+##############
+# CAD helpers
+
+def GetDOMClassName(tag):
+	csname = 'Svg'+ tag[0].upper()
+	n = len(tag)
+	i = 1
+	while i<n:
+		if tag[i] == '-':
+			i = i + 1
+			csname = csname + tag[i].upper()
+		else:
+			csname = csname + tag[i]
+		i = i + 1
+	return csname
+
+
+def PrintDOMClasses():
+	svgelements = SVG.attributes.keys()
+	exltags = ()
+	print ''
+	for tag in svgelements:
+		if tag not in exltags:
+			csname = GetDOMClassName(tag)
+			print 'class '+ csname + '(SvgElement):'
+			print '\tdef parseAttributes(self):'		
+			print '\t\tSvgElement.parseAttributes(self)'		
+			print ''		
+
+if __name__ == '__main__':
+	PrintDOMClasses()
