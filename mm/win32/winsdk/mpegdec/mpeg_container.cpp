@@ -205,8 +205,7 @@ long mpeg_container::read_audio(short *output, long samples, int stream, int cha
 	{
 	if(!m_pmpeg2->has_audio) return 0;
 	long writelen = 0;
-	bool res = mpeg2audio_decode_audio(m_pmpeg2->atrack[stream]->audio, 
-		NULL, output, channel, 
+	bool res = mpeg2audio_decode_audio(m_pmpeg2->atrack[stream]->audio, output, channel, 
 		m_pmpeg2->atrack[stream]->current_position, samples, &writelen);
 	if(!res) return 0;
 	m_pmpeg2->last_type_read = 1;
@@ -239,10 +238,27 @@ long mpeg_container::read_audio_chunk(char **pp, int stream, int channel)
 	if(!m_pmpeg2->has_audio) return 0;
 	if(m_pmpeg2->atrack[stream]->total_samples == m_pmpeg2->atrack[stream]->current_position)
 		return 0;
-	size_t ts = 32*1024;
+	size_t ts = 128*1024;
 	*pp = new char[ts];
 	int samples = ts/2;
 	long n = read_audio((short*)*pp, samples, stream, channel);
 	return 2*n;
 	}
+
+long mpeg_container::read_raw_audio_chunk(char **pp, size_t ts, int stream, int channel)
+	{
+	*pp = 0;
+	if(!m_pmpeg2->has_audio) return 0;
+	*pp = new char[ts];
+	long size = 0;
+	int ret = mpeg2audio_read_raw(m_pmpeg2->atrack[stream]->audio, (unsigned char*)*pp, &size, ts);
+	if(ret != 0 || size==0)
+		{
+		delete *pp;
+		*pp = 0;
+		return 0;
+		}
+	return size;
+	}
+
 

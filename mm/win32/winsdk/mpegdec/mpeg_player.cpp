@@ -78,6 +78,7 @@ DWORD video_thread::Run()
 
 	m_decoder.update_framenum();
 
+	size_t pos = m_decoder.get_stream_pos();
 	while(m_decoder.get_header())
 		{
 		DWORD t0 = GetTickCount();
@@ -85,12 +86,11 @@ DWORD video_thread::Run()
 		long dt = (long)(GetTickCount() - t0);
 		long wait = msecs - dt;
 		if(wait>0) Sleep(wait);
-		
+
 		wres = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 		if(wres == WAIT_OBJECT_0) return 0;
 
 		m_decoder.update_framenum();
-		Sleep(10);
 		}
 	m_decoder.write_last_sequence_frame();
 	SetEvent(GetStopHandle());
@@ -105,7 +105,8 @@ class audio_thread : public Thread
 	:	m_filename(filename),
 		m_pwavout(NULL),
 		m_hPlaybackEvent(CreateEvent(NULL, TRUE, FALSE, NULL)),
-		m_ready(false)
+		m_ready(false),
+		m_data_read(false)
 		{
 		}
 
@@ -139,13 +140,33 @@ class audio_thread : public Thread
 	protected:
 	virtual DWORD Run();
 
+	void write_audio_chunks(mpeg_container& mpeg2);
+
 	private:
 	std::basic_string<TCHAR> m_filename;
 	wave_out_device *m_pwavout;
 	HANDLE m_hPlaybackEvent;
 	bool m_ready;
-	enum {buffers_init = 4, buffers_low = 8, buffers_hi = 12};
+	bool m_data_read;
+	enum {buffers_init = 4, buffers_low = 8, buffers_hi = 10};
 	};
+
+void audio_thread::write_audio_chunks(mpeg_container& mpeg2)
+	{
+	while(!m_data_read && m_pwavout->get_audio_data_size()<buffers_hi)
+		{
+		char *audio_data = 0;
+		int nr = mpeg2.read_audio_chunk(&audio_data);
+		if(nr == 0)
+			{
+			if(audio_data != 0) delete audio_data;
+			m_data_read = true;
+			break;
+			}
+		if(!m_pwavout->write_audio_chunk(audio_data, nr))
+			break;
+		}
+	}
 
 DWORD audio_thread::Run()
 	{
@@ -162,52 +183,28 @@ DWORD audio_thread::Run()
 		return 1;
 		}
 
-	printf("has_audio: rate=%d channels=%d\n", mpeg2.get_sample_rate(), mpeg2.get_audio_channels());
+	//printf("has_audio: rate=%d channels=%d\n", mpeg2.get_sample_rate(), mpeg2.get_audio_channels());
 	m_pwavout = new wave_out_device();
-	if(!m_pwavout->open(mpeg2.get_sample_rate(), mpeg2.get_audio_channels()))
+	if(!m_pwavout->open2(mpeg2.get_sample_rate(), mpeg2.get_audio_channels()))
 		{
 		delete m_pwavout;
 		m_pwavout = 0;
 		SetEvent(GetStopHandle());
 		return 1;
 		}
-	
-	while(m_pwavout->get_audio_data_size()<buffers_hi)
-		{
-		char *audio_data = 0;
-		int nr = mpeg2.read_audio_chunk(&audio_data);
-		if(nr == 0)
-			{
-			if(audio_data != 0) delete audio_data;
-			break;
-			}
-		if(!m_pwavout->write_audio_chunk(audio_data, nr))
-			break;
-		}
+
+	write_audio_chunks(mpeg2);
 	m_ready = true;
 
 	HANDLE handles[] = {GetStopHandle(), m_hPlaybackEvent};
 	DWORD wres = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 	if(wres == WAIT_OBJECT_0) return 0;
 	
-	while(WaitForSingleObject(GetStopHandle(), 10) != WAIT_OBJECT_0)
+	while(WaitForSingleObject(GetStopHandle(), 0) != WAIT_OBJECT_0)
 		{
 		WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 		if(m_pwavout->get_audio_data_size()<buffers_low)
-			{
-			while(m_pwavout->get_audio_data_size()<buffers_hi)
-				{
-				char *audio_data = 0;
-				int nr = mpeg2.read_audio_chunk(&audio_data);
-				if(nr == 0)
-					{
-					if(audio_data != 0) delete audio_data;
-					break;
-					}
-				if(!m_pwavout->write_audio_chunk(audio_data, nr))
-					break;
-				}
-			}
+			write_audio_chunks(mpeg2);
 		}
 
 	SetEvent(GetStopHandle());

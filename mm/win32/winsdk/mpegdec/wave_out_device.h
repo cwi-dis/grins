@@ -30,43 +30,65 @@ class wave_out_device
 	
 	~wave_out_device()
 		{
-		if(is_open()) close();
 		clear_data();
+		if(is_open()) close();
 		if(m_hDoneEvent != NULL) CloseHandle(m_hDoneEvent);
 		}
 	
+	static bool can_play(WAVEFORMATEX& wfx)
+		{
+		DWORD flags = WAVE_FORMAT_QUERY;
+		MMRESULT mmres = waveOutOpen(NULL, WAVE_MAPPER, &wfx, 0, 0, flags);
+		if(mmres != MMSYSERR_NOERROR)
+			{
+			seterror("waveOutOpen()", mmres);
+			return false;
+			}
+		return true;
+		}
+
+	bool open(WAVEFORMATEX& wfx)
+		{
+		MMRESULT mmres = waveOutOpen(&m_hWaveOut, WAVE_MAPPER, &wfx, (DWORD)wave_out_device::callback, (DWORD)this, CALLBACK_FUNCTION);
+		if(mmres != MMSYSERR_NOERROR)
+			{
+			seterror("waveOutOpen()", mmres);
+			return false;
+			}
+		waveOutPause(m_hWaveOut);
+		return true;
+		}
+
 	bool open(int nSamplesPerSec, int nChannels)
 		{
 		int wBitsPerSample = 16; 
 		int nBlockAlign = nChannels*wBitsPerSample/8; 
 		long nAvgBytesPerSec = nBlockAlign*nSamplesPerSec;
-		WAVEFORMATEX wf = {WAVE_FORMAT_PCM, 
+		WAVEFORMATEX wfx = {WAVE_FORMAT_PCM, 
 			WORD(nChannels), 
-			DWORD(nSamplesPerSec/nChannels), 
+			DWORD(nSamplesPerSec),
 			DWORD(nAvgBytesPerSec),
 			WORD(nBlockAlign),
 			WORD(wBitsPerSample),
 			WORD(0) 
 			};
-		MMRESULT mmres = waveOutOpen(&m_hWaveOut, WAVE_MAPPER, &wf, (DWORD)wave_out_device::callback, (DWORD)this, CALLBACK_FUNCTION);
-		if(mmres != MMSYSERR_NOERROR)
-			{
-			if(mmres == MMSYSERR_INVALHANDLE)
-				seterror("waveOutOpen", "MMSYSERR_INVALHANDLE, Specified device handle is invalid.");
-			else if(mmres == MMSYSERR_BADDEVICEID)
-				seterror("waveOutOpen", "MMSYSERR_BADDEVICEID, Specified device identifier is out of range.");
-			else if(mmres == MMSYSERR_NODRIVER)
-				seterror("waveOutOpen", "MMSYSERR_NODRIVER, No device driver is present");
-			else if(mmres == MMSYSERR_NOMEM)
-				seterror("waveOutOpen", "MMSYSERR_NOMEM, Unable to allocate or lock memory.");
-			else if(mmres == WAVERR_BADFORMAT)
-				seterror("waveOutOpen", "WAVERR_BADFORMAT, Attempted to open with an unsupported waveform-audio format.");
-			else if(mmres == WAVERR_SYNC)
-				seterror("waveOutOpen", "WAVERR_SYNC, Device is synchronous but waveOutOpen was called without using the WAVE_ALLOWSYNC flag");
-			return false;
-			}
-		waveOutPause(m_hWaveOut);
-		return true;
+		return open(wfx);
+		}
+
+	bool open2(int nSamplesPerSec, int nChannels)
+		{
+		int wBitsPerSample = 16; 
+		int nBlockAlign = nChannels*wBitsPerSample/8; 
+		long nAvgBytesPerSec = nBlockAlign*nSamplesPerSec;
+		WAVEFORMATEX wfx = {WAVE_FORMAT_PCM, 
+			WORD(nChannels), 
+			DWORD(nSamplesPerSec/nChannels),
+			DWORD(nAvgBytesPerSec),
+			WORD(nBlockAlign),
+			WORD(wBitsPerSample),
+			WORD(0) 
+			};
+		return open(wfx);
 		}
 
 	void close()
@@ -106,11 +128,31 @@ class wave_out_device
 		reset();
 		}
 
-	void seterror(const char *funcname, const char *msg)
+	static void seterror(const char *funcname, MMRESULT mmres)
+		{
+		if(mmres != MMSYSERR_NOERROR)
+			{
+			if(mmres == MMSYSERR_INVALHANDLE)
+				seterror(funcname, "MMSYSERR_INVALHANDLE, Specified device handle is invalid.");
+			else if(mmres == MMSYSERR_BADDEVICEID)
+				seterror(funcname, "MMSYSERR_BADDEVICEID, Specified device identifier is out of range.");
+			else if(mmres == MMSYSERR_NODRIVER)
+				seterror(funcname, "MMSYSERR_NODRIVER, No device driver is present");
+			else if(mmres == MMSYSERR_NOMEM)
+				seterror(funcname, "MMSYSERR_NOMEM, Unable to allocate or lock memory.");
+			else if(mmres == WAVERR_BADFORMAT)
+				seterror(funcname, "WAVERR_BADFORMAT, Attempted to open with an unsupported waveform-audio format.");
+			else if(mmres == WAVERR_SYNC)
+				seterror(funcname, "WAVERR_SYNC, Device is synchronous but waveOutOpen was called without using the WAVE_ALLOWSYNC flag");
+			}
+		}
+
+	static void seterror(const char *funcname, const char *msg)
 		{
 		printf("%s failed, %s\n", funcname, msg);
 		}
-	void seterror(const char *funcname)
+
+	static void seterror(const char *funcname)
 		{
 		printf("%s failed\n", funcname);
 		}
@@ -120,18 +162,18 @@ class wave_out_device
 		wave_out_device *wout = (wave_out_device*)dwInstance;
 		if(uMsg == WOM_OPEN)
 			{
-			;//printf("WOM_OPEN\n");
+			printf("WOM_OPEN\n");
 			}
 		else if(uMsg == WOM_DONE)
 			{
-			//printf("WOM_DONE\n");
+			printf("WOM_DONE\n");
 			wout->unprepare_front_chunk();
 			if(!wout->has_audio_data())
 				SetEvent(wout->m_hDoneEvent);
 			}
 		else if(uMsg == WOM_CLOSE)
 			{
-			//printf("WOM_CLOSE\n");
+			printf("WOM_CLOSE\n");
 			wout->clear_data();
 			SetEvent(wout->m_hDoneEvent);
 			}
