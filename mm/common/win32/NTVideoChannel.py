@@ -114,6 +114,12 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.playdone(0)
 			return
 		if node.__type == 'real':
+			bpp = self.window._topwindow.getRGBBitCount()
+			if  bpp<=8 and USE_WINDOWLESS_REAL_RENDERING:
+				print 'windowless real rendering not supported for screen depth', bpp
+				global USE_WINDOWLESS_REAL_RENDERING
+				USE_WINDOWLESS_REAL_RENDERING = 0
+
 			# real needs an os window yet
 			if not USE_WINDOWLESS_REAL_RENDERING:
 				self.window.CreateOSWindow(rect=self.getMediaWndRect())
@@ -157,6 +163,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if self.__type == 'real':
 				if self.__rc:
 					self.__rc.stopit()
+					if USE_WINDOWLESS_REAL_RENDERING:
+						self.cleanVideoRenderer()
 			else:
 				self.__mc.stopit()
 		self.__playing = None
@@ -267,41 +275,58 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	#############################
 	def getRealVideoRenderer(self):
-		self.initIVideoRenderer()
+		self.initVideoRenderer()
 		return self
 
 	# 
 	# Implement interface of real video renderer
 	# 
-	def initIVideoRenderer(self):
+	def initVideoRenderer(self):
+		self.__rmdds = None
+		self.__rmrender = None
+
+	def cleanVideoRenderer(self):
+		if self.window:
+			self.window.removevideo()
 		self.__rmdds = None
 		self.__rmrender = None
 
 	def OnFormatChange(self, w, h, bpp, comp):
 		import rma, ddraw
-		print 'OnFormatChange', w, h, bpp, comp
 		if not self.window: return
+
 		self.__rmdds = self.window._topwindow.CreateSurface(w, h)
+		self.__RGB_On_RGB = {
+			'32-32': self.__rmdds.Blt_RGB32_On_RGB32,
+			'24-32': self.__rmdds.Blt_RGB24_On_RGB32,
+			}
+
+		screenBPP = self.window._topwindow.getRGBBitCount()
+		self.__rmrender = None
+
 		if comp==rma.RMA_RGB:
-			print 'RMA_RGB'
-			if bpp==24:
-				self.__rmrender = self.__rmdds.Blt_RGB24_On_RGB32, w, h
-			elif bpp==32:
-				self.__rmrender = self.__rmdds.Blt_RGB32_On_RGB32, w, h
+			pair = '%d-%d' % (bpp, screenBPP)
+			if self.__RGB_On_RGB.has_key(pair):
+				self.__rmrender = self.__RGB_On_RGB[pair], w, h
+
 		elif comp==rma.RMA_YUV420:
-			print 'RMA_YUV420'
-			self.__rmrender = self.__rmdds.Blt_YUV420_On_RGB32, w, h
+			if screenBPP==32:
+				self.__rmrender = self.__rmdds.Blt_YUV420_On_RGB32, w, h
+			elif screenBPP==24:
+				self.__rmrender = self.__rmdds.Blt_YUV420_On_RGB24, w, h
+			elif screenBPP==16:
+				self.__rmrender = self.__rmdds.Blt_YUV420_On_RGB16, w, h
 		
-		if self.__rmdds and self.__rmrender:
-			print 'rendering video in', self.getMediaWndRect()
+		if self.__rmrender:
 			self.window.setvideo(self.__rmdds, self.getMediaWndRect(), (0,0,w,h) )
 		else:
+			self.window.removevideo()
 			self.__rmdds = None
 			
 	def Blt(self, data):
-		if self.__rmdds and self.__rmrender:
-			render, w, h = self.__rmrender
-			render(data, w, h)
+		if self.__rmdds:
+			blt, w, h = self.__rmrender
+			blt(data, w, h)
 			if self.window:
 				self.window.update()
 
