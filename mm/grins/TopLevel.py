@@ -135,7 +135,7 @@ class TopLevel(TopLevelDialog):
 		top.player.playsubtree(top.root)
 
 	def read_it(self):
-## 		import time
+##		import time
 		import mimetypes
 		self.changed = 0
 ##		print 'parsing', self.filename, '...'
@@ -249,6 +249,8 @@ class TopLevel(TopLevelDialog):
 				node = top.root.context.mapuid(uid)
 			except NoSuchUIDError:
 				print 'uid not found in document'
+		elif hasattr(node, 'SMILidmap') and node.SMILidmap.has_key(aid):
+			node = node.context.mapuid(node.SMILidmap[aid])
 		top.player.show((top.player.playfromanchor, (node, aid)))
 		if atype == TYPE_CALL:
 			self.player.pause(1)
