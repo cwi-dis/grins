@@ -66,9 +66,9 @@ LRESULT CALLBACK PyStdOutDialogFunc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 	{
 	if(message == WM_INITDIALOG)
 		{
-		std::basic_string<TCHAR> tstr = PyInterface::get_copyright();
-		PyStdOut::append(hDlg, tstr.c_str());
-		ShowWindow(hDlg, SW_SHOW);
+//		std::basic_string<TCHAR> tstr = PyInterface::get_copyright();
+//		PyStdOut::append(hDlg, tstr.c_str());
+//		ShowWindow(hDlg, SW_SHOW);
 		SetFocus(GetParent(hDlg));
 		return TRUE; 
 		}
@@ -91,21 +91,26 @@ LRESULT CALLBACK PyStdOutDialogFunc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 
 PyObject* CreatePyStdOut(HWND hWndParent)
 	{
-	HWND hWnd = CreateDialog(GetApplicationInstance(), MAKEINTRESOURCE(IDD_PYSTDOUT), 
-		hWndParent, (DLGPROC)PyStdOutDialogFunc);
-	RECT rc;
-	SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
-	int w = rc.right-rc.left, h = rc.bottom-rc.top;
-	MoveWindow(hWnd, rc.left+2, rc.bottom-h/3-MENU_HEIGHT, w-4, h/3, 0);
-	GetClientRect(hWnd, &rc);
-	MoveWindow(GetDlgItem(hWnd, IDC_STDOUT), 4, 4, rc.right-rc.left-8, rc.bottom-rc.top-8, 0);
+	HWND hWnd = NULL;
+//	if (!Py_OptimizeFlag)
+	{
+		hWnd = CreateDialog(GetApplicationInstance(), MAKEINTRESOURCE(IDD_PYSTDOUT), 
+			hWndParent, (DLGPROC)PyStdOutDialogFunc);
+		RECT rc;
+		SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
+		int w = rc.right-rc.left, h = rc.bottom-rc.top;
+		MoveWindow(hWnd, rc.left+2, rc.bottom-h/3-MENU_HEIGHT, w-4, h/3, 0);
+		GetClientRect(hWnd, &rc);
+		MoveWindow(GetDlgItem(hWnd, IDC_STDOUT), 4, 4, rc.right-rc.left-8, rc.bottom-rc.top-8, 0);
+	}
 	return (PyObject*)PyStdOut::createInstance(hWnd);
 	}
 
 void DetachPyStdOut(PyObject *obj)
 	{
 	PyStdOut *p = (PyStdOut*)obj;
-	DestroyWindow(p->m_hWnd);
+	if (p->m_hWnd)
+		DestroyWindow(p->m_hWnd);
 	p->m_hWnd = NULL;
 	}
 
@@ -118,18 +123,20 @@ static PyObject* PyStdOut_write(PyStdOut *self, PyObject *args)
 	char *psz;
 	if(!PyArg_ParseTuple(args, "s", &psz))
 		return NULL;
-	std::string str = fixendl(psz);
+	if (self->m_hWnd) {
+		std::string str = fixendl(psz);
 #ifdef UNICODE
-	int n = str.length()+1;
-	WCHAR *ptext = new WCHAR[n];
-	MultiByteToWideChar(CP_ACP, 0, str.c_str(), n, ptext, n);
-	PyStdOut::append(self->m_hWnd, ptext);
-	delete[] ptext;
+		int n = str.length()+1;
+		WCHAR *ptext = new WCHAR[n];
+		MultiByteToWideChar(CP_ACP, 0, str.c_str(), n, ptext, n);
+		PyStdOut::append(self->m_hWnd, ptext);
+		delete[] ptext;
 #else
-	PyStdOut::append(self->m_hWnd, str.c_str());
+		PyStdOut::append(self->m_hWnd, str.c_str());
 #endif
-	ShowWindow(self->m_hWnd, SW_SHOW);
-	SetFocus(GetParent(self->m_hWnd));
+		ShowWindow(self->m_hWnd, SW_SHOW);
+		SetFocus(GetParent(self->m_hWnd));
+	}
 	return none();
 	}
 
@@ -157,7 +164,8 @@ static PyObject* PyStdOut_close(PyStdOut *self, PyObject *args)
 	{
 	if(!PyArg_ParseTuple(args, ""))
 		return NULL;
-	ShowWindow(self->m_hWnd, SW_HIDE);
+	if (self->m_hWnd)
+		ShowWindow(self->m_hWnd, SW_HIDE);
 	return none();
 	}
 
