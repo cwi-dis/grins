@@ -13,7 +13,7 @@ def mkpixmap(w, h, fmt, data):
 	fmtinfo = _fmt_to_mac[fmt]
 	
 	rv = struct.pack("lhhhhhhhlllhhhhlll",
-		id(data)+12,
+		id(data)+16,
 		w*2 + 0x8000,
 		0, 0, h, w,
 		0,
