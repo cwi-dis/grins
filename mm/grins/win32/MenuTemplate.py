@@ -37,6 +37,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, '&Open...\tCtrl+O', 'O', OPENFILE),
 		(FLAG_ALL, ENTRY, 'Open &URL...\tCtrl+L', 'O', OPEN),
 		(FLAG_ALL, DYNAMICCASCADE, 'Open &recent', OPEN_RECENT),
+		(FLAG_ALL, ENTRY, 'R&eload', 'R', RELOAD),
 		(FLAG_ALL, ENTRY, '&Close Document', None, CLOSE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Preferences...', None, PREFERENCES),
