@@ -508,7 +508,7 @@ class SMILHtmlTimeWriter(SMIL):
 				style = style + ';'
 
 			if transIn:
-				#style = style + 'visibility=hidden;'
+				style = style + 'visibility=hidden;'
 				trans = 'transIn(%s, \'%s\')' % (subregid, transInName)
 				attrlist.append( ('onbegin', trans) )
 
