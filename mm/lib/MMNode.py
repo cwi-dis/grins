@@ -1032,7 +1032,7 @@ class MMNode:
 	def startplay(self, sctx, timestamp):
 		self.playing = MMStates.PLAYING
 		self.sctx = sctx
-		if self.fullduration is not None:
+		if self.fullduration is not None and self.fullduration >= 0:
 			endtime = timestamp+self.fullduration
 		else:
 			endtime = None
