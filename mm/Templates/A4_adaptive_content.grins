@@ -26,7 +26,7 @@
         <img id="RealPix-Slideshow_1" region="realpixRegion" src="media/realpix-template.rp" dur="10s" system-bitrate="28800"/>
 	  </seq>
 	  <seq id="RealText_Sequence">
-        <text id="Realtext_1" region="realtextRegion" src="media/realtext-template.rp" system-bitrate="14400"/>
+        <text id="Realtext_1" region="realtextRegion" src="media/realtext-template.rt" system-bitrate="14400"/>
 	  </seq>
     </switch>
 	  <seq id="Audio_Sequence">
