@@ -9,6 +9,10 @@ import os
 import Qt
 import QuickTime
 
+QT_AVAILABLE=Qt.available()
+if not QT_AVAILABLE:
+	Qt = None
+
 debug = 0 # os.environ.has_key('CHANNELDEBUG')
 
 class VideoChannel(ChannelWindow):
@@ -30,7 +34,8 @@ class VideoChannel(ChannelWindow):
 		self.has_callback = 0
 		self.idleprocactive = 0
 		self._paused = 0
-		Qt.EnterMovies()
+		if QT_AVAILABLE:
+			Qt.EnterMovies()
 		self.DBGcolor = (0xffff, 0, 0)
 		
 	def do_hide(self):
@@ -51,7 +56,9 @@ class VideoChannel(ChannelWindow):
 			self.errormsg(node, 'Node must be external')
 			return 1
 		if debug: print 'VideoChannel: arm', node
-
+		if not QT_AVAILABLE:
+			self.errormsg(node, "QuickTime not available")
+			return 1
 		fn = self.getfileurl(node)
 		try:
 			fn = MMurl.urlretrieve(fn)[0]
