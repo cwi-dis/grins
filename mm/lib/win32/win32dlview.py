@@ -39,10 +39,11 @@ import DropTarget
 
 class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTarget):
 	def __init__(self, doc):
-		self._curcursor = ''
 		docview.ScrollView.__init__(self,doc)
 		win32window.Window.__init__(self)
 		DropTarget.DropTarget.__init__(self)
+
+		self._curcursor = 'arrow'
 
 		self._usesLightSubWindows = 0
 
@@ -629,11 +630,12 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 
 	# Set the cursor given its string id		
 	def setcursor(self, strid):
-		if strid == self._curcursor:
+		if 0 and self._curcursor == strid: 
 			return
 		self._curcursor = strid
+		#if strid=='arrow': assert 0,''
 		cursor = win32window.getcursorhandle(strid)
-		Sdk.SetCursor(cursor)
+		Sdk.SetClassLong(self.GetSafeHwnd(),win32con.GCL_HCURSOR,cursor)
 	
 	#
 	# Canvas and scrolling section
