@@ -378,12 +378,11 @@ class RPParser(xmllib.XMLParser):
 		preroll = attributes.get('preroll')
 		if preroll is not None:
 			try:
-				self.preroll = string.atof(preroll)
-			except string.atof_error:
+				preroll = decode_time(preroll, self.timeformat)
+			except ValueError:
 				self.syntax_error('badly formatted preroll attribute')
-				self.preroll = None
-		else:
-			self.preroll = None
+				preroll = 0
+		self.preroll = preroll
 		self.title = attributes.get('title')
 		self.url = attributes.get('url')
 
