@@ -65,7 +65,10 @@ class MMNodeContext:
 		self.__parseErrors = None # keep the parse errors (fatal, normal and warning)
 		self.disableviews = 0 # for the comments look at Editor/TopLevel.__init__ method
 		self.viewinfo = None # Open views and their position. None: default.
-
+		
+		self.__defaultRegion = None
+		self.__defaultViewport = None
+		
 	def isValidDocument(self):
 		return self.getParseErrors() == None
 	
@@ -744,6 +747,52 @@ class MMNodeContext:
 				top_levels.append(chan)
 		return top_levels
 
+	def getDefaultViewport(self):
+		viewportList = self.getviewports()
+		# get the first viewport in the list
+		viewport = viewportList[0]
+		return viewport
+
+	def getDefaultRegion(self):
+		self.updateDefaultRegion()
+		return self.__defaultRegion
+	
+	def hasDefaultRegion(self, rootToInspect):
+		mediaList = rootToInspect.GetAllMediaNodes()
+		for media in mediaList:
+			region = media.GetChannel()
+			if region is None or region.isDefault():
+				return 1
+		return 0
+		
+	def updateDefaultRegion(self):
+		defaultViewport = self.getDefaultViewport()
+		# check if the default viewport has changed because of the previous is vanished
+		if self.__defaultViewport is not None and not self.__defaultViewport is defaultViewport:
+			if self.__defaultRegion is not None:
+				# move the default region
+				# note: don't re-creat the defaultregion: doesn't work with the player
+				del self.__defaultRegion['base_window']
+				self.__defaultRegion['base_window'] = defaultViewport.name
+		self.__defaultViewport = defaultViewport
+		if self.__defaultRegion is None:
+			# create the default region
+
+			name = 'DefaultRegion'
+			if self.channeldict.has_key(name):
+				# search a new region name
+				name = name + '%d'
+				i = 0
+				while self.channeldict.has_key(name % i):
+					i = i + 1
+				name = name	% i
+			
+			defaultRegion = self.newchannel(name, -1, 'layout')
+			defaultRegion['base_window'] = defaultViewport.name
+			defaultRegion['isDefault'] = 1
+			defaultRegion.addOwner(OWNER_DOCUMENT)
+			self.__defaultRegion = defaultRegion
+		
 	# create a new linked SMILCssResolver
 	# it uses the context instance since it absorbed css attrs
 	def newCssResolver(self, root):
@@ -1383,7 +1432,7 @@ class MMChannel(MMTreeElement):
 			self.__recurClearRefs(editmgr, child, allChannelId)
 			
 		# check the channel attribute
-		if nodeRef.GetChannelName() in allChannelId:
+		if nodeRef.attrdict.get('channel') in allChannelId:
 			# this channel has been removed, remove the reference
 			editmgr.setnodeattr(nodeRef, 'channel', None)
 
@@ -1396,7 +1445,9 @@ class MMChannel(MMTreeElement):
 
 		# XXX to do: event
 
-	def getAllLayoutChannel(self, list=[]):
+	def getAllLayoutChannel(self, list=None):
+		if list is None:
+			list = []
 		if self.attrdict.get('type') != 'layout':
 			return list
 		list.append(self)
@@ -1576,7 +1627,10 @@ class MMChannel(MMTreeElement):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
 		return self.attrdict.get(name, default)
-
+		
+	def isDefault(self):
+		return self.attrdict.get('isDefault')
+	
 class MMViewport(MMChannel):
 	# allow to know the class name without use 'import xxx; isinstance'
 	# note: this method should be implemented for all basic classes of the document
@@ -2427,14 +2481,8 @@ class MMNode(MMTreeElement):
 			return
 
 		# for sub region
-		channel = self.GetChannel()
-		if channel is None:
-			print 'Error: MMNode, linkCssId: no channel'
-			return
-		region = channel.GetLayoutChannel()
-		if region is None:
-			print 'Error: MMNode, linkCssId: no layout channel'
-			return
+		region = self.GetChannel()
+		
 		cssResolver.link(self._subRegCssId, region._cssId)
 
 		# for media
@@ -3179,16 +3227,23 @@ class MMNode(MMTreeElement):
 	# Channel management
 	#
 	def GetChannel(self, attrname='channel'):
+		region = self.GetDefinedChannel(attrname)
+		if region is None or not region.isInDocument():
+			return self.context.getDefaultRegion()
+		return region
+
+	def GetDefinedChannel(self, attrname='channel'):
 		cname = self.GetInherAttrDef(attrname, None)
 		if not cname:		# cname == '' or cname is None
 			return None
-		return self.context.channeldict.get(cname)
-
+		else:
+			return self.context.channeldict.get(cname)
+		
 	def GetChannelName(self):
 		c = self.GetChannel()
 		if c: return c.name
 		else: return 'undefined'
-
+	
 	def SetChannelType(self, channelType):
 		self.channelType = channelType
 
@@ -3263,37 +3318,37 @@ class MMNode(MMTreeElement):
 		else:
 			self.SetAttr('channel', c.name)
 
-	# GetAllChannels - Get a list of all leaf channels used in a tree.
-	# If there is overlap between parnode children the node in error
-	# is returned.
-	def GetAllChannels(self):
-		errnode = None
-		overlap = []
-		list = []
-		if self.type in leaftypes:
-			import MMTypes
-			if self.GetType() in MMTypes.mediatypes:
-				# XXX warning: this name is put from PlayerCore
-				try:
-					list.append(self._rendererName)
-				except AttributeError:
-					# undefined renderer
-					list.append('undefined')
-			else:
-				# special types (animate, prefetch, ...)
-				list.append(MMAttrdefs.getattr(self, 'channel'))
-			# special case for real compatibility
-			captionchannel = MMAttrdefs.getattr(self, 'captionchannel')
-			if captionchannel and captionchannel != 'undefined':
-				list.append(captionchannel)
-		for ch in self.children:
-			chlist, cherrnode = ch.GetAllChannels()
-			if cherrnode:
-				errnode = cherrnode
-			list, choverlap = MergeLists(list, chlist)
-			if choverlap:
-				overlap = overlap + choverlap
-		return list, errnode
+#	# GetAllChannels - Get a list of all leaf channels used in a tree.
+#	# If there is overlap between parnode children the node in error
+#	# is returned.
+#	def GetAllChannels(self):
+#		errnode = None
+#		overlap = []
+#		list = []
+#		if self.type in leaftypes:
+#			import MMTypes
+#			if self.GetType() in MMTypes.mediatypes:
+#				# XXX warning: this name is put from PlayerCore
+#				try:
+#					list.append(self._rendererName)
+#				except AttributeError:
+#					# undefined renderer
+#					list.append('undefined')
+#			else:
+#				# special types (animate, prefetch, ...)
+#				list.append(MMAttrdefs.getattr(self, 'channel'))
+#			# special case for real compatibility
+#			captionchannel = MMAttrdefs.getattr(self, 'captionchannel')
+#			if captionchannel and captionchannel != 'undefined':
+#				list.append(captionchannel)
+#		for ch in self.children:
+#			chlist, cherrnode = ch.GetAllChannels()
+#			if cherrnode:
+#				errnode = cherrnode
+#			list, choverlap = MergeLists(list, chlist)
+#			if choverlap:
+#				overlap = overlap + choverlap
+#		return list, errnode
 						
 	#
 	# GetAllMediaNodes - Get a list of all nodes may be played with

@@ -42,11 +42,6 @@ class PlayerCommon:
 	def getRenderer(self, node):
 		chan = self.nodeToRenderer.get(node)
 		if chan is None:
-			# check if valid region
-			regionName = node.GetChannelName()
-			if not regionName or regionName == 'undefined':
-				return None
-		
 			# the renderer doesn't exist yet
 			if not ONE_RENDERER_BY_MEDIA_NODE:
 				chan = self.findRenderer(node)
@@ -57,14 +52,13 @@ class PlayerCommon:
 		return chan		
 		
 	def makeRenderer(self, node):
+		ctx = self.context
 		regionName = node.GetChannelName()
-		
 		chtype = node.GetChannelType()
 		chname = self.newChannelName(regionName)
 		if debug: print 'make a new renderer : ',chname
 		# create just the minimum channel attributes for creating a new channel
 		import MMNode
-		ctx = self.context
 		chan = MMNode.MMChannel(ctx, chname, chtype)		
 		chan['base_window'] = regionName
 		chan['type'] = chtype
@@ -76,9 +70,9 @@ class PlayerCommon:
 		ctx.channeldict[chname] = chan
 		#
 
-		# XXX store the name of the new channel (for the scheduler: GetAllChannels method) in the node
-		node._rendererName = chname
-		#
+#		# XXX store the name of the new channel (for the scheduler: GetAllChannels method) in the node
+#		node._rendererName = chname
+#		#
 		
 		self.newchannel(chname, chan)
 		self.channelnames.append(chname)

@@ -462,8 +462,8 @@ def getdescr(writer, node, attr):
 	return val or None
 
 def getregionname(writer, node):
-	ch = node.GetChannel()
-	if not ch:
+	ch = node.GetDefinedChannel()
+	if not ch or ch.isDefault():
 		return None
 	return writer.ch2name[ch.GetLayoutChannel()]
 
@@ -1715,6 +1715,11 @@ class SMILWriter(SMIL):
 			for sch in ch.GetChildren():
 				self.writeregion(sch)
 			return
+
+		# don't write the default region
+		if ch.isDefault():
+			return
+		
 		attrlist = [('id', self.ch2name[ch])]
 		if ch.has_key('regionName'):
 			attrlist.append(('regionName', ch['regionName']))

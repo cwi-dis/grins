@@ -100,6 +100,10 @@ def EncodeDragData(name, args):
 	if name == 'Region':
 		if hasattr(args, 'GetUID'):
 			args = args.GetUID()
+			if args.isDefault():
+				# in any case, you can't drag and drop the default region
+				# XXX how avoid a source drag properly ???
+				return 0, args
 		return CF_REGION, args
 	if name == 'Media':
 		if hasattr(args, 'GetUID'):
