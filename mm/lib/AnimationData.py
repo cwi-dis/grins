@@ -10,11 +10,13 @@ import colors
 
 # AnimationData pattern:
 # <ref ...>
-#   <animateMotion targetElement="xxx" values="x1, y1; x2, y2; x3, y3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
-#   <animate targetElement="xxx" attributeName="width" values="w1;w2;w3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
-#   <animate targetElement="xxx"  attributeName="height" values="h1;h2;h3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
-#   <animateColor targetElement="xxx" attributeName="backgroundColor" values="rgb1;rgb2;rgb3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
+#   <animateMotion values="x1, y1; x2, y2; x3, y3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
+#   <animate attributeName="width" values="w1;w2;w3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
+#   <animate attributeName="height" values="h1;h2;h3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
+#   <animateColor attributeName="backgroundColor" values="rgb1;rgb2;rgb3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
 # </ref>
+
+# XXX: the implementation is currently limited to media nodes animation
 
 class AnimationData:
 	def __init__(self, node):
@@ -25,9 +27,7 @@ class AnimationData:
 
 		# dom values for animated node
 		# used for missing user values 
-		self.dompos = None
-		self.domwidth = None
-		self.domheight = None
+		self.domrect = None
 		self.domcolor = None
 		self._initDomValues()
 	
@@ -51,6 +51,11 @@ class AnimationData:
 	# animation editor call
 	def getData(self):
 		return self.data
+
+	def initData(self):
+		entry = self.domrect, self.domcolor
+		self.data = [entry, entry]
+		self.times = [0.0, 1.0]
 
 	# read animate nodes and set self data
 	def readData(self):
@@ -79,11 +84,24 @@ class AnimationData:
 						animateHeightValues = self._strToIntList(str)
 				elif tag == 'animateColor':
 					animateColorValues = self._strToColorList(str)
+		
 		n = len(self.times)
-		assert len(animateMotionValues) == n, ''
-		assert len(animateWidthValues) == n, ''
-		assert len(animateHeightValues) == n, ''
-		assert len(animateColorValues) == n, ''
+
+		dompos = self.domrect[:2]
+		while len(animateMotionValues)<n:
+			animateMotionValues.append(dompos)
+				
+		domwidth = self.domrect[2]
+		while len(animateWidthValues)<n:
+			animateWidthValues.append(domwidth)
+
+		domheight = self.domrect[3]
+		while len(animateHeightValues)<n:
+			animateHeightValues.append(domheight)
+
+		while len(animateColorValues)<n:
+			animateColorValues.append(self.domcolor)
+
 		for i in range(n):
 			x, y = animateMotionValues[i]
 			w = animateWidthValues[i]
@@ -91,7 +109,7 @@ class AnimationData:
 			rect = x, y, w, h
 			color = animateColorValues[i]
 			self.data.append((rect, color))
-		#print self.data
+		
 
 	# create animate nodes from self data
 	def applyData(self, editmgr):
@@ -164,7 +182,12 @@ class AnimationData:
 	#  private
 	#
 	def _initDomValues(self):
-		pass
+		try:
+			rc = self.node.getPxGeom()
+		except:
+			rc = None
+		self.domrect = rc
+		self.domcolor = self.node.attrdict.get('bgcolor')
 
 	def _updateNode(self, node, times, values, attr = None, targname = None):
 		if attr is not None:
