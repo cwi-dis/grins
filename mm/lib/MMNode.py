@@ -699,6 +699,7 @@ class MMChannel:
 #
 class MMSyncArc:
 	def __init__(self, dstnode, action, srcnode=None, event=None, marker=None, wallclock=None, delay=None):
+		self.__isresolvedcalled = 0
 		if __debug__:
 			if event is None and marker is None:
 				assert srcnode is None
@@ -802,12 +803,17 @@ class MMSyncArc:
 				return 1
 			else:
 				return 0
+		if self.__isresolvedcalled:
+			print 'MMSyncArc.isresolved called recursively'
+			return 0
+		self.__isresolvedcalled = 1
 		refnode = self.refnode()
 		event = self.event
 		if event is None and self.marker is None:
 			# syncbase-relative offset
 			pnode = self.dstnode.GetSchedParent()
 			if pnode is None:
+				self.__isresolvedcalled = 0
 				return 1
 			if pnode.type == 'seq':
 				if refnode is pnode:
@@ -817,17 +823,23 @@ class MMSyncArc:
 		if event is not None:
 			t = refnode.isresolved()
 			if t is None:
+				self.__isresolvedcalled = 0
 				return 0
 			if event == 'begin':
+				self.__isresolvedcalled = 0
 				return 1
 			if event == 'end':
 				if refnode.playing == MMStates.PLAYED:
+					self.__isresolvedcalled = 0
 					return 1
 				d = refnode.calcfullduration()
-				if d is None:
+				self.__isresolvedcalled = 0
+				if d is None or d < 0:
 					return 0
 				return 1
+			self.__isresolvedcalled = 0
 			return refnode.eventhappened(event)
+		self.__isresolvedcalled = 0
 		if self.marker is not None and refnode.markerhappened(self.marker):
 			return 1
 		return 0
