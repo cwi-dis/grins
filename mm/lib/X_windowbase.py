@@ -1280,9 +1280,6 @@ class _DisplayList:
 						x, y, width, height, x, y)
 		toplevel._main.UpdateDisplay()
 		
-	def render_now(self):
-		self.render()
-
 	def _render(self, region):
 		self._rendered = TRUE
 		w = self._window
