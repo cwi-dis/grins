@@ -519,7 +519,7 @@ class _LayoutView2(GenFormView):
 	#
 	# Reposition controls on size
 	#
-	def getCtrlIds(self):
+	def getCtrlIdsToMoveDown(self):
 		return (
 			grinsRC.IDC_X, grinsRC.IDC_LAYOUT_REGION_X,
 			grinsRC.IDC_Y, grinsRC.IDC_LAYOUT_REGION_Y,
@@ -527,45 +527,57 @@ class _LayoutView2(GenFormView):
 			grinsRC.IDC_H, grinsRC.IDC_LAYOUT_REGION_H,
 			grinsRC.IDC_Z, grinsRC.IDC_LAYOUT_REGION_Z,
 			grinsRC.IDC_LAYOUT_SLIDER,
-			grinsRC.IDUC_ATTRIBUTES)
+			grinsRC.IDC_ANIMATE_GROUP,
+			grinsRC.IDC_ANIMATE_ENABLE,
+			grinsRC.IDC_PLAY, grinsRC.IDC_STOP,
+			grinsRC.IDC_ANIMATE_P0L, grinsRC.IDC_ANIMATE_P100L,
+			grinsRC.IDC_LAYOUT_FITV, grinsRC.IDC_LAYOUT_FITL,
+#			grinsRC.IDUC_ATTRIBUTES
+			)
 
 	def resizeCtrls(self, w, h):
 		# controls margin + posibly scrollbar
-		cm = 48 
-		cm = 80 
+		cm = 100
 
 		lf, tf, rf, bf = self.GetWindowRect()
 
+		# move controls in their right position
+		ctrlIDsToMove = self.getCtrlIdsToMoveDown()
+
 		# resize preview pane
 		ll, tl, rl, bl = self._layout.GetWindowRect()
-		wp = rf - ll - 20
-		hp = bf - tl - cm
-		newrc = 0, 0, wp, hp
+		previewWidth = rf - ll - 10
+		previewHeight = bf - tl - cm
+		newrc = 0, 0, previewWidth, previewHeight
+		# just resize the control (set the flag NOMOVE not to affect the position)
 		self._layout.SetWindowPos(self._layout.GetSafeHwnd(), newrc,
 				win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
 		
-		# resize controls
-		ctrlIDs = self.getCtrlIds()
 		flags = win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOSIZE
-		for id in ctrlIDs:
+		for id in ctrlIDsToMove:
 			ctrl = components.Control(self,id)
 			ctrl.attach_to_parent()
 			l1,t1,r1,b1 = ctrl.getwindowrect()
-			hc = b1-t1
-			if hc<15: dh =12
-			else: dh=8
-			if id == grinsRC.IDC_LAYOUT_SLIDER: dh = 40
-			newrc = self.__orgctrlpos[id], tl-tf+hp+dh, r1-l1, b1-t1
+			
+			offsetL, offsetR = self.__orgctrlpos[id]
+			newrc = offsetL, tl-tf+previewHeight+offsetR, r1-l1, b1-t1
+
+			# XXX we should take into account the scroll bar pos or disable the scroll bar
+			# on the view. But how do this in Python ???
 			ctrl.setwindowpos(ctrl._hwnd, newrc, flags)
 
 	def saveOrgCtrlPos(self):
 		lf, tf, rf, bf = self.GetWindowRect()
-		ctrlIDs = self.getCtrlIds()
+		ctrlIDs = self.getCtrlIdsToMoveDown()
+
+		previewRight, previewBottom = self._layout.GetWindowRect()[2:]
 		for id in ctrlIDs:
 			ctrl = components.Control(self,id)
 			ctrl.attach_to_parent()
 			l1,t1,r1,b1 = ctrl.getwindowrect()
-			self.__orgctrlpos[id] = l1-lf
+			# save relative position: first argument is relative to the dialog box left
+			# second argument is relative to the preview pane bottom
+			self.__orgctrlpos[id] = l1-lf, t1-previewBottom
 		self.__orgctrlpos[-1] = self.GetClientRect()[2:]
 
 	def OnSize(self, params):
