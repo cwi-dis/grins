@@ -310,6 +310,7 @@ class ComboBox(Control):
 			self.insertstring(pos,optionlist[pos])
 			self._optionlist.append(optionlist[pos])
 	def initoptions(self, optionlist,seloption=None):
+		self.resetcontent()
 		if not optionlist: return
 		self.setoptions(optionlist)
 		self.setcursel(seloption)	
