@@ -3,6 +3,7 @@ __version__ = "$Id$"
 import xmllib
 import MMNode, MMAttrdefs
 from MMExc import *
+import MMurl
 from windowinterface import UNIT_PXL
 from HDTL import HD, TL
 import string
@@ -233,7 +234,6 @@ class SMILParser(xmllib.XMLParser):
 		if not attributes.has_key('src'):
 			self.syntax_error('node without src attribute')
 		elif mediatype in ('image', 'video'):
-			import MMurl
 			file = attributes['src']
 			try:
 				if mediatype == 'image':
@@ -497,7 +497,6 @@ class SMILParser(xmllib.XMLParser):
 						dst = _wholenodeanchor(dst)
 				hlinks.addlink((src, dst, DIR_1TO2, ltype))
 			else:
-				import MMurl
 				href, tag = MMurl.splittag(href)
 				if '/' not in href:
 					href = href + '/1'
@@ -1021,14 +1020,22 @@ class SMILParser(xmllib.XMLParser):
 			delay = 0
 		return name, counter, delay
 
-def ReadFile(filename):
-	return ReadFileContext(filename, MMNode.MMNodeContext(MMNode.MMNode))
+def ReadFile(url):
+	return ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode))
 
-def ReadFileContext(filename, context):
-	import os
-	context.setdirname(os.path.dirname(filename))
+def ReadFileContext(url, context):
+	import posixpath
+	type, str = MMurl.splittype(url)
+	host, path = MMurl.splithost(str)
+	dir = posixpath.dirname(path)
+	if host:
+		dir = '//%s%s' % (host, dir)
+	if type:
+		dir = '%s:%s' % (type, dir)
+	context.setdirname(dir)
 	p = SMILParser(context)
-	p.feed(open(filename).read())
+	u = MMurl.urlopen(url)
+	p.feed(u.read())
 	p.close()
 	return p.GetRoot()
 
