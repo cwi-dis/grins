@@ -78,19 +78,21 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.node = None
 
 	def adddependencies(self):
-		if self.node.t0 != self.node.t2:
+		t0, t1, t2, download, begindelay = self.node.GetTimes()
+		if t0 != t2:
 			w, h = self.get_minsize_abs()
-			self.root.timemapper.adddependency(self.node.t0, self.node.t2, w)
+			self.root.timemapper.adddependency(t0, t2, w)
 		
-	def addcollisions(self, mastert0, mastert1):
+	def addcollisions(self, mastert0, mastert2):
 		edge = sizes_notime.HEDGSIZE
-		if self.node.t0 == self.node.t2:
+		t0, t1, t2, download, begindelay = self.node.GetTimes()
+		if t0 == t2:
 			w, h = self.get_minsize_abs()
-			if self.node.t0 == mastert0:
+			if t0 == mastert0:
 				return w+edge, edge
-			if self.node.t0 == mastert1:
+			if t0 == mastert2:
 				return egde, w+edge
-			self.root.timemapper.addcollision(self.node.t0, w+2*edge)
+			self.root.timemapper.addcollision(t0, w+2*edge)
 		return edge, edge
 		
 	#   
@@ -99,7 +101,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def select(self):
 		Widgets.Widget.select(self)
 		self.root.dirty = 1
-		print 'DBG: selected node t0=%d, t1=%d, t2=%d'%(self.node.t0, self.node.t1, self.node.t2)
+		print 'DBG: selected node t0=%d, t1=%d, t2=%d, download=%d, delay=%d'%self.node.GetTimes()
 		
 	def deselect(self):
 		self.unselect()
@@ -374,7 +376,7 @@ class StructureObjWidget(MMNodeWidget):
 		for ch in self.children:
 			ch.adddependencies()
 
-	def addcollisions(self, mastert0, mastert1):
+	def addcollisions(self, mastert0, mastert2):
 		for ch in self.children:
 			ch.addcollisions(None, None)
 		return 0, 0
@@ -591,19 +593,20 @@ class SeqWidget(StructureObjWidget):
 			w,h = medianode.get_minsize()
 			thisnode_free_width = freewidth_per_child
 			# Give the node the free width.
+			t0, t1, t2, download, begindelay = medianode.node.GetTimes()
 			if self.root.timescale:
-				lmin = self.root.timemapper.time2pixel(medianode.node.t0)
+				lmin = self.root.timemapper.time2pixel(t0)
 				if l < lmin:
 					l = lmin
 			r = l + w + thisnode_free_width
 			if self.root.timescale:
-				rmin = self.root.timemapper.time2pixel(medianode.node.t2)
+				rmin = self.root.timemapper.time2pixel(t2)
 				# t2 is the fill-time, so for fill=hold it may extend past
 				# the begin of the next child. We have to truncate in that
 				# case.
 				if chindex < len(self.children)-1:
 					nextch = self.children[chindex+1]
-					rminmax = self.root.timemapper.time2pixel(nextch.node.t0)
+					rminmax = self.root.timemapper.time2pixel(nextch.node.GetTimes()[0])
 					if rmin > rminmax:
 						rmin = rminmax
 				if r < rmin:
@@ -624,15 +627,15 @@ class SeqWidget(StructureObjWidget):
 	def adddependencies(self):
 		# Sequence widgets need a special adddependencies, because we want to calculate the
 		# time->pixel mapping without the channelbox and dropbox
-		if self.node.t0 != self.node.t2:
+		t0, t1, t2, download, begindelay = self.node.GetTimes()
+		if t0 != t2:
 			w, h = self.get_minsize_abs(ignoreboxes=1)
-			self.root.timemapper.adddependency(self.node.t0, self.node.t2, w)
+			self.root.timemapper.adddependency(t0, t2, w)
 		for ch in self.children:
 			ch.adddependencies()
 		
-	def addcollisions(self, mastert0, mastert1):
-		myt0 = self.node.t0
-		myt1 = self.node.t2
+	def addcollisions(self, mastert0, mastert2):
+		t0, t1, t2, download, begindelay = self.node.GetTimes()
 		maxneededpixel0 = sizes_notime.HEDGSIZE
 		maxneededpixel1 = sizes_notime.HEDGSIZE
 		if self.channelbox:
@@ -641,30 +644,29 @@ class SeqWidget(StructureObjWidget):
 		if self.dropbox:
 			mw, mw =self.dropbox.get_minsize_abs()
 			maxneededpixel1 = maxneededpixel1 + mw + sizes_notime.GAPSIZE
-		time_to_collision = {myt0: maxneededpixel0}
-		time_to_collision[myt1] = time_to_collision.get(myt1, 0) + maxneededpixel1
+		time_to_collision = {t0: maxneededpixel0}
+		time_to_collision[t2] = time_to_collision.get(t2, 0) + maxneededpixel1
 		prevneededpixel = 0
 		for ch in self.children:
-			thist0 = ch.node.t0
-			thist1 = ch.node.t2
-			neededpixel0, neededpixel1 = ch.addcollisions(thist0, thist1)
+			thist0, dummy, thist2, dummy, dummy = self.node.GetTimes()
+			neededpixel0, neededpixel1 = ch.addcollisions(thist0, thist2)
 			time_to_collision[thist0] = time_to_collision.get(thist0, 0) + neededpixel0
-			time_to_collision[thist1] = time_to_collision.get(thist1, 0) + neededpixel1
-		maxneededpixel0 = time_to_collision[myt0]
-		del time_to_collision[myt0]
-		if time_to_collision.has_key(myt1):
-			maxneededpixel1 = time_to_collision[myt1]
-			del time_to_collision[myt1]
+			time_to_collision[thist2] = time_to_collision.get(thist2, 0) + neededpixel1
+		maxneededpixel0 = time_to_collision[t0]
+		del time_to_collision[t0]
+		if time_to_collision.has_key(t2):
+			maxneededpixel1 = time_to_collision[t2]
+			del time_to_collision[t2]
 		else:
 			maxneededpixel1 = 0
 		for time, pixel in time_to_collision.items():
 			if pixel:
 				self.root.timemapper.addcollision(time, pixel)
-		if myt0 != mastert0:
-			self.root.timemapper.addcollision(myt0, maxneededpixel0)
+		if t0 != mastert0:
+			self.root.timemapper.addcollision(t0, maxneededpixel0)
 			maxneededpixel0 = 0
-		if myt1 != mastert1:
-			self.root.timemapper.addcollision(myt1, maxneededpixel1)
+		if t2 != mastert2:
+			self.root.timemapper.addcollision(t2, maxneededpixel1)
 			maxneededpixel1 = 0
 		return maxneededpixel0, maxneededpixel1
 
@@ -927,16 +929,17 @@ class UnseenVerticalWidget(StructureObjWidget):
 			# r = l + w # Wrap the node to it's minimum size.
 			this_l = l
 			this_r = r
+			t0, t1, t2, download, begindelay = medianode.node.GetTimes()
 			if self.root.timescale:
-				lmin = self.root.timemapper.time2pixel(medianode.node.t0)
+				lmin = self.root.timemapper.time2pixel(t0)
 				if this_l < lmin:
 					this_l = lmin
 			if self.root.timescale:
-				rmin = self.root.timemapper.time2pixel(medianode.node.t2)
+				rmin = self.root.timemapper.time2pixel(t2)
 				if this_r < rmin:
 					this_r = rmin
 				else:
-					rmax = self.root.timemapper.time2pixel(medianode.node.t2, align='right')
+					rmax = self.root.timemapper.time2pixel(t2, align='right')
 					if this_r > rmax:
 						this_r = rmax
 			medianode.moveto((this_l,t,this_r,b))
@@ -961,7 +964,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 		for ch in self.children:
 			ch.adddependencies()
 		
-	def addcollisions(self, mastert0, mastert1):
+	def addcollisions(self, mastert0, mastert2):
 		for ch in self.children:
 			ch.addcollisions(None, None)
 
@@ -1100,16 +1103,17 @@ class VerticalWidget(StructureObjWidget):
 			b = t + h + thisnode_free_height
 			this_l = l
 			this_r = r
+			t0, t1, t2, download, begindelay = medianode.node.GetTimes()
 			if self.root.timescale:
-				lmin = self.root.timemapper.time2pixel(medianode.node.t0)
+				lmin = self.root.timemapper.time2pixel(t0)
 				if this_l < lmin:
 					this_l = lmin
 			if self.root.timescale:
-				rmin = self.root.timemapper.time2pixel(medianode.node.t2)
+				rmin = self.root.timemapper.time2pixel(t2)
 				if this_r < rmin:
 					this_r = rmin
 				else:
-					rmax = self.root.timemapper.time2pixel(medianode.node.t2, align='right')
+					rmax = self.root.timemapper.time2pixel(t2, align='right')
 					if this_r > rmax:
 						this_r = rmax
 			
@@ -1138,24 +1142,23 @@ class VerticalWidget(StructureObjWidget):
 					display_list.drawline(TEXTCOLOR, [(l, i),(r, i)])
 					i = i + step
 					
-	def addcollisions(self, mastert0, mastert1):
-		myt0 = self.node.t0
-		myt1 = self.node.t2
+	def addcollisions(self, mastert0, mastert2):
+		t0, t1, t2, download, begindelay = self.node.GetTimes()
 		maxneededpixel0 = 0
 		maxneededpixel1 = 0
 		for ch in self.children:
-			neededpixel0, neededpixel1 = ch.addcollisions(myt0, myt1)
+			neededpixel0, neededpixel1 = ch.addcollisions(t0, t2)
 			if neededpixel0 > maxneededpixel0:
 				maxneededpixel0 = neededpixel0
 			if neededpixel1 > maxneededpixel1:
 				maxneededpixel1 = neededpixel1
 		maxneededpixel0 = maxneededpixel0 + sizes_notime.HEDGSIZE
 		maxneededpixel1 = maxneededpixel1 + sizes_notime.HEDGSIZE
-		if myt0 != mastert0:
-			self.root.timemapper.addcollision(myt0, maxneededpixel0)
+		if t0 != mastert0:
+			self.root.timemapper.addcollision(t0, maxneededpixel0)
 			maxneededpixel0 = 0
-		if myt1 != mastert1:
-			self.root.timemapper.addcollision(myt1, maxneededpixel1)
+		if t2 != mastert2:
+			self.root.timemapper.addcollision(t2, maxneededpixel1)
 			maxneededpixel1 = 0
 		return maxneededpixel0, maxneededpixel1
 
@@ -1260,7 +1263,9 @@ class MediaWidget(MMNodeWidget):
 		# the downloadtime is no problem.
 		prevnode = self.node.GetPrevious()
 		if prevnode:
-			prevnode_duration = prevnode.t2-prevnode.t0
+			# XXXX Wrong it prevt2 > our t0!
+			prevt0, dummy, prevt2, dummy, dummy = prevnode.GetTimes()
+			prevnode_duration = prevt2-prevt0
 		else:
 			prevnode_duration = 0
 		lagtime = prearmtime - prevnode_duration
@@ -1285,7 +1290,9 @@ class MediaWidget(MMNodeWidget):
 		# print "            begindelay is: ", begindelay
 		
 		# Now convert this from time to distance. 
-		node_duration = (self.node.t2-self.node.t0)
+		# XXX May be wrong if t2 > next.t0!
+		t0, t1, t2, dummy, dummy = self.node.GetTimes()
+		node_duration = (t2-t0)
 		if node_duration <= 0: node_duration = 1
 
 		# print "            node_duration is: ", node_duration

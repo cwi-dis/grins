@@ -240,8 +240,7 @@ def getbandwidthdata(node):
 		return None
 	if not node.WillPlay():
 		return None
-	t0 = node.t0
-	t1 = node.t1
+	t0, t1, dummy, dummy, dummy = node.GetTimes()
 	prearm, bandwidth = Bandwidth.get(node, target=1)
 	return t0, t1, node, prearm, bandwidth
         # t0 - start time.
