@@ -15,7 +15,7 @@ __version__ = "$Id$"
 
 
 from math import sin, cos, atan2, pi, ceil, floor
-import windowinterface, WMEVENTS, StringStuff
+import windowinterface, WMEVENTS
 from ChannelViewDialog import ChannelViewDialog, GOCommand, \
 	ChannelBoxCommand, NodeBoxCommand, ArcBoxCommand
 
@@ -214,7 +214,7 @@ class ChannelView(ChannelViewDialog):
 		self.recalc(focus)
 		self.reshape()
 		self.draw()
-		
+
 	def canvascall(self, code):
 		self.window.setcanvassize(code)
 
@@ -366,7 +366,7 @@ class ChannelView(ChannelViewDialog):
 		if self.is_showing():
 			for obj in self.arcs:
 				obj.draw()
-	
+
 	def delayed_drawarcs(self):
 		self.delayed_drawarcs_id = None
 		if not self.arcs:
@@ -535,7 +535,7 @@ class ChannelView(ChannelViewDialog):
 		arcs = []
 		self.scanarcs(self.viewroot, focus, arcs)
 		self.objects[len(self.objects):] = self.arcs = arcs
-	
+
 	def scanarcs(self, node, focus, arcs):
 		type = node.GetType()
 		if type in leaftypes and node.GetChannel():
@@ -708,7 +708,7 @@ class ChannelView(ChannelViewDialog):
 	        windowinterface.setcursor('')
 		editmgr = self.editmgr
 		if not editmgr.transaction():
-			return		    
+			return
 		self.toplevel.setwaiting()
 		i = 1
 		context = self.context
@@ -796,7 +796,7 @@ class GO(GOCommand):
 		# the class
 
 		GOCommand.__init__(self)
-		
+
 	def __repr__(self):
 		if hasattr(self, 'name'):
 			name = ', name=' + `self.name`
@@ -831,8 +831,8 @@ class GO(GOCommand):
 		str = '%d more' % (total-visible)
 		d = self.mother.new_displist
 		d.fgcolor(TEXTCOLOR)
-		StringStuff.centerstring(d, 0, self.mother.timescaleborder,
-					 self.mother.channelright, 1.0, str)
+		d.centerstring(0, self.mother.timescaleborder,
+			       self.mother.channelright, 1.0, str)
 
 	def select(self):
 		# Make this object the focus
@@ -962,14 +962,13 @@ class TimeScaleBox(GO):
 			d.drawfbox(BORDERCOLOR, (l, t, r - l, b - t))
 			if i%div <> 0:
 				continue
-			StringStuff.centerstring(d,
-				  l-f_width*2, b,
-				  l+f_width*2, self.bottom,
-				  `i*10`)
+			d.centerstring(l-f_width*2, b,
+				       l+f_width*2, self.bottom,
+				       `i*10`)
 		for i in self.mother.discontinuities:
 		        l, r = self.mother.maptimes(i, i)
 			d.drawline(ANCHORCOLOR, [(l, t), (l, b)])
-			
+
 
 
 # Class for Channel Objects
@@ -983,7 +982,7 @@ class ChannelBox(GO, ChannelBoxCommand):
 			self.ctype = channel['type']
 		except KeyError:
 			self.ctype = '???'
-		
+
 		ChannelBoxCommand.__init__(self)
 
 	def channel_onoff(self):
@@ -1059,7 +1058,7 @@ class ChannelBox(GO, ChannelBoxCommand):
 
 		# Draw the name
 		d.fgcolor(TEXTCOLOR)
-		StringStuff.centerstring(d, l, t, r, b, self.name)
+		d.centerstring(l, t, r, b, self.name)
 
 ## 		# Draw the channel type
 		import ChannelMap
@@ -1068,7 +1067,7 @@ class ChannelBox(GO, ChannelBoxCommand):
 			C = map[self.ctype]
 		else:
 			C = '?'
-		StringStuff.centerstring(d, r, t, self.mother.nodetop, b, C)
+		d.centerstring(r, t, self.mother.nodetop, b, C)
 
 	def drawline(self):
 		# Draw a gray and a white vertical line
@@ -1340,7 +1339,7 @@ class NodeBox(GO, NodeBoxCommand):
 
 		# Draw the name, centered in the box
 		d.fgcolor(TEXTCOLOR)
-		StringStuff.centerstring(d, l, t, r, b, self.name)
+		d.centerstring(l, t, r, b, self.name)
 
 	# Menu stuff beyond what GO offers
 
@@ -1349,7 +1348,7 @@ class NodeBox(GO, NodeBoxCommand):
 		top.setwaiting()
 		top.player.playsubtree(self.node)
 		top.setready()
-		
+
 	def playfromcall(self):
 		top = self.mother.toplevel
 		top.setwaiting()
@@ -1373,7 +1372,7 @@ class NodeBox(GO, NodeBoxCommand):
 		import NodeEdit
 		NodeEdit.showeditor(self.node)
 		self.mother.toplevel.setready()
-	
+
 	def anchorcall(self):
 		self.mother.toplevel.setwaiting()
 		import AnchorEdit
@@ -1421,7 +1420,7 @@ class INodeBox(GO):
 	def drawfocus(self):
 		return
 
-	
+
 class ArcBox(GO, ArcBoxCommand):
 
 	def __init__(self, mother, snode, sside, delay, dnode, dside):
