@@ -182,6 +182,7 @@
 #define IDD_EDITATTR_COLORSEL           387
 #define IDD_SEEK                        388
 #define IDD_LAYOUT_T1                   389
+#define IDD_SOURCEEDIT1                 390
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
