@@ -467,6 +467,10 @@ SOURCE=.\RES\Text.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\unknown.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Video.ico
 # End Source File
 # Begin Source File
