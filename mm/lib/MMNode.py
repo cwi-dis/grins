@@ -3111,13 +3111,13 @@ class MMNode:
 		self.curloopcount = 0
 
 	# eidtmanager stuff
-	def transaction(self):
+	def transaction(self, type):
 		return 1
 
 	def rollback(self):
 		pass
 
-	def commit(self):
+	def commit(self, type):
 ##		print 'MMNode: deleting cached values'
 		self.editmgr.unregister(self)
 		del self.editmgr
