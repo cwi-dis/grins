@@ -28,7 +28,7 @@ class Document(Node):
 	def createElement(self, tagName, defIndex=0, defChannelType='layout') :
 		""" 
 		Creates Elements in three diffrent types:
-			- channels	: tagName = 'channel', 
+		- channels	: tagName = 'channel', 
 					name='_changeMe', 	# change this after creation!
 					index=0, 		# (add 1st)  
 					type='layout' 		# change this after creation!
@@ -52,19 +52,21 @@ class Document(Node):
 			nwChannel.setAttribute('name', '')
 			nwChannel.setAttribute('type', '')
 			return nwChannel
-		elif tagname == 'hyperlink':
+		elif tagName == 'link':
 			# hyperlink
-			print 'nwHyperlink ', nwNode
-			return nwNode
+			nwLink = Element(tagName)
+			nwLink.setAttribute('to', '')
+			nwLink.setAttribute('from', '')
+			print 'nwHyperlink ', nwLink
+			return nwLink
 		else:
-			nwNode == self.root.context.newnode(tagName)
+			nwNode = self.root.context.newnode(tagName)
 			print 'nwNode ', nwNode
 			return nwNode
 
 	def createAttribute(self, name) :
 		nwAttribute = Attr(name)
 		return nwAttribute
-
 
 class NamedNodeMap:
 	def __init__(self, content=None):
@@ -91,6 +93,9 @@ class NamedNodeMap:
 			return self.__content.values()[index]
 		else:
 			return None
+
+	def _get_length(self) :
+		return len(self.__content)
 class NodeList:
 	def __init__(self, nl=None) :
 		if nl:
