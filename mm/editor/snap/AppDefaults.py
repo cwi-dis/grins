@@ -80,7 +80,7 @@ class sizes_notime:
 	ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
 	ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
 
-      	GAPSIZE = 4
+     	GAPSIZE = 4
 	HEDGSIZE = 4
 	VEDGSIZE = 4 #3						# size of edges		
 	HANDLESIZE = 16;		# Size of the handle.
