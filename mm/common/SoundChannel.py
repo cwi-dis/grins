@@ -90,11 +90,11 @@ class SoundChannel(ChannelAsync):
 			self.playdone(0)
 
 	def __stopplay(self):
-		if self.play_fp:
-			self.__qid = None
+		self.__qid = None
+		if self.play_fp is not None:
 			player.stop(self.play_fp)
 			self.play_fp = None
-			self.playdone(0)
+		self.playdone(0)
 
 	def my_playdone(self):
 		if debug: print 'SoundChannel: playdone',`self`
@@ -106,10 +106,9 @@ class SoundChannel(ChannelAsync):
 					player.play(self.play_fp,
 						    (self.my_playdone, ()))
 					return
-				if self.__qid:
-					self._scheduler.cancel(self.__qid)
-					self.__qid = None
 				self.play_fp = None
+				if self.__qid:
+					return
 				self.playdone(0)
 				return
 			self.play_fp.rewind()
