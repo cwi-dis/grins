@@ -61,15 +61,8 @@
 (bitrate (int) 14400 'Peak bitrate' default
 	'Peak bitrate reserved for this item, in bits per second' raw (g2 qt smil10 smil2 cmif snap))
 
-(center (bool) 1 'Center image' default
-	'Determines whether image is centered' channel (cmif))
-
 (channel (name) undefined 'Channel' channelname
 	'Name of channel used to render this node' inherited (g2 qt smil10 smil2 cmif))
-
-(channellist (list (enclosed (tuple (name) (attrdict)))) ()
-	'Channel List' hidden
-	'Channels used in this document (root node only)' normal (cmif))
 
 (clipbegin (string) '' 'Clip begin' default
 	'Start of range of frames to be played. Simplest form is "npt=3s".' raw (g2_pro qt_pro smil10 smil2 cmif))
@@ -81,10 +74,6 @@
 	 'A comment (authoring convenience only)' raw (cmif))
 
 (copyright (string) '' 'Copyright' default 'Copyright of the item (informational only)' raw (g2 qt smil10 smil2 cmif snap))
-
-(crop (tuple (float) (float) (float) (float)) (0 0 0 0) 'Image crop' default
-    'Crop image.  Values are fractions to crop from top, bottom, left, right.'
-	raw (cmif))
 
 (cview_winpos  (tuple (float) (float)) (-1 -1) 'Time chart winpos' hidden
 	 'Window position for Time chart view' raw (g2_pro qt_pro smil10 cmif))
@@ -276,9 +265,6 @@
 
 (scale (float) 1.0 'Scale factor' scale
 	'Aspect ratio is maintained for all options' channel (g2 qt smil10 smil2 cmif snap))
-
-(scalefilter (name) '' 'Scaling filter' default
-	'Name of filter used after image scaling' channel (cmif))
 
 (showEditBackground (bool) 1 'Show edit background' default
 	'Show edit background color in Layout View' channel (g2 qt smil10 smil2 cmif snap))

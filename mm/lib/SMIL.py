@@ -146,7 +146,6 @@ class SMIL:
 			   'top':None,
 			   'width':None,
 			   'z-index':'0',
-			   GRiNSns+' ' 'center':None,
 			   GRiNSns+' ' 'comment':None,
 			   GRiNSns+' ' 'duration':None,
 			   GRiNSns+' ' 'fgcolor':None,
