@@ -17,7 +17,7 @@ import MMStates
 import Bandwidth
 
 debuggensr = 0
-debug = 0
+debug = 1
 
 class MMNodeContext:
 	"Adds context information about each MMNode" # -mjvdg. TODO: elaborate.
@@ -915,6 +915,12 @@ class MMSyncArc:
 			refnode = self.srcnode
 		return refnode
 
+	def getevent(self):
+		if self.srcnode == 'prev' and \
+		   self.refnode() is self.dstnode.GetSchedParent():
+			return 'begin'
+		return self.event
+
 	def isresolved(self, timefunc):
 		if self.timestamp is not None:
 			return 1
@@ -927,7 +933,7 @@ class MMSyncArc:
 				return 1
 			return 0
 		if self.channel is not None:
-			return self.dstnode.GetRoot().eventhappened((self.channel._name, self.event))
+			return self.dstnode.GetRoot().eventhappened((self.channel._name, self.getevent()))
 		if self.dstnode.GetSchedParent() is None:
 			# if destination is root node, only offsets are resolved
 			if self.event is None and self.marker is None:
@@ -939,7 +945,7 @@ class MMSyncArc:
 			return 0
 		self.__isresolvedcalled = 1
 		refnode = self.refnode()
-		event = self.event
+		event = self.getevent()
 		if event is None and self.marker is None:
 			# syncbase-relative offset
 			pnode = self.dstnode.GetSchedParent()
@@ -1027,7 +1033,7 @@ class MMSyncArc:
 				if id == self.srcanchor:
 					atimes = times
 					break
-		event = self.event
+		event = self.getevent()
 		if event is None and self.marker is None:
 			# syncbase-relative offset
 			pnode = self.dstnode.GetSchedParent()
@@ -1078,7 +1084,7 @@ class MMNode_body:
 		if debug: print 'MMNode_body.__init__', `self`
 
 	def __repr__(self):
-		return "<%s body of %s>"%(self.helpertype, self.parent.__repr__())
+		return "<%s body of %s; id=%x>"%(self.helpertype, self.parent.__repr__(), id(self))
 
 	def __getattr__(self, name):
 		if name == 'attrcache':
@@ -1096,6 +1102,27 @@ class MMNode_body:
 
 	def add_arc(self, arc):
 		self.parent.add_arc(arc, self)
+
+	def startplay(self, sctx, timestamp):
+		if debug: print 'startplay',`self`,timestamp,self.fullduration
+		self.playing = MMStates.PLAYING
+		self.sctx = sctx
+		if self.GetFill() == 'remove' and \
+		   self.fullduration is not None and \
+		   self.fullduration >= 0:
+			endtime = timestamp + self.fullduration
+		else:
+			endtime = None
+		self.time_list.append((timestamp, endtime))
+		if self.parent and self.parent.type == 'alt':
+			self.parent.startplay(sctx, timestamp)
+
+	def stopplay(self, timestamp):
+		if debug: print 'stopplay',`self`,timestamp
+		self.playing = MMStates.PLAYED
+		self.time_list[-1] = self.time_list[-1][0], timestamp
+		if self.parent and self.parent.type == 'alt':
+			self.parent.stopplay(timestamp)
 
 class MMNode_pseudopar_body(MMNode_body):
 	"""Helper for RealPix nodes with captions, common part"""
@@ -1216,9 +1243,10 @@ class MMNode:
 		       (`self.type`, `self.uid`, `name`, MMStates.states[self.playing])
 
 	# methods that have to do with playback
-	def reset(self):
+	def reset(self, full_reset = 1):
 		self.happenings = {}
-		self.playing = MMStates.IDLE
+		if full_reset:
+			self.playing = MMStates.IDLE
 		self.sctx = None
 		self.start_time = None
 		if debug: print 'MMNode.reset', `self`
@@ -1304,8 +1332,8 @@ class MMNode:
 					arc.qid = 0
 					self.sctx.trigger(arc)
 				return
-			if arc.event is not None:
-				key = 'event', arc.event
+			if arc.getevent() is not None:
+				key = 'event', arc.getevent()
 			elif arc.marker is not None:
 				key = 'marker', arc.marker
 			elif arc.dstnode.GetSchedParent().type == 'seq' and \
@@ -1696,7 +1724,7 @@ class MMNode:
 		if self.attrdict.has_key('beginlist'):
 			arcs = self.attrdict['beginlist']
 			for arc in arcs:
-				if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+				if arc.srcnode == 'syncbase' and arc.getevent() is None and arc.marker is None and arc.channel is None:
 					begindelay = arc.delay
 		return t0, t1, t2, downloadlag, begindelay
 		
@@ -1716,7 +1744,7 @@ class MMNode:
 		if self.attrdict.has_key('beginlist'):
 			arcs = self.attrdict['beginlist']
 			for arc in arcs:
-				if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+				if arc.srcnode == 'syncbase' and arc.getevent() is None and arc.marker is None and arc.channel is None:
 					begindelay = arc.delay
 		downloadlag = 0.0
 		if self.timing_info_dict.has_key(which):
@@ -2150,9 +2178,9 @@ class MMNode:
 	# - Call EndPruneTree() to clear the garbage.
 	# Alternatively, call GenAllSR(), and then call EndPruneTree() to clear
 	# the garbage.
-	def PruneTree(self, seeknode):
+	def PruneTree(self, seeknode, full_reset = 1):
 		if seeknode is None or seeknode is self:
-			self._FastPruneTree()
+			self._FastPruneTree(full_reset)
 			return
 		if seeknode is not None and not self.IsAncestorOf(seeknode):
 			raise CheckError, 'Seeknode not in tree!'
@@ -2197,8 +2225,8 @@ class MMNode:
 			raise CheckError, 'Cannot PruneTree() on nodes of this type %s' % self.type
 	#
 	# PruneTree - The fast lane. Just copy GetSchedChildren()->wtd_children.
-	def _FastPruneTree(self):
-		self.reset()
+	def _FastPruneTree(self, full_reset = 1):
+		self.reset(full_reset)
 		self.events = {}
 		self.realpix_body = None
 		self.caption_body = None
@@ -2742,7 +2770,7 @@ class MMNode:
 				for arc in beginlist:
 					refnode = arc.refnode()
 					refnode.add_arc(arc)
-					if arc.event == 'begin' and \
+					if arc.getevent() == 'begin' and \
 					   refnode is self_body and \
 					   arc.marker is None and \
 					   arc.delay is not None:
@@ -2934,16 +2962,16 @@ class MMNode:
 				timefunc = None
 			for a in beginlist:
 				t = None
-				if a.event is not None or a.marker is not None or a.wallclock is not None:
+				if a.getevent() is not None or a.marker is not None or a.wallclock is not None:
 					maybecached = 0
 				if a.isresolved(timefunc) and syncbase is not None:
 					t = a.resolvedtime(timefunc) - syncbase
-				elif a.event == 'begin' or a.event == 'end':
+				elif a.getevent() == 'begin' or a.getevent() == 'end':
 					n = a.refnode()
 					t0 = n.isresolved()
 					if t0 is None:
 						continue
-					if a.event == 'end':
+					if a.getevent() == 'end':
 						d = n.calcfullduration()
 						if d is None or d < 0:
 							continue
@@ -2955,7 +2983,7 @@ class MMNode:
 							t = t + a.delay - syncbase
 						else:
 							t = None
-				elif a.event is not None or a.marker is not None or a.wallclock is not None:
+				elif a.getevent() is not None or a.marker is not None or a.wallclock is not None:
 					continue
 				elif a.delay is not None:
 					t = a.delay
@@ -3210,7 +3238,7 @@ class MMNode:
 	#
 	def GenLoopSR(self, curtime):
 		# XXXX Try by Jack:
-		self.PruneTree(None)
+		self.PruneTree(None, 0)
 		return self.gensr(looping=1, curtime=curtime)
 	#
 	# Check whether the current loop has reached completion.
