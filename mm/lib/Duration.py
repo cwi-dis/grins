@@ -77,6 +77,9 @@ def getintrinsicduration(node, wanterror):
 	elif maintype in ('image', 'text'):
 		# static media doesn't have a duration
 		dur = 0
+	else:
+		# unknown object type
+		dur = 0
 	cache['duration'] = dur
 	if clipend:
 		dur = min(dur, clipend)
