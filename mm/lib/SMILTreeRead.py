@@ -157,6 +157,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'set': (self.start_set, self.end_set),
 			'animateMotion': (self.start_animatemotion, self.end_animatemotion),
 			'animateColor': (self.start_animatecolor, self.end_animatecolor),
+			'transition': (self.start_transition, self.end_transition),
 			}
 		xmllib.XMLParser.__init__(self)
 		self.__seen_smil = 0
@@ -192,6 +193,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__printdata = []
 		self.__u_groups = {}
 		self.__layouts = {}
+		self.__transitions = {}
 		self.__realpixnodes = []
 		self.__animatenodes = []
 		self.__new_file = new_file
@@ -565,6 +567,22 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['u_group'] = val
 				else:
 					self.syntax_error("unknown uGroup `%s'" % val)
+			elif attr == 'transIn':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if self.__transitions.has_key(val):
+					attrdict['transIn'] = val
+				else:
+					self.syntax_error("unknown transIn `%s'" % val)
+			elif attr == 'transOut':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if self.__transitions.has_key(val):
+					attrdict['transOut'] = val
+				else:
+					self.syntax_error("unknown transOut `%s'" % val)
 			elif attr == 'layout':
 				if self.__layouts.has_key(val):
 					attrdict['layout'] = val
@@ -1778,6 +1796,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_head(self):
 		self.__in_head = 0
+		if self.__transitions:
+			self.__context.addtransitions(self.__transitions.items())
 
 	def start_body(self, attributes):
 		if not self.__seen_layout:
@@ -2162,6 +2182,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__u_groups[id] = title, u_state == 'RENDERED', override == 'allowed'
 
 	def end_u_group(self):
+		pass
+
+	def start_transition(self, attributes):
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
+## This is unneeded?
+##		new = {}
+##		for k, v in attributes.items():
+##			new[k] = v
+##		attributes = new
+		self.__transitions[id] = attributes
+
+	def end_transition(self):
 		pass
 
 	def start_layouts(self, attributes):

@@ -26,6 +26,7 @@ class MMNodeContext:
 		self.hyperlinks = Hlinks()
 		self.layouts = {}
 		self.usergroups = {}
+		self.transitions = {}
 		self.baseurl = None
 		self.nextuid = 1
 		self.editmgr = None
@@ -367,6 +368,39 @@ class MMNodeContext:
 			n = self.uidmap[uid]
 			if n.GetRawAttrDef('usergroup', None) == oldname:
 				n.SetAttr('usergroup', newname)
+
+	#
+	# transition administration
+	#
+	def addtransitions(self, list):
+		for name, valuedict in list:
+			self.transitions[name] = valuedict
+
+	def addtransition(self, name, valuedict):
+		if self.transitions.has_key(name):
+			raise CheckError, 'addtransition: existing name'
+		self.transitions[name] = valuedict
+
+	def deltransition(self, name):
+		if not self.transitions.has_key(name):
+			raise CheckError, 'deltransition: non-existing name'
+		del self.transitions[name]
+
+	def settransitionname(self, oldname, newname):
+		if newname == oldname: return # No change
+		if self.transitions.has_key(newname):
+			raise CheckError, 'settransition: existing name'
+		if not self.transitions.has_key(oldname):
+			raise CheckError, 'settransition: non-existing name'
+		self.transitions[newname] = self.transitions[oldname]
+		del self.transitions[oldname]
+		# Patch references to this transition in nodes
+		for uid in self.uidmap.keys():
+			n = self.uidmap[uid]
+			if n.GetRawAttrDef('transIn', None) == oldname:
+				n.SetAttr('transIn', newname)
+			if n.GetRawAttrDef('transOut', None) == oldname:
+				n.SetAttr('transOut', newname)
 
 	# Internal: predicates to select nodes pertaining to self._roots
 	def _isbadlink(self, link):
