@@ -41,158 +41,158 @@ PERFORMANCE OF THIS SOFTWARE.
 
 
 /* -- ADDMODULE MARKER 1 -- */
-#ifndef initQdoffs
-extern void initQdoffs();
-#endif
-#ifndef inittime
-extern void inittime();
-#endif
-#ifndef initimgsgi
-extern void initimgsgi();
-#endif
-#ifndef initimgjpeg
-extern void initimgjpeg();
-#endif
-#ifndef initWin
-extern void initWin();
-#endif
-#ifndef initicglue
-extern void initicglue();
-#endif
-#ifndef initCtl
-extern void initCtl();
-#endif
-#ifndef initQd
-extern void initQd();
-#endif
-#ifndef initmac
-extern void initmac();
-#endif
-#ifndef initList
-extern void initList();
-#endif
-#ifndef initQt
-extern void initQt();
-#endif
-#ifndef initAE
-extern void initAE();
-#endif
-#ifndef initTE
-extern void initTE();
-#endif
-#ifndef initimggif
-extern void initimggif();
-#endif
-#ifndef initstrop
-extern void initstrop();
-#endif
-#ifndef initSnd
-extern void initSnd();
-#endif
-#ifndef initNav
-extern void initNav();
-#endif
-#ifndef initScrap
-extern void initScrap();
-#endif
-#ifndef initMenu
-extern void initMenu();
-#endif
-#ifndef initEvt
-extern void initEvt();
-#endif
-#ifndef initwaste
-extern void initwaste();
-#endif
-#ifndef initgestalt
-extern void initgestalt();
-#endif
-#ifndef initimgop
-extern void initimgop();
-#endif
-#ifndef initDrag
-extern void initDrag();
-#endif
-#ifndef initbinascii
-extern void initbinascii();
-#endif
-#ifndef init_socket
-extern void init_socket();
-#endif
-#ifndef initerrno
-extern void initerrno();
-#endif
-#ifndef initFm
-extern void initFm();
-#endif
-#ifndef initpcre
-extern void initpcre();
-#endif
-#ifndef initarray
-extern void initarray();
-#endif
-#ifndef initimgpbm
-extern void initimgpbm();
-#endif
-#ifndef init_sre
-extern void init_sre();
-#endif
-#ifndef initApp
-extern void initApp();
-#endif
-#ifndef initmacfs
-extern void initmacfs();
-#endif
-#ifndef initmath
-extern void initmath();
-#endif
-#ifndef initimgppm
-extern void initimgppm();
-#endif
-#ifndef initrma
-extern void initrma();
-#endif
-#ifndef initRes
-extern void initRes();
-#endif
-#ifndef initDlg
-extern void initDlg();
-#endif
-#ifndef initcStringIO
-extern void initcStringIO();
-#endif
-#ifndef initimageop
-extern void initimageop();
-#endif
-#ifndef initimgcolormap
-extern void initimgcolormap();
-#endif
-#ifndef initimgtiff
-extern void initimgtiff();
-#endif
-#ifndef initimgpgm
-extern void initimgpgm();
-#endif
-#ifndef initimgformat
-extern void initimgformat();
-#endif
-#ifndef initimgpng
-extern void initimgpng();
-#endif
-#ifndef initimp
-extern void initimp();
-#endif
-#ifndef initstruct
-extern void initstruct();
-#endif
-#ifndef initIcn
-extern void initIcn();
+#ifndef initMacOS
+extern void initMacOS();
 #endif
 #ifndef initaudioop
 extern void initaudioop();
 #endif
-#ifndef initMacOS
-extern void initMacOS();
+#ifndef initstruct
+extern void initstruct();
+#endif
+#ifndef initimp
+extern void initimp();
+#endif
+#ifndef initimgpng
+extern void initimgpng();
+#endif
+#ifndef initimgformat
+extern void initimgformat();
+#endif
+#ifndef initimgpgm
+extern void initimgpgm();
+#endif
+#ifndef initimageop
+extern void initimageop();
+#endif
+#ifndef initcStringIO
+extern void initcStringIO();
+#endif
+#ifndef initDlg
+extern void initDlg();
+#endif
+#ifndef initRes
+extern void initRes();
+#endif
+#ifndef initrma
+extern void initrma();
+#endif
+#ifndef initimgppm
+extern void initimgppm();
+#endif
+#ifndef initmath
+extern void initmath();
+#endif
+#ifndef initimgtiff
+extern void initimgtiff();
+#endif
+#ifndef initmacfs
+extern void initmacfs();
+#endif
+#ifndef initimgjpeg
+extern void initimgjpeg();
+#endif
+#ifndef initApp
+extern void initApp();
+#endif
+#ifndef initIcn
+extern void initIcn();
+#endif
+#ifndef init_sre
+extern void init_sre();
+#endif
+#ifndef initimgpbm
+extern void initimgpbm();
+#endif
+#ifndef initarray
+extern void initarray();
+#endif
+#ifndef initpcre
+extern void initpcre();
+#endif
+#ifndef initerrno
+extern void initerrno();
+#endif
+#ifndef init_socket
+extern void init_socket();
+#endif
+#ifndef initbinascii
+extern void initbinascii();
+#endif
+#ifndef initDrag
+extern void initDrag();
+#endif
+#ifndef initimgop
+extern void initimgop();
+#endif
+#ifndef initgestalt
+extern void initgestalt();
+#endif
+#ifndef initwaste
+extern void initwaste();
+#endif
+#ifndef initFm
+extern void initFm();
+#endif
+#ifndef initEvt
+extern void initEvt();
+#endif
+#ifndef initMenu
+extern void initMenu();
+#endif
+#ifndef initScrap
+extern void initScrap();
+#endif
+#ifndef initNav
+extern void initNav();
+#endif
+#ifndef initSnd
+extern void initSnd();
+#endif
+#ifndef initstrop
+extern void initstrop();
+#endif
+#ifndef initimggif
+extern void initimggif();
+#endif
+#ifndef initTE
+extern void initTE();
+#endif
+#ifndef initAE
+extern void initAE();
+#endif
+#ifndef initQt
+extern void initQt();
+#endif
+#ifndef initList
+extern void initList();
+#endif
+#ifndef initmac
+extern void initmac();
+#endif
+#ifndef initQd
+extern void initQd();
+#endif
+#ifndef initCtl
+extern void initCtl();
+#endif
+#ifndef initicglue
+extern void initicglue();
+#endif
+#ifndef initWin
+extern void initWin();
+#endif
+#ifndef initimgcolormap
+extern void initimgcolormap();
+#endif
+#ifndef initimgsgi
+extern void initimgsgi();
+#endif
+#ifndef inittime
+extern void inittime();
+#endif
+#ifndef initQdoffs
+extern void initQdoffs();
 #endif
 
 extern void PyMarshal_Init();
@@ -201,57 +201,57 @@ extern void initimp();
 struct _inittab _PyImport_Inittab[] = {
 
 /* -- ADDMODULE MARKER 2 -- */
-	{"Qdoffs", initQdoffs},
-	{"time", inittime},
-	{"imgsgi", initimgsgi},
-	{"imgjpeg", initimgjpeg},
-	{"Win", initWin},
-	{"icglue", initicglue},
-	{"Ctl", initCtl},
-	{"Qd", initQd},
-	{"mac", initmac},
-	{"List", initList},
-	{"Qt", initQt},
-	{"AE", initAE},
-	{"TE", initTE},
-	{"imggif", initimggif},
-	{"strop", initstrop},
-	{"Snd", initSnd},
-	{"Nav", initNav},
-	{"Scrap", initScrap},
-	{"Menu", initMenu},
-	{"Evt", initEvt},
-	{"waste", initwaste},
-	{"gestalt", initgestalt},
-	{"imgop", initimgop},
-	{"Drag", initDrag},
-	{"binascii", initbinascii},
-	{"_socket", init_socket},
-	{"errno", initerrno},
-	{"Fm", initFm},
-	{"pcre", initpcre},
-	{"array", initarray},
-	{"imgpbm", initimgpbm},
-	{"_sre", init_sre},
-	{"App", initApp},
-	{"macfs", initmacfs},
-	{"math", initmath},
-	{"imgppm", initimgppm},
-	{"rma", initrma},
-	{"Res", initRes},
-	{"Dlg", initDlg},
-	{"cStringIO", initcStringIO},
-	{"imageop", initimageop},
-	{"imgcolormap", initimgcolormap},
-	{"imgtiff", initimgtiff},
-	{"imgpgm", initimgpgm},
-	{"imgformat", initimgformat},
-	{"imgpng", initimgpng},
-	{"imp", initimp},
-	{"struct", initstruct},
-	{"Icn", initIcn},
-	{"audioop", initaudioop},
 	{"MacOS", initMacOS},
+	{"audioop", initaudioop},
+	{"struct", initstruct},
+	{"imp", initimp},
+	{"imgpng", initimgpng},
+	{"imgformat", initimgformat},
+	{"imgpgm", initimgpgm},
+	{"imageop", initimageop},
+	{"cStringIO", initcStringIO},
+	{"Dlg", initDlg},
+	{"Res", initRes},
+	{"rma", initrma},
+	{"imgppm", initimgppm},
+	{"math", initmath},
+	{"imgtiff", initimgtiff},
+	{"macfs", initmacfs},
+	{"imgjpeg", initimgjpeg},
+	{"App", initApp},
+	{"Icn", initIcn},
+	{"_sre", init_sre},
+	{"imgpbm", initimgpbm},
+	{"array", initarray},
+	{"pcre", initpcre},
+	{"errno", initerrno},
+	{"_socket", init_socket},
+	{"binascii", initbinascii},
+	{"Drag", initDrag},
+	{"imgop", initimgop},
+	{"gestalt", initgestalt},
+	{"waste", initwaste},
+	{"Fm", initFm},
+	{"Evt", initEvt},
+	{"Menu", initMenu},
+	{"Scrap", initScrap},
+	{"Nav", initNav},
+	{"Snd", initSnd},
+	{"strop", initstrop},
+	{"imggif", initimggif},
+	{"TE", initTE},
+	{"AE", initAE},
+	{"Qt", initQt},
+	{"List", initList},
+	{"mac", initmac},
+	{"Qd", initQd},
+	{"Ctl", initCtl},
+	{"icglue", initicglue},
+	{"Win", initWin},
+	{"imgcolormap", initimgcolormap},
+	{"imgsgi", initimgsgi},
+	{"time", inittime},
+	{"Qdoffs", initQdoffs},
 
 	/* This module "lives in" with marshal.c */
 	{"marshal", PyMarshal_Init},
