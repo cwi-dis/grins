@@ -268,10 +268,10 @@ class ComboBox(Control):
 	def getcount(self):
 		return self.sendmessage(win32con.CB_GETCOUNT)
 	def insertstring(self,ix,str):
-		if not str:str='<none>'
+		if not str: str='---'
 		self.sendmessage_ls(win32con.CB_INSERTSTRING,ix,str)
 	def addstring(self,str):
-		if not str:str='<none>'
+		if not str: str='---'
 		return self.sendmessage_ls(win32con.CB_ADDSTRING,0,str)
 	def gettextlen(self,ix):
 		return self.sendmessage(win32con.CB_GETLBTEXTLEN,ix)
@@ -317,6 +317,7 @@ class ComboBox(Control):
 	def setoptions_cb(self, optionlist):
 		for item in optionlist:
 			if type(item)==type(()):
+				if item[0]=='Cancel':continue
 				self.addstring(item[0])
 				self._optionlist.append(item[0])
 		self.setcursel(0)
@@ -428,6 +429,9 @@ class SplashDlg(ResDialog):
 		return ResDialog.OnInitDialog(self)
 
 	def close(self):
+		if self._bmp: 
+			self._bmp.DeleteObject()
+			del self._bmp
 		if hasattr(self,'DestroyWindow'):
 			self.DestroyWindow()
 			
@@ -465,6 +469,12 @@ class AboutDlg(ResDialog):
 		self.HookMessage(self.OnDrawItem,win32con.WM_DRAWITEM)
 		self.loadbmp()
 		return ResDialog.OnInitDialog(self)
+
+	def OnOK(self):
+		if self._bmp: 
+			self._bmp.DeleteObject()
+			del self._bmp
+		self._obj_.OnOK()
 
 	# Response to the WM_DRAWITEM
 	# draw splash
@@ -600,7 +610,7 @@ class ModelessMessageBox(ResDialog):
 class showmessage:
 	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
-		     title = 'message', parent = None):
+		     title = 'GRiNS', parent = None):
 		self._wnd=None
 		if grab==0:
 			self._wnd=ModelessMessageBox(text,title,parent)
@@ -637,14 +647,11 @@ class showmessage:
 class _Question:
 	def __init__(self, text, parent = None):
 		self.answer = None
-		self.answer=showmessage(text, mtype = 'question',
-			    callback = (self.callback, (TRUE,)),
-			    cancelCallback = (self.callback, (FALSE,)),
+		showmessage(text, mtype = 'question',
+			    callback = (self.callback, (1,)),
+			    cancelCallback = (self.callback, (0,)),
 			    parent = parent)
-
 	def callback(self, answer):
-#		if _in_create_box:
-#			return
 		self.answer = answer
 
 # Shows a question to the user and returns the response
@@ -652,36 +659,33 @@ def showquestion(text, parent = None):
 	q=_Question(text, parent = parent)
 	return q.answer
 
-# A Multiple choice dialog implementation		
-class _MultChoice:
-	def __init__(self, prompt, msg_list, defindex, parent = None):
-		#self.looping = FALSE
-		self.answer = None
-		self.msg_list = msg_list
-		list = []
-#		for msg in msg_list:
-#			list.append(msg, (self.callback, (msg,)))
-		str='_MultChoice request'+prompt
-		win32ui.MessageBox(str)
-
-# Displays multiple choice dialog
-def multchoice(prompt, list, defindex, parent = None):
-	m=_MultChoice(prompt, list, defindex, parent = parent)
-	return None
 
 # A general one line modal input dialog implementation
 # use DoModal
 class InputDialog(dialog.Dialog):
-	def __init__(self, prompt, defValue, title ):
-		self.title=title
-		dialog.Dialog.__init__(self, win32ui.IDD_SIMPLE_INPUT)
+	def __init__(self, prompt, defValue, okCallback=None,cancelCallback=None, parent=None):
+		self.title=prompt
+		dialog.Dialog.__init__(self, win32ui.IDD_SIMPLE_INPUT,None,parent)
 		self.AddDDX(win32ui.IDC_EDIT1,'result')
 		self.AddDDX(win32ui.IDC_PROMPT1, 'prompt')
 		self._obj_.data['result']=defValue
 		self._obj_.data['prompt']=prompt
+		self._ok_callback=okCallback
+		self._cancel_callback=cancelCallback
+		self.DoModal()
+
 	def OnInitDialog(self):
 		self.SetWindowText(self.title)
 		return dialog.Dialog.OnInitDialog(self)
+	def OnOK(self):
+		self._obj_.UpdateData(1) # do DDX
+		if self._ok_callback:
+			self._ok_callback(self.data['result'])
+		return self._obj_.OnOK()
+	def OnCancel(self):
+		if self._cancel_callback:
+			apply(apply,self._cancel_callback)
+		return self._obj_.OnCancel()
 
 #
 # A general one line modeless input dialog implementation
@@ -734,14 +738,14 @@ class CreateBoxDlg(ResDialog):
 
 # A general dialog that displays a combo with options for the user to select.
 class SimpleSelectDlg(ResDialog):
-	def __init__(self,list, title = '', prompt = None,parent = None):
+	def __init__(self,list, title = '', prompt = None,parent = None,defaultindex=None):
 		ResDialog.__init__(self,grinsRC.IDD_SELECT_ONE,parent)
 		self._prompt_ctrl= Static(self,grinsRC.IDC_STATIC1)
 		self._list_ctrl= ComboBox(self,grinsRC.IDC_COMBO1)
 		self._list=list
 		self._title=title
 		self._prompt=prompt
-		
+		self._defaultindex=defaultindex
 	def OnInitDialog(self):
 		dialog.Dialog.OnInitDialog(self)
 
@@ -756,6 +760,8 @@ class SimpleSelectDlg(ResDialog):
 		
 		self._list_ctrl.attach_to_parent()
 		self._list_ctrl.setoptions_cb(self._list)
+		if self._defaultindex:
+			self._list_ctrl.setcursel(self._defaultindex)
 
 	def OnOK(self):
 		ix=self._list_ctrl.getcursel()
@@ -776,11 +782,34 @@ class SimpleSelectDlg(ResDialog):
 
 # Displays a dialog with options for the user to select
 def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1,
-	   parent = None):
-	dlg=SimpleSelectDlg(list,title,prompt,parent)
+	   parent = None,defaultindex=None):
+	dlg=SimpleSelectDlg(list,title,prompt,parent,defaultindex)
 	if grab==1:dlg.DoModal()
 	else:dlg.CreateWindow()
 	return dlg
+
+
+class _MultChoice:
+	def __init__(self, prompt, msg_list, defindex, parent = None):
+		self.answer = None
+		self.msg_list = msg_list
+		list = []
+		for msg in msg_list:
+			list.append(msg, (self.callback, (msg,)))
+		self.dialog = Dialog(list, title = None, prompt = prompt,
+				     grab = 1, vertical = 1,
+				     parent = parent,defaultindex=defindex)
+
+	def callback(self, msg):
+		for i in range(len(self.msg_list)):
+			if msg == self.msg_list[i]:
+				self.answer = i
+				break;
+
+def multchoice(prompt, list, defindex, parent = None):
+	 mc=_MultChoice(prompt, list, defindex, parent = parent)
+	 return mc.answer
+
 
 #####################################
 # std win32 modules
