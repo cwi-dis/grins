@@ -117,7 +117,7 @@ MENUBAR=(
 	(CASCADE, 'Views', (
 		(TOGGLE, ('Show Player', 'Hide Player'), '5', PLAYERVIEW),
 		(SEP,),
-		(TOGGLE, ('Show Structure view', 'Hide Hierarchy view'), '6', HIERARCHYVIEW),
+		(TOGGLE, ('Show Structure view', 'Hide Structure view'), '6', HIERARCHYVIEW),
 		(TOGGLE, ('Show Timeline view', 'Hide Timeline view'), '7', CHANNELVIEW),
 		(TOGGLE, ('Show Layout view', 'Hide Layout view'), '8', LAYOUTVIEW),
 		(SEP,),
