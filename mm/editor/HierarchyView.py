@@ -1130,7 +1130,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.dropfile(node, window, event, params)
 
 	def dropfile(self, maybenode, window, event, params):
-		# Called when a file is dragged-and-dropped onto this HeirachyView
+		# Called when a file is dragged-and-dropped onto this HierarchyView
 		x, y, filename = params
 		# Convert to pixels.
 		if not (0 <= x < 1 and 0 <= y < 1):
@@ -1151,6 +1151,8 @@ class HierarchyView(HierarchyViewDialog):
 				windowinterface.beep()
 				self.draw()
 				return
+			if isinstance(obj, StructureWidgets.MMWidgetDecoration):
+				obj = obj.get_mmwidget()
 			self.select_widget(obj)
 			#self.setfocusobj(obj) # give the focus to the object which was dropped on.
 
@@ -1222,8 +1224,7 @@ class HierarchyView(HierarchyViewDialog):
 			x = x * self.mcanvassize[0]
 			y = y * self.mcanvassize[1]
 			obj = self.whichhit(x, y)
-			from StructureWidgets import MMWidgetDecoration
-			if isinstance(obj, MMWidgetDecoration):
+			if isinstance(obj, StructureWidgets.MMWidgetDecoration):
 				obj = obj.mmwidget
 
 		if not obj:
@@ -1670,8 +1671,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Problem: dstobj will be an internal node.
 		dstobj = self.whichhit(xd, yd)
 		self.select_widget(dstobj)
-		from StructureWidgets import MMWidgetDecoration
-		if isinstance(dstobj, MMWidgetDecoration):
+		if isinstance(dstobj, StructureWidgets.MMWidgetDecoration):
 			dstobj = dstobj.mmwidget
 		ntype = None
 		chtype = None
@@ -1712,8 +1712,7 @@ class HierarchyView(HierarchyViewDialog):
 			# Compat code for x/y based drag-drop.
 			sx, sy = srcpos
 			srcwidget = self.whichhit(sx, sy)
-			from StructureWidgets import MMWidgetDecoration
-			if isinstance(srcwidget, MMWidgetDecoration):
+			if isinstance(srcwidget, StructureWidgets.MMWidgetDecoration):
 				srcwidget = srcwidget.mmwidget
 			srcnode = srcwidget.node
 		if not srcnode:
@@ -1743,8 +1742,7 @@ class HierarchyView(HierarchyViewDialog):
 			if mustdestroy:
 				mustdestroy.Destroy()
 			return None
-		from StructureWidgets import MMWidgetDecoration
-		if isinstance(dstwidget, MMWidgetDecoration):
+		if isinstance(dstwidget, StructureWidgets.MMWidgetDecoration):
 			dstwidget = dstwidget.mmwidget
 		dstnode = dstwidget.node
 		if cmd == 'move' and srcnode.IsAncestorOf(dstnode):
