@@ -91,15 +91,13 @@ sdk_create_font_indirect(PyObject *self, PyObject *args)
 	// (Last known address is brennan@hal.com, but I hear he is now at Microsoft)
 	// args contains a dict of font properties 
 	PyObject *font_props; 
-	int charset=DEFAULT_CHARSET;
                   // properties.  Valid dictionary keys are:<nl> 
                   // name<nl> 
                   // size<nl> 
                   // weight<nl> 
                   // italic<nl> 
                   // underline 
-	if (!PyArg_ParseTuple (args, "O|i",
-                 &font_props,&charset) ||
+	if (!PyArg_ParseTuple (args, "O", &font_props) ||
 		!PyDict_Check (font_props))
 		{
 		PyErr_Clear();
@@ -110,11 +108,7 @@ sdk_create_font_indirect(PyObject *self, PyObject *args)
 	LOGFONT lf;
 	if (!DictToLogFont(font_props, &lf))
 		return NULL;
-	lf.lfOutPrecision=OUT_DEFAULT_PRECIS;
-	lf.lfClipPrecision=CLIP_DEFAULT_PRECIS;
-	lf.lfQuality=DEFAULT_QUALITY;
-	lf.lfPitchAndFamily=DEFAULT_PITCH; //VARIABLE_PITCH; 
-	lf.lfCharSet= (BYTE)charset;//DEFAULT_CHARSET; // GREEK_CHARSET
+
 	HFONT hfont;
     if (!(hfont=::CreateFontIndirect(&lf))) 
 		RETURN_ERR ("CreateFontIndirect call failed");
