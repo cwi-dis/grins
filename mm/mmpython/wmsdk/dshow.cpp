@@ -55,7 +55,7 @@ seterror(const char *funcname, HRESULT hr)
 		 0,
 		 NULL 
 		);
-	PyErr_Format(ErrorObject, "%s failed, error = %s", funcname, pszmsg);
+	PyErr_Format(ErrorObject, "%s failed, hresult = %d %s", funcname, (int)hr, pszmsg);
 	LocalFree(pszmsg);
 }
 
