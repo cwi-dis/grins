@@ -1395,7 +1395,7 @@ class _CommonWindow:
 			self._rb_movebox(where, 0)
 
 	# Experimental animation interface
-	def updatecoordinates(self, coordinates, units=UNIT_SCREEN, scale=None):
+	def updatecoordinates(self, coordinates, units=UNIT_SCREEN, scale=None, mediacoords=None):
 		# first convert any coordinates to pixel
 		coordinates = self._parent._convert_coordinates(coordinates,units=units)
 ##		print 'window.updatecoordinates',coordinates, units
