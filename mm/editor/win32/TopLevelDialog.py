@@ -64,7 +64,7 @@ class TopLevelDialog:
 		stat1 = os.stat(tmp)
 		import win32api,win32con
 		try:
-			win32api.WinExec('%s %s' % (editor, tmp),win32con.SW_SHOW)<=0:
+			win32api.WinExec('%s %s' % (editor, tmp),win32con.SW_SHOW)
 		except:	
 			# no editor found
 			self.edit_finished_callback()
