@@ -443,7 +443,8 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		basename=urllib.unquote(cmifdoc.basename)
 		self.settitle(basename,'document')
 		self.set_commandlist(commandlist,'document')
-		self.setplayerstate(usercmd.STOP)
+		import Player
+		self.setplayerstate(Player.STOPPED)
 		if adornments and adornments.has_key('pulldown'):
 			pulldownmenus = adornments['pulldown']
 		else:
@@ -1330,7 +1331,3 @@ class SplitterBrowserChildFrame(ChildFrame):
 			self._view.OnClose()
 		else:
 			self.DestroyWindow()
-
-
-
- 
