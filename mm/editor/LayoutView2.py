@@ -367,6 +367,8 @@ class TreeNodeHelper:
 			name = nodeRef.attrdict.get('regionName')
 			if name == None:
 				self.name = nodeRef.name
+			else:
+				self.name = name
 
 	def hasChild(self, child):
 		return self.children.has_key(child)
