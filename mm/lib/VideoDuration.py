@@ -7,7 +7,7 @@ if platform == 'irix6':
 		from SGIVideoDuration import *
 	except ImportError:
 		from MPEGVideoDuration import *
-elif platform == 'sunos5' or platform == 'irix5':
+elif platform == 'sunos5' or platform == 'irix5' or platform[:5] == 'linux':
 	from MPEGVideoDuration import *
 elif platform == 'mac':
 	from MACVideoDuration import *
