@@ -214,9 +214,11 @@ class _CommonWindow:
 		self._wtd_cursor = ''
 		self._z = z
 		self._updatezorder()
+		print 'Window opened', hex(id(self))
 		
 	def close(self):
 		"""Close window and all subwindows"""
+		print 'Closing window', hex(id(self)), self.qdrect()
 		if self._parent is None:
 			return		# already closed
 		if _in_create_box is self:
@@ -288,7 +290,7 @@ class _CommonWindow:
 		if not self._clip:
 			self._mkclip()
 		if includechildren:
-			return self._ckipincludingchildren
+			return self._clipincludingchildren
 		else:
 			return self._clip
 			
@@ -1461,6 +1463,7 @@ class _CommonWindow:
 			self._mac_create_gworld(BM_PASSIVE, 1, self.qdrect())
 			self._frozen = how
 		elif self._frozen:
+			print 'freeze_content(None)' # DBG
 			self._mac_dispose_gworld(BM_PASSIVE)
 			self._frozen = None
 			self._mac_invalwin()
@@ -1484,6 +1487,7 @@ class _CommonWindow:
 		if self._frozen == 'transition':
 			# We are frozen, so we have already saved the contents
 			self._frozen = None
+			print 'transition_setup_before clear freeze'
 		else:
 			# Make sure our screen pixels reflect the actual current
 			# situation, so we can grab them
@@ -1558,6 +1562,7 @@ class _OffscreenMixin:
 		del self.__bitmaps
 
 	def _mac_create_gworld(self, which, copybits, area):
+		print 'DBG: create_gworld', which, copybits, area
 		if which < 0:
 			raise 'Incorrect gworld indicator'
 		cur_port, cur_dev = Qdoffs.GetGWorld()
@@ -2141,7 +2146,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
 			title="", adornments=None, canvassize = None, commandlist=None,
 			resizable=1, bgcolor=None):
-		
+		self._title = title
 		self._istoplevel = 1
 		self._resizable = resizable
 		self._drop_enabled = 0
@@ -2551,9 +2556,15 @@ class _SubWindow(_CommonWindow):
 		return (self._parent._subwindows[0] is self)
 
 	def _clipsubtractsiblings(self):
-		# subtract our higher-stacked siblings
+		# subtract our higher-stacked siblings and clip to our parent too
 		if not self._parent:
 			return
+		# First clip ourselves to our parent.
+		if not self._parent._clipincludingchildren:
+			self._parent._mkclip()
+		Qd.SectRgn(self._clipincludingchildren, self._parent._clipincludingchildren,
+				self._clipincludingchildren)
+		# Next subtract our higher-stacked siblings
 		for w in self._parent._subwindows:
 			if w == self:
 				# Stop when we meet ourselves
