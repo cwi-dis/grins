@@ -13,22 +13,11 @@ WM_GRPAPHNOTIFY=win32con.WM_USER+101
 # gets its name from its main interface: IGraphBuilder
 class GraphBuilder:
 	def __init__(self):
-		self._builder = None
-		self._mc = None
-		self._mp = None
 		try:
 			self._builder = dshow.CreateGraphBuilder()
 		except dshow.error, arg:
 			print arg
 			self._builder = None
-
-	def __del__(self):
-		# seems that the destruction process is important
-		# due to win32ui window message hooking
-		del self._mc
-		del self._mp
-		if self._builder:
-			self._builder.Release()
 
 	def Release(self):
 		pass
@@ -39,35 +28,46 @@ class GraphBuilder:
 		except dshow.error, arg:
 			print arg
 			return 0
-		self._mc = self._builder.QueryIMediaControl()
-		self._mp = self._builder.QueryIMediaPosition()
 		return 1
 
 	def Run(self):
-		if self._mc:self._mc.Run()
+		if self._builder:
+			mc = self._builder.QueryIMediaControl()
+			mc.Run()
 	def Stop(self):
-		if self._mc:self._mc.Stop()
+		if self._builder:
+			mc = self._builder.QueryIMediaControl()
+			mc.Stop()
 	def Pause(self):
-		if self._mc:self._mc.Pause()
+		if self._builder:
+			mc = self._builder.QueryIMediaControl()
+			mc.Pause()
 
 	def GetDuration(self):
-		if not self._mp: return 0
-		return self._mp.GetDuration()
+		if self._builder:
+			mp = self._builder.QueryIMediaPosition()
+			return mp.GetDuration()
+		return 0
 
 	def SetPosition(self,pos):
-		if self._mp: self._mp.SetCurrentPosition(pos)
+		if self._builder:
+			mp = self._builder.QueryIMediaPosition()
+			mp.SetCurrentPosition(pos)
 	def GetPosition(self):
-		if not self._mp: return 0
-		try:
-			return self._mp.GetCurrentPosition()
-		except:
-			return 0
+		if self._builder:
+			mp = self._builder.QueryIMediaPosition()
+			return mp.GetCurrentPosition()
+		return 0
 
 	def SetStopTime(self,pos):
-		if self._mp:self._mp.SetStopTime(pos)
+		if self._builder:
+			mp = self._builder.QueryIMediaPosition()
+			mp.SetStopTime(pos)
 	def GetStopTime(self):
-		if not self._mp: return 0
-		return self._mp.GetStopTime()
+		if self._builder:
+			mp = self._builder.QueryIMediaPosition()
+			return mp.GetStopTime()
+		return 0
 
 	def GetVideoWindow(self):
 		try:
