@@ -779,6 +779,7 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.graph.DelWidget(self.w_fbox)
 		self.graph.DelWidget(self.w_filltimebox)
 		self.graph.DelWidget(self.w_filltimeouterbox)
+		self.graph.DelWidget(self.w_icon)
 
 	def moveto(self, coords):
 		l,t,r,b = coords
