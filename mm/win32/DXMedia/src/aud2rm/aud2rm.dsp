@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 ..\..\lib\strmbase.lib ..\..\lib\quartz.lib msvcrtd.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2rm.ax" /subsystem:windows,4.0 /align:0x1000 /opt:ref /release /debug:none
+# ADD LINK32 ..\..\lib\strmbase.lib ..\..\lib\quartz.lib msvcrt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2rm.ax" /subsystem:windows,4.0 /align:0x1000 /opt:ref /release /debug:none
 
 !ELSEIF  "$(CFG)" == "vaud2rm - Win32 Debug"
 
@@ -149,19 +149,17 @@ DEP_CPP_RPROD=\
 	"..\..\..\..\mmpython\producer\include\engcodec.h"\
 	"..\..\..\..\mmpython\producer\include\engtargs.h"\
 	"..\..\..\..\mmpython\producer\include\engtypes.h"\
+	"..\..\..\..\mmpython\producer\include\pnbastsd.h"\
 	"..\..\..\..\mmpython\producer\include\pncom.h"\
+	"..\..\..\..\mmpython\producer\include\pnresult.h"\
+	"..\..\..\..\mmpython\producer\include\pntypes.h"\
 	"..\..\..\..\mmpython\producer\include\pnwintyp.h"\
 	"..\..\..\..\mmpython\producer\include\progsink.h"\
 	"..\..\..\..\mmpython\producer\include\rmaenum.h"\
 	"..\..\..\..\mmpython\producer\include\rmapckts.h"\
+	"..\..\..\..\mmpython\producer\include\rmavalue.h"\
 	"..\..\..\..\mmpython\producer\include\rmbldeng.h"\
 	"..\..\..\..\mmpython\producer\include\rmmetain.h"\
-	
-NODEP_CPP_RPROD=\
-	".\mavalue.h"\
-	".\nbastsd.h"\
-	".\nresult.h"\
-	".\ntypes.h"\
 	
 # End Source File
 # End Target
