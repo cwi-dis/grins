@@ -288,6 +288,13 @@ class SMILHtmlTimeWriter(SMIL):
 		self.__isopen = 1
 		self.__stack.append(tag)
 
+	def closehtmltag(self):
+		write = self.fp.write
+		if self.__isopen:
+			write('></%s>\n' % self.__stack[-1])
+			self.__isopen = 0
+			del self.__stack[-1]
+
 	def writenode(self, x, root = 0):
 		type = x.GetType()
 
@@ -553,6 +560,7 @@ class SMILHtmlTimeWriter(SMIL):
 		elif mtype=='brush':
 			attrlist.append( ('class','time') )
 			self.writetag('div', attrlist)
+			self.closehtmltag()
 		else:
 			self.writetag('t:'+mtype, attrlist)
 
