@@ -24,10 +24,11 @@ enum { false, true, };
 #include "pnwintyp.h"
 #include "rmawin.h"
 #include "rmaerror.h"
+#include "rmaclsnk.h"
 #include "rmaauth.h"
 
-// our client context
-#include "ccontext.h"
+// our client context interfaces
+#include "rmapyclient.h"
 
 /////////////////////
 
@@ -463,7 +464,7 @@ newRMAAuthenticationManagerObject()
 typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
-    IClientContext *pI;	
+    IPyClientContext *pI;	
 } ClientContextObject;
 
 staticforward PyTypeObject ClientContextType;

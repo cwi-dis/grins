@@ -92,11 +92,23 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\cadvisesink.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\cauthman.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ccontext.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\ccontext.h
+SOURCE=.\cssupplier.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\errorsink.cpp
 # End Source File
 # Begin Source File
 
@@ -108,14 +120,10 @@ SOURCE=.\rma.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\ssupplier.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\ssupplier.h
+SOURCE=.\rmapyclient.h
 # End Source File
 # End Group
-# Begin Group "Python files"
+# Begin Group "Python Files"
 
 # PROP Default_Filter ""
 # Begin Source File

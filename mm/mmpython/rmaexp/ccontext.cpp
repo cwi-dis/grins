@@ -19,9 +19,18 @@ enum { false, true, };
 #include "pncom.h"
 #include "pnresult.h"
 
-#include "ccontext.h"
+#include "rmacore.h"
 
-class ClientContext : public IClientContext
+#include "pnwintyp.h"
+#include "rmawin.h"
+#include "rmaerror.h"
+#include "rmaclsnk.h"
+#include "rmaauth.h"
+
+// our client context interfaces
+#include "rmapyclient.h"
+
+class ClientContext : public IPyClientContext
 	{
 	public:
 	ClientContext();
@@ -37,7 +46,7 @@ class ClientContext : public IClientContext
 	};
 
 HRESULT STDMETHODCALLTYPE CreateClientContext(
-			IClientContext **ppI)
+			IPyClientContext **ppI)
 	{
 	*ppI = new ClientContext();
 	return S_OK;
