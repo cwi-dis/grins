@@ -21,7 +21,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\magpie-106.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\magpie-113.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -43,7 +43,7 @@ item: Global
   Variable Default2=c:\winnt
   Variable Flags2=00001000
   Variable Name3=_WISE_
-  Variable Default3=C:\Program Files\Wise InstallBuilder 8.1
+  Variable Default3=E:\PROGRA~1\WISEIN~1.1
   Variable Flags3=00001000
   Variable Name4=_ALIASNAME_
   Variable Flags4=00001000
@@ -1771,7 +1771,7 @@ end
 item: Install File
   Source=..\..\bin\win32\grinsproxy.dll
   Destination=%MAINDIR%\grinsproxy.dll
-  Flags=0000000010000010
+  Flags=0001000010000010
 end
 item: Install File
   Source=..\..\bin\win32\GRiNSRes.dll
