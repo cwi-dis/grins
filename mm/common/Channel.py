@@ -133,6 +133,7 @@ class Channel:
 		channels.remove(self)
 
 	def commit(self, type):
+		if debug: print 'Channel.commit'+`self,type`
 		if type in ('REGION_GEOM', 'MEDIA_GEOM'):
 			# for now we can't change the geom during pausing
 			if self._player.playing or self._player.pausing:
@@ -249,8 +250,7 @@ class Channel:
 			raise error, 'don\'t know if this can happen'
 
 	def show(self, force = 0):
-		if debug:
-			print 'Channel.show('+`self`+') force=',force
+		if debug: print 'Channel.show'+`self,force`
 			
 		# If we were still waiting for a hide we cancel that
 		self._hide_pending = 0
@@ -608,6 +608,7 @@ class Channel:
 		self._qid = None
 
 	def onclick(self, node, anchorlist, arg):
+		if debug: print 'Channel.onclick'+`self,node,anchorlist,arg`
 		timestamp = self._scheduler.timefunc()
 		for (anchorname, type) in anchorlist:
 			if anchorname is not None:
@@ -629,6 +630,7 @@ class Channel:
 						self.event(ACTIVATEEVENT, timestamp, arc)
 
 	def event(self, event, timestamp = None, arc = None):
+		if debug: print 'Channel.event'+`self,event,timestamp,arc`
 		if not self._scheduler.playing:
 			# not currently interested in events
 			return
@@ -730,6 +732,8 @@ class Channel:
 	def freeze(self, node):
 		# Called by the Scheduler to stop playing and start freezing.
 		# The node is passed for consistency checking.
+		if debug:
+			print 'Channel.freeze'+`self,node`
 		if self._played_node is not node or self._playstate != PLAYING:
 			return
 		self.playstop()
@@ -2055,11 +2059,11 @@ class ChannelWindow(Channel):
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
-		self.cleanup_transitions()
 		Channel.stopplay(self, node, no_extend)
 		if no_extend:
 			in_extended_fill = 0
 		else:
+##			self.cleanup_transitions()
 			in_extended_fill = self.extended_fill(node)
 		# above four lines are equivalent to this:
 		# in_extended_fill = not no_extend and self.extended_fill(node)
@@ -2071,6 +2075,7 @@ class ChannelWindow(Channel):
 			self._hide_pending = 1
 		else:
 			self.updateToInactiveState()
+			self.cleanup_transitions()
 
 	def setpaused(self, paused):
 		if debug:
@@ -2110,7 +2115,7 @@ class ChannelWindow(Channel):
 			self.updateToInactiveState()
 
 	def playstop(self):
-		self.cleanup_transitions() # XXXX incorrect!
+##		self.cleanup_transitions() # XXXX incorrect!
 		return Channel.playstop(self)
 
 	def schedule_transitions(self, node):
@@ -2187,7 +2192,7 @@ class ChannelWindow(Channel):
 		return None
 
 	def find_layout_channel(self):
-		if self.is_layout_channel or not self.pchan:
+		if self.is_layout_channel or not hasattr(self, 'pchan') or not self.pchan:
 			return self
 		return self.pchan.find_layout_channel()
 
