@@ -99,7 +99,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.iconbox = IconBox(self, self.mother)
 		self.has_event_icons = 0
 		self.cause_event_icon = None
-		self.info_icon = None
+		self.infoicon = None
 		if node.GetType() == 'comment':
 			self.playicon = None
 		else:
@@ -129,7 +129,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.playicon = None
 			del self.node.set_armedmode
 		self.cause_event_icon = None
-		self.info_icon = None
+		self.infoicon = None
 		self.link_icon = None
 		if self.iconbox is not None:
 			self.iconbox.destroy()
@@ -141,10 +141,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			del self.node.views['struct_view']
 			del self.node.set_infoicon
 			self.node = None
-		self.set_infoicon = None
-		self.cause_event_icon = None
-		self.info_icon = None
-		self.link_icon = None
 
 	def set_armedmode(self, mode, redraw = 1):
 		self.playicon.set_icon(mode or 'idle')

@@ -1,6 +1,7 @@
 # This module is a collection of useful functions for working with events.
 
 # TODO: the cancel button doesn't work yet.
+# TODO: how do I reference other nodes?
 
 import EventEditorDialog
 import MMNode, windowinterface
@@ -73,6 +74,7 @@ class EventStruct:
 	def __init__(self, syncarc, node=None, action=None):
 		# if syncarc is None, make a new one. 
 		# TODO: action is not a good name.. 
+		self.cause = None
 		self.clear_vars()
 		if not syncarc:
 			if action == 'endlist':
@@ -153,7 +155,6 @@ class EventStruct:
 	def clear_vars(self):
 		# Resets all the variables.
 		self.event = None
-		self.delay = None
 		self.thing = None
 		self._setcause = None	# These variables (_setx) override the defaults and will be committed.
 		self._setevent = None
@@ -165,6 +166,10 @@ class EventStruct:
 		self._setmarker = None	# for later reference - a marker is a special element within the actual media.
 					# e.g. a video could have markers at certain times.
 		self._setwallclock = None
+		if self.get_cause() == 'indefinite':
+			self.delay = None
+		else:
+			self.delay = 0
 
 	def as_string(self):
 		# Must always return a string.
@@ -250,10 +255,10 @@ class EventStruct:
 		if self._setcause:
 			return self._setcause
 		else:
-			assert self.cause
 			return self.cause
 	def set_cause(self, newcause):
 		assert newcause in CAUSES
+		self.clear_vars()
 		self._setcause = newcause
 	def get_event(self):
 		# Only return the element which is in EVENTS_whatever list.
