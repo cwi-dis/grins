@@ -544,6 +544,18 @@ class _DisplayList:
 		self._list.append(('3ddiamond', (cl, ct, cr, cb), coordinates))
 		self._optimize((1,))
 
+	def drawicon(self, coordinates, icon):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		# Icon names needed:
+		# '' is special: don't draw any icon (needed for removing icons in optimize)
+		# 'closed' used for closed structure nodes
+		# 'open': used for open structure nodes
+		# 'bandwidthgood' used to show bandwidth usage is fine
+		# 'bandwidthbad' too much banwidth used
+		# 'error' Some error has occurred on the node
+		pass # To be implemented
+		
 	def drawarrow(self, color, src, dst):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
