@@ -14,10 +14,13 @@ implements the actual view.
 from ViewDialog import ViewDialog
 import WMEVENTS
 from usercmd import *
+from MenuTemplate import POPUP_HVIEW_LEAF, POPUP_HVIEW_STRUCTURE
 
 class HierarchyViewDialog(ViewDialog):
 	adornments = {}
-
+	interior_popupmenu = POPUP_HVIEW_STRUCTURE
+	leaf_popupmenu = POPUP_HVIEW_LEAF
+	
 	def __init__(self):
 		self.commands = self.commands + [
 			CONTENT_EDIT_REG(callback = (self._editcall, ())),
@@ -60,6 +63,9 @@ class HierarchyViewDialog(ViewDialog):
 	def setcommands(self, commandlist):
 		self.window.set_commandlist(commandlist)
 
+	def setpopup(self, template):
+		self.window.setpopupmenu(template)
+		
 	def helpcall(self):
 		import Help
 		Help.givehelp('Hierarchy')
