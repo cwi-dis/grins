@@ -9,6 +9,7 @@ import features
 # The next line enables/disables the CORBA interface to GRiNS
 
 ENABLE_FNORB_SUPPORT = 0
+NUM_RECENT_FILES = 10
 
 import getopt
 
@@ -271,8 +272,8 @@ class Main(MainDialog):
 			if url in recent:
 				recent.remove(url)
 			recent.insert(0, url)
-			if len(recent) > 5:
-				recent = recent[:5]
+			if len(recent) > NUM_RECENT_FILES:
+				recent = recent[:NUM_RECENT_FILES]
 			settings.set('recent_documents', recent)
 			settings.save()
 		doclist = []
