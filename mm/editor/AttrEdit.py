@@ -564,6 +564,8 @@ class AttrEditor(AttrEditorDialog):
 				C = LayoutnameAttrEditorField
 			elif displayername == 'channelname':
 				C = ChannelnameAttrEditorField
+			elif displayername == 'captionchannelname':
+				C = CaptionChannelnameAttrEditorField
 			elif displayername == 'basechannelname':
 				C = BaseChannelnameAttrEditorField
 			elif displayername == 'childnodename':
@@ -1129,6 +1131,28 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 				list.append(name)
 		list.sort()
 		return ['Default', 'undefined'] + list
+
+class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
+	# Choose from the current RealText channel names
+	__nocaptions = 'No captions'
+
+	def getoptions(self):
+		import settings
+		list = []
+		ctx = self.wrapper.context
+		chlist = ctx.compatchannels(None, 'RealText')
+		chlist.sort()
+		return [self.__nocaptions] + chlist
+
+	def parsevalue(self, str):
+		if str == self.__nocaptions:
+			return None
+		return str
+
+	def valuerepr(self, value):
+		if value is None:
+			return self.__nocaptions
+		return value
 
 class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
 	# Choose from the current channel names

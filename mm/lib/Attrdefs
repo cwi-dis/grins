@@ -385,7 +385,7 @@
 (caption (string) '' 'Text caption' default
 	'Text caption to show with the image' normal light)
 	
-(captionchannel (name) undefined 'Caption channel' channelname
+(captionchannel (name) '' 'Caption channel' captionchannelname
 	'Name of channel used to render captions on this node' inherited light)
 
 (wipetype (string) 'normal' 'Wipe type' wipetype
