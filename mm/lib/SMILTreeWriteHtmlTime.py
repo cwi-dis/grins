@@ -234,8 +234,6 @@ class SMILHtmlTimeWriter(SMIL):
 		# body
 		self.writetag('body')
 		self.push()
-		self.writetag('t:seq')
-		self.push()
 		
 		# body contents
 		# viewports
@@ -438,16 +436,14 @@ class SMILHtmlTimeWriter(SMIL):
 			if mtype in not_xhtml_time_elements:
 				pass # self.showunsupported(mtype)
 
-			if not root:
-				if ':' in mtype:
-					self.writetag(mtype, attrlist)
-				else:
-					self.writetag('t:'+mtype, attrlist)
-				self.push()
+			if ':' in mtype:
+				self.writetag(mtype, attrlist)
+			else:
+				self.writetag('t:'+mtype, attrlist)
+			self.push()
 			for child in x.GetChildren():
 				self.writenode(child)
-			if not root:
-				self.pop()
+			self.pop()
 
 		elif type in ('imm', 'ext', 'brush'):
 			if mtype in not_xhtml_time_elements:
