@@ -879,6 +879,7 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		return 0		# never.
 
 	def happily_receive_dropped_object(self, obj):
+		# What is a leaf node going to do with an object?
 		windowinterface.beep()
 
 
@@ -942,10 +943,9 @@ class MultiMMWidget(TimeWidget):
 
 	def happily_receive_dropped_object(self, obj):
 		if isinstance(obj, TimeWidget):
-			self.editmgr.delnode(srcnode)
-			self.editmgr.addnode(self.node, -1, obj.node)
-			self.editmgr.commit()
+			self.node.take(obj.node, -1) # Add at end.
 		else:
+			# It is no type of object that I know of.
 			windowinterface.beep()
 
 
