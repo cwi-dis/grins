@@ -194,8 +194,6 @@ class RENAME(_CommandBase):
 
 
 # win32++
-class CANVAS_FIT(_CommandBase):
-	help = 'Reset the canvas size to fit in the window'
 class CONTENT_OPEN_REG(_CommandBase):
 	help = 'Show the contents of the selected object'
 class CONTENT_EDIT_REG(_CommandBase):

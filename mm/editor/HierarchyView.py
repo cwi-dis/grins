@@ -79,8 +79,6 @@ class HierarchyView(HierarchyViewDialog):
 					(windowinterface.DOUBLE_WIDTH,))),
 			CANVAS_RESET(callback = (self.canvascall,
 					(windowinterface.RESET_CANVAS,))),
-			CANVAS_FIT(callback = (self.canvascall,
-					(windowinterface.FIT_WINDOW,))),
 
 			THUMBNAIL(callback = (self.thumbnailcall, ())),
 			]
