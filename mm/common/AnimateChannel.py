@@ -95,6 +95,9 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__startAnimate()
 
 	def stopplay(self, node):
+		if node and self._played_node is not node:
+			print 'node was not the playing node '+`self,node,self._played_node`
+			return
 		if self.__animating is node and node is not None:
 			self.__stopAnimate()
 		self.__animating = None

@@ -751,7 +751,8 @@ class Channel:
 		if debug:
 			print 'Channel.stopplay('+`self`+','+`node`+')'
 		if node and self._played_node is not node:
-			raise error, 'node was not the playing node '+`self,node,self._played_node`
+			print 'node was not the playing node '+`self,node,self._played_node`
+			return
 		if self._playstate == PLAYING:
 			self._has_pause = 0
 			self.playstop()
@@ -1551,6 +1552,9 @@ class ChannelWindow(Channel):
 	def stopplay(self, node):
 		if debug:
 			print 'ChannelWindow.stopplay('+`self`+','+`node`+')'
+		if node and self._played_node is not node:
+			print 'node was not the playing node '+`self,node,self._played_node`
+			return
 		self.cleanup_transitions()
 		Channel.stopplay(self, node)
 		if self.played_display:

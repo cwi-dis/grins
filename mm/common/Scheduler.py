@@ -290,7 +290,6 @@ class SchedulerContext:
 		node = arc.dstnode
 		timestamp = arc.resolvedtime(self.parent.timefunc)
 		arc.qid = None
-##		arc.triggered = 1
 		if arc.isstart:
 			if not node.parent:
 				self.scheduled_children = self.scheduled_children - 1
@@ -350,7 +349,7 @@ class SchedulerContext:
 				if c is not node and c.playing != MMStates.IDLE:
 					self.parent.do_terminate(self, c, timestamp)
 		# we must start the node, but how?
-		if debugevents: print 'starting node'
+		if debugevents: print 'starting node',`node`
 		srdict = pnode.gensr_child(node)
 		self.srdict.update(srdict)
 		if debugevents: self.dump()
@@ -457,7 +456,6 @@ class Scheduler(scheduler):
 			self.runqueues.append([])
 		self.starting_to_play = 0
 		self.playing = 0
-		self.paused = 0
 		self.resettimer()
 		self.paused = 0
 		# 'inherit' method from parent:
@@ -736,7 +734,13 @@ class Scheduler(scheduler):
 				else:
 					dev = 'end'
 					arc.dstnode.end_time = timestamp+arc.delay
-				if arc.qid is None and not arc.triggered:
+				if arc.timestamp is not None and arc.timestamp != timestamp+arc.delay:
+					if arc.qid is not None:
+						if debugevents: print 'sched_arcs: cancel',`arc`
+						self.cancel(arc.qid)
+						arc.qid = None
+##					arc.timestamp = None
+				if arc.timestamp != timestamp+arc.delay and arc.qid is None:
 					if arc.isstart:
 						if arc.dstnode.parent:
 							srdict = arc.dstnode.parent.gensr_child(arc.dstnode, runchild = 0)
@@ -745,6 +749,7 @@ class Scheduler(scheduler):
 						else:
 							# root node
 							sctx.scheduled_children = sctx.scheduled_children + 1
+					arc.timestamp = timestamp+arc.delay
 					arc.qid = self.enterabs(timestamp+arc.delay, 0, sctx.trigger, (arc,))
 				self.sched_arcs(sctx, arc.dstnode, dev, timestamp=timestamp+arc.delay)
 
@@ -773,22 +778,23 @@ class Scheduler(scheduler):
 		elif action == SR.LOOPSTART:
 			self.do_loopstart(sctx, arg, timestamp)
 			arg.startplay(sctx)
-			self.sched_arcs(sctx, arg.looping_body_self, 'begin', timestamp=timestamp)
+			self.sched_arcs(sctx, arg.looping_body_self,
+					'begin', timestamp=timestamp)
 		elif action == SR.LOOPEND:
 			self.do_loopend(sctx, arg, timestamp)
 		elif action == SR.LOOPRESTART:
 			self.do_looprestart(sctx, arg, timestamp)
 			arg.startplay(sctx)
-			self.sched_arcs(sctx, arg.looping_body_self, 'begin', timestamp=timestamp)
+			self.sched_arcs(sctx, arg.looping_body_self,
+					'begin', timestamp=timestamp)
 		else:
-			if action == SR.SCHED_STOPPING and \
-			   (arg.GetType() in interiortypes or arg.realpix_body or arg.caption_body) and \
-			   not arg.scheduled_children:
-				self.remove_terminate(sctx, arg)
 			if action == SR.SCHED_STOPPING:
 				if arg.scheduled_children:
 					if debugevents: print 'not stopping',`arg`
 					return
+##				if arg.GetType() in interiortypes or \
+##				   arg.realpix_body or arg.caption_body:
+##					self.remove_terminate(sctx, arg)
 				arg.stopplay()
 				for ch in arg.children:
 					ch.reset()
@@ -856,6 +862,8 @@ class Scheduler(scheduler):
 	#
 	def do_terminate(self, sctx, node, timestamp):
 		if debugevents: print 'terminate',node,timestamp
+		node.terminate_play()
+		return
 		if node.GetType() in interiortypes:
 			node.stoplooping()
 			# Remove prearms for all our descendents
