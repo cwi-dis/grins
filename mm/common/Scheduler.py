@@ -399,6 +399,7 @@ class SchedulerContext:
 
 class Scheduler(scheduler):
 	def __init__(self, ui):
+		self.muststop = 0
 		self.queue = []
 		self.ui = ui
 		self.toplevel = self.ui.toplevel
@@ -420,6 +421,7 @@ class Scheduler(scheduler):
 	# Playing algorithm.
 	#
 	def play(self, node, seek_node, anchor_id, anchor_arg):
+		self.muststop = 0
 		# XXXX Is the following true for alt nodes too?
 		if node.GetType() == 'bag':
 			raise error, 'Cannot play choice node'
@@ -466,6 +468,9 @@ class Scheduler(scheduler):
 		print '==============================='
 
 	def stop_all(self):
+		self.muststop = 1
+		
+	def do_stop_all(self):
 ##		print 'STOP_ALL', self.sctx_list
 		to_stop = self.sctx_list[:]
 		for sctx in to_stop:
@@ -498,6 +503,9 @@ class Scheduler(scheduler):
 		# algorithm. For now, we're eager, on both queues.
 		#
 		if debugtimer: print 'timer_callback'
+		if self.muststop:
+			self.do_stop_all()
+			return
 		now = self.timefunc()
 		while self.queue and self.queue[0][0] <= now:
 			self.toplevel.setwaiting()
