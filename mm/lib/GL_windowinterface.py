@@ -52,6 +52,7 @@ _window_list = {}			# mapping from window ID to object
 _image_cache = {}			# cache of prepared images
 _cache_full = 0				# 1 if we shouldn't cache more images
 _size_cache = {}
+_drawbox = 0				# 1 to draw boxes around windows
 
 gl.foreground()
 _screenwidth = gl.getgdesc(GL.GD_XPMAX)
@@ -769,6 +770,10 @@ class _DisplayList:
 				func(args)
 			else:
 				funcargs()
+		if _drawbox or window._drawbox:
+			gl.linewidth(1)
+			gl.RGBcolor(self._fgcolor)
+			gl.recti(0, 0, window._width - 1, window._height - 1)
 		gl.gflush()
 		toplevel._win_lock.release()
 		self._rendered = 1
@@ -1121,7 +1126,9 @@ class _Window:
 		toplevel._win_lock.release()
 		self._bgcolor = self._parent_window._bgcolor
 		self._fgcolor = self._parent_window._fgcolor
+		self._drawbox = _drawbox
 		self._subwindows = []
+		self._subwindows_closed = 0
 		self._displaylists = []
 		self._active_display_list = None
 		self._closecallbacks = []
@@ -1194,12 +1201,53 @@ class _Window:
 			q.append((win, ev, val))
 		event._queue = q
 
+	def _close_win(self):
+		# close the GL window connected to this instance
+		if debug: print `self`+'._close_win()'
+		if self._parent_window == toplevel:
+			raise error, 'can\'t close top-level window'
+		gl.winclose(self._window_id)
+		del _window_list[self._window_id]
+		self._window_id = -1
+
+	def _open_win(self):
+		# re-open a GL window for this instance
+		if self._window_id != -1:
+			raise error, 'window not closed'
+		x, y, w, h = self._sizes
+		x0, y0, x1, y1 = self._parent_window._convert_coordinates(x, y, w, h)
+		toplevel._win_lock.acquire()
+		gl.winset(self._toplevel._window_id)
+		tx, ty = gl.getorigin()
+		gl.winset(self._parent_window._window_id)
+		wx, wy = gl.getorigin()
+		wx, wy = wx - tx, wy - ty
+		x0, y0 = x0 + wx, y0 + wy
+		x1, y1 = x1 + wx, y1 + wy
+		self._window_id = gl.swinopen(self._parent_window._window_id)
+		gl.winposition(x0, x1, y0, y1)
+		gl.RGBmode()
+		gl.gconfig()
+		gl.reshapeviewport()
+		self._width, self._height = gl.getsize()
+		gl.ortho2(-0.5, self._width-0.5, -0.5, self._height-0.5)
+		toplevel._win_lock.release()
+		_window_list[self._window_id] = self
+
 	def _call_on_close(self, func):
 		if not func in self._closecallbacks:
 			self._closecallbacks.append(func)
 
 	def is_closed(self):
 		return not _window_list.has_key(self._window_id)
+
+	def showwindow(self):
+		self._drawbox = 1
+		self._redraw()
+
+	def dontshowwindow(self):
+		self._drawbox = 0
+		self._redraw()
 
 	def fgcolor(self, *color):
 		if debug: print `self`+'.fgcolor()'
@@ -1248,6 +1296,16 @@ class _Window:
 		elif len(bgcolor) != 0:
 			raise TypeError, 'arg count mismatch'
 		return list
+
+	def _close_subwins(self):
+		for win in self._subwindows:
+			win._close_win()
+		self._subwindows_closed = 1
+
+	def _open_subwins(self):
+		for win in self._subwindows:
+			win._open_win()
+		self._subwindows_closed = 0
 
 	def sizebox(self, (x, y, w, h), constrainx, constrainy):
 		if self.is_closed():
@@ -1465,7 +1523,18 @@ class _Window:
 
 	def _redraw(self):
 		if debug: print `self`+'._redraw()'
-		if self._redraw_func:
+		if self._subwindows_closed:
+			toplevel._win_lock.acquire()
+			gl.winset(self._window_id)
+			gl.RGBcolor(self._bgcolor)
+			gl.clear()
+			gl.RGBcolor(self._fgcolor)
+			for win in self._subwindows:
+				x, y, w, h = win._sizes
+				x0, y0, x1, y1 = self._convert_coordinates(x, y, w, h)
+				gl.recti(x0, y0, x1, y1)
+			toplevel._win_lock.release()
+		elif self._redraw_func:
 			self._redraw_func()
 		elif self._active_display_list:
 			buttons = []
@@ -1480,6 +1549,16 @@ class _Window:
 			gl.winset(self._window_id)
 			gl.RGBcolor(self._bgcolor)
 			gl.clear()
+			toplevel._win_lock.release()
+		if _drawbox or self._drawbox:
+			toplevel._win_lock.acquire()
+			gl.linewidth(1)
+			if self._active_display_list:
+				color = self._active_display_list._fgcolor
+			else:
+				color = self._fgcolor
+			gl.RGBcolor(color)
+			gl.recti(0, 0, self._width - 1, self._height - 1)
 			toplevel._win_lock.release()
 		self._must_redraw = 0
 
