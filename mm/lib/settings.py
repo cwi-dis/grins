@@ -140,6 +140,7 @@ default_settings = {
 	# Attribute editor prefs
 	'show_all_attributes' : 1,
 	'enable_template': 0,
+	'registered': 'notyet',
 }
 
 # Set cpu/os type
