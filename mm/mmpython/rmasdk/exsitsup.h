@@ -7,9 +7,7 @@
 #define _EXSITSUP_H_
 
 
-#ifdef USE_WINDOWLESS_SITE
 class ExampleWindowlessSite;
-#endif
 
 /****************************************************************************
  *
@@ -38,9 +36,8 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 	PyObject *pPythonWindow;
 
 	// window-less support
-#ifdef USE_WINDOWLESS_SITE
+	BOOL m_windowless;
 	ExampleWindowlessSite *m_pWindowlessSite;
-#endif
 	
     public:
     /****** Public Class Methods ******************************************/
@@ -48,7 +45,7 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 #ifdef _UNIX
 			void *dpy,
 #endif
-			int x, int y, int w, int h);
+			int x, int y, int w, int h, int wl);
     
 
     /************************************************************************
@@ -79,7 +76,8 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 		m_PNxWindow.clipRect.bottom = p.y+s.cy;
 	}
 
-
+	ExampleWindowlessSite *GetWindowlessSite() {return m_pWindowlessSite;}
+	
     /************************************************************************
      *  IRMASiteSupplier Interface Methods                     ref:  rmawin.h
      */
