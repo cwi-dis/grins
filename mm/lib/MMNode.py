@@ -20,7 +20,7 @@ class MMNodeContext:
 		self.hyperlinks = Hlinks()
 		self.layouts = {}
 		self.usergroups = {}
-		self.dirname = None
+		self.baseurl = None
 		self.nextuid = 1
 		self.editmgr = None
 		self.armedmode = None
@@ -30,26 +30,16 @@ class MMNodeContext:
 		return '<MMNodeContext instance, channelnames=' \
 			+ `self.channelnames` + '>'
 
-	def setdirname(self, dirname):
-		if not self.dirname:
-			self.dirname = dirname
-			if not self.dirname:
-				self.dirname = '.'
-			if self.dirname[-1] <> '/':
-				self.dirname = self.dirname + '/'
+	def setbaseurl(self, baseurl):
+		self.baseurl = baseurl
 
 	def findurl(self, filename):
 		"Locate a file given by url-style filename."
-## 		import os
-## 		if os.name == 'posix':
-## 			# XXXX May also work for msdos, etc. (not for mac)
-## 			filename = os.path.expandvars(filename)
-## 			filename = os.path.expanduser(filename)
 		urltype, urlpath = MMurl.splittype(filename)
 		if urltype or filename[:1] == '/':
 			return filename
-		if self.dirname:
-			filename = MMurl.basejoin(self.dirname, filename)
+		if self.baseurl:
+			filename = MMurl.basejoin(self.baseurl, filename)
 		return filename
 
 	def newnode(self, type):
