@@ -57,7 +57,7 @@ end
 item: Search for File
   Variable=FIND_DIRECTORY
   Pathname List=GRiNS_SV2.exe
-  Description=Checking for previously installed components...
+  Description=Checking for previously installed components.  This may take several minutes...
   Flags=00000001
 end
 item: If/While Statement
@@ -2312,6 +2312,51 @@ item: If/While Statement
   Variable=COMPONENTS
   Value=B
   Flags=00001010
+end
+item: Install File
+  Source=..\products\smil-20\template_files\TopLeftLogo.gif
+  Destination=%MAINDIR%\template_files\TopLeftLogo.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil-20\template_files\TempTut.gif
+  Destination=%MAINDIR%\template_files\TempTut.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil-20\template_files\RepeatPage.gif
+  Destination=%MAINDIR%\template_files\RepeatPage.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil-20\template_files\RepeatMenuDark.gif
+  Destination=%MAINDIR%\template_files\RepeatMenuDark.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil-20\template_files\RepeatMenu.gif
+  Destination=%MAINDIR%\template_files\RepeatMenu.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil-20\template_files\Msie.css
+  Destination=%MAINDIR%\template_files\Msie.css
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil-20\template_files\HouseBarRepeat.gif
+  Destination=%MAINDIR%\template_files\HouseBarRepeat.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil-20\template_files\Development.gif
+  Destination=%MAINDIR%\template_files\Development.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\products\smil-20\template_files\Demonstrations.gif
+  Destination=%MAINDIR%\template_files\Demonstrations.gif
+  Flags=0000000010000010
 end
 item: Install File
   Source=..\products\smil-20\TDG.html

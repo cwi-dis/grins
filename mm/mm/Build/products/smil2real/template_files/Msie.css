@@ -1,0 +1,82 @@
+.highlight {
+	BACKGROUND: yellow
+}
+
+@media Screen    
+{
+A:hover {
+	BACKGROUND: #aaaaa6
+}
+    }
+P {
+	line-size: 10px
+}
+BODY {
+	MARGIN: 0px; COLOR: #000088; FONT-FAMILY: Verdana, Geneva, Arial, Helvetica, sans-serif; BACKGROUND-COLOR: #ffffff
+}
+.cell {
+	FONT-SIZE: 1px
+}
+.trace {
+	FONT-WEIGHT: normal; FONT-SIZE: 75%; COLOR: #000000; FONT-STYLE: normal; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.tracelight {
+	FONT-WEIGHT: normal; FONT-SIZE: 75%; COLOR: #cccccc; FONT-STYLE: normal; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.trtexteven {
+	FONT-WEIGHT: normal; FONT-SIZE: 85%; COLOR: #cccccc; FONT-STYLE: normal; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.trtextodd {
+	FONT-WEIGHT: normal; FONT-SIZE: 85%; COLOR: #ffffff; FONT-STYLE: normal; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.trdark {
+	COLOR: #ffffff; BACKGROUND-COLOR: #000000
+}
+.treven {
+	BACKGROUND-COLOR: #cccccc
+}
+.trodd {
+	BACKGROUND-COLOR: #bbbbbb
+}
+.Head {
+	FONT-WEIGHT: bold; FONT-SIZE: 100%; COLOR: #0033cc; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.SubHead {
+	FONT-WEIGHT: bold; COLOR: #333333; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.Title {
+	FONT-WEIGHT: normal; COLOR: #003399; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.Text {
+	FONT-WEIGHT: normal; FONT-SIZE: 80%; COLOR: #000000; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.TextLight {
+	FONT-WEIGHT: normal; FONT-SIZE: 85%; COLOR: #ffffff; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.TextEmph {
+	FONT-WEIGHT: bold; FONT-SIZE: 85%; COLOR: #111111; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.TextLink {
+	FONT-WEIGHT: bold; FONT-SIZE: 85%; COLOR: #9900cc; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.Note {
+	FONT-WEIGHT: normal; FONT-SIZE: 85%; COLOR: #000000; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.Error {
+	FONT-WEIGHT: bold; FONT-SIZE: 85%; COLOR: #ff0000; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.Legal {
+	FONT-WEIGHT: normal; FONT-SIZE: 85%; FONT-STYLE: oblique; FONT-FAMILY: Arial, Helvetica, sans-serif; TEXT-DECORATION: none
+}
+.MenuLarge {
+	FONT-WEIGHT: bold; FONT-SIZE: 12px; MARGIN-LEFT: 5px; COLOR: #ffcc66; FONT-FAMILY: Arial, Helvetica, sans-serif; POSITION: static; TEXT-DECORATION: none
+}
+.MenuLargeProduct {
+	FONT-WEIGHT: bold; FONT-SIZE: 12px; MARGIN-LEFT: 5px; COLOR: #ffff00; FONT-FAMILY: Arial, Helvetica, sans-serif; POSITION: static; TEXT-DECORATION: none
+}
+.MenuMedium {
+	FONT-WEIGHT: bold; FONT-SIZE: 12px; MARGIN-LEFT: 35px; COLOR: #ffffff; FONT-FAMILY: Arial, Helvetica, sans-serif; POSITION: static; TEXT-DECORATION: none
+}
+.MenuSmall {
+	FONT-WEIGHT: bold; FONT-SIZE: 12px; MARGIN-LEFT: 65px; COLOR: #ffffff; FONT-FAMILY: Arial, Helvetica, sans-serif; POSITION: static; TEXT-DECORATION: none
+}
