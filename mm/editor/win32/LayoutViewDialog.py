@@ -173,6 +173,3 @@ class LayoutViewDialog:
 		#	callback in the very near future.
 		#	windowinterface.settimer(0.00001, (self.newchannel_callback, (name, type)))
 
-
-import LayoutViewDialog2
-LayoutViewDialog = LayoutViewDialog2.LayoutViewDialog2
