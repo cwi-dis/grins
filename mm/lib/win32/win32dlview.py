@@ -610,7 +610,7 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 		xpos,ypos=msg.pos()
 
 		if self._menu:
-			self.onLButtonDown(params)
+			self.onLButtonDown(params, 0)
 			id = self._menu.FloatMenu(self,xpos, ypos)
 			if self._cbld.has_key(id) :
 				callback = self._cbld[id]
@@ -618,7 +618,7 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 		elif self._topwindow==self:
 			menu=None
 			if self._popupmenu:
-				self.onLButtonDown(params)
+				self.onLButtonDown(params, 0)
 				menu = self._popupmenu
 			if not menu:return
 			pt=(xpos,ypos)

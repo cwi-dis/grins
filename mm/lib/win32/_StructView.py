@@ -107,9 +107,9 @@ class _StructView(DisplayListView):
 			self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.ATTRIBUTES].id)
 
 	# Response to left button down
-	def onLButtonDown(self, params):
+	def onLButtonDown(self, params, maystartdrag = 1):
 		DisplayListView.onLButtonDown(self, params)
-		if self._enableNodeDragDrop:
+		if self._enableNodeDragDrop and maystartdrag:
 			msgpos=win32mu.Win32Msg(params).pos()
 			self._dragging = msgpos
 
