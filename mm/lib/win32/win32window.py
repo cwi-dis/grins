@@ -2053,9 +2053,9 @@ class Viewport(Region):
 
 ##########################
 class ViewportContext:
-	def __init__(self, w, h, units, bgcolor):
+	def __init__(self, wnd, w, h, units, bgcolor):
 		self._viewport = Viewport(self, 0, 0, w, h, bgcolor)
-		self._wnd = Sdk.GetDesktopWindow()
+		self._wnd = wnd
 		self._bgcolor = bgcolor
 
 		self._ddraw = ddraw.CreateDirectDraw()
@@ -2124,7 +2124,7 @@ class ViewportContext:
 		pass
 
 	def imgAddDocRef(self, file):
-		pass
+		self._wnd.imgAddDocRef(file)
 
 	def CreateSurface(self, w, h):
 		ddsd = ddraw.CreateDDSURFACEDESC()

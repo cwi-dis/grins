@@ -630,7 +630,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		self.__fsPlayer = None
 
 	def newExport(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
-		return win32window.ViewportContext(w, h, units, bgcolor)
+		return win32window.ViewportContext(self, w, h, units, bgcolor)
 
 	# Return the framework document object associated with this frame
 	def getdoc(self):

@@ -598,9 +598,10 @@ class ProgressDialog:
 class _ProgressDialog(ResDialog):
 	# Placeholder
 	
-	def __init__(self, title, cancelcallback=None, parent=None):
+	def __init__(self, title, cancelcallback=None, parent=None, delaycancel=1):
 		self.cancelcallback = cancelcallback
 		self._title = title
+		self.delaycancel = delaycancel
 		ResDialog.__init__(self,grinsRC.IDD_PROGRESS,parent)
 		self._parent=parent
 		self._progress = ProgressControl(self,grinsRC.IDC_PROGRESS1)
@@ -629,7 +630,9 @@ class _ProgressDialog(ResDialog):
 		# Don't call callback now, we are probably not in the
 		# right thread. Remember for the next set call
 		self._cancel_pressed = 1
-
+		if not self.delaycancel and self.cancelcallback:
+			self.cancelcallback()
+			
 	def set(self, label, cur1=None, max1=None, cur2=None, max2=None):
 		if self._cancel_pressed and self.cancelcallback:
 			self.cancelcallback()
