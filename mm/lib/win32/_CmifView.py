@@ -253,6 +253,9 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 
 	# Bring window in front of peers
 	def pop(self):
+		# Do nothing
+		# Improperly used by core system
+		return
 		self._parent.ActivateFrame()
 		self._parent.MDIActivate(self.GetParent())
 		#self.InvalidateRect()
@@ -324,7 +327,6 @@ class _CmifPlayerView(_CmifView):
 		_CmifView.OnInitialUpdate(self)
 		#self.HookMessage(self.onPostResize,win32con.WM_USER)
 
-
 	# Do not close and recreate topwindow, due to flushing screen
 	# and loose of focus. 
 	# Nobody would excpect to destroy a window by resizing it!
@@ -367,7 +369,11 @@ class _CmifPlayerView(_CmifView):
 		self._canclose=0
 		self._resize_tree()
 		self._canclose=1
-		
+
+		# Check activation !!!!!!!!!!!!!!!!!
+		# Since we need this the activation mechanism is wrong!
+		# self._parent.MDIActivate(self.GetParent())
+
 
 #################################################
 # Specialization of _CmifView for smooth drawing		
@@ -549,7 +555,7 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 	
 	# Bring the subwindow infront of windows with the same z	
 	def pop(self):
-		self._topwindow.pop()
+		#self._topwindow.pop()
 		parent = self._parent
 		# put self in front of all siblings with equal or lower z
 		if self is not parent._subwindows[0]:
@@ -640,7 +646,7 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 			return
 
 		# do not erase bkgnd for video channel when active
-		if self._window_type==MPEG or self._window_type==HTM: 
+		if self._active_displist and (self._window_type==MPEG or self._window_type==HTM): 
 			return 1
 
 		# default is:
