@@ -82,11 +82,11 @@
 	'Determines whether image is centered' channel (cmif))
 
 (channel (name) undefined 'Channel' channelname
-	'Name of channel used to render this node' inherited (g2 qt smil10 smil2 cmif snap))
+	'Name of channel used to render this node' inherited (g2 qt smil10 smil2 cmif))
 
 (channellist (list (enclosed (tuple (name) (attrdict)))) ()
 	'Channel List' hidden
-	'Channels used in this document (root node only)' normal (g2 qt smil10 smil2 cmif snap))
+	'Channels used in this document (root node only)' normal (cmif))
 
 (clipbegin (string) '' 'Clip begin' default
 	'Start of range of frames to be played. Simplest form is "npt=3s".' raw (g2_pro qt_pro smil10 cmif))
