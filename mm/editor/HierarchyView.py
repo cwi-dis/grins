@@ -1510,10 +1510,12 @@ class HierarchyView(HierarchyViewDialog):
 	# I'm not quite sure how to do right-clicks on a mac. Sorry. -mjvdg.
 	def click(self, x, y):
 		# Called only from self.mouse, which is the event handler.
-		for i in self.__select_arrow_list:
-			caller, colour, src, dest = i
-			if self.window.hitarrow((x,y), src, dest):
-				self.select_arrow(i)
+		# mjvdg: This causes a bug. By not returning from this function, the ui thinks that
+		# the click has not finished when the dialog box is popped up (attrcall above does this).
+		#for i in self.__select_arrow_list:
+		#	caller, colour, src, dest = i
+		#	if self.window.hitarrow((x,y), src, dest):
+		#		self.select_arrow(i)
 		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
 		clicked_widget.mouse0press((x,y))
 		self.select_widget(clicked_widget, scroll=0)
