@@ -129,6 +129,10 @@ class HierarchyView(HierarchyViewDialog):
 	def aftersetfocus(self):
 		import Clipboard
 		commands = self.commands
+		if self.focusnode.GetType() in MMNode.interiortypes:
+			popupmenu = self.interior_popupmenu
+		else:
+			popupmenu = self.leaf_popupmenu
 		if self.focusnode is not self.root:
 			# can't do certain things to the root
 			commands = commands + self.notatrootcommands
@@ -148,6 +152,7 @@ class HierarchyView(HierarchyViewDialog):
 				# can't paste before/after root node
 				commands = commands + self.pastenotatrootcommands
 		self.setcommands(commands)
+		self.setpopup(popupmenu)
 
 	def show(self):
 		HierarchyViewDialog.show(self)

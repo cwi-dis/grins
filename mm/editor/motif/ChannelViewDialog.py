@@ -113,25 +113,59 @@ class ChannelViewDialog(ViewDialog):
 		self.window.set_dynamiclist(SYNCARCS, (self.focus and self.focus.arcmenu) or [])
 		self.window.set_dynamiclist(LAYOUTS, self.layouts)
 
+	def setpopup(self, menutemplate):
+		self.window.setpopupmenu(menutemplate)
+
 	def settoggle(self, command, onoff):
 		self.window.set_toggle(command, onoff)
 
 class GOCommand:
+	POPUP_NONE = (
+		('New channel...', NEW_CHANNEL),
+		)
+
 	def __init__(self):
-		self.popupmenu = None # XXXX
+		self.popupmenu = self.POPUP_NONE
 
 	def helpcall(self):
 		pass
 
 
 class ChannelBoxCommand:
+	POPUP_CHANNEL = (
+		('Move channel', MOVE_CHANNEL),
+		('Copy channel', COPY_CHANNEL),
+		('Toggle on/off', TOGGLE_ONOFF),
+		None,
+		('Delete', DELETE),
+		)
+
 	def __init__(self):
-		self.popupmenu = None # XXXX
+		self.popupmenu = self.POPUP_CHANNEL
 
 class NodeBoxCommand:
+	POPUP_NODE = (
+		('Finish hyperlink to focus...', FINISH_LINK),
+		('Finish sync arc from focus...', FINISH_ARC),
+		None,
+		('Play node', PLAYNODE),
+		('Play from node', PLAYFROM),
+		None,
+		('Show info...', INFO),
+		('Show properties...', ATTRIBUTES),
+		('Show anchors...', ANCHORS),
+		('Edit content...', CONTENT),
+		)
+
 	def __init__(self, mother, node):
-		self.popupmenu = None # XXXX
+		self.popupmenu = self.POPUP_NODE
 
 class ArcBoxCommand:
+	POPUP_SYNCARC = (
+		('Show info...', INFO),
+		None,
+		('Delete', DELETE),
+		)
+
 	def __init__(self):
-		self.popupmenu = None # XXXX
+		self.popupmenu = self.POPUP_SYNCARC
