@@ -508,6 +508,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.window.bgcolor(BGCOLOR)
 		# Other administratrivia
 		self.editmgr.register(self,1) # 1 means we want to participate in global focus management.
+		settings.register(self)
 		self.toplevel.checkviews()
 
 		self.refresh_scene_graph()
@@ -689,6 +690,7 @@ class HierarchyView(HierarchyViewDialog):
 		HierarchyViewDialog.hide(self)
 		self.cleanup()
 		self.editmgr.unregister(self)
+		settings.unregister(self)
 		self.toplevel.checkviews()
 
 	def is_showing(self):
