@@ -2022,6 +2022,9 @@ class SMILWriter(SMIL):
 				self.push()
 			self.writeanimatenode(x)
 			return
+		elif type == 'animpar':
+			self.writeanimpar(x)
+			return
 		elif type=='prefetch':
 			if root:
 				self.writetag('body', [('%s:hidden' % NSGRiNSprefix, 'true')])
@@ -2034,7 +2037,7 @@ class SMILWriter(SMIL):
 		elif type == 'comment':
 			self.writecomment(x)
 			return
-
+		
 		attrlist = []
 
 		interior = (type in interiortypes)
@@ -2258,6 +2261,126 @@ class SMILWriter(SMIL):
 		if pushed:
 			self.pop()
 
+	def writeanimpar(self, node):
+		animvals = node.attrdict.get('animvals', [])
+
+		times = []
+		posValues = []
+		widthValues = []
+		heightValues = []
+		bgcolorValues = []
+
+		for t, v in animvals:
+			t = fmtfloat(t, prec = 4)
+			times.append(t)
+			for attr in v.keys():
+				val = v[attr]
+				if attr == 'left' and v.has_key('top'):
+					val = val, v['top']
+					posValues.append('%d %d' % val)
+				elif attr == 'width':
+					widthValues.append('%d' % val)
+				elif attr == 'height':
+					heightValues.append('%d' % val)
+				elif attr == 'bgcolor':
+					import colors
+					if colors.rcolors.has_key(val):
+						bgcolorValues.append(colors.rcolors[val])
+					else:
+						bgcolorValues.append('#%02x%02x%02x' % val)
+
+		timeLen = len(times)		
+		posLen = len(posValues)
+		widthLen = len(widthValues)
+		heightLen = len(heightValues)
+		bgcolorLen = len(bgcolorValues)
+
+		if self.grinsExt:
+			if posLen > 0 and posLen == timeLen:
+				self.__writeanimparitem1('pos', posValues, times, node)
+			if widthLen > 0 and widthLen == timeLen:
+				self.__writeanimparitem1('width', widthValues, times, node)
+			if heightLen > 0 and heightLen == timeLen:
+				self.__writeanimparitem1('height', heightValues, times, node)
+			if bgcolorLen > 0 and bgcolorLen == timeLen:
+				self.__writeanimparitem1('bgcolor', bgcolorValues, times, node)
+		else:
+			if posLen > 0 and posLen == timeLen:
+				self.__writeanimparitem2('pos', posValues, times, node)
+			if widthLen > 0 and widthLen == timeLen:
+				self.__writeanimparitem2('width', widthValues, times, node)
+			if heightLen > 0 and heightLen == timeLen:
+				self.__writeanimparitem2('height', heightValues, times, node)
+			if bgcolorLen > 0 and bgcolorLen == timeLen:
+				self.__writeanimparitem2('bgcolor', bgcolorValues, times, node)
+
+	# use key times		
+	def __writeanimparitem1(self, aname, values, times, node):
+		attrlist = []
+		if aname == 'pos':
+			tag = 'animateMotion'
+		elif aname == 'bgcolor':
+			tag = 'animateColor'
+			attrlist.append(('attributeName', 'backgroundColor'))
+		else:
+			tag = 'animate'
+			attrlist.append(('attributeName', aname))
+
+		attrlist.append(('values', ';'.join(values)))
+		attrlist.append(('keyTimes', ';'.join(times)))
+		attrlist.append(('fill', 'freeze'))
+		attrlist.append(('%s:editMode' % NSGRiNSprefix, 'animatePar'))
+
+		# duration
+		# for now, the target node can only be the parent node
+		targetNode = node.GetParent()
+		duration = targetNode.GetDuration()
+		if duration is not None and duration >= 0:
+			dur = fmtfloat(duration, 's')
+			attrlist.append(('dur', dur))
+			
+		self.writetag(tag, attrlist)
+
+	# don't use key times
+	def __writeanimparitem2(self, aname, values, times, node):
+		ind = 0
+		for ind in range(len(times)):
+			attrlist = []
+			if ind == len(times)-1:
+				break
+			if aname == 'pos':
+				tag = 'animateMotion'
+			elif aname == 'bgcolor':
+				tag = 'animateColor'
+				attrlist.append(('attributeName', 'backgroundColor'))
+			else:
+				tag = 'animate'
+				attrlist.append(('attributeName', aname))
+
+			v1 = values[ind]
+			v2 = values[ind+1]
+			
+			if v1 != v2:
+				attrlist.append(('from', v1))
+				attrlist.append(('to', v2))
+				attrlist.append(('fill', 'freeze'))
+			
+				# duration
+				# for now, the target node can only be the parent node
+				targetNode = node.GetParent()
+				duration = targetNode.GetDuration()
+				if duration is not None and duration >= 0:
+					dur = (float(times[ind+1])-float(times[ind]))*duration
+					dur = fmtfloat(dur, 's')
+					attrlist.append(('dur', dur))
+				
+					begin = float(times[ind])*duration
+					if begin > 0:
+						begin = fmtfloat(begin, 's')
+						attrlist.append(('begin', begin))
+					
+				self.writetag(tag, attrlist)
+
 	def writeanimatenode(self, node):
 		attrlist = []
 		tag = node.GetAttrDict().get('atag')
@@ -2281,8 +2404,6 @@ class SMILWriter(SMIL):
 				if value and value != attributes[name]:
 					attrlist.append((name, value))
 		self.writetag('prefetch', attrlist, node)
-
-
 
 	def linkattrs(self, a2, ltype, stype, dtype):
 		attrs = []

@@ -259,6 +259,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__progressCallback = progressCallback # tuple of (callback fnc, interval of time updated (max))
 		self.__progressTimeToUpdate = 0  # next time to update the progress bar (if progresscallback is not none
 		self.linenumber = 1 # number of lines. Useful to determinate the progress value
+		self.__animateParSet = {}
 		
 		# experimental code for switch layout
 		self.__alreadymatch = 0
@@ -860,7 +861,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					attrdict['borderWidth'] = width
 				del attributes['borderWidth']
-
+								
 	def addQTAttr(self, attrdict, attributes):
 		if attributes.has_key('immediate-instantiation'):
 			val = self.parseEnumValue('immediate-instantiation', attributes['immediate-instantiation'])
@@ -1936,7 +1937,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 ##			# message already given
 ##			#self.error('%s elements can not be in the content model of media elements' % tagname)
 ##			return
-			
+
 		# find target node (explicit or implicit)
 		targetnode = None
 		targetid = attributes.get('targetElement')
@@ -1951,16 +1952,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('the target element of "%s" is unspecified' % tagname)
 
 		if tagname != 'animateMotion' and tagname != 'transitionFilter' and\
-		   not attributes.has_key('attributeName'):
+			not attributes.has_key('attributeName'):
 			self.syntax_error('required attribute attributeName missing in %s element' % tagname)
 			attributes['attributeName'] = ''
 
 		# create the node
 		node = self.__context.newnode('animate')
+
 		self.__container._addchild(node)
-		self.__container = node
 		self.AddAttrs(node, attributes)
-		
+
 		an = node.attrdict.get('attributeName')
 		if an == 'soundLevel':
 			minval = maxval = 1.0
@@ -2009,7 +2010,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# add to context an internal channel for this node
 		self.__context.addinternalchannels( [(chname, 'animate', node.attrdict), ] )
 
-
+		editMode = attributes.get('editMode')
+		if features.editor and editMode is not None:
+			if editMode == 'animatePar':
+				# A animpar mmnode instance will be created from FixAnimatePar method
+				animatePar = self.__animateParSet.get(self.__container)
+				if animatePar is None:
+					animatePar = []
+					self.__animateParSet[self.__container] = animatePar
+				animatePar.append((node, chname, self.lineno))
+			else:
+				self.syntax_error('unrecognized %s edit mode' % editMode)
+		self.__container = node
+				
 	def EndAnimateNode(self):
 		self.__container = self.__container.GetParent()
 
@@ -2071,6 +2084,168 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.SyncArc(node, attr, val)
 		self.lineno = save_lineno
 		del node.__syncarcs
+
+	def FixAnimatePar(self):
+		# for each set
+		for container, animatepar in self.__animateParSet.items():
+			errorMsg = None
+			keyTimes = None
+			posValues = None
+			widthValues = None
+			heightValues = None
+			bgcolorValues = None
+			end = None
+			for node, chname, lineno in animatepar:
+				attributes = node.attrdict
+				
+				tagName = attributes.get('atag')
+				
+				# check/finish parsing attributes. Accept only one partern
+				# key times
+				times = attributes.get('keyTimes')
+				if times is not None:
+					if len(times) < 2:
+						errorMsg = 'bad keyTimes attribute'
+						break
+					if keyTimes is None:
+						keyTimes = times
+					else:
+						# times has to be the same
+						if len(times) != len(keyTimes):
+							errorMsg = 'imcompatible keyTimes attribute'
+							break
+						for ind in range(len(times)):
+							if times[ind] != keyTimes[ind]:
+								errorMsg = 'imcompatible keyTimes attribute'
+								break
+						if errorMsg:
+							break
+				else:
+					# no key times
+					errorMsg = 'no keyTimes attribute'
+					break
+
+				if keyTimes is not None:
+					keyTimesLen = len(keyTimes)
+
+				# values				
+				values = attributes.get('values')
+				if values is not None:
+					if tagName == 'animateMotion':
+						if posValues is not None:
+							# already exist
+							errorMsg = 'duplicated animateMotion'
+							break
+						try:
+							pos = self.__strToPosList(values)
+						except:
+							errorMsg = 'bad values attribute'
+							break
+						if len(pos) != keyTimesLen:
+							# invalid size
+							errorMsg = 'imcompatible values number'
+							break
+						posValues = pos
+					elif tagName == 'animateColor' and attributes.get('attributeName') == 'backgroundColor':
+						if bgcolorValues is not None:
+							# already exist
+							errorMsg = 'duplicated animateColor'
+							break
+						try:
+							bgcolor = self.__strToColorList(values)
+						except:
+							errorMsg = 'bad values attribute'
+							break
+						if len(bgcolor) != keyTimesLen:
+							# invalid size
+							errorMsg = 'imcompatible values number'
+							break
+						bgcolorValues = bgcolor
+					elif tagName == 'animate':
+						attributeName = attributes.get('attributeName')
+						if attributeName == 'width':							
+							if widthValues is not None:
+								# already exist
+								errorMsg = 'duplicated animate width'
+								break
+							try:
+								width = self.__strToIntList(values)
+							except:
+								errorMsg = 'bad values attribute'
+								break
+							if len(width) != keyTimesLen:
+								# invalid size
+								errorMsg = 'imcompatible values number'
+								break
+							widthValues = width
+						elif attributeName == 'height':							
+							if heightValues is not None:
+								# already exist
+								errorMsg = 'duplicated animate height'
+								break
+							try:
+								height = self.__strToIntList(values)
+							except:
+								errorMsg = 'bad values attribute'
+								break
+							if len(height) != keyTimesLen:
+								# invalid size
+								errorMsg = 'imcompatible values number'
+								break
+							heightValues = height
+						else:
+							# no supported attribute name
+							errorMsg = 'attributeName not supported'
+							break
+					else:
+						# no supported tag, shouldn't happen
+						errorMsg = 'animate type not supported'
+						break
+				else:
+					# no values
+					errorMsg = 'no values attribute'
+					break
+				
+				# end attribute
+				# XXX to do
+
+			if errorMsg:
+				self.syntax_error('edit mode value not compatible with this node:%s' % errorMsg, lineno)				
+			else:
+				ctx = self.__context
+				# transfert the set of animate nodes to a animpar node 
+				for node, chname, lineno in animatepar:
+					ctx._delinternalchannel(chname)
+					node.Extract()
+
+				# create the node
+				node = ctx.newnode('animpar')
+				container._addchild(node)
+				attrdict = node.attrdict
+				
+				leftValues = []
+				topValues = []
+				if posValues is not None:
+					for pos in posValues:
+						left, top = pos
+						leftValues.append(left)
+						topValues.append(top)
+
+				animvals = []
+				for time in keyTimes:
+					animvals.append((time, {}))
+				
+				for values, aname in ((leftValues, 'left'), (topValues, 'top'), \
+								  (widthValues, 'width'), (heightValues, 'height'),
+								  (bgcolorValues, 'bgcolor')):
+					if values is not None:
+						for ind in range(len(values)):
+							t, v = animvals[ind]
+							v[aname] = values[ind]
+								
+				attrdict['animvals'] = animvals
+
+		del self.__animateParSet
 
 	def CreateLayout(self, attrs, isroot = 1):
 		bg = None
@@ -2535,6 +2710,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.FixBaseWindow()
 		self.FixLinks()
 		self.FixAnimateTargets()
+		self.FixAnimatePar()
 		self.FixAssets(self.__root)
 		metadata = ''.join(self.__metadata)
 		self.__context.metadata = metadata
@@ -4063,6 +4239,38 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if g > 255: g = 255
 		if b > 255: b = 255
 		return r, g, b
+
+	def __strToIntList(self, str):
+		sl = string.split(str,';')
+		vl = []
+		for s in sl:
+			if s: 
+				vl.append(string.atoi(s))
+		return vl	
+
+	def __strToPosList(self, str):
+		sl = string.split(str,';')
+		vl = []
+		for s in sl:
+			if s: 
+				pair = self.__getNumPair(s)
+				if pair:
+					vl.append(pair)
+		return vl	
+
+	def __getNumPair(self, str):
+		if not str: return None
+		str = string.strip(str)
+		import tokenizer
+		sl = tokenizer.splitlist(str, delims=' ,')
+		if len(sl)==2:
+			x, y = sl
+			return string.atoi(x), string.atoi(y)
+		return None
+
+	def __strToColorList(self, str):
+		vl = map(self.__convert_color, string.split(str,';'))
+		return vl
 
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)

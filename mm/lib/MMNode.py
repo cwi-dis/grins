@@ -502,6 +502,14 @@ class MMNodeContext:
 			self._ichannelnames.append(name)
 			self._ichannels.append(c)
 
+	def _delinternalchannel(self, name):
+		if name not in self._ichannelnames:
+			raise CheckError, 'delinternalchannels: non-existing name'
+		i = self._ichannelnames.index(name)
+		del self._ichannels[i]
+		del self._ichannelnames[i]
+		del self._ichanneldict[name]
+		
 	def getchanneltree(self):
 		if not self.__channeltree:
 			self.__channeltree = MMChannelTree(self)
