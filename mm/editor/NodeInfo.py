@@ -115,6 +115,9 @@ class NodeInfo(Dialog):
 	    self.destroy()
 
 	def open(self):
+	    if self.is_showing():
+		self.pop()
+	    else:
 		self.close()
 		self.title = self.maketitle()
 		self.getvalues(TRUE)
