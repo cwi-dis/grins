@@ -86,6 +86,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.need_resize = 1	# Whether the tree needs to be resized. Implies need_redraw
 		self.need_redraw = 1	# Whether the scene graph needs redrawing.
 		self.need_redraw_selection = 0 # Whether we only need to redraw the selection.
+		self.calculating = 0
 
 		self.focus_lock = 0	# prevents recursive focus requests.
 
@@ -560,10 +561,12 @@ class HierarchyView(HierarchyViewDialog):
 		# Set the size of the first widget.
 		self.need_resize = 0
 		self.need_redraw = 1
+		self.calculating = 1
 		w,h = self.scene_graph.recalc_minsize()
 		self.mcanvassize = w,h
 		self.scene_graph.moveto((0,0,w,h))
 		self.scene_graph.recalc()
+		self.calculating = 0
 		self.window.setcanvassize((SIZEUNIT, w, h)) # Causes a redraw() event.
 
 	def draw_scene(self):
