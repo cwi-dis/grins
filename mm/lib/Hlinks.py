@@ -33,7 +33,11 @@ class Hlinks:
 		self.links.append(link)
 
 	def dellink(self, link):
-		self.links.remove(link)
+		try:
+			self.links.remove(link)
+		except ValueError:
+			print 'dellink: try reverse link'
+			self.links.remove(self.revlink(link))
 
 	def addlinks(self, linklist):
 		self.links = self.links + linklist
@@ -58,11 +62,13 @@ class Hlinks:
 			if a1==l[ANCHOR1] and (a2==None or a2==l[ANCHOR2]):
 				rv.append(l)
 			elif a1==l[ANCHOR2] and (a2==None or a2==l[ANCHOR1]):
-				dir = l[DIR]
-				if dir == DIR_1TO2:
-					dir = DIR_2TO1
-				elif dir == DIR_2TO1:
-					dir = DIR_1TO2
-				l = l[ANCHOR2], l[ANCHOR1], dir, l[TYPE]
-				rv.append(l)
+				rv.append(self.revlink(l))
 		return rv
+
+	# Reverse representation of a link
+	def revlink(self, (a1, a2, dir, type)):
+		if dir == DIR_1TO2:
+			dir = DIR_2TO1
+		elif dir == DIR_2TO1:
+			dir = DIR_1TO2
+		return (a2, a1, dir, type)
