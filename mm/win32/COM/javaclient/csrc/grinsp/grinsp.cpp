@@ -12,15 +12,36 @@
 #include "jawt_md.h"
 
 #include <assert.h>
-
 #include "..\..\..\grinscomsvr\idl\IGRiNSPlayerAuto.h"
+
 
 inline IGRiNSPlayerAuto* GetIGRiNSPlayer(jint h) {return h?(IGRiNSPlayerAuto*)h:NULL;}
 
 
 extern "C" {
-
-
+	
+static void ThrowCOMException(JNIEnv *env, const char *funcname, HRESULT hr) {
+	char* pszmsg;
+	FormatMessage( 
+		 FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		 NULL,
+		 hr,
+		 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+		 (LPTSTR) &pszmsg,
+		 0,
+		 NULL 
+		);
+	char sz[512];
+	sprintf(sz, "Native function %s failed, error = %x, %s", funcname, hr, pszmsg);
+	LocalFree(pszmsg);
+	env->ThrowNew(env->FindClass("GRiNSInterfaceException"), sz);
+	} 
+	
+/*
+ * Class:     GRiNSPlayer
+ * Method:    nconnect
+ * Signature: ()I
+ */
 JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__(JNIEnv *env, jobject player)
 	{
 	CoInitialize(NULL);
@@ -28,10 +49,12 @@ JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__(JNIEnv *env, jobject player)
 	DWORD dwClsContext = CLSCTX_LOCAL_SERVER;
 	IGRiNSPlayerAuto *pIGRiNSPlayer = NULL;
 	HRESULT hr = CoCreateInstance(CLSID_GRiNSPlayerAuto, NULL, dwClsContext, IID_IGRiNSPlayerAuto,(void**)&pIGRiNSPlayer);
- 	jint hgrins = 0;
-	if(SUCCEEDED(hr))
-		hgrins = jint(pIGRiNSPlayer);
-	return hgrins;
+	if(FAILED(hr))
+		{
+		ThrowCOMException(env, "CoCreateInstance", hr);
+		return 0;
+		}
+	return jint(pIGRiNSPlayer);
 	}
 
 /*
@@ -42,6 +65,16 @@ JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__(JNIEnv *env, jobject player)
 JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__Ljava_awt_Component_2(JNIEnv *env, jobject player, jobject component)
 	{
 	CoInitialize(NULL);
+	
+	DWORD dwClsContext = CLSCTX_LOCAL_SERVER;
+	IGRiNSPlayerAuto *pIGRiNSPlayer = NULL;
+	HRESULT hr = CoCreateInstance(CLSID_GRiNSPlayerAuto, NULL, dwClsContext, IID_IGRiNSPlayerAuto,(void**)&pIGRiNSPlayer);
+	if(FAILED(hr))
+		{
+		ThrowCOMException(env, "CoCreateInstance", hr);
+		return 0;
+		}
+	jint hgrins = jint(pIGRiNSPlayer);
 	
 	// Get the AWT
 	JAWT awt;
@@ -64,16 +97,10 @@ JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__Ljava_awt_Component_2(JNIEnv *
  	JAWT_Win32DrawingSurfaceInfo *dsi_win = (JAWT_Win32DrawingSurfaceInfo*)dsi->platformInfo;
 
  	//////////////////////////////
-	DWORD dwClsContext = CLSCTX_LOCAL_SERVER;
-	IGRiNSPlayerAuto *pIGRiNSPlayer = NULL;
-	HRESULT hr = CoCreateInstance(CLSID_GRiNSPlayerAuto, NULL, dwClsContext, IID_IGRiNSPlayerAuto,(void**)&pIGRiNSPlayer);
- 	jint hgrins = 0;
-	if(SUCCEEDED(hr))
-		{
-		pIGRiNSPlayer->setWindow(dsi_win->hwnd);
-		hgrins = jint(pIGRiNSPlayer);
-		}
- 	//////////////////////////////
+
+	HWND hwnd = dsi_win->hwnd;
+
+	//////////////////////////////
 	
  	// Free the drawing surface info
  	ds->FreeDrawingSurfaceInfo(dsi);
@@ -84,6 +111,12 @@ JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__Ljava_awt_Component_2(JNIEnv *
  	// Free the drawing surface
  	awt.FreeDrawingSurface(ds);
 
+	hr = pIGRiNSPlayer->setWindow(hwnd);
+	if(FAILED(hr))
+		{
+		ThrowCOMException(env, "setWindow", hr);
+		return hgrins;
+		}
 	return hgrins;
 	}
 
@@ -116,8 +149,10 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nopen(JNIEnv *env, jobject player, jint 
 		const char *psz = env->GetStringUTFChars(url, NULL);
 		WCHAR wPath[MAX_PATH];
 		MultiByteToWideChar(CP_ACP,0,LPCTSTR(psz),-1,wPath,MAX_PATH);	
-		pIGRiNSPlayer->open(wPath);
+		HRESULT hr = pIGRiNSPlayer->open(wPath);
 		env->ReleaseStringUTFChars(url, psz);
+		if(FAILED(hr))
+			ThrowCOMException(env, "open", hr);
 		}	
 	}
 
@@ -141,7 +176,12 @@ JNIEXPORT jobject JNICALL Java_GRiNSPlayer_ngetPreferredSize(JNIEnv *env, jobjec
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	jint w=0, h=0;
-	if(pIGRiNSPlayer)pIGRiNSPlayer->getSize((int*)&w, (int*)&h);
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->getSize((int*)&w, (int*)&h);
+		if(FAILED(hr))
+			ThrowCOMException(env, "getSize", hr);
+		}
 	jclass clazz = env->FindClass("java/awt/Dimension");
 	jmethodID methodID = env->GetMethodID(clazz, "<init>", "(II)V");
 	return env->NewObject(clazz, methodID, w, h);
@@ -155,7 +195,12 @@ JNIEXPORT jobject JNICALL Java_GRiNSPlayer_ngetPreferredSize(JNIEnv *env, jobjec
 JNIEXPORT void JNICALL Java_GRiNSPlayer_nplay(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
-	if(pIGRiNSPlayer)pIGRiNSPlayer->play();	
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->play();	
+		if(FAILED(hr))
+			ThrowCOMException(env, "play", hr);
+		}
 	}
 
 /*
@@ -166,7 +211,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nplay(JNIEnv *env, jobject player, jint 
 JNIEXPORT void JNICALL Java_GRiNSPlayer_nupdate(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
-	if(pIGRiNSPlayer)pIGRiNSPlayer->update();		
+	if(pIGRiNSPlayer) pIGRiNSPlayer->update();		
 	}
 
 /*
@@ -177,7 +222,12 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nupdate(JNIEnv *env, jobject player, jin
 JNIEXPORT void JNICALL Java_GRiNSPlayer_npause(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
-	if(pIGRiNSPlayer)pIGRiNSPlayer->pause();		
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->pause();	
+		if(FAILED(hr))
+			ThrowCOMException(env, "pause", hr);
+		}
 	}
 
 
@@ -189,7 +239,12 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_npause(JNIEnv *env, jobject player, jint
 JNIEXPORT void JNICALL Java_GRiNSPlayer_nstop(JNIEnv *env, jobject player, jint hgrins)
 	 {
 	 IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
-	 if(pIGRiNSPlayer)pIGRiNSPlayer->stop();		
+	 if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->stop();	
+		if(FAILED(hr))
+			ThrowCOMException(env, "stop", hr);
+		}
 	 }
 
 /*
@@ -200,8 +255,13 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nstop(JNIEnv *env, jobject player, jint 
 JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetDuration(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
-	double dur;
-	if(pIGRiNSPlayer)pIGRiNSPlayer->getDuration(&dur);		
+	double dur = 0;
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->getDuration(&dur);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "getDuration", hr);
+		}
 	return jdouble(dur);
 	}
 
@@ -213,8 +273,13 @@ JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetDuration(JNIEnv *env, jobject pla
 JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetSpeed(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
-	double speed;
-	if(pIGRiNSPlayer)pIGRiNSPlayer->getSpeed(&speed);		
+	double speed = 1;
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->getSpeed(&speed);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "getSpeed", hr);
+		}
 	return jdouble(speed);
 	}
 
@@ -226,8 +291,13 @@ JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetSpeed(JNIEnv *env, jobject player
 JNIEXPORT jint JNICALL Java_GRiNSPlayer_ngetState(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
-	int plstate;
-	if(pIGRiNSPlayer)pIGRiNSPlayer->getState(&plstate);		
+	int plstate = 0;
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->getState(&plstate);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "getState", hr);
+		}
 	return jint(plstate);
 	}
 
@@ -239,8 +309,13 @@ JNIEXPORT jint JNICALL Java_GRiNSPlayer_ngetState(JNIEnv *env, jobject player, j
 JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetTime(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
-	double t;
-	if(pIGRiNSPlayer)pIGRiNSPlayer->getTime(&t);		
+	double t = 0;
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->getTime(&t);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "getTime", hr);
+		}
 	return jdouble(t);
 	}
 
@@ -252,7 +327,12 @@ JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetTime(JNIEnv *env, jobject player,
 JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetSpeed(JNIEnv *env, jobject player, jint hgrins, jdouble speed)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
-	if(pIGRiNSPlayer) pIGRiNSPlayer->setSpeed(speed);		
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->setSpeed(speed);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "setSpeed", hr);
+		}
 	}
 
 
@@ -264,7 +344,12 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetSpeed(JNIEnv *env, jobject player, j
 JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetTime(JNIEnv *env, jobject player, jint hgrins, jdouble t)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
-	if(pIGRiNSPlayer) pIGRiNSPlayer->setTime(t);		
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->setTime(t);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "setTime", hr);
+		}
 	}
 
 
