@@ -1,4 +1,4 @@
-#include "allobjects.h"
+#include "Python.h"
 #include "modsupport.h"
 #include "thread.h"
 #include "mmmodule.h"
@@ -36,9 +36,9 @@ null_resized(self)
 static int
 null_arm(self, file, delay, duration, attrdict, anchorlist)
 	mmobject *self;
-	object *file;
+	PyObject *file;
 	int delay, duration;
-	object *attrdict, *anchorlist;
+	PyObject *attrdict, *anchorlist;
 {
 	denter(null_arm);
 	return 1;
@@ -125,21 +125,21 @@ nullchannel_dealloc(self)
 	if (self != null_chan_obj) {
 		dprintf(("nullchannel_dealloc: arg != null_chan_obj\n"));
 	}
-	DEL(self);
+	PyMem_DEL(self);
 	null_chan_obj = NULL;
 }
 
-static object *
+static PyObject *
 nullchannel_getattr(self, name)
 	channelobject *self;
 	char *name;
 {
-	err_setstr(AttributeError, name);
+	PyErr_SetString(PyExc_AttributeError, name);
 	return NULL;
 }
 
-static typeobject Nullchanneltype = {
-	OB_HEAD_INIT(&Typetype)
+static PyTypeObject Nullchanneltype = {
+	PyObject_HEAD_INIT(&PyType_Type)
 	0,			/*ob_size*/
 	"channel:null",		/*tp_name*/
 	sizeof(channelobject),	/*tp_size*/
@@ -153,28 +153,28 @@ static typeobject Nullchanneltype = {
 	0,			/*tp_repr*/
 };
 
-static object *
+static PyObject *
 nullchannel_init(self, args)
 	channelobject *self;
-	object *args;
+	PyObject *args;
 {
 	channelobject *p;
 
-	if (!getnoarg(args))
+	if (!PyArg_NoArgs(args))
 		return NULL;
 	if (null_chan_obj == NULL) {
-		null_chan_obj = NEWOBJ(channelobject, &Nullchanneltype);
+		null_chan_obj = PyObject_NEW(channelobject, &Nullchanneltype);
 		if (null_chan_obj == NULL)
 			return NULL;
 		null_chan_obj->chan_funcs = &null_channel_funcs;
 	} else {
-		INCREF(null_chan_obj);
+		Py_INCREF(null_chan_obj);
 	}
-	return (object *) null_chan_obj;
+	return (PyObject *) null_chan_obj;
 }
 
-static struct methodlist nullchannel_methods[] = {
-	{"init",		(method)nullchannel_init},
+static PyMethodDef nullchannel_methods[] = {
+	{"init",		(PyCFunction)nullchannel_init},
 	{NULL,			NULL}
 };
 
@@ -185,5 +185,5 @@ initnullchannel()
 	nullchannel_debug = getenv("NULLDEBUG") != 0;
 #endif
 	dprintf(("initnullchannel\n"));
-	(void) initmodule("nullchannel", nullchannel_methods);
+	(void) Py_InitModule("nullchannel", nullchannel_methods);
 }
