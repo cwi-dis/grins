@@ -5335,13 +5335,20 @@ class AttrEditForm(GenFormView):
 			raise error, 'os window not exists'
 		if attrobj not in self._attriblist:
 			raise error, 'item not in list'
-		return self._a2p[attrobj].getvalue(attrobj)
+		p = self._a2p.get(attrobj)
+		if not p:
+			# this causes the current value to be used
+			raise AttributeError('attribute not available')
+		return p.getvalue(attrobj)
 
 	# Called by the core system to set a value on the list
 	def setvalue(self,attrobj,newval):
 		if attrobj not in self._attriblist:
 			raise error, 'item not in list'
-		self._a2p[attrobj].setvalue(attrobj,newval)
+		p = self._a2p.get(attrobj)
+		if not p:
+			return
+		p.setvalue(attrobj,newval)
 
 		# patch core's draw back
 		if not self._tid:
@@ -5357,7 +5364,9 @@ class AttrEditForm(GenFormView):
 		t = attrobj.gettype()
 		if t != 'option':
 			raise error, 'item not an option'
-		self._a2p[attrobj].setoptions(attrobj,list,val)
+		p = self._a2p.get(attrobj)
+		if p:
+			p.setoptions(attrobj,list,val)
 
 	def onDirty(self):
 		self._tid=None
