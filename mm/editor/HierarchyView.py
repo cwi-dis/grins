@@ -14,9 +14,6 @@ from usercmd import *
 import os
 
 
-def fix(r, g, b): return r, g, b	# Hook for color conversions
-
-
 import settings
 DISPLAY_VERTICAL = settings.get('vertical_structure')
 hierarchy_minimum_sizes = settings.get('hierarchy_minimum_sizes')
@@ -25,34 +22,24 @@ root_expanded = settings.get('root_expanded')
 
 # Color assignments (RGB)
 
-BGCOLOR = fix(200, 200, 200)		# Light gray
-BORDERCOLOR = fix(75, 75, 75)		# Dark gray
-BORDERLIGHT = fix(255, 255, 255)	# White
-CHANNELCOLOR = fix(240, 240, 240)	# Very light gray
-CHANNELOFFCOLOR = fix(160, 160, 160)	# Darker gray
-LEAFCOLOR = fix(208, 182, 160)		# Pale pinkish, match channel view
-ALTNODECOLOR = fix(255, 224, 200)	# Same but brighter
-BAGCOLOR = fix(152, 174, 200)		# Light blue
-ALTCOLOR = fix(152, 200, 174)		# Light green
-PARCOLOR = fix(150, 150, 150)		# Gray
-SEQCOLOR = fix(150, 150, 150)		# Gray
-TEXTCOLOR = fix(0, 0, 0)		# Black
-CTEXTCOLOR = fix(50, 50, 50)		# Very dark gray
-EXPCOLOR = fix(255, 0, 0)		# Red
-COLCOLOR = fix(0, 255, 0)		# Green
+BGCOLOR = settings.get('structure_bgcolor')
+LEAFCOLOR = settings.get('structure_leafcolor')
+BAGCOLOR = settings.get('structure_bagcolor')
+ALTCOLOR = settings.get('structure_altcolor')
+PARCOLOR = settings.get('structure_parcolor')
+SEQCOLOR = settings.get('structure_seqcolor')
+TEXTCOLOR = settings.get('structure_textcolor')
+CTEXTCOLOR = settings.get('structure_ctextcolor')
+EXPCOLOR = settings.get('structure_expcolor')
+COLCOLOR = settings.get('structure_colcolor')
 
 
 # Focus color assignments (from light to dark gray)
 
-FOCUSLEFT   = fix(200, 200, 200)
-FOCUSTOP    = fix(200, 200, 200)
-FOCUSRIGHT  = fix(40, 40, 40)
-FOCUSBOTTOM = fix(40, 40, 40)
-##FOCUSLEFT   = fix(244, 244, 244)
-##FOCUSTOP    = fix(204, 204, 204)
-##FOCUSRIGHT  = fix(40, 40, 40)
-##FOCUSBOTTOM = fix(91, 91, 91)
-FOCUSBORDER = fix(0, 0, 0)		# Thin line around it
+FOCUSLEFT = settings.get('structure_focusleft')
+FOCUSTOP = settings.get('structure_focustop')
+FOCUSRIGHT = settings.get('structure_focusright')
+FOCUSBOTTOM = settings.get('structure_focusbottom')
 
 
 # Box types
