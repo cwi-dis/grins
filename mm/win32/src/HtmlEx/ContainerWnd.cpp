@@ -5,7 +5,6 @@
 #include "stdafx.h"
 #include "htmlex.h"
 #include "ContainerWnd.h"
-#include "resource.h"
 #include "string.h"
 #include "stdio.h"
 
