@@ -1021,6 +1021,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.AddAttrs(node, attributes)
 
 		node.type = nodetype
+		node.subtype = 'animate'
 		node.attrdict['channel'] = chtype
 		node.attrdict['mimetype'] = 'animate/%s' % tagname
 
@@ -1031,6 +1032,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if targetnode:
 			targetnode.__chanlist = {}
 			targetnode._addchild(node)
+			node.targetnode = targetnode
 		elif targetid:
 			node.__targetid = targetid
 			self.__animatenodes.append(node)
@@ -1564,6 +1566,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				targetnode = self.__nodemap[targetid]
 				targetnode.__chanlist = {}
 				targetnode._addchild(node)
+				node.targetnode = targetnode
 				del node.__targetid
 		del self.__animatenodes
 			
