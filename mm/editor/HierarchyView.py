@@ -1668,6 +1668,10 @@ class Object:
 				d.drawfbox(MMAttrdefs.getattr(node, 'color'), (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
 				d.fgcolor(TEXTCOLOR)
 				d.drawbox((l+hmargin, (t1+b1-ih)/2, iw, ih))
+			elif node.GetChannelType() == 'brush':
+				d.drawfbox(MMAttrdefs.getattr(node, 'fgcolor'), (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
+				d.fgcolor(TEXTCOLOR)
+				d.drawbox((l+hmargin, (t1+b1-ih)/2, iw, ih))
 			elif f is not None:
 				try:
 					box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1-ih)/2, iw, ih), scale=-2)

@@ -195,7 +195,9 @@ def getid(writer, node):
 def getsrc(writer, node):
 	ntype = node.GetType()
 	chtype = node.GetChannelType()
-	if ntype == 'ext':
+	if chtype == 'brush':
+		return None
+	elif ntype == 'ext':
 		val = MMAttrdefs.getattr(node, 'file')
 	elif ntype == 'imm':
 		if chtype == 'html':
@@ -323,6 +325,16 @@ def getsrc(writer, node):
 	if features.compatibility == features.G2:
 		val = MMurl.unquote(val)
 	return val
+
+def getcolor(writer, node):
+	if node.GetChannelType() != 'brush':
+		return None
+	fgcolor = MMAttrdefs.getattr(node, 'fgcolor')
+	if colors.rcolors.has_key(fgcolor):
+		fgcolor = colors.rcolors[fgcolor]
+	else:
+		fgcolor = '#%02x%02x%02x' % fgcolor
+	return fgcolor
 
 def getcmifattr(writer, node, attr):
 	val = MMAttrdefs.getattr(node, attr)
@@ -672,6 +684,7 @@ smil_attrs=[
 	("choice-index", getbagindex),
 	("uGroup", getugroup),
 	("layout", getlayout),
+	("color", getcolor),		# only for brush element
 ]
 
 # attributes that we know about and so don't write into the SMIL file using
@@ -720,7 +733,8 @@ smil_mediatype={
 	'RealText':'textstream',
 	'RealVideo':'video',
 	'unknown': 'ref',
-	'animate':'animate',
+	'animate': 'animate',
+	'brush': 'brush',
 }
 
 def mediatype(chtype, error=0):
@@ -1454,11 +1468,13 @@ class SMILWriter(SMIL):
 			   value != attributes[gname]:
 				attrlist.append((name, value))
 		is_realpix = type == 'ext' and x.GetChannelType() == 'RealPix'
+		is_brush = x.GetChannelType() == 'brush'
 		for key, val in x.GetAttrDict().items():
 			if key[-7:] != '_winpos' and \
 			   key[-8:] != '_winsize' and \
 			   not qt_node_attrs.has_key(key) and \
 			   not cmif_node_attrs_ignore.has_key(key) and \
+			   (not is_brush or key != 'fgcolor') and \
 			   (not is_realpix or
 			    not cmif_node_realpix_attrs_ignore.has_key(key)):
 				attrlist.append(('%s:%s' % (NSGRiNSprefix, key),

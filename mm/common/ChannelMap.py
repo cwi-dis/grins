@@ -33,6 +33,7 @@ def _freeze_dummy_func():
 	import VideoChannel
 	import WordChannel
 	import AnimateChannel
+	import BrushChannel
 
 class ChannelMap:
 	channelmap = {
@@ -59,7 +60,8 @@ class ChannelMap:
 		'RealPix':	'RealPixChannel',
 		'RealText':	'RealTextChannel',
 ##		'RealVideo':	'RealVideoChannel',
-		'animate':  'AnimateChannel',
+		'animate':	'AnimateChannel',
+		'brush':	'BrushChannel',
 		}
 
 	if platform == 'mac':
@@ -105,12 +107,10 @@ channelmap = ChannelMap()
 class InternalChannelMap(ChannelMap):
 	channelmap = {
 		'null': 	'NullChannel',
-		'animate':  'AnimateChannel',
+		'animate':	'AnimateChannel',
 		}
 	has_key = channelmap.has_key
 	keys = channelmap.keys
-	def __init__(self):
-		ChannelMap.__init__(self)
 
 internalchannelmap = InternalChannelMap()
 
@@ -131,6 +131,7 @@ SMILchanneltypes = ['image', 'sound', 'video', 'text']
 if features.compatibility == compatibility.G2:
         SMILchanneltypes = SMILchanneltypes+['RealPix', 'RealText']
 SMILextendedchanneltypes = ['html']
+SMILBostonChanneltypes = ['brush']
 
 ct = channelmap.keys()
 ct.sort()
@@ -162,7 +163,7 @@ shortcuts = {
 	'external':	'X',
 	}
 
-def getvalidchanneltypes():
+def getvalidchanneltypes(context):
 	"""Return the list of channels to be shown in menus and such.
 	Either the full list or the SMIL-supported list is returned."""
 	import settings
@@ -172,11 +173,13 @@ def getvalidchanneltypes():
 	import features
 	if features.compatibility == features.SMIL10:
 		rv = rv + SMILextendedchanneltypes
+	if context.attributes.get('project_boston'):
+		rv = rv + SMILBostonChanneltypes
 	if not features.lightweight:
 		rv = rv + ['null']
 	return rv
 
 def isvisiblechannel(type):
 	return type in ('text', 'image', 'movie', 'video', 'mpeg', 'html',
-			'label', 'graph', 'layout',
+			'label', 'graph', 'layout', 'brush',
 			'RealPix', 'RealText', 'RealVideo')
