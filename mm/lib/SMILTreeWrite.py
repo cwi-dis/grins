@@ -423,7 +423,7 @@ class SMILWriter(SMIL):
 		self.__isopen = 0
 		self.__stack = []
 
-		self.uses_cmif_extension = 0
+		self.uses_cmif_extension = not cleanSMIL
 		self.root = node
 		self.fp = fp
 		self.__title = node.GetContext().gettitle()
@@ -534,7 +534,8 @@ class SMILWriter(SMIL):
 		fp.write(SMILdecl)
 		if self.evallicense:
 			fp.write(EVALcomment)
-		fp.write(doctype)
+		if not self.uses_cmif_extension:
+			fp.write(doctype)
 		attrlist = []
 		if self.uses_cmif_extension:
 			attrlist.append((xmlns, GRiNSns))
