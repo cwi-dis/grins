@@ -17,7 +17,6 @@ struct PyWaveOut
 	{
 	PyObject_HEAD
 	HWAVEOUT m_hWaveOut;
-	WAVEHDR *m_pWaveHdr;
 
 	static PyTypeObject type;
 	static PyMethodDef methods[];
@@ -27,17 +26,11 @@ struct PyWaveOut
 		PyWaveOut *instance = PyObject_NEW(PyWaveOut, &type);
 		if (instance == NULL) return NULL;
 		instance->m_hWaveOut = hWaveOut;
-		instance->m_pWaveHdr = NULL;
 		return instance;
 		}
 
 	static void dealloc(PyWaveOut *p) 
 		{ 
-		if(p->m_hWaveOut != NULL && p->m_pWaveHdr != NULL)
-			{
-			waveOutUnprepareHeader(p->m_hWaveOut, p->m_pWaveHdr, sizeof(WAVEHDR));
-			delete p->m_pWaveHdr;
-			}
 		if(p->m_hWaveOut != NULL) 
 			waveOutClose(p->m_hWaveOut);
 		PyMem_DEL(p);
@@ -125,12 +118,6 @@ static PyObject* PyWaveOut_Close(PyWaveOut *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	if(self->m_hWaveOut != NULL && self->m_pWaveHdr != NULL)
-		{
-		waveOutUnprepareHeader(self->m_hWaveOut, self->m_pWaveHdr, sizeof(WAVEHDR));
-		delete self->m_pWaveHdr;
-		self->m_pWaveHdr = NULL;
-		}
 	MMRESULT mmres = waveOutClose(self->m_hWaveOut);
 	if(mmres != MMSYSERR_NOERROR)
 		{
@@ -154,35 +141,15 @@ static PyObject* PyWaveOut_Reset(PyWaveOut *self, PyObject *args)
 	return none(); 
 }
 
-static PyObject* PyWaveOut_PlayChunk(PyWaveOut *self, PyObject *args)
+static PyObject* PyWaveOut_Write(PyWaveOut *self, PyObject *args)
 {
 	PyObject *obj;
-	if (!PyArg_ParseTuple(args,"S",&obj))
+	if (!PyArg_ParseTuple(args,"O",&obj))
 		return NULL;
-	if(self->m_pWaveHdr == NULL)
-		{
-		self->m_pWaveHdr = new WAVEHDR;
-		memset(self->m_pWaveHdr, 0, sizeof(WAVEHDR));
-		}
-	self->m_pWaveHdr->lpData = PyString_AS_STRING(obj);
-	self->m_pWaveHdr->dwBufferLength = PyString_GET_SIZE(obj);
-	self->m_pWaveHdr->dwFlags = 0;
-	self->m_pWaveHdr->dwLoops = 0;
-
-	MMRESULT mmres = waveOutPrepareHeader(self->m_hWaveOut, self->m_pWaveHdr, sizeof(WAVEHDR));
-	if(mmres != MMSYSERR_NOERROR)
-		{
-		delete self->m_pWaveHdr;
-		self->m_pWaveHdr = NULL;
-		seterror("waveOutPrepareHeader", mmres);
-		return NULL;
-		}
-	mmres = waveOutWrite(self->m_hWaveOut, self->m_pWaveHdr, sizeof(WAVEHDR));
+	WAVEHDR *pWaveHdr = (WAVEHDR *)GetObjHandle(obj);
+	MMRESULT mmres = waveOutWrite(self->m_hWaveOut, pWaveHdr, sizeof(WAVEHDR));
  	if(mmres != MMSYSERR_NOERROR)
 		{
-		waveOutUnprepareHeader(self->m_hWaveOut, self->m_pWaveHdr, sizeof(WAVEHDR));
-		delete self->m_pWaveHdr;
-		self->m_pWaveHdr = NULL;
 		seterror("waveOutWrite", mmres);
 		return NULL;
 		}
@@ -218,7 +185,7 @@ static PyObject* PyWaveOut_Restart(PyWaveOut *self, PyObject *args)
 PyMethodDef PyWaveOut::methods[] = {
 	{"Close", (PyCFunction)PyWaveOut_Close, METH_VARARGS, ""},
 	{"Reset", (PyCFunction)PyWaveOut_Reset, METH_VARARGS, ""},
-	{"PlayChunk", (PyCFunction)PyWaveOut_PlayChunk, METH_VARARGS, ""},
+	{"Write", (PyCFunction)PyWaveOut_Write, METH_VARARGS, ""},
 	{"Pause", (PyCFunction)PyWaveOut_Pause, METH_VARARGS, ""},
 	{"Restart", (PyCFunction)PyWaveOut_Restart, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
