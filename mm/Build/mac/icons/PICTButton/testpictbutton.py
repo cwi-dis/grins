@@ -5,6 +5,7 @@
 import Dlg
 import Res
 import sys
+import MacOS
 
 DIALOG_ID=512
 
@@ -39,7 +40,7 @@ def run():
 		if n == I_OK:
 			return
 		if n == I_CNTL:
-			pass
+			MacOS.SysBeep()
 			
 def main():
 	Res.OpenResFile("testpictbutton.rsrc")
