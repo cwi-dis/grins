@@ -2880,6 +2880,11 @@ IDI_ICON_SEQCLOSED      ICON    DISCARDABLE     "res\\Seq_close.ico"
 IDI_ICON_SWITCHCLOSED   ICON    DISCARDABLE     "res\\Switch_close.ico"
 IDI_ICON_PRIOCLOSED     ICON    DISCARDABLE     "res\\Prio_close.ico"
 IDI_ICON_EXCLCLOSED     ICON    DISCARDABLE     "res\\Excl_close.ico"
+IDI_ICON_ASSET_AUDIO    ICON    DISCARDABLE     "res\\Audio.ico"
+IDI_ICON_ASSET_VIDEO    ICON    DISCARDABLE     "res\\Video.ico"
+IDI_ICON_ASSET_BLANK    ICON    DISCARDABLE     "res\\Blank.ico"
+IDI_ICON_ASSET_IMAGE    ICON    DISCARDABLE     "res\\Image.ico"
+IDI_ICON_ASSET_TEXT     ICON    DISCARDABLE     "res\\Text.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
