@@ -35,8 +35,8 @@ from usercmd import *
 from wndusercmd import *
 import features
 from compatibility import Boston
-
 import WMEVENTS
+import MMurl
 
 class MainDialog:
 	def __init__(self, title):
@@ -123,8 +123,13 @@ class MainDialog:
 			self.openURL_callback(url)
 
 	def embeddedopenfile(self, arg, window, event, value):
-		filename = value
-		url = self.__path2url(filename)
+		if len(value)>7 and value[:6] == 'file:/':
+			if value[7]==':':
+				url = 'file:///%s|%s' % (value[6], value[8:])
+			else:
+				url = MMurl.canonURL(value)
+		else:
+			url = self.__path2url(value)
 		if url:
 			self.openURL_callback(url)
 		
@@ -166,7 +171,7 @@ class MainDialog:
 		# this method is called also from the drop stuff
 		# so check for UNC names before calling pathname2url
 		# otherwise it will fail.
-		import longpath, MMurl, os
+		import longpath, os
 		filename = longpath.short2longpath(filename)
 ##		if os.path.isabs(filename):
 ##			cwd = os.getcwd()
@@ -199,3 +204,4 @@ class MainDialog:
 	def grins_web_callback(self, url):
 		import windowinterface
 		helpwindow = windowinterface.shell_execute(url,'open')
+ 
