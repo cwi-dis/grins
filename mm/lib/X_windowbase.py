@@ -816,6 +816,7 @@ class _Window:
 		if self._parent is None:
 			return		# already closed
 		e = call_data.event
+## 		print 'expose',`self`,e.x,e.y,e.width,e.height,e.count
 		# collect redraw regions
 		self._exp_reg.UnionRectWithRegion(e.x, e.y, e.width, e.height)
 		if e.count == 0:
