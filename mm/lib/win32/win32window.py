@@ -1235,7 +1235,6 @@ class SubWindow(Window):
 		self.__releaseDC(src,srcDC)
 		
 		rgn.DeleteObject()			
-
 	
 	# paint while frozen
 	def _paint_4(self):
@@ -1274,7 +1273,8 @@ class SubWindow(Window):
 			self._paint_5()
 			return
 
-		if self._transition and self._transition.ismaster(self):
+		if self._transition and self._transition.isrunning() and\
+				self._transition.ismaster(self):
 			if self._multiElement:
 				if self._childrenClip:
 					self._paint_3()
@@ -1379,7 +1379,8 @@ class SubWindow(Window):
 		self._multiElement = dict.get('multiElement')
 		self._childrenClip = dict.get('childrenClip')
 		self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict)
-		self._transition.begintransition()
+		if runit:
+			self._transition.begintransition()
 
 	def endtransition(self):
 		#print 'endtransition'

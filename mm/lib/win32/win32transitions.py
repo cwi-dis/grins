@@ -40,7 +40,7 @@ class TransitionEngine:
 	def join(self, window, ismaster):
 		"""Join this (sub or super) window to an existing transition"""
 		if ismaster:
-			if self.__isrunning():
+			if self.isrunning():
 				self.windows.insert(0, window)
 				self.__createSurfaces()
 			else:
@@ -54,7 +54,7 @@ class TransitionEngine:
 	def ismaster(self, wnd):
 		return self.windows[0]==wnd
 
-	def __isrunning(self, wnd):
+	def isrunning(self):
 		return self.windows[0]._drawsurf!=None
 
 	def __createSurfaces(self):
