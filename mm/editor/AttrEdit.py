@@ -591,7 +591,9 @@ class NodeWrapper(Wrapper):
 					namelist.append('bottom')
 					namelist.append('scale')
 					namelist.append('sensitivity')
-				
+					namelist.append('regPoint')
+					namelist.append('regAlign')
+					
 			# specific time preference
 			namelist.append('immediateinstantiationmedia')
 			namelist.append('bitratenecessary')
