@@ -648,8 +648,9 @@ class _Window(_AdornmentSupport):
 	def settitle(self, title):
 		self._shell.SetValues({'title': title, 'iconName': title})
 
-	def pop(self):
-		self._shell.Popup(0)
+	def pop(self, poptop=1):
+		if poptop:
+			self._shell.Popup(0)
 
 	def push(self):
 		self._form.LowerWindow()
@@ -1680,7 +1681,7 @@ class _SubWindow(_Window):
 	def setcursor(self, cursor):
 		pass
 
-	def pop(self):
+	def pop(self, poptop=1):
 		parent = self._parent
 		# put self in front of all siblings with equal or lower z
 		if self is not parent._subwindows[0]:
@@ -1702,7 +1703,7 @@ class _SubWindow(_Window):
 					self._pixmap.CopyArea(self._form,
 							      self._gc,
 							      x, y, w, h, x, y)
-		parent.pop()
+		parent.pop(poptop)
 
 	def push(self):
 		parent = self._parent
