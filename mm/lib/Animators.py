@@ -26,8 +26,8 @@ debug = 0
 debugParser = 0
 
 # animateMotion default origin
-# assume origin in ('default', 'layout', 'parent', 'topLayout')
-regionOrigin = 'parent' # smil20-profile ??? IE5.5 defaults to 'layout'
+# assume origin in ('layout', 'parent', 'topLayout')
+regionOrigin = 'parent' # smil20-profile (IE5.5 defaults to 'layout')
 mediaOrigin = 'layout' # smil20-profile
 
 
@@ -136,6 +136,10 @@ class Animator:
 
 		# composition context of this animator
 		self._effectiveAnimator = None
+
+		# transitionFilter
+		self._trtype = None
+		self._trsubtype = None
 
 	def getDOMValue(self):
 		return self._domval
@@ -308,6 +312,10 @@ class Animator:
 
 	def setEffectiveAnimator(self, ea):
 		self._effectiveAnimator = ea
+
+	def setTransition(self, trtype, trsubtype):
+		self._trtype = trtype
+		self._trsubtype = trsubtype
 
 	def _setAutoReverse(self,f):
 		if f: self._autoReverse = 1
@@ -744,6 +752,8 @@ class EffectiveAnimator:
 				self.__animators.remove(animator)			
 		self.__animators.append(animator)
 		animator.setEffectiveAnimator(self)
+		if self.__attr == 'transition':
+			self.__begintransition(animator)
 		if debug: print 'adding animator', animator
 
 		if not self.__chan:
@@ -756,6 +766,8 @@ class EffectiveAnimator:
 			self.__lastanimator = animator
 		if update: self.update(targChan)
 		self.__lastanimator = None
+		if self.__attr == 'transition':
+			self.__endtransition()
 
 	# compute and apply animations composite effect
 	# this method is a notification from some animator 
@@ -786,7 +798,7 @@ class EffectiveAnimator:
 			displayValue = a.clamp(displayValue)
 		
 		# update presentation value
-
+		
 		# handle regions and areas separately
 		if self.__tag == 'region':
 			self.__updateregion(displayValue)
@@ -794,6 +806,10 @@ class EffectiveAnimator:
 		elif self.__tag == 'area':
 			self.__updatearea(displayValue)
 			return
+		elif self.__attr == 'transition':
+			self.__settransitionvalue(displayValue)
+			return
+			
 		elif self.__attr in ('top','left','width','height','right','bottom','position', 'z', 'bgcolor'):
 			self.__updatesubregion(displayValue)
 			return
@@ -985,7 +1001,21 @@ class EffectiveAnimator:
 
 		if debug:
 			print 'update',self.__attr,'of channel',self.__chan._name,'to',value
+	
+	def __begintransition(self, animator):
+		print 'begintransition', animator._trtype, animator._trsubtype
+
+	def __endtransition(self):
+		print 'endtransition'
 			
+	def __settransitionvalue(self, value):
+		if not self.__chan:
+			return
+		chan = self.__chan
+		print 'settransitionvalue', value
+		if chan.window and 0:
+			chan.window.settransitionvalue(value)
+	
 	def getcurrentbasevalue(self, animator=None):
 		cv = self.__domval
 		for a in self.__animators:
@@ -1163,7 +1193,7 @@ class AnimateElementParser:
 		# ['invalid', 'values', 'from-to', 'from-by', 'to', 'by']
 
 		self.__animtype = self.__getAnimationType()
-		if self.__animtype == 'invalid':
+		if self.__animtype == 'invalid' and self.__elementTag!='transitionFilter':
 			print 'Syntax error: Invalid animation values'
 			print '\t',self
 						
@@ -1242,6 +1272,9 @@ class AnimateElementParser:
 		if not self.__hasValidTarget:
 			return None
 		
+		if self.__elementTag=='transitionFilter':
+			return self.__getTransitionFilterAnimator()
+
 		if self.__animtype == 'invalid':
 			return None
 
@@ -1486,6 +1519,48 @@ class AnimateElementParser:
 
 		return anim
 
+	def __getTransitionFilterAnimator(self):
+		if not basicAnimation:
+			return None
+
+		if not self.__hasValidTarget:
+			return None
+
+		# shortcuts
+		attr = self.__grinsattrname
+		accumulate = self.__accumulate
+		additive = self.__additive
+		calcmode = self.__calcMode
+		dur = self.getDuration()
+
+		# check for keyTimes, keySplines
+		if not splineAnimation or calcmode == 'paced':
+			# ignore times and splines for 'paced' animation
+			times = splines = ()
+		else:
+			times = self.__getInterpolationKeyTimes() 
+			splines = self.__getInterpolationKeySplines()
+
+		if self.__animtype == 'invalid':
+			trmode = MMAttrdefs.getattr(self.__anim, 'mode')
+			if trmode=='in':
+				values = (0, 1)
+				self.__domval = 1
+			else:
+				values = (1, 0)
+				self.__domval = 0
+		else:
+			values = self.__getNumInterpolationValues()
+			self.__domval = values[len(values)-1]
+		anim = Animator(attr, self.__domval, values, dur, calcmode, times, splines, accumulate, additive)
+		self.__setTimeManipulators(anim)
+
+		trtype = MMAttrdefs.getattr(self.__anim, 'trtype')
+		trsubtype = MMAttrdefs.getattr(self.__anim, 'subtype')
+		anim.setTransition(trtype, trsubtype)
+
+		return anim
+
 	def getAttrName(self):
 		return self.__attrname
 
@@ -1684,6 +1759,21 @@ class AnimateElementParser:
 			if rc:
 				x, y, w, h = rc
 				self.__domval = complex(x, y)
+				return 1
+			return 0
+	
+		# transitionFilter
+		if self.__elementTag=='transitionFilter':
+			self.__grinsattrname = self.__attrname = 'transition'
+			self.__attrtype = 'float'
+			rc = None
+			if self.__target._type == 'mmnode':
+				self.__mmtarget = self.__target
+				self.__domval = 0
+				return 1
+			elif self.__target._type == 'region':
+				self.__mmtarget = self.__target._region
+				self.__domval = 0
 				return 1
 			return 0
 				
