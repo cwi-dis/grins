@@ -282,6 +282,7 @@ class Index:
 	def add(self, key, value, id):
 		if not key in self._keylist:
 			raise Error, "Key not in keylist: %s"%key
+		value=string.lower(value)
 		keyname = '%s=%s'%(key, value)
 		if self._db.has_key(keyname):
 			new = self._db[keyname] + ',' + id
@@ -290,6 +291,7 @@ class Index:
 		self._db[keyname] = new
 
 	def get(self, key, value):
+		value = string.lower(value)
 		if not key in self._keylist:
 			raise Error, "Key not in keylist: %s"%key
 		keyname = '%s=%s'%(key, value)
