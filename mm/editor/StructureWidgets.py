@@ -540,6 +540,10 @@ class StructureObjWidget(MMNodeWidget):
 		# Called from self.draw or from the mother when selection is changed.
 		displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 
+	def draw_box(self, displist):
+		displist.fgcolor((0,0,0))
+		displist.drawbox(self.get_box())
+
 	def draw(self, displist):
 		# This is a base class for other classes.. this code only gets
 		# called once the aggregating node has been called.
@@ -1346,6 +1350,10 @@ class MediaWidget(MMNodeWidget):
 		displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 		self.__draw(displist)
 
+	def draw_box(self, displist):
+		displist.fgcolor((0,0,0))
+		displist.drawbox(self.get_box())
+
 	def draw(self, displist):
 		# Only draw unselected.
 		willplay = not self.mother.showplayability or self.node.WillPlay()
@@ -1547,6 +1555,9 @@ class PushBackBarWidget(MMWidgetDecoration):
 		displist.drawfbox(COLCOLOR, (x, y, w*redfraction, h))
 		displist.drawfbox(LEAFCOLOR, (x+redfraction, y, w*(1-redfraction), h))
 		displist.drawbox(self.get_box())
+
+	def draw_box(self, displist):
+		self.parent.draw_box(displist)
 
 	def select(self):
 		self.parent.select()
