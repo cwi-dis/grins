@@ -429,16 +429,18 @@ class SchedulerContext:
 					if debugevents: print 'node not playing',parent.timefunc()
 					return
 				if debugevents: print 'terminating node',parent.timefunc()
-				self.do_terminate(node, timestamp, fill = node.GetFill())
-				if not parent.playing:
-					return
 				pnode = node.GetSchedParent()
 				if pnode is not None and \
 				   pnode.type == 'excl' and \
 				   pnode.pausestack:
-					node = pnode.pausestack[0]
+					nnode = pnode.pausestack[0]
 					del pnode.pausestack[0]
-					self.do_resume(node, timestamp)
+					self.do_terminate(node, timestamp)
+					if not parent.playing:
+						return
+					self.do_resume(nnode, timestamp)
+				else:
+					self.do_terminate(node, timestamp, fill = node.GetFill())
 				return
 		pnode = node.GetSchedParent()
 		if not pnode:
