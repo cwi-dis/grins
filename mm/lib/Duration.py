@@ -11,8 +11,9 @@ def get(node):
 	# in the player.
 	if hasattr(node.attrdict, 'fduration'):
 		return node.attrdict['fduration']
+	duration = MMAttrdefs.getattr(node, 'duration')
 	channel = node.GetChannel()
-	if channel is not None and channel.has_key('type'):
+	if duration == 0 and channel is not None and channel.has_key('type'):
 		context = node.GetContext()
 		ctype = channel['type']
 		filename = MMAttrdefs.getattr(node, 'file')
@@ -41,4 +42,4 @@ def get(node):
 				return SoundDuration.get(filename)
 			except IOError, msg:
 				print filename, msg
-	return MMAttrdefs.getattr(node, 'duration')
+	return duration
