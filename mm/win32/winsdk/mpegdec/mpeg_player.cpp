@@ -137,7 +137,6 @@ bool mpeg_player::set_input_stream(mpeg_input_stream *in_stream)
 		return false;
 		}
 	pinstream = in_stream; // become owner
-	set_audio_input_stream(pinstream);
 	decoder->initialize_sequence();
 	decoder->get_display_info(*di);
 	return true;
@@ -158,6 +157,7 @@ bool mpeg_player::set_audio_input_stream(mpeg_input_stream *in_stream)
 			return false;
 			}
 		mpeg2.read_audio(pwavout->get_data_ref());
+		
 		if(!pwavout->prepare_playback())
 			{
 			delete pwavout;

@@ -77,7 +77,10 @@ PyObject* Winmm_CreateVideoPlayerFromFile(PyObject *self, PyObject *args)
 	// find/create decoder/player for given file
 	player = new mpeg_player();
 	if(player->set_input_stream(instream))
+		{
+		player->set_audio_input_stream(instream);
 		return (PyObject*)PyVideoPlayer::createInstance(player);
+		}
 
 	delete player;
 	delete instream;
