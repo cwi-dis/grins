@@ -601,10 +601,10 @@ class SMILHtmlTimeWriter(SMIL):
 		if tag == 'animateMotion':
 			from Animators import AnimateElementParser
 			aparser = AnimateElementParser(node)
-			fromxy = aparser.translatePosAttr('from')
-			toxy = aparser.translatePosAttr('to')
-			values = aparser.translatePosValues()
-			path = aparser.translatePath()
+			fromxy = aparser.toDOMOriginPosAttr('from')
+			toxy = aparser.toDOMOriginPosAttr('to')
+			values = aparser.toDOMOriginPosValues()
+			path = aparser.toDOMOriginPath()
 
 		attributes = self.attributes.get(tag, {})
 		for name, func in smil_attrs:
