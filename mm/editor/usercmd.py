@@ -134,6 +134,8 @@ class CLOSE(_CommandBase):
 	help = 'Close current document'
 class CHECKVERSION(_CommandBase):
 	help = 'Check for newer versions of the software'
+class REGISTER(_CommandBase):
+	help = 'Register this product with Oratrix'
 
 #
 # TopLevel commands
