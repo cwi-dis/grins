@@ -7,7 +7,6 @@ from windowinterface import *
 from types import *
 
 error = 'windowinterface.error'
-SINGLE, HTM, TEXT, MPEG = 0, 1, 2, 3
 FALSE, TRUE = 0, 1
 ReadMask, WriteMask = 1, 2
 WM_MAINLOOP = 200
@@ -31,6 +30,7 @@ a_window=None
 [OPAQUE, TRANSPARENT] = range(2)
 [HIDDEN, SHOWN] = range(2)
 [ARROW, WAIT, HAND, START] = range(4)
+
 [SINGLE, HTM, TEXT, MPEG] = range(4)
 
 win32Cursors = { 'hand':HAND, 'watch':WAIT, '':ARROW, 'start':START }
@@ -352,6 +352,7 @@ class _Window:
 		self._do_init(parent)
 
 		self._align = ''		
+		self._scale = 0.0
 		self._title = title
 		self._topwindow = self
 		self._window_state = HIDDEN
@@ -367,7 +368,8 @@ class _Window:
 		self._window_type = type_channel
 		self._resize_flag = 0
 		self._render_flag = 0		
-		
+		self._sizes = x, y, w, h
+
 		# conversion factors to convert from mm to relative size
 		# (this uses the fact that _hfactor == _vfactor == 1.0
 		# in toplevel)
@@ -407,8 +409,8 @@ class _Window:
 			self._hWnd = Htmlex.CreateWindow(title, x, y, w, h, 0)
 		elif (type_channel == TEXT) :
 			#print "Text Window"
-			#self._hWnd = textex.CreateWindow(title, x, y, w, h, 0)
-			self._hWnd = cmifex.CreateWindow(title, x, y, w, h, 0)
+			self._hWnd = textex.CreateWindow(title, x, y, w, h, 0)
+			#self._hWnd = cmifex.CreateWindow(title, x, y, w, h, 0)
 		else :
 			print 'UnKnown window type - SINGLE USED AS BACKUP'
 			self._hWnd = cmifex.CreateWindow(title, x, y, w, h, 0)
@@ -421,11 +423,11 @@ class _Window:
 		self._hfactor = parent._hfactor / (w/toplevel._hmm2pxl)
 		self._vfactor = parent._vfactor / (h/toplevel._vmm2pxl)
 		self._rect = 0, 0, w, h
-
+		
 		#self._placement = x, y, width, height
 		self._placement = self._hWnd.GetWindowPlacement()
 		#self._expose_callback(100)
-		self._event_list = [PAINT, SIZE, LBUTTONDOWN, SET_CURSOR] #, WIN_DESTROY]
+		self._event_list = [PAINT, SIZE, LBUTTONDOWN, SET_CURSOR, WIN_DESTROY]
 		self._enable_events()
 		if visible:
 			self._hWnd.ShowWindow(win32con.SW_SHOW)
@@ -451,7 +453,7 @@ class _Window:
 			if event == SET_CURSOR:
 				self._hWnd.HookMessage(self._setcursor_callback, win32con.WM_SETCURSOR)
 			if event == WIN_DESTROY:
-				self._hWnd.HookMessage(self._destroy_callback, win32con.WM_DESTROY)
+				self._hWnd.HookMessage(self._destroy_callback, win32con.WM_CLOSE)
 
 	def _do_init(self, parent):
 		parent._subwindows.insert(0, self)
@@ -511,18 +513,18 @@ class _Window:
 	def is_closed(self):
 		return self._parent is None
 
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, type_channel = SINGLE):
-		win = _SubWindow(self, type_channel, coordinates, 0, pixmap, transparent)
+	def newwindow(self, coordinates, transparent = 0, pixmap = 0, type_channel = SINGLE):
+		win = _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap)
 		win._window_state = HIDDEN
 		return win
 
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, type_channel = SINGLE):
-		win = _SubWindow(self, type_channel, coordinates, 1, pixmap, transparent)
+	def newcwindow(self, coordinates, transparent = 0, pixmap = 0, type_channel = SINGLE):
+		win = _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap)
 		win._window_state = HIDDEN
 		return win
 		
 	def showwindow(self):
-		print "Highlight Show the window"
+		#print "Highlight Show the window"
 		pass
 		
 	def dontshowwindow(self):
@@ -565,7 +567,8 @@ class _Window:
 		pass
 
 	def getgeometry(self):
-		return self._rect
+		#print "GetGeometry for Window, ", self._title
+		return self._sizes
 
 	def pop(self):
 		#self._hWnd.MessageBox("POP Window", "Debug", win32con.MB_OK)
@@ -645,15 +648,19 @@ class _Window:
 		return px, py, pw, ph
 		
 	def _prepare_image(self, file, crop, scale):
-		imageHandle, l, t, r, b = imageex.PrepareImage(self._hWnd, file)
+		imageHandle, l, t, r, b = imageex.PrepareImage(self._hWnd, file, scale)
 		return imageHandle, l, t, r, b
 
 	def _setcursor_callback(self, params):
 		_win_setcursor(self._hWnd, self._cursor)
 
 	def _destroy_callback(self, params):
-		#self._hWnd.MessageBox("Close TopWindow!", "Debug", win32con.MB_OK)
-		self.close()
+		try:
+			func, arg = self._callbacks[WindowExit]			
+		except KeyError:
+			pass
+		else:
+			func(arg, self, WindowExit, None)
 
 	def _expose_callback(self, params):
 		if self._parent is None:
@@ -679,7 +686,7 @@ class _Window:
 			self._active_displist._render(hWnd, 1)	
 					
 	def _resize_callback(self, params):	
-		print "_______Resize Callback: ", self._title
+		#print "_______Resize Callback: ", self._title
 		a, b, width, height = self._hWnd.GetClientRect()
 		if width==0 or height==0:
 			#We've been Iconified
@@ -759,7 +766,7 @@ class _Window:
 		
 
 class _BareSubWindow:
-	def __init__(self, parent, type_channel, coordinates,  defcmap, pixmap, transparent):
+	def __init__(self, parent, coordinates, transparent, type_channel, defcmap, pixmap):
 		px, py, pw, ph = parent._convert_coordinates(coordinates)
 		if pw == 0: pw = 1
 		if ph == 0: ph = 1	
@@ -815,8 +822,8 @@ class _BareSubWindow:
 		elif (type_channel == HTM) :
 			self._hWnd = Htmlex.CreateChildWindow(self._title, parent._hWnd, px, py, pw, ph)
 		elif (type_channel == TEXT) :
-			#self._hWnd = textex.CreateChildWindow(self._title, parent._hWnd, px, py, pw, ph)
-			self._hWnd = cmifex.CreateChildWindow(self._title, parent._hWnd, px, py, pw, ph)
+			self._hWnd = textex.CreateChildWindow(self._title, parent._hWnd, px, py, pw, ph)
+			#self._hWnd = cmifex.CreateChildWindow(self._title, parent._hWnd, px, py, pw, ph)
 		else :
 			print 'UnKnown window type - SINGLE USED AS BACKUP'
 			self._hWnd = cmifex.CreateChildWindow(self._title, parent._hWnd, px, py, pw, ph)
@@ -830,7 +837,7 @@ class _BareSubWindow:
 		cmifex.SetBGColor(self._hWnd, r, g, b)
 
 		#self._event_list = [PAINT, SIZE, LBUTTONDOWN]
-		self._event_list = [PAINT, LBUTTONDOWN, SET_CURSOR] #, WIN_DESTROY]
+		self._event_list = [PAINT, LBUTTONDOWN, SET_CURSOR, WIN_DESTROY]
 		self._enable_events()
 
 		#parent._mkclip()
@@ -847,12 +854,16 @@ class _BareSubWindow:
 		return '<_BareSubWindow instance at %x>' % id(self)
 
 	def _destroy_callback(self, params):
-		#self._hWnd.MessageBox("Close SubWindow!", "Debug", win32con.MB_OK)
-		self.close()
+		try:
+			func, arg = self._callbacks[WindowExit]			
+		except KeyError:
+			pass
+		else:
+			func(arg, self, WindowExit, None)
 
 	def close(self):
 		#self._hWnd.MessageBox("_BareSubWindow %s"%self._title, "Debug", win32con.MB_OK)
-		print "_BareSubWindow.Close %s"%self._title
+		#print "_BareSubWindow.Close %s"%self._title
 		parent = self._parent
 		self.hide()
 		if parent is None:
@@ -879,8 +890,8 @@ class _BareSubWindow:
 		raise error, 'can only settitle at top-level'
 
 	def getgeometry(self):
+		#print "GetGeometry for BareSubWindow, ", self._title
 		return self._sizes
-
 
 	def pop(self):
 		#self._hWnd.MessageBox("POP BareSub", "Debug", win32con.MB_OK)
@@ -1011,7 +1022,7 @@ class _DisplayList:
 	def close(self):
 		win = self._window
 		#win._hWnd.MessageBox("DisplayList.Close!", "Debug", MB_OK)
-		print "DisplayList.Close!"
+		#print "DisplayList.Close!"
 		if win is None:
 			return
 		#win.hide()		
@@ -1135,7 +1146,7 @@ class _DisplayList:
 		elif cmd == 'image':		
 			mask = entry[1]
 			r, g, b = w._bgcolor
-			imageex.PutImage(w._hWnd, entry[2], r, g, b)
+			imageex.PutImage(w._hWnd, entry[2], r, g, b, w._scale)
 #			if mask:
 #				# mask is clip mask for image
 #				width, height = w._topwindow._rect[2:]
@@ -1178,9 +1189,11 @@ class _DisplayList:
 			fontname = entry[1]
 			pointsize = entry[2]
 			id, str = entry[3:]
-			fontColor = 0, 0, 0
+			#fontColor = 0, 0, 0
+			fontColor = w._fgcolor
 			textex.PutText(id, w._hWnd, str, fontname, pointsize, TRANSPARENT, self._bgcolor, fontColor,w._align)
 			#textex.PutText(id, w._hWnd, str, fontname, pointsize, TRANSPARENT, self._bgcolor, fontColor)
+			self.update_boxes(w._hWnd)
 			pass
 		elif cmd == 'linewidth':
 			#gc.line_width = entry[1]
@@ -1188,11 +1201,14 @@ class _DisplayList:
 		#w.show()
 
 
+
 	def update_boxes(self, hWnd):
-		#print "in update_boxes"
-		xdif, ydif = textex.GetScrollPos(hWnd)
+		print "in update_boxes"
+		ydif = textex.GetScrollPos(hWnd)
+		if ydif == 0:
+			return
 		textex.ClearXY(hWnd)
-		#print "xdif ydif-->", xdif, ydif
+		print "ydif-->", ydif
 		#dif = oldscrollpos-scrollpos
 		#print "self._buttons[0]->>>", self._buttons[0]
 		if self._buttons==[]:
@@ -1203,9 +1219,9 @@ class _DisplayList:
 			#print "before buttons-->", l
 			if l[0] == 'box':				
 				tuple = l[1]
-				x1 = tuple[0]+xdif
+				x1 = tuple[0]
 				y1 = tuple[1]+ydif
-				x2 = tuple[2]+xdif
+				x2 = tuple[2]
 				y2 = tuple[3]+ydif
 				temptuple = (x1,y1,x2,y2)
 				l = ('box', temptuple)
@@ -1433,7 +1449,7 @@ class _Button:
 
 	def close(self):
 		wnd = self._dispobj._window._hWnd
-		print "Buttons.Close!"
+		#print "Buttons.Close!"
 		if self._dispobj is None:
 			return
 		self._dispobj._buttons.remove(self)
@@ -1698,7 +1714,8 @@ def beep():
 	sys.stderr.write('\7')
 
 def _win_setcursor(form, cursor):
-	#print "+++++++++++++++: Cursor: ", cursor
+	if cursor != '':
+		print "+++++++++++++++: Cursor: ", cursor
 	if cursor!='watch' and cursor!='start' and cursor!='hand':
 		cursor = ''
 	cmifex.SetCursor(win32Cursors[cursor])
@@ -1715,10 +1732,4 @@ def _win_setcursor(form, cursor):
 		form.UndefineCursor()
 	else:
 		raise error, 'unknown cursor glyph'
-
-
-
-16
-
-
 

@@ -10,15 +10,14 @@ class ImageChannel(ChannelWindow):
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
+		self._visible = 1
 
 	def __repr__(self):
 		return '<ImageChannel instance, name=' + `self._name` + '>'
 
 	def do_arm(self, node, same=0):
-		#print "----------------ImageChannel-----------------------"
 		if same and self.armed_display:
 		        return 1
-		#print "----------------ImageChannel2-----------------------"
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
@@ -30,6 +29,7 @@ class ImageChannel(ChannelWindow):
 		# remember coordinates for anchor editing (and only for that!)
 		try:
 			self._arm_imbox = self.armed_display.display_image_from_file(f, scale = MMAttrdefs.getattr(node, 'scale'), crop = MMAttrdefs.getattr(node, 'crop'))
+			self.window._scale = MMAttrdefs.getattr(node, 'scale')
 		except (windowinterface.error, IOError), msg:
 			if type(msg) == type(()):
 				msg = msg[1]
@@ -42,11 +42,13 @@ class ImageChannel(ChannelWindow):
 			alist = []
 		self.armed_display.fgcolor(self.getbucolor(node))
 		hicolor = self.gethicolor(node)
+		# Calculate the image's coordinates of upper left corner,
+		# its width and height   
 		imagex = int(self._arm_imbox[0] * self.window._rect[2] ) #+ self.window._rect[0]
 		imagey = int(self._arm_imbox[1] * self.window._rect[3] ) #+ self.window._rect[1]
 		imagew = int(self._arm_imbox[2] * self.window._rect[2] )
 		imageh = int(self._arm_imbox[3] * self.window._rect[3] )
-		#print "IMAGE DIMENSIONS-->", imagex, imagey, imagew, imageh
+		
 		for a in alist:
 			args = a[A_ARGS]
 			if len(args) == 0:
@@ -59,25 +61,26 @@ class ImageChannel(ChannelWindow):
 			if args == [0, 0, 1, 1]:
 			    continue
 			x, y, w, h = args[0], args[1], args[2], args[3]
+			# The anchor's button coordinates in pixels.
 			butx = int(x * imagew )
 			buty = int(y * imageh )
+			
 			if butx == 0:
 				butw = int(w * imagew)
 			else:
 				butw = int(w * imagew + 0.5)+2
+			
 			if butx == 0:
 				buth = int(h * imageh)
 			else:
 				buth = int(h * imageh + 0.5)+2
-			#print "BUTTON DIMENSIONS-->", butx, buty, butw, buth
+			
+			# The anchor's button coordinates in 0-1 scale.
 			x = (float(butx) + float(imagex)) / (float(self.window._rect[2]) - 1.0)
 			y = (float(buty) + float(imagey)) / (float(self.window._rect[3]) - 1.0)
 			w = float(butw) / (float(self.window._rect[2]) - 1.0)
 			h = float(buth) / (float(self.window._rect[3]) - 1.0)
 			
-			#print "x, y, w, h", x, y, w, h
-			#b = self.armed_display.newbutton((x, y, w, h))
-			#b = self.armed_display.newbutton((x+0.000000000005, y+0.000000000005, w+x+0.000000000005, h+y+0.000000000005))
 			b = self.armed_display.newbutton((x, y, w+x, h+y))
 			b.hiwidth(3)
 			b.hicolor(hicolor)
@@ -117,8 +120,8 @@ class ImageChannel(ChannelWindow):
 				pass
 			box = self.convert_args(f, box)
 			# convert coordinates from image size to window size.
-			#print "defanchor.ArmIMBOX: ", self._arm_imbox
-			#print "Box: ", box
+			print "defanchor.ArmIMBOX: ", self._arm_imbox
+			print "Box: ", box
 			x = box[0] * self._arm_imbox[2] + self._arm_imbox[0]
 			y = box[1] * self._arm_imbox[3] + self._arm_imbox[1]
 			w = box[2] * self._arm_imbox[2]
@@ -129,8 +132,8 @@ class ImageChannel(ChannelWindow):
 		self.stopcontext(self._anchor_context)
 		if len(box) == 4:
 			# convert coordinates from window size to image size.
-			#print "BoxCB.ArmIMBOX: ", self._arm_imbox
-			#print "Box: ", box
+			print "BoxCB.ArmIMBOX: ", self._arm_imbox
+			print "Box: ", box
 			x = (box[0] - self._arm_imbox[0]) / self._arm_imbox[2]
 			y = (box[1] - self._arm_imbox[1]) / self._arm_imbox[3]
 			w = box[2] / self._arm_imbox[2]
@@ -150,7 +153,6 @@ class ImageChannel(ChannelWindow):
 	# the conversion since the offsets are already fractions of
 	# the image.
 	def convert_args(self, file, args):
-		#print "-------convert_args---------"
 		need_conversion = 1
 		for a in args:
 			if a != int(a):	# any floating point number
@@ -169,6 +171,5 @@ class ImageChannel(ChannelWindow):
 			x0, x1 = x1, x0
 		if y0 > y1:
 			y0, y1 = y1, y0
-		#print "-------out of convert_args---------"
 		return float(x0)/float(xsize), float(y0)/float(ysize), \
 			  float(x1-x0)/float(xsize), float(y1-y0)/float(ysize)
