@@ -33,6 +33,8 @@ PLAYED = 3
 import settings
 CMIF_MODE = settings.get('cmif')
 
+ACTIVATEEVENT = 'activateEvent'
+
 def isin(elem, list):
 	# faster than "elem in list"
 	for x in list:
@@ -80,12 +82,15 @@ class Channel:
 		self._want_shown = 0
 		self._highlighted = None
 		self._in_modeless_resize = 0
+		self.armBox = (0.0, 0.0, 1.0, 1.0) # by default all window area
+		self.playBox = (0.0, 0.0, 1.0, 1.0) # by default all window area
 		self.nopop = 0
 		self.syncarm = settings.noprearm
 		self.syncplay = 0
 		self.is_layout_channel = 0
 		self.seekargs = None
-		self._anchor2button = {}
+		self._armed_anchor2button = {}
+		self._played_anchor2button = {}
 		self._hide_pending = 0
 		if debug:
 			print 'Channel() -> '+`self`
@@ -551,6 +556,7 @@ class Channel:
 		self._playcontext = self._armcontext
 		self._playstate = PLAYING
 		self._played_node = node
+		self.playBox = self.armBox
 		self._anchors = {}
 		self._played_anchors = self._armed_anchors[:]
 		durationattr = node.GetAttrDef('duration', None)
@@ -570,24 +576,42 @@ class Channel:
 		else:
 			self._has_pause = 0
 		for (name, type, button, times) in self._played_anchors:
-			if name is None and type is None:
-				f = self.onclick
-			elif type == ATYPE_PAUSE:
+			if type == ATYPE_PAUSE:
 ##				print 'found pause anchor'
-				f = self.pause_triggered
 				self._has_pause = 1
-			else:
-				f = self.anchor_triggered
-			self._anchors[button] = f, (node, [(name, type)], None)
+			self._anchors[button] = self.onclick, (node, [(name, type)], None)
 		self._qid = None
 
-	def onclick(self, *unused):
-		self.event('activateEvent')
-
-	def event(self, event):
+	def onclick(self, node, anchorlist, arg):
 		timestamp = self._scheduler.timefunc()
-		self._played_node.event(timestamp, event)
-		self._playcontext.sched_arcs(self._played_node, event, timestamp=timestamp)
+		for (anchorname, type) in anchorlist:
+			if anchorname is not None:
+				anchor = node.GetUID(), anchorname
+				if self._player.context.hyperlinks.findsrclinks(anchor):
+					if type == ATYPE_PAUSE:
+						f = self.pause_triggered
+					else:
+						f = self.anchor_triggered
+					return f(node, anchorlist, arg)
+
+			# check if anchor is source of event
+			for arc in node.sched_children:
+				if arc.srcanchor == anchorname and \
+				   arc.event == ACTIVATEEVENT:
+					if anchorname is None:
+						self.event(ACTIVATEEVENT, timestamp)
+					else:
+						self.event(ACTIVATEEVENT, timestamp, arc)
+
+	def event(self, event, timestamp = None, arc = None):
+		if timestamp is None:
+			timestamp = self._scheduler.timefunc()
+		if arc is None:
+			self._played_node.event(timestamp, event)
+			self._playcontext.sched_arcs(self._played_node, event, timestamp=timestamp)
+		else:
+			self._played_node.event(timestamp, event, arc.srcanchor)
+			self._playcontext.sched_arc(self._played_node, arc, event, timestamp=timestamp)
 
 	def play_1(self):
 		# This does the final part of playing a node.  This
@@ -934,15 +958,20 @@ class Channel:
 	#
 	# Methods used by derived classes.
 	#
-	def setanchor(self, name, type, button, times):
+	def setanchor(self, name, type, button, times, arming = 1):
 		# Define an anchor.  This method should be called by
 		# superclasses to define an anchor while arming.  Name
 		# is the name of the anchor, type is its type, button
 		# is a button object which, when pressed, triggers the
 		# anchor.
-		self._armed_anchors.append((name, type, button, times))
-		if name is not None:
-			self._anchor2button[name] = button
+		if arming:
+			self._armed_anchors.append((name, type, button, times))
+			if name is not None:
+				self._armed_anchor2button[name] = button
+		else:
+			self._played_anchors.append((name, type, button, times))
+			if name is not None:
+				self._played_anchor2button[name] = button
 
 	def getfileurl(self, node, animated=0):
 		name = node.GetAttrDef('name', None)
@@ -1372,6 +1401,9 @@ class ChannelWindow(Channel):
 	def getArmBox(self):
 		return self.armBox
 
+	def getPlayBox(self):
+		return self.playBox
+
 	def create_window(self, pchan, pgeom, units = None):
 ##		menu = []
 		if pchan:
@@ -1624,14 +1656,6 @@ class ChannelWindow(Channel):
 			bgcolor = self.getbgcolor(node)
 		self.armed_display = self.window.newdisplaylist(bgcolor)
 
-		for arc in node.sched_children:
-			if arc.event == 'activateEvent':
-				self.armed_display.fgcolor(bgcolor)
-				# Warning: This line select all the region
-				b = self.armed_display.newbutton([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z = -1)
-				self.setanchor(None, None, b, None)
-				break
-
 		# by default all window area
 		self.armBox = (0.0, 0.0, 1.0, 1.0)
 
@@ -1639,40 +1663,10 @@ class ChannelWindow(Channel):
 		fgcolor = self.getfgcolor(node)
 		self.armed_display.fgcolor(fgcolor)
 
-		# WARNING: Can't be done here: we don't know at this point the real display area size of
-		# media. So we can't create the sensitive button here. Otherwise we have to select all region, and
-		# not just the media area !. Instead, this code is done is _prepareAnchors method
-
-#		alist = node.GetRawAttrDef('anchorlist', [])
-#		armed_anchor = None
-
-#		for i in range(len(alist)-1,-1,-1):
-#			a = alist[i]
-#			atype = a[A_TYPE]
-#			if atype == ATYPE_WHOLE:
-#				anchor = node.GetUID(), a[A_ID]
-#				if not self._player.context.hyperlinks.findsrclinks(anchor):
-#					continue
-#				if armed_anchor:
-#					print 'multiple whole-node anchors on node'
-#				armed_anchor = a
-#		if armed_anchor:
-#			if MMAttrdefs.getattr(node, 'drawbox'):
-#				self.armed_display.fgcolor(self.getbucolor(node))
-#			else:
-#				self.armed_display.fgcolor(bgcolor)
-#			b = self.armed_display.newbutton([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], times = armed_anchor[A_TIMES])
-#			b.hiwidth(3)
-#			b.hicolor(self.gethicolor(node))
-#			self.armed_display.fgcolor(fgcolor)
-#			self.setanchor(armed_anchor[A_ID],
-#				       armed_anchor[A_TYPE], b,
-#				       armed_anchor[A_TIMES])
-
 		return 0
 
-	# Active an sensitive area in display list according to the anchors.
-	# Warning: this method have to be called after do_arm
+	# Activate a sensitive area in display list according to the anchors.
+	# Warning: this method has to be called after do_arm
 	def _prepareAnchors(self, node):
 		drawbox = MMAttrdefs.getattr(node, 'drawbox')
 		if drawbox:
@@ -1684,42 +1678,73 @@ class ChannelWindow(Channel):
 				bgcolor = self.getbgcolor(node)
 			self.armed_display.fgcolor(bgcolor)
 		hicolor = self.gethicolor(node)
-		for a in node.GetRawAttrDef('anchorlist', []):
+
+		b = None
+		for arc in node.sched_children:
+			if arc.event == ACTIVATEEVENT and \
+			   arc.srcanchor is None:
+				if b is None:
+					windowCoordinates = self.convertShapeRelImageToRelWindow([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0])
+					b = self.armed_display.newbutton(windowCoordinates, z = -1, sensitive = 1)
+				self.setanchor(None, None, b, None)
+
+		for a in MMAttrdefs.getattr(node, 'anchorlist'):
 			coordinates = a[A_ARGS]
 			atype = a[A_TYPE]
-			if atype not in SourceAnchors or atype in (ATYPE_AUTO, ):
-#			if atype not in SourceAnchors or atype in (ATYPE_AUTO, ATYPE_WHOLE):
-				continue
-#			if atype == ATYPE_WHOLE:
-				# whole node already done
-#				continue
+			sensitive = 1
+			if atype not in SourceAnchors or \
+			   atype in (ATYPE_AUTO, ):
+				sensitive = 0
 			anchor = node.GetUID(), a[A_ID]
 			if not self._player.context.hyperlinks.findsrclinks(anchor):
-				continue
+				sensitive = 0
 
 			# convert coordinates to relative image size
 			relativeCoordinates = self.convertShapeToRelImage(node, coordinates)
 			# convert coordinates from relative image to relative window size
 			windowCoordinates = self.convertShapeRelImageToRelWindow(relativeCoordinates)
 
-			b = self.armed_display.newbutton(windowCoordinates, times = a[A_TIMES])
+			b = self.armed_display.newbutton(windowCoordinates, times = a[A_TIMES], sensitive = sensitive)
 			b.hiwidth(3)
 			if drawbox:
 				b.hicolor(hicolor)
 			self.setanchor(a[A_ID], atype, b, a[A_TIMES])
 
+		for arc in node.sched_children:
+			if arc.event == ACTIVATEEVENT and \
+			   arc.srcanchor is not None:
+				b = self._armed_anchor2button.get(arc.srcanchor)
+				if b is None:
+					continue
+				b.setsensitive(1)
+
 	def add_arc(self, node, arc):
-		if node is self._played_node and arc.event == 'activateEvent':
-			d = self.played_display.clone()
-			d.fgcolor(self.getbgcolor(node))
+		if node is not self._played_node or \
+		   arc.event != ACTIVATEEVENT:
+			return
+		d = self.played_display.clone()
+		d.fgcolor(self.getbgcolor(node))
+		if arc.srcanchor is not None:
+			for a in MMAttrdefs.getattr(node, 'anchorlist'):
+				if a[A_ID] != arc.srcanchor:
+					continue
+				relativeCoordinates = self.convertShapeToRelImage(node, a[A_ARGS])
+				windowCoordinates = self.convertShapeRelImageToRelWindow(relativeCoordinates)
+				b = self.armed_display.newbutton(windowCoordinates, times = a[A_TIMES])
+				break
+			else:
+				# no matching anchor found
+				d.close()
+				return
+		else:
 			b = d.newbutton([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z = -1)
-			self._played_anchors.append((None, None, b, None))
-			self._anchors[b] = self.onclick, (node, [(None, None)], None)
-			if self._paused >= 0:
-				# don't render when paused and hidden
-				d.render()
-			self.played_display.close()
-			self.played_display = d
+		self.setanchor(arc.srcanchor, None, b, None, arming = 0)
+		self._anchors[b] = self.onclick, (node, [(None, None)], arc)
+		if self._paused >= 0:
+			# don't render when paused and hidden
+			d.render()
+		self.played_display.close()
+		self.played_display = d
 
 	# get the space display area of media according to registration points
 	# return pourcent values relative to the subregion or region
@@ -2099,19 +2124,22 @@ class ChannelWindow(Channel):
 	# For this, we need to know the real size of media which fit inside the region
 	# --> method getArmBox (channel dependent)
 	# This box is known only after the call of do_arm method
-	def convertShapeRelImageToRelWindow(self, args):
+	def convertShapeRelImageToRelWindow(self, args, arming = 1):
 		shapeType = args[0]
 
-		armBox = self.getArmBox()
+		if arming:
+			box = self.getArmBox()
+		else:
+			box = self.getPlayBox()
 		rArgs = [shapeType]
 		n=0
 		for a in args[1:]:
 			# test if xCoordinates or yCoordinates
 			if n%2 == 0:
 				# convert coordinates from image to window size
-				rArgs.append(a*armBox[2] + armBox[0])
+				rArgs.append(a*box[2] + box[0])
 			else:
-				rArgs.append(a*armBox[3] + armBox[1])
+				rArgs.append(a*box[3] + box[1])
 			n = n+1
 
 		return rArgs

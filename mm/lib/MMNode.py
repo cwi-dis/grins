@@ -1196,8 +1196,12 @@ class MMNode:
 				if arc.delay <= time - t:
 					self.sctx.trigger(arc)
 
-	def event(self, time, event):
-		self.happenings[('event', event)] = time
+	def event(self, time, event, anchorname = None):
+		if anchorname is None:
+			key = ('event', event)
+		else:
+			key = ('event', anchorname, event)
+		self.happenings[key] = time
 
 	def marker(self, time, marker):
 		self.happenings[('marker', marker)] = time
