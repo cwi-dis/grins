@@ -437,6 +437,10 @@ SOURCE=.\M_GenFormView.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_GenView.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_GenWnd.c
 # End Source File
 # Begin Source File
@@ -1186,6 +1190,10 @@ SOURCE=.\M_windowinterface.c
 # Begin Source File
 
 SOURCE=.\M_winerror.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_winlayout.c
 # End Source File
 # Begin Source File
 
