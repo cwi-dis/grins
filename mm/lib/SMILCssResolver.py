@@ -174,6 +174,8 @@ class Node:
 			self.unlink()
 		self.container = container
 		container.children.append(self)
+		if container is self:
+			raise 'SmilCssResolver: link failed: container is child ',container
 
 	def unlink(self):
 		self.isInit = 0
@@ -201,6 +203,8 @@ class Node:
 			return
 
 		if self.container == None:
+			self.isInit = 1
+			self.dump()
 			raise 'SmilCssResolver: init failed, no root node'
 
 		self.container._toInitState()		
