@@ -581,7 +581,7 @@
 (path (string) '' 'Path' default
 	'Motion path' normal (g2 qt smil10 smil2 cmif))
 
-(origin (string) '' 'Origin' default
+(origin (enum parent element) parent 'Origin' default
 	'Coordinates origin' normal (g2 qt smil10 smil2 cmif))
 
 

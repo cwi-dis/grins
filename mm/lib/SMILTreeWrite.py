@@ -767,6 +767,12 @@ def getadditive(writer, node):
 		return None
 	return additive
 
+def getorigin(writer, node):
+	origin = node.GetRawAttrDef('origin', 'parent')
+	if origin == 'parent':
+		return None
+	return 'element'
+
 def getcalcmode(writer, node):
 	mode = node.GetRawAttrDef('calcMode', 'linear')
 	tag = node.GetRawAttrDef('atag', 'animate')
@@ -894,7 +900,7 @@ smil_attrs=[
 	("by", lambda writer, node: node.GetRawAttrDef("by", None), "by"),
 	("values", lambda writer, node: node.GetRawAttrDef("values", None), "values"),
 	("path", getpath, "path"),
-	("origin", lambda writer, node: node.GetRawAttrDef("origin", None), "origin"),
+	("origin", getorigin, "origin"),
 	("accumulate", getaccumulate, "accumulate"),
 	("additive", getadditive, "additive"),
 	("calcMode", getcalcmode, None),

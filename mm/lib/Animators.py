@@ -27,8 +27,8 @@ debug = 0
 debugParser = 0
 
 # animateMotion default origin
-# assume origin in ('layout', 'parent', 'topLayout')
-regionOrigin = 'parent' # smil20-profile (IE5.5 defaults to 'layout')
+# assume origin in ('element', 'parent')
+regionOrigin = 'parent' # smil20-profile (IE5.5 defaults to 'element')
 mediaOrigin = 'parent' # smil20-profile
 
 
@@ -1339,10 +1339,12 @@ class AnimateElementParser:
 					anim = EffValueAnimator(attr, domval, v, dur, mode, times, splines, accumulate, additive)
 				elif self.__attrtype == 'color':
 					values = self.__getColorValues()
-					anim = EffColorAnimator(attr, domval, values, dur, mode, times, splines, accumulate, additive)
+					if values:
+						anim = EffColorAnimator(attr, domval, values, dur, mode, times, splines, accumulate, additive)
 				elif self.__attrtype == 'position':
 					coords = self.__getNumPairInterpolationValues()
-					anim = EffMotionAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
+					if coords:
+						anim = EffMotionAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
 				elif self.__attrtype == 'inttuple':
 					coords = self.__getNumTupleInterpolationValues()
 					anim = EffIntTupleAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)				
