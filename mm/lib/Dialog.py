@@ -122,7 +122,7 @@ class Dialog(BasicDialog):
 	#
 	def init(self, (width, height, title, hint)):
 		self.hint = hint
-		return BasicDialog.init(self, (width, height, title))
+		return BasicDialog.init(self, width, height, title)
 	#
 	# Internal routine to create the form and buttons.
 	#
