@@ -647,6 +647,18 @@ class Channel:
 		pass
 
 	#
+	# The following methods can be called by the animation module.
+	#
+	def updateattr(self, node, name, value):
+		# Updates the display value of the attribute
+		if self._playstate == PLAYING:
+			self.do_updateattr(node, name, value)
+
+	def do_updateattr(self, node, name, value):
+		# Override this method to enable animations.
+		pass
+
+	#
 	# The following methods can be called by the scheduler.
 	#
 	def arm(self, node):
