@@ -183,6 +183,7 @@ class ColorAttrDlgBar(AttrDlgBar):
 		self._attrval.attach_to_parent()
 		parent.HookCommand(self.OnEdit,grinsRC.IDC_EDIT2)
 		parent.HookCommand(self.OnBrowse,grinsRC.IDUC_BROWSE)
+		self._parent=parent
 		self._browsecb=None
 	# Response to edit box change
 	def OnEdit(self,id,code):
@@ -208,12 +209,30 @@ class ColorAttrDlgBar(AttrDlgBar):
 			self._attrval.settext(colorstring)
 	
 	def ColorSelect(self, r, g, b):
-		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR)
+		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR,self._parent)
 		if dlg.DoModal() == win32con.IDOK:
 			newcol = dlg.GetColor()
 			r, g, b = win32ui.GetWin32Sdk().GetRGBValues(newcol)
 			return r, g, b
 		return None
+
+	def resize(self,cx):
+		if cx<360:return
+		AttrDlgBar.resize(self,cx)
+		wnd=self.GetDlgItem(grinsRC.IDUC_BROWSE)
+		rc=win32mu.Rect(self.GetWindowRect())
+		rc1=win32mu.Rect(self.GetDlgItem(grinsRC.IDUC_RESET).GetWindowRect())
+		rc2=win32mu.Rect(wnd.GetWindowRect())
+		x=rc1.left-rc.left-rc2.width()-4;y=rc2.top-rc.top
+		wnd.SetWindowPos(self.GetSafeHwnd(),(x,y,0,0),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOSIZE)
+
+		wnd=self.GetDlgItem(grinsRC.IDC_EDIT2)
+		rc1=win32mu.Rect(self.GetDlgItem(grinsRC.IDUC_BROWSE).GetWindowRect())
+		rc2=win32mu.Rect(wnd.GetWindowRect())
+		cx=rc1.left-rc2.left-4;cy=rc2.height()
+		wnd.SetWindowPos(self.GetSafeHwnd(),(0,0,cx,cy),
+			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOMOVE)
 
 # Dialog bar with the buttons Restore,Apply,Cancel,OK
 class StdDlgBar(window.Wnd):
