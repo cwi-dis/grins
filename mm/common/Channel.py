@@ -621,7 +621,7 @@ class Channel:
 			timestamp = self._scheduler.timefunc()
 		if arc is None:
 			if type(event) is type(()):
-				node = self._player.root
+				node = self._player.root.GetSchedRoot()
 				sctx = self._scheduler.sctx_list[0] # XXX HACK!
 			else:
 				node = self._played_node
