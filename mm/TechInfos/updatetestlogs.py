@@ -54,6 +54,7 @@ def main():
 			dirname = fss.as_pathname()
 		else:
 			print >>sys.stderr, "Usage: %s interopdirname"%sys.argv[0]
+			sys.exit(1)
 	else:
 		dirname = sys.argv[1]
 	files = getsmilfiles(dirname)
