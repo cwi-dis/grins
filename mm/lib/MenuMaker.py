@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # A class to build SGI style hierarchical menus.
 # A command list is a list of (shortcut, itemtext, function) tuples,
 # where function can be either a function object or a command list
