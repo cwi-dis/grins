@@ -132,7 +132,6 @@ class Channel:
 		if self._is_shown:
 			for key, (val, default) in self._curvals.items():
 				if self._attrdict.get(key, default) != val:
-					print 're-showing',`self`
 					self.hide()
 					self.show()
 					break
