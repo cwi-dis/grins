@@ -1,0 +1,3 @@
+LIBRARY        winuser.pyd
+EXPORTS
+                initwinuser   @1	PRIVATE
