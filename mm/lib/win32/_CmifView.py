@@ -32,6 +32,9 @@ import grinsRC
 import win32mu
 import usercmd, usercmdui, wndusercmd
 
+import math
+import DropTarget
+
 import ddraw
 
 # constants to select web browser control
@@ -768,17 +771,18 @@ class _CmifPlayerView(_CmifView):
 # Specialization of _CmifView for smooth drawing	
 class _CmifStructView(_CmifView):
 	# Class contructor. initializes base classes
-	def __init__(self,doc,bgcolor=None):
+	def __init__(self, doc, bgcolor=None):
 		_CmifView.__init__(self,doc)
 
 		# shortcut for GRiNS private clipboard format
-		self.CF_NODE=self.getClipboardFormat('Node')
+		self.CF_NODE = self.getClipboardFormat('Node')
 
 		# enable or dissable node drag and drop
-		self._enableNodeDragDrop=1
+		self._enableNodeDragDrop = 1
 			
 		if self._enableNodeDragDrop:
-			self._dropmap['Node']=(self.dragnode,self.dropnode)
+			self._dropmap['Node']=(self.dragnode, self.dropnode)
+			self._dragging = None
 
 	def OnCreate(self,params):
 		_CmifView.OnCreate(self,params)
@@ -845,55 +849,69 @@ class _CmifStructView(_CmifView):
 		if callAttr:
 			self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.ATTRIBUTES].id)
 
-
 	# Response to left button down
 	def onLButtonDown(self, params):
 		_CmifView.onLButtonDown(self, params)
 		if self._enableNodeDragDrop:
 			msgpos=win32mu.Win32Msg(params).pos()
-			self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.COPY].id)
-			self.checkDragDrop(msgpos)
-		self._button_down=1
-	
-	def checkDragDrop(self,pos):
-		dragCmd=None
-		for cmd in self._commandlist:
-			if cmd.__class__==usercmd.COPY:
-				dragCmd=usercmd.COPY
-				break
-		dropRes=0
-		if dragCmd:
-			str='%d %d' % pos
-			dropRes=self.DoDragDrop(self.CF_NODE,str)
-		return dropRes
-	
-		
-	def dragnode(self,dataobj,kbdstate,x,y):
-		node=dataobj.GetGlobalData(self.CF_NODE)
-		self._last_paste_cmd=None
-		if node:
-			dragCmd=None
-			self._last_paste_cmd=self.getpastecmd(kbdstate,(x,y))
-			if self._last_paste_cmd:return 1
-			return 0 
-		return 0
+			self._dragging = msgpos
+			#self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.COPY].id)
+			#self.checkDragDrop(msgpos)
 
-	def dropnode(self,dataobj,effect,x,y):
+	def onLButtonUp(self, params):
+		_CmifView.onLButtonUp(self, params)
+		if self._enableNodeDragDrop:
+			if self._dragging: 
+				self._dragging = None
+
+	def onMouseMove(self, params):
+		_CmifView.onMouseMove(self, params)
+		if self._enableNodeDragDrop and self._dragging:
+			xp, yp = self._dragging
+			x, y =win32mu.Win32Msg(params).pos()
+			if math.fabs(xp-x)>4 or math.fabs(yp-y)>4:
+				str='%d %d' % (xp, yp)
+				self.DoDragDrop(self.CF_NODE, str)
+
+	def dragnode(self, dataobj, kbdstate, x, y):
 		node=dataobj.GetGlobalData(self.CF_NODE)
 		if node:
+			# we must return DROPEFFECT_NONE
+			# when paste at x, y is not allowed
+			if self.isShiftPressed(kbdstate):
+				return DropTarget.DROPEFFECT_MOVE   
+			else:
+				return DropTarget.DROPEFFECT_COPY   
+		return DropTarget.DROPEFFECT_NONE
+
+	def dropnode(self, dataobj, effect, x, y):
+		DROP_FAILED, DROP_SUCCEEDED = 0, 1
+		node=dataobj.GetGlobalData(self.CF_NODE)		
+		if node and self._dragging:
+			
+			# the drag and drop cmd is:
+			# copy or cut (according to arg effect)
+			# the node at point self._dragging 
+			# to position x, y
+
+			# if the operation can not be executed return DROP_FAILED
+			# else return DROP_SUCCEEDED
+
+			# cut or copy
+			self.onMouseEvent(self._dragging, Mouse0Press)
+			if effect == DropTarget.DROPEFFECT_MOVE:
+				self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CUT].id)
+			else:
+				self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.COPY].id)
+			
+			# paste
 			self.onMouseEvent((x,y),Mouse0Press)
-			self._parent.SendMessage(win32con.WM_COMMAND,self._last_paste_cmd.id)
-			return 1
-		return 0
-		
-	# Trivial for now. 
-	# Should check what paste cmd is available at pos given the kbdstate (user paste selection)
-	def getpastecmd(self,kbdstate,pos):
-		# Ctrl key pressed
-		if kbdstate==9 or kbdstate==8:
-			return usercmdui.class2ui[usercmd.PASTE_BEFORE]
-		else:
-			return usercmdui.class2ui[usercmd.PASTE_AFTER]
+			self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PASTE_AFTER].id)
+
+			self._dragging = None
+			return DROP_SUCCEEDED
+
+		return DROP_FAILED
 							
 				
 #################################################
