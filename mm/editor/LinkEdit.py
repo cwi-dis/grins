@@ -34,7 +34,9 @@ class LinkEdit(ViewDialog):
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		title = 'Hyperlinks (' + toplevel.basename + ')'
-		self.window = windowinterface.Window(title)
+		self.window = windowinterface.Window(title,
+					{'resizable': 1,
+					 'deleteCallback': (self.hide, ())})
 		self.showing = self.window.is_showing()
 		self.left = Struct()
 		self.right = Struct()
@@ -160,6 +162,7 @@ class LinkEdit(ViewDialog):
 
 	def show(self):
 		if not self.window.is_showing():
+			self.toplevel.showstate(self, 1)
 			self.updateform()
 			self.window.show()
 			self.showing = self.window.is_showing()
@@ -168,6 +171,7 @@ class LinkEdit(ViewDialog):
 
 	def hide(self):
 		if self.window.is_showing():
+			self.toplevel.showstate(self, 0)
 			self.editmgr.unregister(self)
 			self.window.hide()
 			self.toplevel.checkviews()

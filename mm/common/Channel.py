@@ -766,6 +766,8 @@ class ChannelWindow(Channel):
 			else:
 				self.window = windowinterface.newwindow(x, y,
 						width, height, self._name)
+			self.window.register(EVENTS.WindowExit,
+					     self._destroy_callback, None)
 		if self._is_waiting:
 			self.window.setcursor('watch')
 		if self._attrdict.has_key('bgcolor'):
@@ -778,6 +780,9 @@ class ChannelWindow(Channel):
 				     None)
 		if menu:
 			self.window.create_menu(self._name, menu)
+
+	def _destroy_callback(self, *rest):
+		self._player.cmenu_callback(self._name)
 
 	def resize_window(self, pchan):
 		if not self._player.editmgr.transaction():

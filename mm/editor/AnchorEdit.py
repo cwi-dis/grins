@@ -70,7 +70,9 @@ class AnchorEditor:
 
 		title = self.maketitle()
 
-		self.window = w = windowinterface.Window(title)
+		self.window = w = windowinterface.Window(title,
+			 {'resizable': 1,
+			  'deleteCallback': (self.cancel_callback, ())})
 
 		self.anchor_browser = w.Selection(None, 'Id:', [],
 						  (self.anchor_callback, ()),

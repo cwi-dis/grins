@@ -38,7 +38,9 @@ class NodeInfo:
 		self.getvalues(1)
 		#
 		title = self.maketitle()
-		self.window = w = windowinterface.Window(title)
+		self.window = w = windowinterface.Window(title,
+					{'resizable': 1,
+					 'deleteCallback': (self.close, ())})
 
 		top = w.SubWindow({'left': None, 'right': None, 'top': None})
 
