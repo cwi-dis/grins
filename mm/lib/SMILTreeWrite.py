@@ -2714,8 +2714,11 @@ class SMILWriter(SMIL):
 				progress = (self.progress, ("Converting %s"%os.path.split(file)[1], None, None))
 			else:
 				progress = None
-			cfile = convertaudiofile(u, srcurl, dstdir, file, node,
-						progress = progress)
+			try:
+				cfile = convertaudiofile(u, srcurl, dstdir, file, node,
+							 progress = progress)
+			except:
+				cfile = None
 			if cfile:
 				files_generated[cfile] = 'b'
 				return cfile
@@ -2735,7 +2738,10 @@ class SMILWriter(SMIL):
 				progress = (self.progress, ("Converting %s"%os.path.split(file)[1], None, None))
 			else:
 				progress = None
-			cfile = convertvideofile(u, srcurl, dstdir, file, node, progress = progress)
+			try:
+				cfile = convertvideofile(u, srcurl, dstdir, file, node, progress = progress)
+			except:
+				cfile = None
 			if cfile:
 				files_generated[cfile] = 'b'
 				return cfile
@@ -2788,14 +2794,18 @@ class SMILWriter(SMIL):
 			self.progress("Copying %s"%os.path.split(file)[1], None, None, None, None)
 		dstfile = os.path.join(dstdir, file)
 #		print 'DBG verbatim copy', dstfile
-		f = open(dstfile, 'w'+binary)
-		while 1:
-			data = u.read(10240)
-			if not data:
-				break
-			f.write(data)
-		f.close()
-		u.close()
+		try:
+			f = open(dstfile, 'w'+binary)
+			while 1:
+				data = u.read(10240)
+				if not data:
+					break
+				f.write(data)
+			f.close()
+			u.close()
+		except:
+			import windowinterface
+			windowinterface.showmessage("Copying %s failed; the document may not play" % srcurl)
 		if os.name == 'mac':
 			import ic, macfs, macostools
 			try:
