@@ -27,6 +27,7 @@ class HierarchyViewDialog(ViewDialog):
 	transition_popupmenu = MenuTemplate.POPUP_HVIEW_TRANS
 	event_popupmenu_source = MenuTemplate.POPUP_EVENT_SOURCE
 	event_popupmenu_dest = MenuTemplate.POPUP_EVENT_DEST
+	multi_popupmenu = MenuTemplate.POPUP_MULTI # For multiple selections.
 
 	def __init__(self):
 		ViewDialog.__init__(self, 'hview_')
