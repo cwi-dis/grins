@@ -50,6 +50,10 @@ PRODUCT_TO_FEATURE = {
 	"ALLPRODUCTS": ["ALLPRODUCTS"],
 
 	"preregistered": ["preregistered"],
+	
+	"upgradefromsmil1editor": ["upgradefromsmil1editor"],
+	"upgradefromsmil2real": ["upgradefromsmil2real"],
+	"upgradefromany": ["upgradefromsmil2real", "upgradefromsmil1editor"]
 	}
 
 PLATFORM_TO_PLATFORM = {
