@@ -7,11 +7,10 @@ class EditMgr:
 	#
 	# Initialization.
 	#
-	def init(self, root):
+	def __init__(self, root):
 		self.reset()
 		self.root = root
 		self.context = root.GetContext()
-		return self
 	#
 	def __repr__(self):
 		return '<EditMgr instance, context=' + `self.context` + '>'
