@@ -3721,6 +3721,8 @@ IDI_CLOSEDEYE           ICON    DISCARDABLE     "RES\\closedeye.ico"
 IDI_PAUSING             ICON    DISCARDABLE     "res\\pausing.ico"
 IDI_ICON_BROWSER        ICON    DISCARDABLE     "res\\icon_bro.ico"
 IDI_ICON_CONTEXT        ICON    DISCARDABLE     "res\\icon_con.ico"
+IDI_ICON_MEDIACLOSED    ICON    DISCARDABLE     "res\\icon_med.ico"
+IDI_ICON_MEDIAOPEN      ICON    DISCARDABLE     "res\\ico00008.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
