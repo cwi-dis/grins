@@ -1812,6 +1812,7 @@ class showmessage:
 				w = w._parent
 		else:
 			dialogStyle = Xmd.DIALOG_MODELESS
+			w = toplevel._main
 		if mtype == 'error':
 			func = w.CreateErrorDialog
 		elif mtype == 'warning':
