@@ -119,9 +119,9 @@ sdk_create_font_indirect(PyObject *self, PyObject *args)
 int CALLBACK EnumFontFamiliesExProc(ENUMLOGFONTEX *lpelfe, NEWTEXTMETRICEX *lpntme, int FontType, LPARAM lParam)
 	{
 	PyObject *d = (PyObject*)lParam;
-	PyObject *fontStyle = PyString_FromString((const char*)lpelfe->elfStyle);
-	PyDict_SetItemString(d, (char*)lpelfe->elfFullName, fontStyle);
-	Py_XDECREF(fontStyle);
+	PyObject *lfdict = LogFontToDict(lpelfe->elfLogFont);
+	PyDict_SetItemString(d, (char*)lpelfe->elfFullName, lfdict);
+	Py_XDECREF(lfdict);
     return 1;
 	}
 
