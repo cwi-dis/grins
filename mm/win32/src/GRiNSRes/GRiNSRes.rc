@@ -619,8 +619,8 @@ BEGIN
     EDITTEXT        IDC_14,236,41,27,14,ES_AUTOHSCROLL
     LTEXT           "h",IDC_GROUP1,264,32,8,8
     EDITTEXT        IDC_15,264,41,27,14,ES_AUTOHSCROLL
-    LTEXT           "scale 1:1",IDC_SCALE1,13,4,62,8
-    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,112,BS_FLAT | NOT 
+    LTEXT           "scale 1:1",IDC_SCALE1,11,4,62,8
+    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,145,105,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
 END
 
@@ -686,8 +686,8 @@ BEGIN
     LTEXT           "Untitled",IDC_4,202,56,87,8
     EDITTEXT        IDC_5,201,67,89,14,ES_AUTOHSCROLL
     LTEXT           "",IDC_ATTR_INFO,6,132,289,18,SS_SUNKEN
-    LTEXT           "scale 1:1",IDC_SCALE1,10,4,62,8
-    PUSHBUTTON      "Preview Area",IDC_PREVIEW,8,15,156,112,BS_FLAT | NOT 
+    LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
+    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,155,105,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
 END
 
@@ -710,7 +710,7 @@ BEGIN
                     WS_TABSTOP
     LTEXT           "",IDC_ATTR_INFO,6,132,289,18,SS_SUNKEN
     LTEXT           "scale 1:1",IDC_SCALE1,9,4,62,8
-    PUSHBUTTON      "Preview Area",IDC_PREVIEW,8,15,156,112,BS_FLAT | NOT 
+    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,145,105,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
 END
 
@@ -843,8 +843,8 @@ BEGIN
     COMBOBOX        IDC_32,179,95,110,52,CBS_DROPDOWN | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
-    LTEXT           "scale 1:1",IDC_SCALE1,9,4,62,8
-    PUSHBUTTON      "Preview Area",IDC_PREVIEW,8,15,156,112,BS_FLAT | NOT 
+    LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
+    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,145,105,BS_FLAT | NOT 
                     WS_VISIBLE | NOT WS_TABSTOP
 END
 
