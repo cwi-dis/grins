@@ -17,7 +17,6 @@
 #include "win32win.h"
 
 //TimerEx Header Files
-#define PyIMPORT  __declspec(dllimport)
 #define PyEXPORT  __declspec(dllexport)
 
 #endif
