@@ -198,8 +198,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__node = None	# the media object we're in
 		self.__regions = {}	# mapping from region id to chan. attrs
 		self.__regionnames = {}	# mapping from regionName to list of id
-		self.__region2channel = {} # mapping from region to channels
-		self.__channoreuse = {}	# channels that shouldn't be reused
 		self.__region = None	# keep track of nested regions
 		self.__regionlist = []
 		self.__childregions = {}
@@ -1364,6 +1362,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				region = 'unnamed region'
 		node.__region = region
+		node.attrdict['channel'] = region
+		
 		ch = self.__regions.get(region)
 		if ch is None:
 			# create a region for this node
@@ -1606,7 +1606,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node = self.__context.newnode(type)
 			self.__container._addchild(node)
 		self.__container = node
-		node.__chanlist = {}
 		self.AddAttrs(node, attributes)
 
 	def EndContainer(self, type):
@@ -2035,9 +2034,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ctx.addchannel(name, 0, 'layout')
 		layout = ctx.channeldict[name]
 
-		if not self.__region2channel.has_key(top):
-			self.__region2channel[top] = []
-		self.__region2channel[top].append(layout)
 		self.__topchans.append(layout)
 		if isroot:
 			self.__base_win = name
@@ -2119,24 +2115,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.__context.cssResolver.setRawAttrs(cssId, [('width', width),
 																		   ('height', height)])
 				continue
-			# old 03-07-2000
-			#if ch.has_key('base_window'):
-			#	basewin = ch['base_window']
-			#	basechans = self.__region2channel.get(basewin)
-			#	if len(basechans) == 0:
-			#		raise error, 'no base channels?'
-			#	elif len(basechans) == 1:
-			#		ch['base_window'] = basechans[0].name
-			#	else:
-			#		raise error, 'not implemented yet'
-			#else:
-			#	ch['base_window'] = self.__base_win
-			#end old
 
-			# new 03-07-2000
 			if not ch.has_key('base_window'):
 				ch['base_window'] = self.__base_win
-			# end new
 
 		# cleanup
 		if settings.activeFullSmilCss:
@@ -2385,120 +2366,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		if node.GetType() == 'animate':
 			return
-		mediatype, subtype = node.__mediatype
-		del node.__mediatype
-		try:
-			region = node.__region
-			del node.__region
-		except AttributeError:
-			region = '<unnamed>'
-		attrdict = self.__regions.get(region, {})
-		mtype = node.__chantype
-		del node.__chantype
-		if mtype == 'undefined':
-			return
-		ctx = self.__context
-		# find a channel of the right type that represents
-		# this node's region
-		name = None
-		for ch in self.__region2channel.get(region, []):
-			if self.__channoreuse.has_key(ch.name):
-				continue
-			if ch['type'] == mtype:
-				# found existing channel of correct type
-				name = ch.name
-				# check whether channel can be used
-				# we can only use a channel if it isn't used
-				# by another node parallel to this one
-				par = node.GetSchedParent()
-				while par is not None:
-					if par.__chanlist.has_key(name):
-						ptype = par.GetType()
-						if ptype == 'par':
-							# conflict
-							name = None
-							break
-						elif ptype == 'excl':
-							# potential conflict
-							name = None
-							break
-						else:
-							# no conflict
-							break
-					par = par.GetSchedParent()
-				if name is not None:
-					break
-
-		# if 'name' <> None, we can re-use the channel named 'name'
-
-		# either we use name or name is None and we have to
-		# create a new channel
-		if not name:
-			name = attrdict.get('id', region)
-			if ctx.channeldict.has_key(name):
-				name = name + ' %d'
-				i = 0
-				while ctx.channeldict.has_key(name % i):
-					i = i + 1
-				name = name % i
-		ch = ctx.channeldict.get(name)
-		# there is no channel of the right name and type, then we create a new channel
-		if ch is None:
-			ctx.addchannel(name, -1, mtype)
-			ch = ctx.channeldict[name]
-		############################### WARNING ##################################
-		################# to move the test : doesn't work clearly ################
-		##########################################################################
-			if not self.__regions.has_key(region):
-				self.warning('no region %s in layout' %
-					     region, self.lineno)
-				self.__in_layout = self.__seen_layout
-				self.start_region({'id': region})
-				self.end_region()
-				self.__in_layout = LAYOUT_NONE
-		##########################################################################
-			# we're going to change this locally...
-			attrdict = self.__regions[region]
-
-			# new 03-07-2000
-			# add the new region in channel tree
-			attrdict['base_window'] = region
-
-			# for instance, we set z-index value to -1 in order to have to folow rule:.
-			# if a LayoutChannel and XXChannel are sibling, LayoutChannel
-			# is always in front of XXChannel
-			import ChannelMap
-			visiblechannel = ChannelMap.isvisiblechannel(mtype)
-			if visiblechannel:
-				attrdict['z-index'] = -1
-			self.__fillchannel(ch, attrdict, mtype)
-
-			if not self.__region2channel.has_key(region):
-				self.__region2channel[region] = []
-			self.__region2channel[region].append(ch)
-
-			# temporarely
-			if not settings.activeFullSmilCss:
-				x, y, w, h = ch['base_winoff']
-				ch['base_winoff'] = 0, 0, w, h
-
-			# end new
-
-		if (node.GetSchedParent().GetType() == 'seq' and
-		    node.GetFill() == 'hold') or \
-		   node.GetFill() == 'transition':
-			self.__channoreuse[name] = 0
-
-		node.attrdict['channel'] = name
-
-		# complete chanlist
-		par = node.GetSchedParent()
-		while par is not None:
-			par.__chanlist[name] = 0
-			par = par.GetSchedParent()
 
 		if compatibility.G2 == features.compatibility:
-			if mtype == 'RealPix':
+			if node.GetChannelType() == 'RealPix':
 				self.__realpixnodes.append(node)
 
 	def FixLayouts(self):
@@ -2506,13 +2376,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		layouts = self.__context.layouts
 		for layout, regions in self.__layouts.items():
-			channellist = []
-			for region in regions:
-				channels = self.__region2channel.get(region)
-				if channels is None:
-					continue
-				channellist = channellist + channels
-			layouts[layout] = channellist
+			layouts[layout] = regions
 
 	def FixLinks(self):
 		hlinks = self.__context.hyperlinks
@@ -2553,10 +2417,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				# external link
 				hlinks.addlink((src, url, DIR_1TO2, ltype, stype, dtype))
-
-	def CleanChanList(self, node):
-		if node.GetType() not in leaftypes:
-			del node.__chanlist
 
 	# Assume that an anchor list is a node attribute
 	# For each anchor, throw away the two fist arguments ( z-order and index)
@@ -2706,7 +2566,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.FixSizes()
 		self.__makeLayoutChannels()
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
-		self.Recurse(self.__root, self.CleanChanList)
 		self.FixLayouts()
 		if settings.activeFullSmilCss:
 			self.FixSizes()

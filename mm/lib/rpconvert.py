@@ -133,15 +133,15 @@ def rpconvert(node):
 				em.setnodeattr(newnode, 'scale', 0)
 			else:
 				em.setnodeattr(newnode, 'scale', -3)
-		chname = ctx.newChannelName(regionname)
-		em.addchannel(chname, -1, chtype)
-		em.setchannelattr(chname, 'base_window', regionname)
+#		chname = ctx.newChannelName(regionname)
+#		em.addchannel(chname, -1, chtype)
+#		em.setchannelattr(chname, 'base_window', regionname)
 		# XXX are these two correct?
-		em.setchannelattr(chname, 'transparent', region.get('transparent', 0))
-		em.setchannelattr(chname, 'bgcolor', region.get('bgcolor', (255,255,255)))
-		em.setchannelattr(chname, 'center', 0)
-		em.setchannelattr(chname, 'drawbox', 0)
-		em.setchannelattr(chname, 'z', -1)
+#		em.setchannelattr(chname, 'transparent', region.get('transparent', 0))
+#		em.setchannelattr(chname, 'bgcolor', region.get('bgcolor', (255,255,255)))
+#		em.setchannelattr(chname, 'center', 0)
+#		em.setchannelattr(chname, 'drawbox', 0)
+#		em.setchannelattr(chname, 'z', -1)
 
 		# calculate subregion positioning
 		# first work in source (RealPix) coordinates
@@ -187,7 +187,8 @@ def rpconvert(node):
 ##		em.setnodeattr(newnode, 'bgcolor', (0,0,0))
 ##		em.setnodeattr(newnode, 'transparent', 0)
 		em.setnodeattr(newnode, 'transparent', 1)
-		em.setnodeattr(newnode, 'channel', chname)
+#		em.setnodeattr(newnode, 'channel', chname)
+		em.setnodeattr(newnode, 'channel', regionname)
 		em.setnodeattr(newnode, 'beginlist', [MMSyncArc(newnode, 'begin', srcnode='syncbase', delay=start)])
 		if transition in ('fadein', 'fadeout', 'crossfade', 'wipe'):
 			# the real transtions

@@ -7,6 +7,7 @@ import windowinterface
 #from MMExc import *
 import MMAttrdefs
 from Selecter import Selecter
+from PlayerCommon import PlayerCommon
 
 
 # The Player class normally has only a single instance.
@@ -14,7 +15,7 @@ from Selecter import Selecter
 # It implements a queue using "virtual time" using an invisible timer
 # object in its form.
 
-class PlayerCore(Selecter):
+class PlayerCore(Selecter, PlayerCommon):
 	#
 	# Initialization.
 	#
@@ -26,6 +27,7 @@ class PlayerCore(Selecter):
 		self.context = self.root.GetContext()
 		self.chans_showing = 0
 		Selecter.__init__(self)
+		PlayerCommon.__init__(self)
 		self.context.registergetchannelbynode(self.getchannelbynode)
 		self.__ichannels = {} # internal channels map
 
@@ -108,12 +110,19 @@ class PlayerCore(Selecter):
 	# Channels.
 	#
 	def makechannels(self):
+		# make layout channels
 		for name in self.context.channelnames:
 			attrdict = self.context.channeldict[name]
-			self.newchannel(name, attrdict)
-			self.channelnames.append(name)
-		self.makemenu()
+			if attrdict.get('type') == 'layout':
+				self.newchannel(name, attrdict)
+				self.channelnames.append(name)
+		# make renderer channels
+		self.makeRendererChannels()
+		
+		# make internal channels
 		self.__makeichannels()
+		
+		self.makemenu()
 
 	#
 	def getchannelbyname(self, name):
@@ -124,9 +133,15 @@ class PlayerCore(Selecter):
 		else:
 			return None
 	#
+	
 	def getchannelbynode(self, node):
-		cname = MMAttrdefs.getattr(node, 'channel')
-		return self.getchannelbyname(cname)
+		import MMTypes
+		if node.GetType() in MMTypes.mediatypes:
+			return self.getRenderer(node)
+		else:
+			cname = MMAttrdefs.getattr(node, 'channel')
+			return self.getchannelbyname(cname)
+		
 	#
 	def before_chan_show(self, chan = None):
 		self.chans_showing = self.chans_showing + 1

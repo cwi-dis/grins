@@ -777,6 +777,8 @@ class MMChannel:
 	# return the layout channel
 	def GetLayoutChannel(self):
 		# actualy the layout channel is directly the parent channel
+		if self['type'] == 'layout':
+			return self		
 		return self.getParent()
 
 	# return the parent channel
@@ -2624,15 +2626,25 @@ class MMNode:
 		else:
 			self.SetAttr('channel', c.name)
 
-	#
-	# GetAllChannels - Get a list of all channels used in a tree.
+	# GetAllChannels - Get a list of all leaf channels used in a tree.
 	# If there is overlap between parnode children the node in error
 	# is returned.
 	def GetAllChannels(self):
 ##		if self.type in bagtypes:
 ##			return [], None
 		if self.type in leaftypes:
-			list = [MMAttrdefs.getattr(self, 'channel')]
+			import MMTypes
+			if self.GetType() in MMTypes.mediatypes:
+				# XXX warning: this name is put from PlayerCore
+				try:
+					list = [self._rendererName]
+				except AttributeError:
+					# undefined renderer
+					list = ['undefined']
+			else:
+				# special types (animate, prefetch, ...)
+				list = [MMAttrdefs.getattr(self, 'channel')]
+			# special case for real compatibility
 			captionchannel = MMAttrdefs.getattr(self, 'captionchannel')
 			if captionchannel and captionchannel != 'undefined':
 				list.append(captionchannel)
@@ -2651,9 +2663,23 @@ class MMNode:
 			list, choverlap = MergeLists(list, chlist)
 			if choverlap:
 				overlap = overlap + choverlap
-		if overlap and self.type == 'par':
-			errnode = (self, overlap)
+#		if overlap and self.type == 'par':
+#			errnode = (self, overlap)
 		return list, errnode
+						
+	#
+	# GetAllMediaNodes - Get a list of all nodes may be played with
+	# a renderer channel.
+	def GetAllMediaNodes(self, list = None):
+		if list == None:
+			list = []
+		import MMTypes
+		if self.type in MMTypes.mediatypes:
+			list.append(self)
+			return list
+		for node in self.children:
+			node.GetAllMediaNodes(list)
+		return list
 
 	#
 	# set and get the computed mimetype value

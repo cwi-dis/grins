@@ -132,26 +132,30 @@ class Channel:
 		channels.remove(self)
 
 	def commit(self, type):
-		if debug: print 'Channel.commit'+`self,type`
-		if type in ('REGION_GEOM', 'MEDIA_GEOM'):
-			# for now we can't change the geom during pausing
-			if self._player.playing or self._player.pausing:
-				return
-			
-		self._armed_node = None
-		if self._is_shown:
-			reshow = 0
-			for key, (val, default) in self._curvals.items():
-				if self._attrdict.get(key, default) != val:
-					reshow = 1
-					break
-			if self.mustreshow() or reshow:
-				highlighted = self._highlighted
-				self.cancel_modeless_resize()
-				self.hide()
-				self.show()
-				if highlighted:
-					self.highlight(highlighted)
+		try:
+			if debug: print 'Channel.commit'+`self,type`
+			if type in ('REGION_GEOM', 'MEDIA_GEOM'):
+				# for now we can't change the geom during pausing
+				if self._player.playing or self._player.pausing:
+					return
+				
+			self._armed_node = None
+			if self._is_shown:
+				reshow = 0
+				for key, (val, default) in self._curvals.items():
+					if self._attrdict.get(key, default) != val:
+						reshow = 1
+						break
+				if self.mustreshow() or reshow:
+					highlighted = self._highlighted
+					self.cancel_modeless_resize()
+					self.hide()
+					self.show()
+					if highlighted:
+						self.highlight(highlighted)
+		except:
+			# may be already destroyed
+			pass
 
 	def transaction(self, type):
 		return 1
