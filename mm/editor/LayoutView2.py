@@ -58,7 +58,7 @@ class TreeHelper:
 		if not node.type in leaftypes:
 			return 0
 		chtype = node.GetChannelType()
-		if chtype == None or chtype == 'null':
+		if chtype == None:
 			return 0
 		return 1
 
@@ -2485,7 +2485,14 @@ class PreviousWidget(Widget):
 			self.displayViewport(viewportRef)
 					
 	# ensure that the region is in showing state
-	def __showRegion(self, regionRef):		
+	def __showRegion(self, regionRef):
+		type = regionRef.GetAttrDef('chsubtype', None)
+		if type != None:
+			# if the region is typed, we show only the region if visible
+			import ChannelMap
+			if not ChannelMap.isvisiblechannel(type):
+				return 
+				
 		if regionRef not in self.currentRegionRefListM: 
 			self.currentRegionRefListM.append(regionRef)
 		regionNode = self.getNode(regionRef)
