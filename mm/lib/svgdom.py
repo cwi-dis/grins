@@ -255,7 +255,7 @@ class SvgElement(SvgNode, smiltime.TimeElement):
 	def getTransform(self):
 		return self.get('transform')
 
-	def get(self, name, atype='XML', parent = None):
+	def get(self, name, atype='XML'):
 		if atype == 'XML':
 			attr = self.attrdict.get(name)
 		elif atype == 'CSS':
@@ -265,13 +265,9 @@ class SvgElement(SvgNode, smiltime.TimeElement):
 			return attr
 		else:
 			if isinstance(attr, Animateable):
-				if parent is None:
-					return attr.getPresentValue()
-				return attr.getPresentValue(parent = parent)
+				return attr.getPresentValue()
 			else:
-				if parent is None:
-					return attr.getValue()
-				return attr.getValue(parent = parent)
+				return attr.getValue()
 
 	def isVisible(self):
 		if self.istimeElement:
@@ -376,12 +372,8 @@ class SvgSvg(SvgElement):
 	def parseAttributes(self):
 		pass
 							
-	def getSize(self, width = None, height = None):
-		if width is not None and height is not None:
-			self.__size = width, height
-		else:
-			width, height = self.__size
-		w, h = self.get('width', parent = width), self.get('height', parent = height)
+	def getSize(self):
+		w, h = self.get('width'), self.get('height')
 		if not w or not h:
 			if self != self.getRoot():
 				return self.getParent().getSize()
@@ -1008,10 +1000,10 @@ class SvgDocument(SvgNode):
 	def getRoot(self):
 		return self.getFirstChildByType('svg')
 		
-	def getSize(self, width, height):
+	def getSize(self):
 		root =  self.getRoot()
 		if root is not None:
-			return root.getSize(width, height)
+			return root.getSize()
 		return 0, 0
 			
 	def getDOMClassName(self, tag):
