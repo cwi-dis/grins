@@ -5,7 +5,7 @@ import string, math
 from types import ListType
 RegionType = type(Xlib.CreateRegion())
 from XTopLevel import toplevel
-from XConstants import TRUE, FALSE, error, ARR_HALFWIDTH, ARR_LENGTH, _WIDTH, UNIT_SCREEN, UNIT_PXL
+from XConstants import TRUE, FALSE, error, ARR_HALFWIDTH, ARR_LENGTH, UNIT_SCREEN, UNIT_PXL
 from XFont import findfont
 from XButton import _Button, _ButtonRect, _ButtonPoly, _ButtonCircle
 from splash import roundi
@@ -479,7 +479,6 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		if units is None:
 			units = self.__units
-		w = self._window
 		self._list.append(('line', color, self._linewidth, units,
 				   points[:]))
 		self._optimize((1,))
@@ -521,7 +520,6 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		if units is None:
 			units = self.__units
-		w = self._window
 		self._list.append(('marker', color, coordinates, units))
 
 	def get3dbordersize(self):
@@ -594,7 +592,6 @@ class _DisplayList:
 			raise error, 'no fgcolor'
 		if units is None:
 			units = self.__units
-		w = self._window
 		list = self._list
 		f = self._font._font
 		base = self.baseline(UNIT_PXL)
@@ -674,7 +671,6 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		if units is None:
 			units = self.__units
-		window = self._window
 		self._list.append(('3dbox', (cl, ct, cr, cb), coordinates, units))
 		self._optimize((1,))
 
@@ -791,7 +787,6 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		if units is None:
 			units = self.__units
-		window = self._window
 		self._list.append(('arrow', color, self._linewidth, src, dst, units))
 		self._optimize((1,))
 
