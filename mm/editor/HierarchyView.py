@@ -1825,7 +1825,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.select_widget(nodelist[0].views['struct_view'], external, scroll)
 			for node in nodelist[1:]:
 				if node.views.has_key('struct_view'):
-					self.also_select_widget(node.views['struct_view'])
+					self.also_select_widget(node.views['struct_view'], external=external)
 
 	def select_arrow(self, arrow):
 		caller, colour, src, dest = arrow
