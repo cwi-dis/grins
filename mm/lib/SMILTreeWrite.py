@@ -506,19 +506,27 @@ def getduration(writer, node, attr = 'duration'):
 	duration = MMAttrdefs.getattr(node, attr)
 	if not duration:		# 0 or None
 		return None
-	if duration < 0:		# infinite duration...
+	if duration == -1:		# infinite duration...
 		return 'indefinite'
+	elif duration == -2:
+		return 'media'
 	else:
 		return fmtfloat(duration, 's')
 
 def getmin(writer, node):
 	min = MMAttrdefs.getattr(node, 'min')
+	if min == -2:
+		return 'media'
 	if not min:
 		return None		# 0 or None
 	return fmtfloat(min, 's')
 
 def getmax(writer, node):
 	max = node.GetRawAttrDef('max', None)
+	if max == -1:
+		return 'indefinite'
+	elif max == -2:
+		return 'media'
 	if max is None:
 		return None
 	return fmtfloat(max, 's')
