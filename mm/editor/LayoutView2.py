@@ -3544,6 +3544,9 @@ class PreviousWidget(Widget):
 		self.__mustBeUpdated = 1
 						
 	def appendNode(self, pNodeRef, nodeRef, nodeType):
+		if not self._context.isAVisibleNode(nodeRef, nodeType):
+			return
+		
 		if nodeType == TYPE_VIEWPORT:
 			node = self.addViewport(nodeRef)
 			if node is not None:
@@ -3561,6 +3564,9 @@ class PreviousWidget(Widget):
 			self.updateVisibility([nodeRef], visible)
 			
 	def removeNode(self, nodeRef, nodeType):
+		if not self._context.isAVisibleNode(nodeRef, nodeType):
+			return
+		
 		if nodeType == TYPE_VIEWPORT:
 			self.removeViewport(nodeRef)
 		elif nodeType == TYPE_REGION:
