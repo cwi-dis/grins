@@ -64,4 +64,5 @@ __version__ = "$Id$";
 	AUTO_EVALUATE,			# Don't need trial license to evaluate
 
 	INTERNAL_LINKS,			# allow creation of internal hyperlinks
-] = range(39)				# don't forget to update this range!
+	UNSUPPORTED_ERROR,		# unsupported features cause fatal errors
+] = range(40)				# don't forget to update this range!

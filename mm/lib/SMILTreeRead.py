@@ -296,7 +296,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def GetErrorList(self):
 		return self.__errorList
 	
-	def MakeRoot(self, type):
+	def MakeRoot(self, type, mayexist = 0):
+		if mayexist and self.__root:
+			return self.__root
 		self.__root = self.__context.newnodeuid(type, '1')
 		from Owner import OWNER_DOCUMENT
 		self.__root.addOwner(OWNER_DOCUMENT)
@@ -2611,7 +2613,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ctx = self.__context
 
 		if len(self.__toplayouts) > 1 and features.editor and features.MULTIPLE_TOPLAYOUT not in features.feature_set:
-			self.unsupportedfeature_error("multi top layouts are not supported in this version")
+			self.unsupportedfeature_error("multi top layouts")
 		
 		for top in self.__toplayouts:
 			self.CreateLayout(self.__tops[top]['attrs'], top is None)
@@ -4022,6 +4024,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			href = MMurl.basejoin(self.__base, attributes['href'])
 			if href not in self.__context.externalanchors:
 				self.__context.externalanchors.append(href)
+		elif features.editor and features.INTERNAL_LINKS not in features.feature_set:
+			self.unsupportedfeature_error('internal hyperlinks not supported')
 
 		attrdict = {}
 		self.AddLinkAttrs(attrdict, attributes)
@@ -4173,6 +4177,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			href = '%20'.join(href.split(' '))
 			if href not in self.__context.externalanchors:
 				self.__context.externalanchors.append(href)
+		elif href is not None and features.editor and features.INTERNAL_LINKS not in features.feature_set:
+			self.unsupportedfeature_error('internal hyperlinks not supported')
 
 		# show, sourcePlaystate and destinationPlaystate parsing
 		self.AddLinkAttrs(node.attrdict, attributes)
@@ -4533,7 +4539,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		raise MSyntaxError, msg + message
 
 	def unsupportedfeature_error(self, message, lineno=None):
-		self.error(message+'. You can use the pro version', lineno)
+		if features.editor and features.UNSUPPORTED_ERROR in features.feature_set:
+			self.error('%s not supported in this version.\nYou can use the GRiNS PRO version.' % message, lineno)
 		
 	def fatalerror(self):
 		type, value, traceback = sys.exc_info()
@@ -4784,7 +4791,7 @@ def __doParse(parser, data):
 		# a fatal errors has been occured
 		# in this, case the root node is not valid, and we create a fake node just to have
 		# the minimum required by TopLevel
-		root = parser.MakeRoot(MMNode.FakeRootNode)
+		root = parser.MakeRoot('seq', 1)
 		context = root.GetContext()
 		errors = MMNode.MMErrors('fatal')
 		errors.setSource(data)

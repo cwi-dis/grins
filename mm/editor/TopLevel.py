@@ -184,9 +184,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# XXX for now, if there is any fatal error, we load an empty document. In this case, we
 			# even be able to edit the source view.
 			baseurl = oldcontext.baseurl
+			root.Destroy()
 			import SMILTreeRead
 			root = SMILTreeRead.ReadString(EMPTY, self.filename)
-			# check that the 'EMPTY' document don't generate as well a fatal error
+			# check that the 'EMPTY' document does't generate a fatal error as well
 			# note: it shouldn't happen
 			iParseErrors = root.GetContext().getParseErrors()
 			if iParseErrors != None and iParseErrors.getType() == 'fatal':
