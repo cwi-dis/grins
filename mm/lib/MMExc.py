@@ -17,3 +17,5 @@ DuplicateUIDError = 'MMExc.DuplicateUIDError'	# UID already in UID map
 ExitException = 'MMExc.ExitException'	# Exit application,
 					# Should be caught at outer level.
 					# Argument is proposed exit status.
+					
+UserCancel = 'MMExc.UserCancel'		# called by parser if user after an user abort
