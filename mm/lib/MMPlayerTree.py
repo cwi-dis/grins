@@ -48,7 +48,7 @@ def ReadFile(filename):
 		elif header[2:] != (stf[ST_MTIME], stf[ST_SIZE]):
 			print 'Warning: player file out of date'
 	list = marshal.load(f)
-	root = load(list, context)
+	root = load(list, context, f)
 	context.root = root
 	if _progressbar:
 		_progressbar.set(fsize) # Not true, but who cares...
@@ -211,12 +211,16 @@ def dump(node, mini, targets, list, dellist):
 	for c in children:
 		dump(c, mini, targets, list, dellist)
 
-def load(list, context):
+def load(list, context, f):
 	try:
 		type, uid, attrdict, extra = list[0]
 		del list[0]
 	except TypeError:
-		type, uid, attrdict, extra = marshal.load(list)
+		if list:
+			type, uid, attrdict, extra = list
+			list = None
+		else:
+			type, uid, attrdict, extra = marshal.load(f)
 	if type in ('seq', 'par', 'bag') and _progressbar:
 		_progressbar.set(f.tell())
 	node = newnodeuid(context, type, uid)
@@ -224,7 +228,7 @@ def load(list, context):
 	if node.type in interiortypes:
 		children = []
 		for i in range(extra):
-			children.append(load(list, context))
+			children.append(load(list, context, f))
 		if node.type == 'bag':
 			node.children = children
 		else:
