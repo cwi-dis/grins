@@ -10,16 +10,12 @@ class Exporter:
 		self.writer = None
 		self.profile = profile
 		self.topwindow = None
+		self.completed = 0
 		windowinterface.settimevirtual(1)
 		self.starttime = windowinterface.getcurtime()
 		print 'starttime=', self.starttime
-		
-		self._progress = windowinterface.ProgressDialog("Exporting", self.cancel_callback)
-		self._progress.set('Exporting document to WMP...')
-		
-		# XXX: temp until set progress is enabled
-		self._progress._dialog.OnCancel = self.cancel_callback 
-		
+		self.progress = windowinterface.ProgressDialog("Exporting", self.cancel_callback, None, 0)
+		self.progress.set('Exporting document to WMP...')
 		self.player.exportplay(self)
 		
 	def __del__(self):
@@ -36,8 +32,11 @@ class Exporter:
 			if self.topwindow != window:
 				print "Cannot export multiple topwindows"
 				return
-			else:
-				self.writer.update(timestamp-self.starttime)
+			elif self.writer and self.progress:
+				dt = timestamp-self.starttime
+				self.writer.update(dt)
+				if self.progress:
+					self.progress.set('Exporting document to WMP...', int(dt*100)%100, 100, int(dt*100)%100, 100)
 		else:
 			self.topwindow = window
 			print 'Begin export', self.filename, 'using profile', self.profile
@@ -51,11 +50,15 @@ class Exporter:
 			print 'End export', self.writer._filename
 			self.writer = None
 			self.topwindow = None
-		if self._progress:
-			del self._progress
+		if self.progress:
+			del self.progress
+			self.progress = None
 		stoptime = windowinterface.getcurtime()
 		windowinterface.settimevirtual(0)
 		
 	def cancel_callback(self):
+		if self.progress:
+			del self.progress
+			self.progress = None
 		self.player.stop()
 		windowinterface.showmessage('Export interrupted.')
