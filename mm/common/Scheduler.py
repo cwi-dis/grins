@@ -428,9 +428,9 @@ class SchedulerContext:
 					del pnode.pausestack[0]
 					self.do_resume(node, timestamp)
 				return
-		if not node.parent:
-			self.scheduled_children = self.scheduled_children - 1
 		pnode = node.GetSchedParent()
+		if not pnode:
+			self.scheduled_children = self.scheduled_children - 1
 		if not pnode or pnode.playing != MMStates.PLAYING:
 			# ignore event when node can't play
 			if debugevents: print 'parent not playing'
@@ -447,16 +447,20 @@ class SchedulerContext:
 		endlist = MMAttrdefs.getattr(node, 'endlist')
 		equal = 0
 		if endlist:
+			found = 0
 			for a in endlist:
 				if not a.isresolved(self.parent.timefunc):
 					# any unresolved time is after any resolved time
-					break
-				if a.resolvedtime(self.parent.timefunc) > timestamp:
-					break
-				elif a.resolvedtime(self.parent.timefunc) == timestamp:
-					equal = 1
-					break
-			else:
+					found = 1
+				else:
+					ats = a.resolvedtime(self.parent.timefunc)
+					if ats > timestamp:
+						found = 1
+					elif ats == timestamp:
+						equal = 1
+						found = 1
+						break
+			if not found:
 				if debugevents: print 'not allowed to start'
 				srdict = pnode.gensr_child(node, runchild = 0)
 				self.srdict.update(srdict)
