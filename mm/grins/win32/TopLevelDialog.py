@@ -24,6 +24,7 @@ class TopLevelDialog:
 
 	def hide(self):
 		if hasattr(self,'window') and self.window:
+			self.window.set_toggle(SOURCE,0)
 			self.window.close() 
 			self.window=None
 		sensitive = len(self.main.tops) > 1
@@ -33,18 +34,12 @@ class TopLevelDialog:
 	def showsource(self, source):
 		if self.source:
 			self.source.close()
-			self.source=None
+			self.source = None
 			self.window.set_toggle(SOURCE,0)
 		else:
-			self.source = self.window.textwindow(self.root.source)
+			self.source = self.window.textwindow(source)
 			self.window.set_toggle(SOURCE,1)
-
-	def showsource_(self, source):
-		if self.source is not None and not self.source.is_closed():
-			self.source.show()
-			return
-		self.source = self.window.textwindow(self.root.source)
-
+			
 	def __set_close_sensitive(self, sensitive):
 		# CLOSE is the first entry in commandlist
 		if sensitive:
