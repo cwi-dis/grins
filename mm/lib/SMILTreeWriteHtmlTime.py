@@ -505,7 +505,7 @@ class SMILHtmlTimeWriter(SMIL):
 				style = style + ';'
 
 			if transIn:
-				style = style + 'visibility=hidden;'
+				#style = style + 'visibility=hidden;'
 				trans = 'transIn(%s, \'%s\')' % (subregid, transInName)
 				attrlist.append( ('onbegin', trans) )
 
@@ -529,7 +529,11 @@ class SMILHtmlTimeWriter(SMIL):
 			self.push()
 			pushed = pushed + 1
 
-		self.writetag('t:'+mtype, attrlist)
+		if mtype=='img':
+			attrlist.append( ('class','time') )
+			self.writetag(mtype, attrlist)
+		else:
+			self.writetag('t:'+mtype, attrlist)
 
 		if transOut:
 			trans = 'transOut(%s, \'%s\')' % (subregid, transOutName)
