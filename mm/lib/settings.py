@@ -199,6 +199,7 @@ default_settings = {
 	'license_user' : '',
 	'license_organization' : '',
 	'baselicense': '',
+	'skin': None,			# URL for skin definition file (player only)
 
 	'default_sync_behavior_locked' : 0,
 	'default_sync_tolerance' : 0.1,

@@ -1916,7 +1916,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# make it a child of the root-layout
 			self.__newTopRegion()
 			self.__rootLayout._addchild(ch)
-			self.__context.cssResolver.link(ch.getCssId(), self.__rootLayout.getCssId())
 
 		if ChannelMap.isvisiblechannel(mtype):
 			# create here all positioning nodes and initialize them
@@ -2751,15 +2750,79 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__set_defaultregpoints()
 		
 	def end_smil(self):
+		ctx = self.__context
 		if __debug__:
 			if parsedebug: print 'end smil'
 		self.__in_smil = 0
 		if not self.__root:
 			self.error('empty document', self.lineno)
-		if not self.__context.attributes.get('project_boston') and \
-		   not self.__context.getviewports():
+		if not ctx.attributes.get('project_boston') and \
+		   not ctx.getviewports():
 			self.__newTopRegion()
 		self.Recurse(self.__root, self.FixSyncArcs)
+		if not features.editor and settings.get('skin') and len(ctx.getviewports()) == 1:
+			from parseskin import parseskin
+			import Sizes
+			vp = ctx.getviewports()[0] # we already know there's exactly one
+			skin = settings.get('skin')
+			f = MMurl.urlopen(skin)
+			dict, buttons = parseskin(f)
+			top = ctx.newviewport('The Skin', -1, 'layout')
+			top.addOwner(OWNER_DOCUMENT)
+			reg = ctx.newchannel('Skin Image', -1, 'layout')
+			top._addchild(reg)
+			root = ctx.newnode('par')
+			root.__forcechild = None, 0
+			img = ctx.newnode('ext')
+			root._addchild(img)
+			img.attrdict['file'] = MMurl.basejoin(skin, dict['File1x'])
+			width, height = Sizes.GetSize(img.attrdict['file'])
+			top['width'] = reg['width'] = width
+			top['height'] = reg['height'] = height
+			ctx.cssResolver.setRawAttrs(top.getCssId(), [('width', width), ('height', height)])
+			ctx.cssResolver.setRawAttrs(reg.getCssId(), [('width', width), ('height', height)])
+			ctx.cssResolver.setRawAttrs(img.getSubRegCssId(), [])
+			ctx.cssResolver.setRawAttrs(img.getMediaCssId(), [])
+			img.attrdict['duration'] = -1
+			img.attrdict['channel'] = 'Skin Image'
+			play = None
+			for key, val in buttons.items():
+				if key == 'LCD':
+					lcd = ctx.newchannel('Skin Area', -1, 'layout')
+					reg._addchild(lcd)
+					lcd['left'] = val[0]
+					lcd['top'] = val[1]
+					lcd['width'] = val[2]
+					lcd['height'] = val[3]
+					ctx.cssResolver.setRawAttrs(lcd.getCssId(), [('left', val[0]), ('top', val[1]), ('width', val[2]), ('height', val[3])])
+				else:
+					a = ctx.newnode('anchor')
+					a.attrdict['name'] = key
+					a.attrdict['acoords'] = [val[0], val[1], val[0] + val[2], val[1] + val[3]]
+					img._addchild(a)
+					if key == 'App1Button':
+						play = a
+			arc = MMNode.MMSyncArc(self.__root, 'begin', srcnode = play, event = 'activateEvent', delay = 0)
+			self.__root.attrdict['beginlist'] = [arc]
+			arc = MMNode.MMSyncArc(self.__root, 'end', srcnode = play, event = 'activateEvent', delay = 0)
+			self.__root.attrdict['endlist'] = [arc]
+			self.__root.attrdict['restart'] = 'whenNotActive'
+			self.__root.removeOwner(OWNER_DOCUMENT)
+			root._addchild(self.__root)
+			assets = []
+			for c in self.__root.children:
+				if c.type == 'assets':
+					assets.append(c)
+				for c in assets:
+					c.Extract()
+					root._addchild(c)
+			root.SMILidmap = self.__root.SMILidmap
+			del self.__root.SMILidmap
+			self.__root = root
+			for r in vp.GetChildren()[:]:
+				r.Extract()
+				lcd._addchild(r)
+			vp.Destroy()
 		self.FixLayouts()
 		self.FixSizes()
 		self.FixBaseWindow()
@@ -2769,9 +2832,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.FixAssets(self.__root)
 		self.Recurse(self.__root, self.FixForceChild)
 		metadata = ''.join(self.__metadata)
-		self.__context.metadata = metadata
+		ctx.metadata = metadata
 		if self.__viewinfo:
-			self.__context.setviewinfo(self.__viewinfo)
+			ctx.setviewinfo(self.__viewinfo)
 		MMAttrdefs.flushcache(self.__root)
 
 	# head/body sections
@@ -2822,6 +2885,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				root = self.__root
 				self.__root = root.children[0] # only remaining child
 				self.__root.Extract()
+				self.__root.SMILidmap = root.SMILidmap
+				del root.SMILidmap
 				root.Destroy()
 				for c in assets:
 					c.AddToTree(self.__root, -1)
@@ -3145,7 +3210,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			self.__newTopRegion(id)
 			self.__rootLayout._addchild(ch)
-		self.__context.cssResolver.link(ch.getCssId(), ch.GetParent().getCssId())
 		self.__region = ch
 
 	def end_region(self):
