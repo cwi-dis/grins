@@ -8,6 +8,7 @@ import string
 
 import svgdtd
 import svgtypes
+import svgpath
 
 class SvgNode:
 	def __init__(self, type, document):
@@ -71,6 +72,8 @@ class SvgElement(SvgNode):
 
 	def setAttributes(self, attrdict):
 		self.attrdict = attrdict.copy()
+		self.parseTransforms()
+		self.parseStyleAttrs()
 		self.parseAttributes()
 
 	def getAttribute(self, attr):
@@ -81,10 +84,18 @@ class SvgElement(SvgNode):
 
 	def getCoordinate(self, name):
 		val = self.attrdict.get(name)
+		return svgtypes.SVGCoordinate(val).getLength()
+
+	def getLength(self, name):
+		val = self.attrdict.get(name)
 		return svgtypes.SVGLength(val).getLength()
 	
 	def parseStyleAttrs(self):
-		pass
+		val = self.attrdict.get('style')
+		if val:
+			val = string.strip(val)
+			style = svgtypes.SVGStyle(val)
+			print style.styleprops
 
 	def parseFillStrokeAttrs(self):
 		pass
@@ -92,68 +103,72 @@ class SvgElement(SvgNode):
 	def parseGraphicsAttrs(self):
 		pass
 
+	def parseTransforms(self):
+		val = self.attrdict.get('transform')
+		if val:
+			val = string.strip(val)
+			tfl = svgtypes.SVGTransformList(val)
+			print tfl.transforms
 
 class SvgRect(SvgElement):
 	def parseAttributes(self):
-		x = self.getCoordinate('x')
-		y = self.getCoordinate('y')
-		w = self.getCoordinate('width')
-		h = self.getCoordinate('height')
-		if x is None: x = 0
-		if y is None: y = 0
-		if x is not None and y is not None and w is not None and h is not None:
-			self._rect = x, y, w, h
+		self._pos = self.getCoordinate('x'), self.getCoordinate('y')
+		w, h = self.getLength('width'), self.getLength('height')
+		if w is not None and h is not None:
+			self._size = w, h
 		else:
-			self._rect = None
-			self.seterror('invalid coordinates')	
+			self._size = None
+			self.seterror('invalid rect size')	
 
 class SvgCircle(SvgElement):
 	def parseAttributes(self):
-		cx = self.getCoordinate('cx')
-		cy = self.getCoordinate('cy')
-		r = self.getCoordinate('r')
-		if cx is not None and cy is not None and r is not None:
-			self._rect = cx-r, cy-r, 2*r, 2*r
+		self._pos = self.getCoordinate('cx'), self.getCoordinate('cy')
+		r = self.getLength('r')
+		if r is not None:
+			self._r = r
 		else:
-			self._rect = None
-			self.seterror('invalid coordinates')	
+			self._r = None
+			self.seterror('invalid circle radious')	
 
 class SvgEllipse(SvgElement):
 	def parseAttributes(self):
-		cx = self.getCoordinate('cx')
-		cy = self.getCoordinate('cy')
-		rx = self.getCoordinate('rx')
-		ry = self.getCoordinate('ry')
-		if cx is not None and cy is not None and rx is not None and ry is not None:
-			self._rect = cx-rx, cy-ry, 2*rx, 2*ry
-			print 'ellipse', cx, cy, rx, ry
+		self._pos = self.getCoordinate('cx'), self.getCoordinate('cy')
+		rx, ry = self.getLength('rx'), self.getLength('ry')
+		if rx is not None and ry is not None:
+			self._size = rx, ry
 		else:
-			self._rect = None
-			self.seterror('invalid coordinates')	
+			self._size = None
+			self.seterror('invalid ellipse axis')	
 
 class SvgLine(SvgElement):
 	def parseAttributes(self):
-		pass
+		self._pt1 = self.getCoordinate('x1'), self.getCoordinate('y1')
+		self._pt2 = self.getCoordinate('x2'), self.getCoordinate('y2')
+		print self._pt1, 'lineto', self._pt2
 
 class SvgPolyline(SvgElement):
 	def parseAttributes(self):
-		pass
+		points = self.attrdict.get('points')
+		svgpoints = svgtypes.SVGPoints(points)
+		print svgpoints.points
 
 class SvgPolygon(SvgElement):
 	def parseAttributes(self):
-		pass
+		points = self.attrdict.get('points')
+		svgpoints = svgtypes.SVGPoints(points)
+		print svgpoints.points
 
 class SvgPath(SvgElement):
 	def parseAttributes(self):
-		pass
+		d = self.attrdict.get('d')
+		path = svgpath.Path(d)
+		print path
 		
 class SvgText(SvgElement):
 	def parseAttributes(self):
-		pass
-
-class SvgTransform(SvgElement):
-	def parseAttributes(self):
-		pass
+		self._pos = self.getCoordinate('x'), self.getCoordinate('y')
+		self._textLength = self.getLength('textLength')
+		self._lengthAdjust = self.getLength('lengthAdjust')
 
 class SvgG(SvgElement):
 	def parseAttributes(self):
@@ -170,7 +185,6 @@ class SvgDocument(SvgNode):
 		'polygon': SvgPolygon,
 		'path': SvgPath,
 		'text': SvgText,
-		'transform': SvgTransform,
 		'g': SvgG,
 		}
 	def __init__(self, source):
