@@ -304,15 +304,18 @@ class OpenLocationDlg(ResDialog):
 ##############################
 
 class SelectElementDlg(ResDialog):
+	ET_TOPLAYOUT, ET_REGION, ET_SUBREGION = 1, 2, 3
 	def __init__(self, parent, mmnode, selection=''):
 		ResDialog.__init__(self,grinsRC.IDD_SELECT_ELEMENT, parent)
 		self._mmnode = mmnode
 		self._selection = selection
+		self._selectionid = 0
 		self.__isoswnd = 0
 
 		self._bselect = Button(self,win32con.IDOK)
 		self._bcancel = Button(self,win32con.IDCANCEL)
 		self._editsel = Edit(self, grinsRC.IDC_EDIT1)
+		self._msg = Edit(self, grinsRC.IDC_STATIC_MSG)
 		self._tree = None
 
 	def OnInitDialog(self):	
@@ -321,6 +324,10 @@ class SelectElementDlg(ResDialog):
 		self._editsel.settext(self._selection)
 		self._tree = self.GetDlgItem(grinsRC.IDC_TREE1)
 		self.buildElementsTree()
+		if self._selectionid:
+			self._tree.SetItemState(self._selectionid, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
+			self._tree.Select(self._selectionid,commctrl.TVGN_CARET)
+			self.sethelpstring(self._selectionid)
 		self.HookNotify(self.OnSelChanged, commctrl.TVN_SELCHANGED)
 		return ResDialog.OnInitDialog(self)
 
@@ -357,40 +364,67 @@ class SelectElementDlg(ResDialog):
 		top_levels = ctx.getviewports()
 		self.__reg2id = {}
 		for top in top_levels:
-			itemid = self.insertLabel(top.GetUID())
+			itemid = self.insertLabel(top.GetUID(), self.ET_TOPLAYOUT)
 			self.__reg2id[top] = itemid
 			self.__appendRegions(top, itemid)
 		self.__appendNodes(root)
+		for top in top_levels:
+			self._tree.Expand(self.__reg2id[top], commctrl.TVE_EXPAND)
+			self.__expandRegions(top)
 		del self.__reg2id
 					
 	def __appendRegions(self, parent, itemid):
 		for reg in parent.GetChildren():
 			if reg.get('type') == 'layout':
-				childitemid = self.insertLabel(reg.GetUID(), itemid)
+				childitemid = self.insertLabel(reg.GetUID(), self.ET_REGION, itemid)
 				self.__reg2id[reg] = childitemid
 				self.__appendRegions(reg, childitemid)
 
+	def __expandRegions(self, parent):
+		for reg in parent.GetChildren():
+			id =  self.__reg2id.get(reg)
+			if id:
+				try:
+					self._tree.Expand(id, commctrl.TVE_EXPAND)
+				except: 
+					pass
+			self.__expandRegions(reg)
+		
 	def __appendNodes(self, parent):
 		from MMTypes import mediatypes
 		for node in parent.children:
 			ntype = node.GetType()
 			if ntype in mediatypes:
-				name = node.GetRawAttrDef('name', '<no id>')
+				name = node.GetRawAttrDef('name', '')
 				mmchan = node.GetChannel()
-				if mmchan:
+				if name and mmchan:
 					reg = mmchan.GetLayoutChannel()
 					regid = self.__reg2id.get(reg)
 					if regid is not None:
-						self.insertLabel(name, regid) 
+						self.insertLabel(name, self.ET_SUBREGION, regid) 
 			self.__appendNodes(node)
 
 	def OnSelChanged(self, std, extra):
 		nmsg = win32mu.Win32NotifyMsg(std, extra, 'tree')
-		text = self._tree.GetItemText(nmsg.itemNew[0])
+		itemid = nmsg.itemNew[0]
+		text = self._tree.GetItemText(itemid)
 		self.settext(text)
+		self.sethelpstring(itemid)
 
-	def insertLabel(self, text, parent = commctrl.TVI_ROOT, after = commctrl.TVI_LAST):
-		return self._tree.InsertItem(commctrl.TVIF_TEXT, text, 0, 0, 0, 0, None, parent, after)
+	def sethelpstring(self, itemid):
+		etype = self._tree.GetItemData(itemid)
+		if etype == self.ET_REGION:
+			self._msg.settext('Element type: region')
+		elif etype == self.ET_SUBREGION:
+			self._msg.settext('Element type: media element')
+		elif etype == self.ET_TOPLAYOUT:
+			self._msg.settext('Element type: topLayout')
+
+	def insertLabel(self, text, etype = 0, parent = commctrl.TVI_ROOT, after = commctrl.TVI_LAST):
+		itemid = self._tree.InsertItem(commctrl.TVIF_TEXT | commctrl.TVIF_PARAM, text, 0, 0, 0, 0, etype, parent, after)
+		if text == 	self._selection:
+			self._selectionid = itemid
+		return itemid
 
 # Implementation of the Layout name dialog
 class LayoutNameDlg(ResDialog):
