@@ -1373,14 +1373,10 @@ class AnimateElementParser:
 			elif self.__attrtype == 'position':
 				if mode == 'discrete':
 					coords = self.__getNumPairInterpolationValues()
-					if not self.isAdditive():
-						coords = self.translateToDefault(coords=coords)
-					anim = DiscreteMotionAnimator(attr, domval, coords[1], dur, mode, times, splines, accumulate, additive)
+					anim = DiscreteMotionAnimator(attr, domval, coords[1], dur, mode, times, splines, accumulate, additive='sum')
 				else:
 					path = svgpath.Path()
 					coords = self.__getNumPairInterpolationValues()
-					if not self.isAdditive():
-						coords = self.translateToDefault(coords=coords)
 					path.constructFromPoints(coords)
 					anim = MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive='sum')
 			if anim: 
