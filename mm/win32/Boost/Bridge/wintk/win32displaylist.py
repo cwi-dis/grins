@@ -14,12 +14,10 @@ import math,string
 
 import win32con
 from win32ig import win32ig
-import grinsRC
 import ddraw
 
 from types import *		
 from appcon import *	# draw contants
-from win32mu import *	# paint utilities
 from Font import findfont
 from sysmetrics import pixel_per_mm_x, pixel_per_mm_y
 
