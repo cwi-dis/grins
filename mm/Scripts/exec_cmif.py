@@ -18,7 +18,7 @@ from win32con import *
 print 'Running CMIF Multimedia presentation'
 if len(sys.argv)>1:
 	print sys.argv[1]
-	
+
 # For now:
 #progdir=os.path.split(sys.argv[0])[0]
 #CMIFDIR=os.path.split(progdir)[0]

@@ -149,7 +149,7 @@ class ArcInfo(ArcInfoDialog):
 		editmgr = self.context.editmgr
 		delay = self.delay_getvalue()
 		if delay != self.delay:
-			changed = 1		
+			changed = 1
 		# XXX For now, clip sides to [0, 1]
 		sside = min(self.src_getpos(), 1)
 		if sside != self.sside:

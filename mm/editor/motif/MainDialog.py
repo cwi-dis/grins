@@ -17,6 +17,8 @@ self.close_callback is also called.
 
 """
 
+__version__ = "$Id$"
+
 class MainDialog:
 	def __init__(self, title):
 		"""Create the Main dialog.
@@ -31,30 +33,20 @@ class MainDialog:
 
 		import windowinterface
 
-		#self.__window = w = windowinterface.Window(
-		#	title, resizable = 0,
-		#	deleteCallback = (self.close_callback, ()))
-		buttons = [('New', (self.new_callback, ())),
-			 ('Open Location...', (self.__openURL_callback, ())),
-			 ('Open File...', (self.__openfile_callback, ())),
+		self.__window = w = windowinterface.Window(
+			title, resizable = 0,
+			deleteCallback = (self.close_callback, ()))
+		buttons = w. ButtonRow(
+			[('New', (self.new_callback, ())),
+			 ('Open\nLocation...', (self.__openURL_callback, ())),
+			 ('Open\nFile...', (self.__openfile_callback, ())),
 			 ('Trace', (self.trace_callback, ()), 't'),
 			 ('Debug', (self.debug_callback, ())),
-			 ('About', (self.about_callback, ())),
-			 ('Exit', (self.close_callback, ()))]
-			 
-		self._window = w = windowinterface.MainDialog(
-			buttons, title, grab = 0, del_Callback = (self.close_callback, ()))
-		#print ""
-		#buttons = w. ButtonRow(
-		#	[('New', (self.new_callback, ())),
-		#	 ('Open Location...', (self.__openURL_callback, ())),
-		#	 ('Open File...', (self.__openfile_callback, ())),
-		#	 ('Trace', (self.trace_callback, ()), 't'),
-		#	 ('Debug', (self.debug_callback, ())),
-		#	 ('Exit', (self.close_callback, ())),
-		#	 ],
-		#	vertical = 1, tight = 1, left = 0, top = 0, right = 100, bottom = 600)
-		#w.show()
+			 ('Exit', (self.close_callback, ())),
+			 ],
+			vertical = 0, tight = 1,
+			top = None, bottom = None, left = None, right = None)
+		w.show()
 
 	def __openURL_callback(self):
 		import windowinterface
@@ -64,7 +56,7 @@ class MainDialog:
 	def __openfile_callback(self):
 		import windowinterface
 		windowinterface.FileDialog('Open file', '.', '*.smil', '',
-					   self.__filecvt, None, existing = 1)
+					   self.__filecvt, None, 1)
 
 	def __filecvt(self, filename):
 		import os, MMurl
@@ -81,6 +73,9 @@ class MainDialog:
 			if dir == cwd:
 				filename = file
 		self.open_callback(MMurl.pathname2url(filename))
+
+	def setbutton(self, button, value):
+		pass			# for now...
 
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
@@ -99,10 +94,3 @@ class MainDialog:
 
 	def debug_callback(self):
 		pass
-
-	def about_callback(self):
-		import windowinterface
-		windowinterface.showmessage('Copyright © 1995-98 \n\nEpsilon Software S.A.\
-							\nC.W.I.\
-							\n\nWebster Pro Control Copyright © 1995-1998 Home Page Software Inc.\
-						   	 \nAccusoft Corp.   		')

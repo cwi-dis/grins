@@ -71,8 +71,13 @@ class HierarchyViewDialog(ViewDialog):
 				('.', 'Zoom here', (self.zoomherecall, ())),
 				('Z', 'Zoom in', (self.zoomincall, ()))
 				]),
-			('h', 'Help...', (self.helpcall, ())),
 			]
+		import Help
+		if Help.hashelp():
+			self.menu.append(
+				('Help', [
+					('h', 'Help...', (self.helpcall, ())),
+					]))
 
 	# transf from HierarchyView
 	def helpcall(self):

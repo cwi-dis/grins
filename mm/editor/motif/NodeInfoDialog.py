@@ -21,7 +21,7 @@ The constant part of the dialog consists of the following items:
   selection, a callback must be called.  Also, it must be possible to
   set the current selection under program control.
 - Buttons, each with their own callback: `Cancel', `Restore', `Apply',
-  `OK', `Node attr...', and `Anchors...'.
+  `OK', `Node attr...', `Channel attr...', and `Anchors...'.
 
 The three variable parts are known as external, immediate, and
 interior.  A description of each follows.
@@ -47,16 +47,13 @@ button, whatever) at which time a callback is called.
 
 __version__ = "$Id$"
 
-import windowinterface, cmifex2, win32api, win32con
-
-DEFAULT_EDIT_WIDTH = 120
+import windowinterface
 
 class NodeInfoDialog:
 	def __init__(self, title, channelnames, initchannel, types, inittype,
 		     name, filename, children, immtext):
 		"""Create the NodeInfo dialog.
 
-		
 		Create the dialog window (non-modal, so does not grab
 		the cursor) and pop it up (i.e. display it on the
 		screen).
@@ -81,184 +78,24 @@ class NodeInfoDialog:
 			embedded linefeeds -- the text to be displayed
 			in the immediate part
 		"""
+
 		self.__window = w = windowinterface.Window(
 			title, resizable = 1,
 			deleteCallback = (self.cancel_callback, ()))
 
-		#top = w.SubWindow(left = None, right = None, top = None)
+		top = w.SubWindow(left = None, right = None, top = None)
 
-		#self.__channel_select = top.OptionMenu('Channel:',
-		#			channelnames, initchannel,
-		#			(self.channel_callback, ()),
-		#			right = None, top = None)
-		#self.__type_select = top.OptionMenu('Type:', types, inittype,
-		#				  (self.type_callback, ()),
-		#				  right = self.__channel_select,
-		#				  top = None)
-		#self.__name_field = top.TextInput('Name:', name, None, None,
-		#				left = None, top = None,
-		#				right = self.__type_select)
-		#butt = w.ButtonRow(
-		#	[('Cancel', (self.cancel_callback, ())),
-		#	 ('Restore', (self.restore_callback, ())),
-		#	 ('Node attr...', (self.attributes_callback, ())),
-		#	 ('Anchors...', (self.anchors_callback, ())),
-		#	 ('Apply', (self.apply_callback, ())),
-		#	 ('OK', (self.ok_callback, ()))],
-		#	bottom = None, left = None, right = None, vertical = 0)
-
-		#midd = w.SubWindow(top = top, bottom = butt, left = None,
-		#		   right = None)
-
-		#alter = midd.AlternateSubWindow(top = None, bottom = None,
-		#				right = None, left = None)
-		#self.__imm_group = alter.SubWindow()
-		#self.__ext_group = alter.SubWindow()
-		#self.__int_group = alter.SubWindow()
-
-		#self.__file_input = self.__ext_group.TextInput('URL:',
-		#		filename,
-		#		(self.file_callback, ()), None,
-		#		top = None, left = None, right = None)
-		#butt = self.__ext_group.ButtonRow(
-		#	[('Edit contents...', (self.conteditor_callback, ())),
-		#	 ('Browser...', (self.browser_callback, ()))],
-		#	top = self.__file_input, left = None, right = None,
-		#	vertical = 0)
-
-		#butt = self.__int_group.ButtonRow(
-		#	[('Open...', (self.openchild_callback, ()))],
-		#	left = None, right = None, bottom = None, vertical = 0)
-		#self.__children_browser = self.__int_group.List('Children:',
-		#		children,
-		#		[None, (self.openchild_callback, ())],
-		#		top = None, left = None, right = None,
-		#		bottom = butt)
-
-		#label = self.__imm_group.Label('Contents:',
-		#		top = None, left = None, right = None)
-		#self.__text_browser = self.__imm_group.TextEdit(immtext, None,
-		#			top = label, left = None,
-		#			right = None, bottom = None)
-
-		#if immtext:
-		#	self.__imm_group.show()
-		#elif children:
-		#	self.__int_group.show()
-		#else:
-		#	self.__ext_group.show()
-
-		
-		constant = 3*win32api.GetSystemMetrics(win32con.SM_CXBORDER)+win32api.GetSystemMetrics(win32con.SM_CYCAPTION)+5
-		constant2 = 2*win32api.GetSystemMetrics(win32con.SM_CYBORDER)+5
-		self._w = constant2
-		self._h = constant
-		hbw = 0
-		eb1w = 0
-		eb2w = 0
-		lb1w = 0
-		lb2w = 0
-		topw = 0
-		toph = 0
-		midw = 0
-		midh = 155
-		max = 0
-		btm = 0
-
-
-		ls = [('Cancel', (self.cancel_callback, ())),
-			 ('Restore', (self.restore_callback, ())),
-			 ('Node attr...', (self.attributes_callback, ())),
-			 ('Channel attr...', (self.chattrs_callback, ())),
-			 ('Anchors...', (self.anchors_callback, ())),
-			 ('Apply', (self.apply_callback, ())),
-			 ('OK', (self.ok_callback, ())),
-			 ('Help', (self.helpcall, ()))]
-
-		length = 0
-		for item in ls:
-			label = item[0]
-			if (label==None or label==''):
-				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
-			hbw = hbw + length + 15		
-		max = hbw
-		self._h = self._h + 30 
-		
-		ls = channelnames
-		
-		length = 0
-		for item in ls:
-			label = item
-			if (label==None or label==''):
-				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
-			if length>lb2w:
-				lb2w = length
-		lb2w = lb2w + cmifex2.GetStringLength(self.__window._hWnd,'Channel: ')+30
-		
-				
-		ls = types
-		
-		length = 0
-		for item in ls:
-			label = item
-			if (label==None or label==''):
-				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
-			if length>lb1w:
-				lb1w = length
-		lb1w = lb1w + cmifex2.GetStringLength(self.__window._hWnd,'Type: ')+30
-		
-		if (name==None or name==''):
-			name = ' '
-		#print '---------window----------', self.__window._hWnd, 'name: ', name
-
-	
-		eb1w = cmifex2.GetStringLength(self.__window._hWnd,name) + cmifex2.GetStringLength(self.__window._hWnd,'Name: ') + 10
-		
-		if (eb1w < DEFAULT_EDIT_WIDTH):
-			eb1w = DEFAULT_EDIT_WIDTH
-
-		if max<lb1w+lb2w+eb1w+20:
-			max = lb1w+lb2w+eb1w+20
-		
-		toph = 30
-
-		self._h = self._h + toph + 160
-		
-		ls = [('Edit contents...', (self.conteditor_callback, ())),
-			 ('Browser...', (self.browser_callback, ()))]
-
-		length = 0
-		for item in ls:
-			label = item[0]
-			if (label==None or label==''):
-				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
-			midw = midw + length + 15		
-
-		if max<midw:
-			max = midw
-
-		midw = max
-		topw = max
-		self._w = self._w + max + 10
-
-		top = w.SubWindow(left = 5, right = topw, top = 3, bottom = 30)
-
-		self.__name_field = top.TextInput('Name: ', name, None, None,
-						left = 0, right = eb1w, top = 0, bottom = 25, editable = 1)
-		
-		self.__type_select = top.OptionMenu('Type: ', types, inittype,
-						  (self.type_callback, ()),
-						  left = eb1w+5, right = lb1w, top = 0, bottom = 125)
-		
-		self.__channel_select = top.OptionMenu('Channel: ',
+		self.__channel_select = top.OptionMenu('Channel:',
 					channelnames, initchannel,
 					(self.channel_callback, ()),
-					left = eb1w+lb1w+10, right = lb2w, top = 0, bottom = 125)
-
+					right = None, top = None)
+		self.__type_select = top.OptionMenu('Type:', types, inittype,
+						  (self.type_callback, ()),
+						  right = self.__channel_select,
+						  top = None)
+		self.__name_field = top.TextInput('Name:', name, None, None,
+						left = None, top = None,
+						right = self.__type_select)
 		butt = w.ButtonRow(
 			[('Cancel', (self.cancel_callback, ())),
 			 ('Restore', (self.restore_callback, ())),
@@ -266,63 +103,52 @@ class NodeInfoDialog:
 			 ('Channel attr...', (self.chattrs_callback, ())),
 			 ('Anchors...', (self.anchors_callback, ())),
 			 ('Apply', (self.apply_callback, ())),
-			 ('OK', (self.ok_callback, ())),
-			 ('Help', (self.helpcall, ()))],
-			left = 5, right = max, top = 185, bottom = 30, vertical = 0)
+			 ('OK', (self.ok_callback, ()))],
+			bottom = None, left = None, right = None, vertical = 0)
 
-		midd = w.SubWindow(left = 5, right = midw, top = 30, bottom = 155)
+		midd = w.SubWindow(top = top, bottom = butt, left = None,
+				   right = None)
 
-		alter = midd.AlternateSubWindow(left = 0, right = midw, top = 0, bottom = 155)
-		self.__imm_group = alter.SubWindow(left = 0, right = midw, top = 0, bottom = 155)
-		self.__ext_group = alter.SubWindow(left = 0, right = midw, top = 0, bottom = 155)
-		self.__int_group = alter.SubWindow(left = 0, right = midw, top = 0, bottom = 155)
+		alter = midd.AlternateSubWindow(top = None, bottom = None,
+						right = None, left = None)
+		self.__imm_group = alter.SubWindow()
+		self.__ext_group = alter.SubWindow()
+		self.__int_group = alter.SubWindow()
 
 		self.__file_input = self.__ext_group.TextInput('URL:',
 				filename,
 				(self.file_callback, ()), None,
-				left = 0, right = midw, top = 0, bottom = 25)
+				top = None, left = None, right = None)
 		butt = self.__ext_group.ButtonRow(
 			[('Edit contents...', (self.conteditor_callback, ())),
 			 ('Browser...', (self.browser_callback, ()))],
-			left = 0, right = midw, top = 25, bottom = 30,
+			top = self.__file_input, left = None, right = None,
 			vertical = 0)
 
 		butt = self.__int_group.ButtonRow(
 			[('Open...', (self.openchild_callback, ()))],
-			left = 0, right = midw, top = 125, bottom = 30, vertical = 0)
+			left = None, right = None, bottom = None, vertical = 0)
 		self.__children_browser = self.__int_group.List('Children:',
 				children,
 				[None, (self.openchild_callback, ())],
-				left = 0, right = midw, top = 0, bottom = 125)
+				top = None, left = None, right = None,
+				bottom = butt)
 
 		label = self.__imm_group.Label('Contents:',
-				left = 0, right = midw, top = 0, bottom = 25)
+				top = None, left = None, right = None)
 		self.__text_browser = self.__imm_group.TextEdit(immtext, None,
-					left = 0, right = midw, top = 25, bottom = 130)
+					top = label, left = None,
+					right = None, bottom = None)
 
 		if immtext:
 			self.__imm_group.show()
-			w._not_shown.append(self.__int_group)
-			w._not_shown.append(self.__ext_group)
 		elif children:
 			self.__int_group.show()
-			w._not_shown.append(self.__imm_group)
-			w._not_shown.append(self.__ext_group)
 		else:
 			self.__ext_group.show()
-			w._not_shown.append(self.__int_group)
-			w._not_shown.append(self.__imm_group)
 
-		cmifex2.ResizeWindow(w._hWnd, self._w, self._h)
-		self.__window._hWnd.HookKeyStroke(self.helpcall,104)
 		w.show()
 
-	
-	def helpcall(self, params=None):
-		import Help
-		Help.givehelp(self.__window._hWnd, 'Node Info Dialog')
-
-	
 	def close(self):
 		"""Close the dialog and free resources."""
 		self.__window.close()

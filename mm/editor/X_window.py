@@ -1392,7 +1392,7 @@ class _List:
 			self._list.ListSetPos(toppos)
 		else:
 			raise error, 'bad argument for scrolllist'
-			
+
 
 	def _callback(self, w, (func, arg), call_data):
 		if self.is_closed():

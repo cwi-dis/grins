@@ -19,7 +19,7 @@ from win32con import *
 print 'Running CMIF Multimedia presentation'
 if len(sys.argv)>1:
 	print sys.argv[1]
-	
+
 # For now:
 #progdir=os.path.split(sys.argv[0])[0]
 #CMIFDIR=os.path.split(progdir)[0]
@@ -31,15 +31,14 @@ h1 = win32ui.GetMainFrame()
 #CMIFDIR = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Python\\PythonCore\\CmifPath")
 CMIFDIR = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Chameleon\\CmifPath")
 CMIFPATH = [
-	CMIFDIR+"\\pylib\\audio",
-	CMIFDIR+"\\grins1",
-	CMIFDIR+"\\grins1\\motif",
-	#CMIFDIR+"\\player",
-	CMIFDIR+"\\win32",
-	CMIFDIR+"\\common",
-	CMIFDIR+"\\common\\motif",
-	CMIFDIR+"\\lib",
-	CMIFDIR+"\\lib\\motif"
+	os.path.join(CMIFDIR, 'grins\\win32'),
+	os.path.join(CMIFDIR, 'grins'),
+	os.path.join(CMIFDIR, 'common\\win32'),
+	os.path.join(CMIFDIR, 'common'),
+	os.path.join(CMIFDIR, 'lib\\win32'),
+	os.path.join(CMIFDIR, 'lib'),
+	os.path.join(CMIFDIR, 'pylib'),
+	os.path.join(CMIFDIR, 'pylib\\audio'),
 ]
 CMIF_USE_WIN32="ON"
 #CHANNELDEBUG="ON"

@@ -6,7 +6,7 @@ import MMAttrdefs
 begend = ('begin', 'end')
 
 class ChannelViewDialog(ViewDialog):
-	
+
 	def __init__(self):
 		ViewDialog.__init__(self, 'cview_')
 
@@ -25,7 +25,7 @@ class ChannelViewDialog(ViewDialog):
 		self.window.close()
 		self.window = None
 		self.displist = self.new_displist = None
-		
+
 	def setcommands(self, commandlist, title):
 		self.window.create_menu(commandlist, title = title)
 
@@ -55,7 +55,7 @@ class GOCommand:
 		import Help
 		Help.givehelp(self.mother.window._hWnd,'Channel_view')
 
-	
+
 class ChannelBoxCommand:
 	def __init__(self):
 		c = self.commandlist

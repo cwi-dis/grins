@@ -20,7 +20,7 @@ import win32api, win32con
 from win32con import *
 
 print 'Running CMIF Multimedia presentation'
- 
+
 if len(sys.argv)>1:
 	print sys.argv[1]
 
@@ -79,7 +79,7 @@ os.environ["CMIF"] = CMIFDIR
 os.environ["CMIF_USE_WIN32"] = "ON"
 
 # run the given cmif file
-#import main	
+#import main
 print "sys.argv-->", sys.argv
 
 import cmifex

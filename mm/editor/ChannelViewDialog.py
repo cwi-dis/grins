@@ -2,11 +2,12 @@ from ViewDialog import ViewDialog
 import windowinterface
 import WMEVENTS
 import MMAttrdefs
+import Help
 
 begend = ('begin', 'end')
 
 class ChannelViewDialog(ViewDialog):
-	
+
 	def __init__(self):
 		ViewDialog.__init__(self, 'cview_')
 
@@ -25,15 +26,15 @@ class ChannelViewDialog(ViewDialog):
 		self.window.close()
 		self.window = None
 		self.displist = self.new_displist = None
-		
+
 	def setcommands(self, commandlist, title):
 		self.window.create_menu(commandlist, title = title)
-
 
 class GOCommand:
 	def __init__(self):
 		self.commandlist = c = []
-		c.append('h', 'Help...', (self.helpcall, ()))
+		if Help.hashelp():
+			c.append('h', 'Help...', (self.helpcall, ()))
 		c.append('', 'Canvas', [
 			('', 'Double height',
 			 (self.canvascall, (windowinterface.DOUBLE_HEIGHT,))),
@@ -50,12 +51,9 @@ class GOCommand:
 		c.append('T', 'Toggle unused channels', (self.toggleshowcall, ()))
 		self.menutitle = 'Base ops'
 
-	# from ChanelView
 	def helpcall(self):
-		import Help
-		Help.givehelp(self.mother.window._hWnd,'Channel_view')
+		Help.givehelp('Channel_view')
 
-	
 class ChannelBoxCommand:
 	def __init__(self):
 		c = self.commandlist

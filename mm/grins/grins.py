@@ -21,7 +21,7 @@ def usage(msg):
 	print msg
 	print 'usage: grins file ...'
 	print 'file ...   : one or more SMIL or CMIF files or URLs'
-	#sys.exit(2)
+	sys.exit(2)
 
 from MainDialog import MainDialog
 
@@ -73,10 +73,7 @@ class Main(MainDialog):
 			top.setready()
 
 	def close_callback(self):
-		import win32ui
-		h1 = win32ui.GetMainFrame()
-		h1.DestroyWindow()
-		#raise SystemExit, 0
+		raise SystemExit, 0
 
 	def debug_callback(self):
 		import pdb
@@ -137,7 +134,7 @@ def main():
 		opts, files = getopt.getopt(sys.argv[1:], 'qj:')
 	except getopt.error, msg:
 		usage(msg)
-	if not files and os.name != 'mac':
+	if not files and os.name not in ('mac', 'nt', 'win'):
 		usage('No files specified')
 
 	try:
@@ -229,7 +226,11 @@ def main():
 			pdb.post_mortem(exc_traceback)
 	finally:
 		import windowinterface
-		#windowinterface.close()
+		windowinterface.close()
+		if os.name in ('nt', 'win'):
+			import win32ui
+			h1 = win32ui.GetMainFrame()
+			h1.DestroyWindow()
 
 
 # A copy of cmif.findfile().  It is copied here rather than imported

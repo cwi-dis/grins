@@ -21,7 +21,7 @@ For these buttons there are callbacks.
 
 __version__ = "$Id$"
 
-import windowinterface, cmifex2, win32api, win32con
+import windowinterface
 
 class ArcInfoDialog:
 	__rangelist = ['0-1 sec', '0-10 sec', '0-100 sec']
@@ -45,120 +45,25 @@ class ArcInfoDialog:
 			the floating point value
 		"""
 
-		self.__window = w = windowinterface.Window(title, resizable = 1,
+		self.__window = windowinterface.Window(title, resizable = 1,
 					deleteCallback = (self.cancel_callback, ()))
-		#self.__src_choice = self.__window.OptionMenu('From:',
-		#			srclist, srcinit,
-		#			None, top = None, left = None)
-		#self.__dst_choice = self.__window.OptionMenu('To:',
-		#			dstlist, dstinit,
-		#			None, top = None,
-		#			left = self.__src_choice, right = None)
-		#if delay > 10.0:
-		#	rangeinit = 2
-		#elif delay > 1.0:
-		#	rangeinit = 1
-		#else:
-		#	rangeinit = 0
-		#range = float(10 ** rangeinit)
-		#self.__delay_slider = self.__window.Slider(None, 0, delay, range,
-		#			None,
-		#			top = self.__src_choice, left = None)
-		#self.__range_choice = self.__window.OptionMenu(None,
-		#			self.__rangelist,
-		#			rangeinit, (self.__range_callback, ()),
-		#			top = self.__dst_choice,
-		#			left = self.__delay_slider, right = None)
-		#buttons = self.__window.ButtonRow(
-		#	[('Cancel', (self.cancel_callback, ())),
-		#	 ('Restore', (self.restore_callback, ())),
-		#	 ('Apply', (self.apply_callback, ())),
-		#	 ('OK', (self.ok_callback, ()))],
-		#	left = None, top = self.__delay_slider, vertical = 0)
-
-		
-		constant = 3*win32api.GetSystemMetrics(win32con.SM_CXBORDER)+win32api.GetSystemMetrics(win32con.SM_CYCAPTION)+5
-		constant2 = 2*win32api.GetSystemMetrics(win32con.SM_CYBORDER)+5
-		self._w = constant2
-		self._h = constant
-		hbw = 0
-		lb1w = 0
-		lb2w = 0
-		lb3w = 0
-		sbw = 200
-		sbh = 50
-		max = 0
-
-		
-		ls = srclist
-		
-		length = 0
-		for item in ls:
-			label = item
-			if (label==None or label==''):
-				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
-			if length>lb1w:
-				lb1w = length
-		lb1w = lb1w + cmifex2.GetStringLength(self.__window._hWnd,'From: ')+30
-		
-
-		ls = dstlist
-		
-		length = 0
-		for item in ls:
-			label = item
-			if label:
-				length = cmifex2.GetStringLength(self.__window._hWnd,label)
-			if length>lb2w:
-				lb2w = length
-		lb2w = lb2w + cmifex2.GetStringLength(self.__window._hWnd,'To: ')+30
-
-		max = lb1w + lb2w + 15
-
-		
-		ls = [('Cancel', (self.cancel_callback, ())),
-			 ('Restore', (self.restore_callback, ())),
-			 ('Apply', (self.apply_callback, ())),
-			 ('OK', (self.ok_callback, ())),
-			 ('Help', (self.helpcall, ()))]
-
-		length = 0
-		for item in ls:
-			label = item[0]
-			if (label==None or label==''):
-				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
-			hbw = hbw + length + 15		
-		
-		if max<hbw:
-			max = hbw
-
-		ls = self.__rangelist
-		
-		length = 0
-		for item in ls:
-			label = item
-			if (label==None or label==''):
-				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
-			if length>lb3w:
-				lb3w = length
-		lb3w = lb3w + 30
-
-		if max<lb3w+sbw+15:
-			max = lb3w+sbw+15
-
-		self._w = self._w + max +10
-		self._h = self._h + 130 
-		
-		
-		self.__src_choice = self.__window.OptionMenu('From: ',
+		s = self.__window.SubWindow(top = None, left = None, right = None)
+		s1 = s.SubWindow(top = None, left = None)
+		self.__src_choice = s1.OptionMenu('From:',
 					srclist, srcinit,
-					None, left = 5, top = 5, right = lb1w, bottom = 125)
-		self.__dst_choice = self.__window.OptionMenu('To: ',
+					None, top = None, left = None,
+						  right = None)
+		b1 = s1.Button('Push focus', (self.pushsrcfocus_callback, ()),
+			       top = self.__src_choice, left = None,
+			       right = None, bottom = None)
+		s2 = s.SubWindow(top = None, left = s1, right = None)
+		self.__dst_choice = s2.OptionMenu('To:',
 					dstlist, dstinit,
-					None, left = lb1w+10, top = 5, right = lb2w, bottom = 125)
+					None, top = None,
+					left = None, right = None)
+		b2 = s2.Button('Push focus', (self.pushdstfocus_callback, ()),
+			       top = self.__dst_choice, left = None,
+			       right = None, bottom = None)
 		if delay > 10.0:
 			rangeinit = 2
 		elif delay > 1.0:
@@ -166,22 +71,22 @@ class ArcInfoDialog:
 		else:
 			rangeinit = 0
 		range = float(10 ** rangeinit)
-		self.__delay_slider = self.__window.Slider(None, 0, delay, range,
+		ss = self.__window.SubWindow(top = s, left = None, right = None)
+		self.__delay_slider = ss.Slider(None, 0, delay, range,
 					None,
-					left = 5, top = 35, right = sbw, bottom = sbh)
-		self.__range_choice = self.__window.OptionMenu(None,
+					top = None, left = None, bottom = None)
+		self.__range_choice = ss.OptionMenu(None,
 					self.__rangelist,
 					rangeinit, (self.__range_callback, ()),
-					left = sbw+5, top = 35, right = lb3w, bottom = 125)
+					top = None,
+					left = self.__delay_slider, right = None, bottom = None)
 		buttons = self.__window.ButtonRow(
 			[('Cancel', (self.cancel_callback, ())),
 			 ('Restore', (self.restore_callback, ())),
 			 ('Apply', (self.apply_callback, ())),
-			 ('OK', (self.ok_callback, ())),
-			 ('Help', (self.helpcall, ()))],
-			left = 5, top = 90, right = hbw, bottom = 30, vertical = 0)
-		cmifex2.ResizeWindow(w._hWnd, self._w, self._h)
-		self.__window._hWnd.HookKeyStroke(self.helpcall,104)
+			 ('OK', (self.ok_callback, ()))],
+			left = None, top = ss, right = None, bottom = None,
+			vertical = 0)
 		self.__window.show()
 
 	def __range_callback(self):
@@ -196,10 +101,6 @@ class ArcInfoDialog:
 	# interface methods
 	#
 
-	def helpcall(self, params=None):
-		import Help
-		Help.givehelp(self.__window._hWnd, 'Arc Info Dialog')
-	
 	def close(self):
 		"""Close the dialog and free resources."""
 		self.__window.close()
@@ -259,7 +160,7 @@ class ArcInfoDialog:
 			rangeinit = 0
 		range = float(10 ** rangeinit)
 		self.__range_choice.setpos(rangeinit)
-		#self.__delay_slider.setvalue(0)
+		self.__delay_slider.setvalue(0)
 		self.__delay_slider.setrange(0, range)
 		self.__delay_slider.setvalue(delay)
 

@@ -34,9 +34,8 @@ All other callbacks are called without arguments.
 
 """
 
-__version__ = "$Id"
+__version__ = "$Id$"
 
-import cmifex2, win32api, win32con
 import windowinterface
 
 class LinkEditDialog:
@@ -62,165 +61,44 @@ class LinkEditDialog:
 		"""
 
 		w = windowinterface.Window(title, resizable = 1,
-				deleteCallback = (self.delete_callback, ()), havpar = 0)
+				deleteCallback = (self.delete_callback, ()))
 		self.__window = w
 
-		#self.__edit_group = e = w.SubWindow(bottom = None, left = None,
-		#				    right = None)
-		#self.__link_dir = e.OptionMenu('Link direction:', dirstr, 0,
-		#			       (self.linkdir_callback, ()),
-		#			       bottom = None, left = None,
-		#			       top = None)
-		#self.__ok_group = e.ButtonRow(
-		#	[('OK', (self.ok_callback, ())),
-		#	 ('Cancel', (self.cancel_callback, ())),
-		#	 ],
-		#	vertical = 0,
-		#	bottom = None, top = None, right = None,
-		#	left = self.__link_dir)
-
-		#win1 = w.SubWindow(top = None, left = None, right = 1.0/3.0,
-		#		   bottom = self.__edit_group)
-		#menu = win1.PulldownMenu([('Set anchorlist', menu1)],
-		#			 top = None, left = None, right = None)
-		#self.__left_buttons = win1.ButtonRow(
-		#	[('Push focus', (self.show_callback, (cbarg1,))),
-		#	 ('Anchor editor...',
-		#	  (self.anchoredit_callback, (cbarg1,))),
-		#	 ],
-		#	vertical = 1, bottom = None, left = None, right = None)
-		#self.__left_browser = win1.List('None', [],
-		#	(self.anchor_browser_callback, (cbarg1,)),
-		#	top = menu, bottom = self.__left_buttons,
-		#	left = None, right = None)
-
-		#win2 = w.SubWindow(top = None, left = win1, right = 2.0/3.0,
-		#		   bottom = self.__edit_group)
-		#dummymenu = win2.PulldownMenu([('Set anchorlist', [])],
-		#			 top = None, left = None, right = None)
-		#self.__middle_buttons = win2.ButtonRow(
-		#	[('Add...', (self.link_new_callback, ())),
-		#	 ('Edit...', (self.link_edit_callback, ())),
-		#	 ('Delete', (self.link_delete_callback, ())),
-		#	 ],
-		#	vertical = 1, bottom = None, left = None, right = None)
-		#self.__middle_browser = win2.List('links:', [],
-		#	(self.link_browser_callback, ()),
-		#	top = dummymenu, bottom = self.__middle_buttons,
-		#	left = None, right = None)
-
-		#win3 = w.SubWindow(top = None, left = win2, right = None,
-		#		   bottom = self.__edit_group)
-		#menu = win3.PulldownMenu([('Set anchorlist', menu2)],
-		#			 top = None, left = None, right = None)
-		#self.__right_buttons = win3.ButtonRow(
-		#	[('Push focus', (self.show_callback, (cbarg2,))),
-		#	 ('Anchor editor...', (self.anchoredit_callback, (cbarg2,))),
-		#	 ],
-		#	vertical = 1, bottom = None, left = None, right = None)
-		#self.__right_browser = win3.List('None', [],
-		#	(self.anchor_browser_callback, (cbarg2,)),
-		#	top = menu, bottom = self.__right_buttons,
-		#	left = None, right = None)
-
-		winw = 230 #cmifex2.GetStringLength(w._hWnd,'Anchor editor...')+20
-
-		constant = 3*win32api.GetSystemMetrics(win32con.SM_CXBORDER)+win32api.GetSystemMetrics(win32con.SM_CYCAPTION)+5
-		constant2 = 2*win32api.GetSystemMetrics(win32con.SM_CYBORDER)+5
-		self._w = constant2
-		self._h = constant
-		hbw = 0
-		lbw = 0
-		lbw2 = 0
-		max = 3*winw + 20
-		
-
-		ls = [('OK', (self.ok_callback, ())),
-			 ('Cancel', (self.cancel_callback, ()))]
-
-		length = 0
-		for item in ls:
-			label = item[0]
-			if (label==None or label==''):
-				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
-			hbw = hbw + length + 15		
-		
-		ls = dirstr
-		
-		length = 0
-		for item in ls:
-			label = item
-			if (label==None or label==''):
-				label=' '
-			length = cmifex2.GetStringLength(w._hWnd,label)
-			if length>lbw:
-				lbw = length
-		lbw = lbw + cmifex2.GetStringLength(w._hWnd,'Link direction: ')+30
-
-		ls = typestr
-		
-		length = 0
-		for item in ls:
-			label = item
-			if (label==None or label==''):
-				label=' '
-			length = cmifex2.GetStringLength(w._hWnd,label)
-			if length>lbw2:
-				lbw2 = length
-		lbw2 = lbw2 + cmifex2.GetStringLength(w._hWnd,'type: ')+30
-	
-		if max<hbw+lbw+lbw2+10:
-			max = hbw+lbw+lbw2+10	
-			winw = max/3
-		
-		self._w = self._w + max-130
-		self._h = self._h + 385
-		
-		self.__edit_group = e = w.SubWindow(bottom = 30, left = 5,
-						    right = hbw+lbw+lbw2+15, top = 345-35)
-		w._not_shown.append(e)
-		self.__link_dir = e.OptionMenu('Link direction: ', dirstr, 0,
+		self.__edit_group = e = w.SubWindow(bottom = None, left = None,
+						    right = None)
+		self.__link_dir = e.OptionMenu('Link direction:', dirstr, 0,
 					       (self.linkdir_callback, ()),
-					       bottom = 125, left = 0,
-						    right = lbw, top = 0)
-		
+					       bottom = None, left = None,
+					       top = None)
 		self.__link_type = e.OptionMenu('type:', typestr, 0,
 						(self.linktype_callback, ()),
-						bottom = 125, top = 0, 
-						left =lbw+5 , right =lbw2)
-		
+						bottom = None, top = None,
+						left = self.__link_dir)
 		self.__ok_group = e.ButtonRow(
 			[('OK', (self.ok_callback, ())),
 			 ('Cancel', (self.cancel_callback, ())),
 			 ],
 			vertical = 0,
-			bottom = 30, left = lbw+lbw2+5,
-			right = hbw, top = 0)
+			bottom = None, top = None, right = None,
+			left = self.__link_type)
 
-		self._win1 = win1 = w.SubWindow(top = 5, left = 5, right = winw, bottom = 310)
-		
-		print "menu1-->", menu1
-		self._men1 = menu = win1.PulldownMenu([('Set anchorlist', menu1)],
-					 top = None, left = None, right = None, bottom = None)
-
-		button1 = win1.Button('Set anchorlist',(self._call,(0,)),top = 0, left = 0, right = winw, bottom = 30)
-
+		win1 = w.SubWindow(top = None, left = None, right = 1.0/3.0,
+				   bottom = self.__edit_group)
+		menu = win1.PulldownMenu([('Set anchorlist', menu1)],
+					 top = None, left = None, right = None)
 		self.__left_buttons = win1.ButtonRow(
 			[('Push focus', (self.show_callback, (cbarg1,))),
 			 ('Anchor editor...',
 			  (self.anchoredit_callback, (cbarg1,))),
 			 ],
-			vertical = 1, top = 205, left = 0, right = winw, bottom = 105)
+			vertical = 1, bottom = None, left = None, right = None)
 		self.__left_browser = win1.List('None', [],
 			(self.anchor_browser_callback, (cbarg1,)),
-		#	top = menu, bottom = self.__left_buttons,
-			top = 30, left = 0, right = winw, bottom = 170)
+			top = menu, bottom = self.__left_buttons,
+			left = None, right = None)
 
-		cmifex2.SetFont(self.__left_browser._list,"Arial",8)
-
-		self._win2 = win2 = w.SubWindow(top = 5, left = winw+5, right = winw-130, bottom = 310)
-		
+		win2 = w.SubWindow(top = None, left = win1, right = 2.0/3.0,
+				   bottom = self.__edit_group)
 		dummymenu = win2.PulldownMenu([('Set anchorlist', [])],
 					 top = None, left = None, right = None)
 		self.__middle_buttons = win2.ButtonRow(
@@ -228,45 +106,28 @@ class LinkEditDialog:
 			 ('Edit...', (self.link_edit_callback, ())),
 			 ('Delete', (self.link_delete_callback, ())),
 			 ],
-			vertical = 1, top = 205, left = 0, right = winw-130, bottom = 105)
+			vertical = 1, bottom = None, left = None, right = None)
 		self.__middle_browser = win2.List('links:', [],
 			(self.link_browser_callback, ()),
-			top = 30, left = 0, right = winw-130, bottom = 170)
+			top = dummymenu, bottom = self.__middle_buttons,
+			left = None, right = None)
 
-		cmifex2.SetFont(self.__middle_browser._list,"Arial",8)
-		
-		w._not_shown.append(self.__middle_browser)
-		w._not_shown.append(self.__middle_buttons)
-		
-		self._win3 = win3 = w.SubWindow(top = 5, left = 2*winw+5-130, right = winw, bottom = 310)
-		print "menu2-->", menu2
-		self._men2 = menu = win3.PulldownMenu([('Set anchorlist', menu2)],
+		win3 = w.SubWindow(top = None, left = win2, right = None,
+				   bottom = self.__edit_group)
+		menu = win3.PulldownMenu([('Set anchorlist', menu2)],
 					 top = None, left = None, right = None)
-		
-		button2 = win3.Button('Set anchorlist',(self._call,(1,)),top = 0, left = 0, right = winw, bottom = 30)
-		
 		self.__right_buttons = win3.ButtonRow(
 			[('Push focus', (self.show_callback, (cbarg2,))),
 			 ('Anchor editor...', (self.anchoredit_callback, (cbarg2,))),
 			 ],
-			vertical = 1, top = 205, left = 0, right = winw, bottom = 105)
+			vertical = 1, bottom = None, left = None, right = None)
 		self.__right_browser = win3.List('None', [],
 			(self.anchor_browser_callback, (cbarg2,)),
-			top = 30, left = 0, right = winw, bottom = 170)
-		
-		cmifex2.SetFont(self.__right_browser._list,"Arial",8)
-		
-		
-		self._helpwin = helpwin = w.SubWindow(bottom = 30, left = 5,
-				right = cmifex2.GetStringLength(w._hWnd,'Help')+20, top = 350)
-		
-		self.__helpbutton = helpwin.ButtonRow(
-			[('Help', (self.helpcall, ()))],
-			vertical = 1, top = 0, left = 0, right = cmifex2.GetStringLength(w._hWnd,'Help')+20, bottom = 30)
-				
+			top = menu, bottom = self.__right_buttons,
+			left = None, right = None)
+
 		w.fix()
-		cmifex2.ResizeWindow(w._hWnd,self._w,self._h)
-		
+
 		dummymenu.hide()
 
 		# the below assignments are merely for efficiency
@@ -302,39 +163,6 @@ class LinkEditDialog:
 		self.linktypesetchoice = self.__link_type.setpos
 		self.linktypegetchoice = self.__link_type.getpos
 
-		self.__window._hWnd.HookKeyStroke(self.helpcall,104)
-		return self.__window
-
-	
-	def helpcall(self, params=None):
-		import Help
-		Help.givehelp(self.__window._hWnd, 'Hyperlinks')
-
-	
-	def _call(self, button):
-		#print "CALLBACK CALLED"
-		if button == 0:
-			id = cmifex2.FloatMenu(self._win1._hWnd,self._men1._menu,0,0)
-			print id
-			if self._men1._callback_dict.has_key(id):
-				try:
-					f, a = self._men1._callback_dict[id]
-				except AttributeError:
-					pass
-				else:
-					apply(f, a) 
-		else:
-			id = cmifex2.FloatMenu(self._win3._hWnd,self._men2._menu,0,0)
-			print id 
-			if self._men2._callback_dict.has_key(id):
-				try:
-					f, a = self._men2._callback_dict[id]
-				except AttributeError:
-					pass
-				else:
-					apply(f, a)
-	
-	
 	def close(self):
 		"""Close the dialog and free resources."""
 		self.__window.close()

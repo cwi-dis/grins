@@ -15,9 +15,13 @@ SINGLE, HTM, TEXT, MPEG = 0, 1, 2, 3
 
 UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
 
+RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH = 0, 1, 2
+
 Version = 'X'
 
 toplevel = None
+
+_def_useGadget = 1			# whether to use gadgets or not
 
 from types import *
 from WMEVENTS import *
@@ -81,6 +85,7 @@ class _Toplevel:
 		self._vmm2pxl = float(self._screenheight) / self._mscreenheight
 		self._dpi_x = int(25.4 * self._hmm2pxl + .5)
 		self._dpi_y = int(25.4 * self._vmm2pxl + .5)
+		self._handcursor = dpy.CreateFontCursor(Xcursorfont.hand2)
 		self._watchcursor = dpy.CreateFontCursor(Xcursorfont.watch)
 		self._channelcursor = dpy.CreateFontCursor(Xcursorfont.draped_box)
 		self._linkcursor = dpy.CreateFontCursor(Xcursorfont.hand1)
@@ -105,11 +110,11 @@ class _Toplevel:
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM, menubar = None):
-		return _Window(self, x, y, w, h, title, 0, pixmap, units, menubar)
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM, menubar = None, canvassize = None):
+		return _Window(self, x, y, w, h, title, 0, pixmap, units, menubar, canvassize)
 
-	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM, menubar = None):
-		return _Window(self, x, y, w, h, title, 1, pixmap, units, menubar)
+	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM, menubar = None, canvassize = None):
+		return _Window(self, x, y, w, h, title, 1, pixmap, units, menubar, canvassize)
 
 	def setcursor(self, cursor):
 		for win in self._subwindows:
@@ -253,6 +258,8 @@ class _Window:
 	# _shell: the Xt.ApplicationShell widget used for the window
 	#	(top-level windows only)
 	# _form: the Xm.DrawingArea widget used for the window
+	# _scrwin: the Xm.ScrolledWindow widget used for scrolling the canvas
+	# _clipcanvas: the Xm.DrawingArea widget used by the Xm.ScrolledWindow
 	# _colormap: the colormap used by the window (top-level
 	#	windows only)
 	# _visual: the visual used by the window (top-level windows
@@ -299,7 +306,7 @@ class _Window:
 	# _exp_reg: a region in which the exposed area is built up
 	#	(top-level window only)
 	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0,
-		     units = UNIT_MM, menubar = None):
+		     units = UNIT_MM, menubar = None, canvassize = None):
 		self._title = title
 		parent._subwindows.insert(0, self)
 		self._do_init(parent)
@@ -382,14 +389,17 @@ class _Window:
 		self._menubar = None
 		if menubar is not None:
 			mb = form.CreateMenuBar(
-				'toplevelMenuBar',
+				'menubar',
 				{'leftAttachment': Xmd.ATTACH_FORM,
 				 'rightAttachment': Xmd.ATTACH_FORM,
 				 'topAttachment': Xmd.ATTACH_FORM})
 			mb.ManageChild()
 			attrs['topAttachment'] = Xmd.ATTACH_WIDGET
 			attrs['topWidget'] = mb
-			cascade = Xm.CascadeButtonGadget
+			if _def_useGadget:
+				cascade = Xm.CascadeButtonGadget
+			else:
+				cascade = Xm.CascadeButton
 			for item, list in menubar:
 				menu = mb.CreatePulldownMenu('toplevelMenu',
 					{'colormap': toplevel._default_colormap,
@@ -404,6 +414,39 @@ class _Window:
 					     toplevel._default_colormap,
 					     self._accelerators)
 			self._menubar = mb
+		if canvassize is not None:
+			form = form.CreateScrolledWindow('scrolledWindow',
+				{'scrollingPolicy': Xmd.AUTOMATIC,
+				 'width': attrs['width'],
+				 'height': attrs['height'],
+				 'leftAttachment': Xmd.ATTACH_FORM,
+				 'rightAttachment': Xmd.ATTACH_FORM,
+				 'bottomAttachment': Xmd.ATTACH_FORM,
+				 'topAttachment': attrs['topAttachment'],
+				 'topWidget': attrs.get('topWidget',0)})
+			form.ManageChild()
+			self._scrwin = form
+			for w in form.children:
+				if w.Class() == Xm.DrawingArea:
+					w.AddCallback('resizeCallback',
+						self._scr_resize_callback,
+						form)
+					self._clipcanvas = w
+					break
+			width, height = canvassize
+			# convert to pixels
+			if units == UNIT_MM:
+				width = int(float(width) * toplevel._hmm2pxl + 0.5)
+				height = int(float(height) * toplevel._vmm2pxl + 0.5)
+			elif units == UNIT_SCREEN:
+				width = int(float(width) * toplevel._screenwidth + 0.5)
+				height = int(float(height) * toplevel._screenheight + 0.5)
+			elif units == UNIT_PXL:
+				width = int(width)
+				height = int(height)
+			spacing = form.spacing
+			attrs['width'] = width - spacing
+			attrs['height'] = height - spacing
 		form = form.CreateManagedWidget('toplevel',
 						Xm.DrawingArea, attrs)
 		self._form = form
@@ -416,6 +459,17 @@ class _Window:
 		self._rect = 0, 0, w, h
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
+		self.setcursor(self._cursor)
+		if pixmap:
+			self._pixmap = form.CreatePixmap()
+			gc = self._pixmap.CreateGC({'foreground': bg,
+						    'background': bg})
+			gc.FillRectangle(0, 0, w, h)
+		else:
+			self._pixmap = None
+			gc = form.CreateGC({'background': bg})
+		gc.foreground = fg
+		self._gc = gc
 		w = float(w) / toplevel._hmm2pxl
 		h = float(h) / toplevel._vmm2pxl
 		self._hfactor = parent._hfactor / w
@@ -425,16 +479,8 @@ class _Window:
 		form.AddCallback('exposeCallback', self._expose_callback, None)
 		form.AddCallback('resizeCallback', self._resize_callback, None)
 		form.AddCallback('inputCallback', self._input_callback, None)
-		self.setcursor(self._cursor)
-		if pixmap:
-			self._pixmap = form.CreatePixmap()
-			gc = self._pixmap.CreateGC({'foreground': bg,
-						    'background': bg})
-			gc.FillRectangle(0, 0, w, h)
-		else:
-			gc = form.CreateGC({'background': bg})
-		gc.foreground = fg
-		self._gc = gc
+		form.AddEventHandler(X.PointerMotionMask, FALSE,
+				     self._motion_handler, None)
 
 	def __repr__(self):
 		try:
@@ -460,12 +506,16 @@ class _Window:
 		self._bgcolor = parent._bgcolor
 		self._fgcolor = parent._fgcolor
 		self._cursor = parent._cursor
+		self._curcursor = ''
+		self._curpos = None
+		self._buttonregion = Xlib.CreateRegion()
 		self._callbacks = {}
 		self._accelerators = {}
 		self._menu = None
 		self._transparent = 0
 		self._showing = 0
 		self._redrawfunc = None
+		self._scrwin = None	# Xm.ScrolledWindow widget if any
 
 	def close(self):
 		if self._parent is None:
@@ -483,10 +533,7 @@ class _Window:
 		del self._clip
 		del self._topwindow
 		del self._gc
-		try:
-			del self._pixmap
-		except AttributeError:
-			pass
+		del self._pixmap
 
 	def is_closed(self):
 		return self._parent is None
@@ -498,7 +545,7 @@ class _Window:
 		gc.foreground = self._convert_color((255,0,0))
 		x, y, w, h = self._rect
 		gc.DrawRectangle(x, y, w-1, h-1)
-		if hasattr(self, '_pixmap'):
+		if self._pixmap is not None:
 			x, y, w, h = self._rect
 			self._pixmap.CopyArea(self._form, gc,
 					      x, y, w, h, x, y)
@@ -514,14 +561,21 @@ class _Window:
 			r1.UnionRectWithRegion(x+1, y+1, w-2, h-2)
 			r.SubtractRegion(r1)
 			self._topwindow._do_expose(r)
-			if hasattr(self, '_pixmap'):
+			if self._pixmap is not None:
 				self._gc.SetRegion(r)
 				self._pixmap.CopyArea(self._form, self._gc,
 						      x, y, w, h, x, y)
 
 	def getgeometry(self, units = UNIT_MM):
 		x, y = self._shell.TranslateCoords(0, 0)
-		w, h = self._rect[2:]
+		for w in self._shell.children[0].children:
+			if w.Class() == Xm.ScrolledWindow:
+				val = w.GetValues(['width', 'height'])
+				w = val['width']
+				h = val['height']
+				break
+		else:
+			w, h = self._rect[2:]
 		if units == UNIT_MM:
 			return float(x) / toplevel._hmm2pxl, \
 			       float(y) / toplevel._vmm2pxl, \
@@ -536,6 +590,26 @@ class _Window:
 			return x, y, w, h
 		else:
 			raise error, 'bad units specified'
+
+	def setcanvassize(self, code):
+		if self._scrwin is None:
+			raise error, 'no scrollable window'
+		# this triggers a resizeCallback
+		sp = self._scrwin.spacing
+		w = self._scrwin.width
+		h = self._scrwin.height
+		if code == RESET_CANVAS:
+			self._form.SetValues({'width': w-sp, 'height': h-sp})
+		elif code == DOUBLE_HEIGHT:
+			attrs = {'height': self._form.height * 2}
+			if self._clipcanvas.width == self._form.width:
+				attrs['width'] = self._form.width - 27
+			self._form.SetValues(attrs)
+		elif code == DOUBLE_WIDTH:
+			attrs = {'width': self._form.width * 2}
+			if self._clipcanvas.height == self._form.height:
+				attrs['height'] = self._form.height - 27
+			self._form.SetValues(attrs)
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
 		return _SubWindow(self, coordinates, 0, pixmap, transparent, z)
@@ -580,13 +654,17 @@ class _Window:
 			self._gc.foreground = self._convert_color(color)
 			x, y, w, h = self._rect
 			self._gc.FillRectangle(x, y, w, h)
-			if hasattr(self, '_pixmap'):
+			if self._pixmap is not None:
 				self._pixmap.CopyArea(self._form, self._gc,
 						      x, y, w, h, x, y)
 
 	def setcursor(self, cursor):
 		self._cursor = cursor
+		if cursor == '' and self._curpos is not None and \
+		   apply(self._buttonregion.PointInRegion, self._curpos):
+			cursor = 'hand'
 		_setcursor(self._form, cursor)
+		self._curcursor = cursor
 
 	def newdisplaylist(self, bgcolor = None):
 		if bgcolor is None:
@@ -708,6 +786,7 @@ class _Window:
 		# create region for whole window
 		self._clip = region = Xlib.CreateRegion()
 		apply(region.UnionRectWithRegion, self._rect)
+		self._buttonregion = bregion = Xlib.CreateRegion()
 		# subtract all subwindows
 		for w in self._subwindows:
 			if w._transparent == 0 or \
@@ -716,6 +795,13 @@ class _Window:
 				apply(r.UnionRectWithRegion, w._rect)
 				region.SubtractRegion(r)
 			w._mkclip()
+			bregion.UnionRegion(w._buttonregion)
+		# create region for all visible buttons
+		if self._active_displist is not None:
+			r = Xlib.CreateRegion()
+			r.UnionRegion(self._clip)
+			r.IntersectRegion(self._active_displist._buttonregion)
+			bregion.UnionRegion(r)
 
 	def _delclip(self, child, region):
 		# delete child's overlapping siblings
@@ -953,9 +1039,8 @@ class _Window:
 			# last of a series, do the redraw
 			r = self._exp_reg
 			self._exp_reg = Xlib.CreateRegion()
-			try:
-				pm = self._pixmap
-			except AttributeError:
+			pm = self._pixmap
+			if pm is None:
 				self._do_expose(r)
 			else:
 				self._gc.SetRegion(r)
@@ -1005,6 +1090,13 @@ class _Window:
 		if self._showing:
 			self.showwindow()
 
+	def _scr_resize_callback(self, w, form, call_data):
+		if self.is_closed():
+			return
+		width = max(self._form.width, w.width)
+		height = max(self._form.height, w.height)
+		self._form.SetValues({'width': width, 'height': height})
+
 	def _resize_callback(self, form, client_data, call_data):
 		val = self._form.GetValues(['width', 'height'])
 		x, y = self._rect[:2]
@@ -1018,9 +1110,7 @@ class _Window:
 		h = float(height) / toplevel._vmm2pxl
 		self._hfactor = parent._hfactor / w
 		self._vfactor = parent._vfactor / h
-		try:
-			del self._pixmap
-		except AttributeError:
+		if self._pixmap is None:
 			pixmap = None
 		else:
 			pixmap = form.CreatePixmap()
@@ -1036,7 +1126,7 @@ class _Window:
 			w._do_resize1()
 		self._mkclip()
 		self._do_expose(self._region)
-		if pixmap:
+		if pixmap is not None:
 			gc.SetRegion(self._region)
 			pixmap.CopyArea(form, gc, 0, 0, width, height, 0, 0)
 		# call resize callbacks
@@ -1051,6 +1141,16 @@ class _Window:
 			pass
 		else:
 			func(arg, self, ResizeWindow, None)
+
+	def _motion_handler(self, form, client_data, event):
+		x, y = self._curpos = event.x, event.y
+		if self._buttonregion.PointInRegion(x, y):
+			cursor = 'hand'
+		else:
+			cursor = self._cursor
+		if self._curcursor != cursor:
+			_setcursor(form, cursor)
+			self._curcursor = cursor
 
 class _BareSubWindow:
 	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z):
@@ -1082,6 +1182,7 @@ class _BareSubWindow:
 		else:
 			parent._subwindows.append(self)
 		self._do_init(parent)
+		self._motion_handler = parent._motion_handler
 		if parent._transparent:
 			self._transparent = parent._transparent
 		else:
@@ -1094,19 +1195,14 @@ class _BareSubWindow:
 		self._gc = parent._gc
 		self._visual = parent._visual
 		self._colormap = parent._colormap
-		try:
-			self._pixmap = parent._pixmap
-		except AttributeError:
-			have_pixmap = 0
-		else:
-			have_pixmap = 1
+		self._pixmap = parent._pixmap
 
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
 		parent._mkclip()
 		if self._transparent == 0:
 			self._do_expose(self._region)
-			if have_pixmap:
+			if self._pixmap is not None:
 				x, y, w, h = self._rect
 				self._gc.SetRegion(self._region)
 				self._pixmap.CopyArea(self._form, self._gc,
@@ -1127,18 +1223,19 @@ class _BareSubWindow:
 			dl.close()
 		parent._mkclip()
 		parent._do_expose(self._region)
-		if hasattr(self, '_pixmap'):
+		if self._pixmap is not None:
 			x, y, w, h = self._rect
 			self._gc.SetRegion(self._region)
 			self._pixmap.CopyArea(self._form, self._gc,
 					      x, y, w, h, x, y)
-			del self._pixmap
+		del self._pixmap
 		del self._form
 		del self._clip
 		del self._topwindow
 		del self._region
 		del self._gc
 		del self._convert_color
+		del self._motion_handler
 
 	def settitle(self, title):
 		raise error, 'can only settitle at top-level'
@@ -1162,7 +1259,7 @@ class _BareSubWindow:
 			# draw the window's contents
 			if self._transparent == 0 or self._active_displist:
 				self._do_expose(self._region)
-				if hasattr(self, '_pixmap'):
+				if self._pixmap is not None:
 					x, y, w, h = self._rect
 					self._gc.SetRegion(self._region)
 					self._pixmap.CopyArea(self._form,
@@ -1189,7 +1286,7 @@ class _BareSubWindow:
 		for w in self._parent._subwindows:
 			if w is not self:
 				w._do_expose(self._region)
-		if hasattr(self, '_pixmap'):
+		if self._pixmap is not None:
 			x, y, w, h = self._rect
 			self._gc.SetRegion(self._region)
 			self._pixmap.CopyArea(self._form, self._gc,
@@ -1211,12 +1308,7 @@ class _BareSubWindow:
 		# calculate new size of subwindow after resize
 		# close all display lists
 		parent = self._parent
-		try:
-			del self._pixmap
-		except AttributeError:
-			pass
-		else:
-			self._pixmap = parent._pixmap
+		self._pixmap = parent._pixmap
 		self._gc = parent._gc
 		x, y, w, h = parent._convert_coordinates(self._sizes, crop = 1)
 		self._rect = x, y, w, h
@@ -1244,6 +1336,7 @@ class _DisplayList:
 		self._window = window
 		window._displists.append(self)
 		self._buttons = []
+		self._buttonregion = Xlib.CreateRegion()
 		self._fgcolor = window._fgcolor
 		self._bgcolor = bgcolor
 		self._linewidth = 1
@@ -1281,17 +1374,23 @@ class _DisplayList:
 				win._parent._do_expose(r)
 			else:
 				win._do_expose(r)
-			if hasattr(win, '_pixmap'):
+			if win._pixmap is not None:
 				x, y, w, h = win._rect
 				win._gc.SetRegion(win._region)
 				win._pixmap.CopyArea(win._form, win._gc,
 						     x, y, w, h, x, y)
+			win._buttonregion = bregion = Xlib.CreateRegion()
+			w = win._parent
+			while w is not None and w is not toplevel:
+				w._buttonregion.SubtractRegion(win._clip)
+				w = w._parent
 		del self._cloneof
 		del self._optimdict
 		del self._list
 		del self._buttons
 		del self._font
 		del self._imagemask
+		del self._buttonregion
 
 	def is_closed(self):
 		return self._window is None
@@ -1338,12 +1437,21 @@ class _DisplayList:
 		# finally, re-highlight window
 		if window._showing:
 			window.showwindow()
-		if hasattr(window, '_pixmap'):
+		if window._pixmap is not None:
 			x, y, width, height = window._rect
+			window._gc.SetRegion(window._clip)
 			window._pixmap.CopyArea(window._form, window._gc,
 						x, y, width, height, x, y)
+		window._buttonregion = bregion = Xlib.CreateRegion()
+		bregion.UnionRegion(self._buttonregion)
+		bregion.IntersectRegion(window._clip)
+		w = window._parent
+		while w is not None and w is not toplevel:
+			w._buttonregion.SubtractRegion(window._clip)
+			w._buttonregion.UnionRegion(bregion)
+			w = w._parent
 		toplevel._main.UpdateDisplay()
-		
+
 	def _render(self, region):
 		self._rendered = TRUE
 		w = self._window
@@ -1355,12 +1463,6 @@ class _DisplayList:
 		   w._transparent and clonestart == 0:
 			w._active_displist = None
 			w._do_expose(region)
-		try:
-			pm = self._pixmap
-		except AttributeError:
-			have_pixmap = 0
-		else:
-			have_pixmap = 1
 		gc = w._gc
 		gc.ChangeGC(self._gcattr)
 		gc.SetRegion(region)
@@ -1570,6 +1672,37 @@ class _DisplayList:
 		newx, newy = self._curpos
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
 
+	# Draw a string centered in a box, breaking lines if necessary
+	def centerstring(self, left, top, right, bottom, str):
+		fontheight = self.fontheight()
+		baseline = self.baseline()
+		width = right - left
+		height = bottom - top
+		curlines = [str]
+		if height >= 2*fontheight:
+			import StringStuff
+			curlines = StringStuff.calclines([str], self.strsize, width)[0]
+		nlines = len(curlines)
+		needed = nlines * fontheight
+		if nlines > 1 and needed > height:
+			nlines = max(1, int(height / fontheight))
+			curlines = curlines[:nlines]
+			curlines[-1] = curlines[-1] + '...'
+		x0 = (left + right) * 0.5	# x center of box
+		y0 = (top + bottom) * 0.5	# y center of box
+		y = y0 - nlines * fontheight * 0.5
+		for i in range(nlines):
+			str = string.strip(curlines[i])
+			# Get font parameters:
+			w = self.strsize(str)[0]	# Width of string
+			while str and w > width:
+				str = str[:-1]
+				w = self.strsize(str)[0]
+			x = x0 - 0.5*w
+			y = y + baseline
+			self.setpos(x, y)
+			self.writestr(str)
+
 	def _optimize(self, ignore = ()):
 		entry = self._list[-1]
 		x = []
@@ -1613,9 +1746,11 @@ class _Button:
 		self._width = self._hiwidth = dispobj._linewidth
 		self._newdispobj = None
 		self._highlighted = 0
+		x, y, w, h = window._convert_coordinates(coordinates)
+		dispobj._buttonregion.UnionRectWithRegion(x, y, w, h)
 		if self._color == dispobj._bgcolor:
 			return
-		dispobj.drawbox(self._coordinates)
+		dispobj.drawbox(coordinates)
 
 	def close(self):
 		if self._dispobj is None:
@@ -1650,7 +1785,7 @@ class _Button:
 			return
 		self._highlighted = 1
 		self._do_highlight()
-		if hasattr(window, '_pixmap'):
+		if window._pixmap is not None:
 			x, y, w, h = window._rect
 			window._pixmap.CopyArea(window._form, window._gc,
 						x, y, w, h, x, y)
@@ -1685,7 +1820,7 @@ class _Button:
 				       w - 2*lw - 1, h - 2*lw - 1)
 		r.SubtractRegion(r1)
 		window._do_expose(r)
-		if hasattr(window, '_pixmap'):
+		if window._pixmap is not None:
 			x, y, w, h = window._rect
 			window._pixmap.CopyArea(window._form, window._gc,
 						x, y, w, h, x, y)
@@ -1845,8 +1980,8 @@ def findfont(fontname, pointsize):
 			raise error, "can't find any fonts"
 	fontobj = _Font(thefont, psize)
 	_fontcache[key] = fontobj
-	return fontobj	
-	
+	return fontobj
+
 class _Font:
 	def __init__(self, fontname, pointsize):
 		self._font = toplevel._main.LoadQueryFont(fontname)
@@ -1975,14 +2110,21 @@ class Dialog:
 			 'topAttachment': Xmd.ATTACH_FORM,
 			 'leftAttachment': Xmd.ATTACH_FORM,
 			 'rightAttachment': Xmd.ATTACH_FORM}
+		if _def_useGadget:
+			label = Xm.LabelGadget
+			separator = Xm.SeparatorGadget
+			pushbutton = Xm.PushButtonGadget
+		else:
+			label = Xm.Label
+			separator = Xm.Separator
+			pushbutton = Xm.PushButton
 		if prompt:
-			l = w.CreateManagedWidget('label', Xm.LabelGadget,
+			l = w.CreateManagedWidget('label', label,
 					{'labelString': prompt,
 					 'topAttachment': Xmd.ATTACH_FORM,
 					 'leftAttachment': Xmd.ATTACH_FORM,
 					 'rightAttachment': Xmd.ATTACH_FORM})
-			sep = w.CreateManagedWidget('separator',
-					Xm.SeparatorGadget,
+			sep = w.CreateManagedWidget('separator', separator,
 					{'topAttachment': Xmd.ATTACH_WIDGET,
 					 'topWidget': l,
 					 'leftAttachment': Xmd.ATTACH_FORM,
@@ -1998,7 +2140,7 @@ class Dialog:
 				else:
 					attrs = {'orientation': Xmd.VERTICAL}
 				dummy = row.CreateManagedWidget('separator',
-							Xm.SeparatorGadget,
+							separator,
 							attrs)
 				continue
 			if type(entry) is TupleType:
@@ -2007,8 +2149,7 @@ class Dialog:
 				label, callback = entry, None
 			if callback and type(callback) is not TupleType:
 				callback = (callback, (label,))
-			b = row.CreateManagedWidget('button',
-						    Xm.PushButtonGadget,
+			b = row.CreateManagedWidget('button', pushbutton,
 						    {'labelString': label})
 			if callback:
 				b.AddCallback('activateCallback',
@@ -2074,7 +2215,7 @@ class Dialog:
 		if not 0 <= button < len(self._buttons):
 			raise error, 'button number out of range'
 		self._buttons[button].set = onoff
-		
+
 class MainDialog(Dialog):
 	pass	# Same as Dialog, for X
 
@@ -2132,7 +2273,19 @@ def _colormask(mask):
 def _generic_callback(widget, (func, args), call_data):
 	apply(func, args)
 
-def _create_menu(menu, list, visual, colormap, acc = None):
+def _create_menu(menu, list, visual, colormap, acc = None, widgets = {}):
+	if _def_useGadget:
+		separator = Xm.SeparatorGadget
+		label = Xm.LabelGadget
+		cascade = Xm.CascadeButtonGadget
+		toggle = Xm.ToggleButtonGadget
+		pushbutton = Xm.PushButtonGadget
+	else:
+		separator = Xm.Separator
+		label = Xm.Label
+		cascade = Xm.CascadeButton
+		toggle = Xm.ToggleButton
+		pushbutton = Xm.PushButton
 	accelerator = None
 	length = 0
 	i = 0
@@ -2141,8 +2294,7 @@ def _create_menu(menu, list, visual, colormap, acc = None):
 		i = i + 1
 		if entry is None:
 			dummy = menu.CreateManagedWidget('separator',
-							 Xm.SeparatorGadget,
-							 {})
+							 separator, {})
 			continue
 		if length == 20 and i < len(list) - 3:
 			entry = ('More', list[i-1:])
@@ -2152,39 +2304,66 @@ def _create_menu(menu, list, visual, colormap, acc = None):
 		length = length + 1
 		if type(entry) is StringType:
 			dummy = menu.CreateManagedWidget(
-				'menuLabel', Xm.LabelGadget,
+				'menuLabel', label,
 				{'labelString': entry})
+			widgets[entry] = dummy, None
 			continue
+		btype = 'p'		# default is pushbutton
+		initial = 0
 		if acc is None:
-			label, callback = entry
+			labelString, callback = entry[:2]
+			if len(entry) > 2:
+				btype = entry[2]
+				if len(entry) > 3:
+					initial = entry[3]
 		else:
-			accelerator, label, callback = entry
+			accelerator, labelString, callback = entry[:3]
+			if len(entry) > 3:
+				btype = entry[3]
+				if len(entry) > 4:
+					initial = entry[4]
 		if type(callback) is ListType:
 			submenu = menu.CreatePulldownMenu('submenu',
 				{'colormap': colormap,
 				 'visual': visual,
 				 'depth': visual.depth})
 			button = menu.CreateManagedWidget(
-				'submenuLabel', Xm.CascadeButtonGadget,
-				{'labelString': label, 'subMenuId': submenu})
-			_create_menu(submenu, callback, visual, colormap, acc)
+				'submenuLabel', cascade,
+				{'labelString': labelString, 'subMenuId': submenu})
+			subwidgets = {}
+			widgets[labelString] = button, subwidgets
+			_create_menu(submenu, callback, visual, colormap, acc,
+				     subwidgets)
 		else:
 			if type(callback) is not TupleType:
-				callback = (callback, (label,))
-			attrs = {'labelString': label}
+				callback = (callback, (labelString,))
+			attrs = {'labelString': labelString}
 			if accelerator:
 				if type(accelerator) is not StringType or \
 				   len(accelerator) != 1:
 					raise error, 'menu accelerator must be single character'
 				acc[accelerator] = callback
 				attrs['acceleratorText'] = accelerator
-			button = menu.CreateManagedWidget('menuLabel',
-						Xm.PushButtonGadget, attrs)
-			button.AddCallback('activateCallback',
-					   _generic_callback, callback)
+			if btype == 't':
+				attrs['set'] = initial
+				button = menu.CreateManagedWidget('menuToggle',
+						toggle, attrs)
+				cbfunc = 'valueChangedCallback'
+			else:
+				button = menu.CreateManagedWidget('menuLabel',
+						pushbutton, attrs)
+				cbfunc = 'activateCallback'
+			button.AddCallback(cbfunc, _generic_callback, callback)
+			widgets[labelString] = button, None
 
 def _setcursor(form, cursor):
-	if cursor == 'watch':
+	if not form.IsRealized():
+		return
+	if cursor == 'hand':
+		form.DefineCursor(toplevel._handcursor)
+	elif cursor == '':
+		form.UndefineCursor()
+	elif cursor == 'watch':
 		form.DefineCursor(toplevel._watchcursor)
 	elif cursor == 'channel':
 		form.DefineCursor(toplevel._channelcursor)
@@ -2192,8 +2371,6 @@ def _setcursor(form, cursor):
 		form.DefineCursor(toplevel._linkcursor)
 	elif cursor == 'stop':
 		form.DefineCursor(toplevel._stopcursor)
-	elif cursor == '':
-		form.UndefineCursor()
 	else:
 		raise error, 'unknown cursor glyph'
 

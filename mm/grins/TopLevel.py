@@ -1,19 +1,17 @@
 __version__ = "$Id$"
 
 import os, sys, posixpath
-import windowinterface, win32api, win32con, cmifex2
-import MMExc, MMAttrdefs, MMTree, MMurl
+import windowinterface
+import MMAttrdefs, MMurl
+from MMExc import *
 import Timing
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 
 # an empty document
 EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
 
-# List of currently open toplevel windows
-opentops = []
-
 class TopLevel:
-	def __init__(self, main, url):	
+	def __init__(self, main, url):
 		self.waiting = 0
 		self.select_fdlist = []
 		self.select_dict = {}
@@ -42,28 +40,23 @@ class TopLevel:
 			url = '%s:%s' % (utype, url)
 		self.filename = url
 		self.read_it()
-		self.source = None
 		self.makeplayer()
-		self.window = None
-		opentops.append(self)
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
 
 	def show(self):
 		pass
-		
+
 	def destroy(self):
 		self.destroyplayer()
 		self.root.Destroy()
 		if self in self.main.tops:
 			self.main.tops.remove(self)
-			opentops.remove(self)
 
 	def timer_callback(self):
 		self._last_timer_id = None
-		if self.player:
-			self.player.timer_callback()
+		self.player.timer_callback()
 
 	def set_timer(self, delay):
 		if self._last_timer_id is not None:
@@ -87,7 +80,6 @@ class TopLevel:
 	#
 	# Callbacks.
 	#
-	
 	def open_okcallback(self, filename):
 		if os.path.isabs(filename):
 			cwd = os.getcwd()
@@ -127,9 +119,9 @@ class TopLevel:
 				cwd = os.path.join(os.getcwd(), cwd)
 		else:
 			cwd = os.getcwd()
-		#pat = 'cmif files (*.cmif)|*.cmif|smil files (*.smi;*.smil)|*.smi;*.smil||'
-		windowinterface.FileDialog('Open CMIF or SMIL file:', cwd, '*.smil *.cmif', ' ',
-					   self.open_okcallback, None, existing = 1)
+		windowinterface.FileDialog('Open SMIL file:', cwd, '*.smil',
+					   '', self.open_okcallback, None,
+					   existing = 1)
 
 	def read_it(self):
 ##  	import time
@@ -152,7 +144,7 @@ class TopLevel:
     <ref dur="indefinite" src="%s"/>
   </body>
 </smil>
-''' % self.filename, self.filename)	
+''' % self.filename, self.filename)
 ##		t1 = time.time()
 ##		print 'done in', round(t1-t0, 3), 'sec.'
 		Timing.changedtimes(self.root)
@@ -165,11 +157,6 @@ class TopLevel:
 
 	def close(self):
 		self.destroy()
-	#	if len(opentops) == 0:
-	#		#raise SystemExit, 0
-	#		import win32ui
-	#		h1 = win32ui.GetMainFrame()
-	#		h1.DestroyWindow()
 
 	def setwaiting(self):
 		if self.waiting: return
@@ -180,7 +167,7 @@ class TopLevel:
 	def setready(self):
 		if not self.waiting: return
 		self.waiting = 0
-		if self.player:
+		if self.player is not None:
 			self.player.setready()
 		windowinterface.setcursor('')
 

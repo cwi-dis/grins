@@ -12,7 +12,7 @@ from WizardDialog import WizardDialog
 class Wizard(WizardDialog):
 
 	def __init__(self, toplevel, **options):
-		self.toplevel = toplevel 
+		self.toplevel = toplevel
 		self.new_dialog = None
 		self.new_dialog2 = None
 		self.def_anch_dialog = None
@@ -32,11 +32,11 @@ class Wizard(WizardDialog):
 	def __repr__(self):
 		return '<Wizard instance>'
 
-	
+
 	def maketitle(self):
 		return 'Document Wizard'
 
-	
+
 	def updateform(self):
 		self.setname(self.name)
 
@@ -56,7 +56,7 @@ class Wizard(WizardDialog):
 		self.setchildren(self.children, 0)
 
 		self.show_correct_group()
-	
+
 	def show_correct_group(self):
 		self.show_group()
 
@@ -75,8 +75,8 @@ class Wizard(WizardDialog):
 		del self.history
 		del self.node_list
 		del self.channel_list
-	
-	
+
+
 	def cancel_callback(self):
 		self.close()
 
@@ -112,7 +112,7 @@ class Wizard(WizardDialog):
 					s = item[1]
 				elif type(item[0]) is TupleType:
 					s = item[1]+'.'+item[0][0]
-									
+
 				if s in tmp:
 					num = 1
 					s = s+'.'
@@ -124,7 +124,7 @@ class Wizard(WizardDialog):
 				self.def_nodes(tmp,item[3])
 		return tmp
 
-	
+
 	def def_anch_callback(self):
 		if self.def_anch_dialog == None:
 			import WizardAnchorDialog
@@ -139,7 +139,7 @@ class Wizard(WizardDialog):
 			#self.new_dialog2.setlevel(`lev`)
 			self.def_anch_dialog.show()
 
-	
+
 	def get_node_list(self, filelist):
 		templist = filelist
 		tmp = {}
@@ -156,21 +156,21 @@ class Wizard(WizardDialog):
 			if not found:
 				int_tmp[key]=(item[0],item[3])
 				key = key +1
-		
+
 		for x in int_tmp.keys():
 			tmp[x] = []
-		
+
 		for item in templist:
 			ind = 0
 			for x in int_tmp.keys():
 				if int_tmp[x]==(item[0],item[3]):
 					ind = x
 					break
-			
+
 			tmp_l = tmp[ind]
 			tmp_l.append(item)
 			tmp[ind] = tmp_l
-			
+
 		templist = []
 		node_cr = 1
 		for it in int_tmp.keys():
@@ -180,7 +180,7 @@ class Wizard(WizardDialog):
 				node_cr = node_cr + 1
 			else:
 				templist.append(tmp_l[0])
-		
+
 		level_dict = {}
 		for i in templist:
 			if not level_dict.has_key(string.atoi(i[0][0])):
@@ -196,21 +196,21 @@ class Wizard(WizardDialog):
 			type = levels[i]
 			templist.append(i,'Level '+`i`,type,level_dict[i],1)
 		return templist
-	
-	
+
+
 	def next_callback(self):
 		if self.new_dialog != None:
 			self.new_dialog.cancel_callback()
-		win = self.getwindow() 
+		win = self.getwindow()
 		if self.cur_dialog == 1:
 			file = self.getfilename()
 			if not file:
 				windowinterface.showmessage("You must give a destination filename.", mtype = 'error')
 				return
 		else:
-			file = self.getfilename2() 
+			file = self.getfilename2()
 		type = self.gettype()
-		level = self.getwindowlevel() 
+		level = self.getwindowlevel()
 		if self.cur_dialog>1:
 			if not win or win == ('None','None'):
 				windowinterface.showmessage("You must give a window", mtype = 'error')
@@ -244,7 +244,7 @@ class Wizard(WizardDialog):
 		if self.cur_dialog<len(self.dialogs_list)-2:
 			self.cur_dialog = self.cur_dialog + 1
 			self.show_group()
-		
+
 
 
 	def back_callback(self):
@@ -253,11 +253,11 @@ class Wizard(WizardDialog):
 			self.buttons._buttons[2].SetWindowText('Finish')
 		if self.new_dialog != None:
 			self.new_dialog.cancel_callback()
-		win = self.getwindow() 
-		file = self.getfilename2() 
+		win = self.getwindow()
+		file = self.getfilename2()
 		type = self.gettype()
 		level = self.getwindowlevel()
-		name = self.getname() 
+		name = self.getname()
 		t = (win,file,type,level,name)
 		if self.cur_dialog>1 and self.cur_pos < len(self.history):
 			if not win:
@@ -287,8 +287,8 @@ class Wizard(WizardDialog):
 		else:
 			self.setwindowlevel(t[3])
 		self.setname(t[4])
-		
-	
+
+
 	def dir_callback(self):
 		directory = self.getdirname()
 		if directory <> self.directory:
@@ -309,10 +309,10 @@ class Wizard(WizardDialog):
 		name = self.getname()
 		if name <> self.name:
 			self.name = name
-	
-	
+
+
 	def ok_callback(self):
-		
+
 		## Called just in case the filename has changed
 		## So the filename is re-retrieved anyway
 		## MUADDIB
@@ -331,19 +331,19 @@ class Wizard(WizardDialog):
 		file = string.split(self.filename,'\\')[-1]
 		windowinterface.FileDialog('Select file', dir, '*', file,
 					   self.browserfile_callback, None, 1)
-	
+
 	def browser_callback2(self):
 		dir = self.directory
 		file = ' '
 		windowinterface.FileDialog('Select file', dir, '*', file,
 					   self.browserfile_callback2, None, 1)
-		
+
 
 	def browserfile_callback(self, pathname):
 		self.filename = pathname
 		ls = string.split(self.filename,'\\')
 		del ls[-1]
-		self.directory = string.joinfields(ls,'\\') 
+		self.directory = string.joinfields(ls,'\\')
 		self.setfilename(pathname)
 
 	def browserfile_callback2(self, pathname):
@@ -352,11 +352,11 @@ class Wizard(WizardDialog):
 	def finish_callback(self):
 		title = self.buttons._buttons[2].GetWindowText()
 		if title == 'Finish':
-			win = self.getwindow() 
-			file = self.getfilename2() 
+			win = self.getwindow()
+			file = self.getfilename2()
 			type = self.gettype()
 			level = self.getwindowlevel()
-			name = self.getname() 
+			name = self.getname()
 			t = (win,file,type,level,name)
 			if self.cur_dialog>1 and self.cur_pos < len(self.history):
 				if not win:
@@ -404,10 +404,9 @@ class Wizard(WizardDialog):
 					del self.ch_names[0]
 			if self.list_callback:
 				apply(self.list_callback, (self.ch_names, self.node_list, self.getanchors(),))
-			self.cancel_callback()	
-	
+			self.cancel_callback()
+
 	def type_callback(self, type):
 		self.settype(type)
 
 	def save_callback(self, yesno):
-		self.setsave(yesno)
