@@ -1042,7 +1042,7 @@ static PyObject* PyDC_StretchBlt(PyDC *self, PyObject *args)
 	DWORD dwRop = SRCCOPY;
 	if(!PyArg_ParseTuple(args, "(iiii)O(iiii)|l",
 		&nXDest,&nYDest,&nWidthDest,&nHeightDest,&obj,
-		&nXSrc,&nYSrc,&nWidthSrc,&nHeightSrc,dwRop))
+		&nXSrc,&nYSrc,&nWidthSrc,&nHeightSrc,&dwRop))
 		return NULL;
 	HDC hdcSrc = (HDC)GetGdiObjHandle(obj);
 	BOOL res = StretchBlt(self->m_hDC,nXDest,nYDest,nWidthDest,nHeightDest,hdcSrc,nXSrc,nYSrc,nWidthSrc,nHeightSrc,dwRop);
