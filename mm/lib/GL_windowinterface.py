@@ -241,10 +241,10 @@ class _Event:
 		try:
 			if debug:
 				print 'Event._readeventtimeout('+`timeout`+')'
-			if timeout != None and timeout > 0 and not mayblock():
+			if timeout is not None and timeout > 0 and not mayblock():
 				raise error, 'won\'t block in _readeventtimeout()'
 			fdlist = [self._winfd] + self._fdlist
-			if timeout == None:
+			if timeout is None:
 				ifdlist, ofdlist, efdlist = select.select(
 					  fdlist, [], [])
 			else:
@@ -273,7 +273,7 @@ class _Event:
 		if self._queue:
 			timeout = 0	# force collecting events w/out waiting
 		while 1:
-			if timeout != None:
+			if timeout is not None:
 				t1 = time.time()
 				timeout = timeout - (t1 - t0)
 				if timeout < 0:
@@ -286,7 +286,7 @@ class _Event:
 					win._redraw()
 			if self._queue:
 				return 1
-			if timeout != None and timeout <= 0:
+			if timeout is not None and timeout <= 0:
 				return 0
 			if not mayblock():
 				raise error, 'won\'t block in _getevent()'
@@ -551,7 +551,7 @@ class _Event:
 	def select_setcallback(self, fd, cb, arg):
 		if type(fd) <> type(1):
 			fd = fd.fileno()
-		if cb == None:
+		if cb is None:
 			self._select_fdlist.remove(fd)
 			del self._select_dict[fd]
 			self.rmfd(fd)
@@ -663,7 +663,7 @@ class _Button:
 		self._dispobj = None
 
 	def is_closed(self):
-		return self._dispobj == None
+		return self._dispobj is None
 
 	def getwindow(self):
 		return self._dispobj._window
@@ -774,7 +774,7 @@ class _DisplayList:
 		del self._buttonlist
 
 	def is_closed(self):
-		return self._window == None
+		return self._window is None
 
 	def render(self):
 		if debug: print `self`+'.render()'
@@ -1112,7 +1112,7 @@ class _Window:
 		gl.prefposition(x0 - wmcorr_x, x1 - wmcorr_x,
 			  _screenheight - y1 - 1 + wmcorr_y,
 			  _screenheight - y0 - 1 + wmcorr_y)
-		if title == None:
+		if title is None:
 			gl.noborder()
 			title = ''
 			noborder = 1
@@ -1127,7 +1127,7 @@ class _Window:
 
 ##	def __repr__(self):
 ##		s = '<_Window instance, window-id=' + `self._window_id`
-##		if self._parent_window == None:
+##		if self._parent_window is None:
 ##			s = s + ' (no parent)'
 ##		else:
 ##			s = s + ', parent=' + `self._parent_window`
