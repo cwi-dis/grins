@@ -8,8 +8,12 @@ import urllib
 def getduration(filename):
 	import mv
 	filename = urllib.urlretrieve(filename)[0]
-	f = mv.OpenFile(filename, 0)
-	duration = float(f.GetMovieDuration(1000)) / 1000
+	try:
+		f = mv.OpenFile(filename, 0)
+	except mv.error, msg:
+		print 'error in video file', filename, ':', msg
+		return 0
+	duration = float(f.GetEstMovieDuration(1000)) / 1000
 	f.Close()
 	return duration
 
