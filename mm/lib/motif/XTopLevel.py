@@ -2,8 +2,8 @@ __version__ = "$Id$"
 
 import Xt
 from types import IntType
-from XConstants import *
-from XConstants import _WAITING_CURSOR, _READY_CURSOR
+from XConstants import TRUE, FALSE, UNIT_MM, SINGLE, ReadMask, WriteMask, \
+     _WAITING_CURSOR, _READY_CURSOR
 
 class _Timer:
 	def set(self, id):

@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 import Xlib
-from XConstants import *
+from XConstants import error, TRUE, FALSE
 from XTopLevel import toplevel
 
 class _Button:

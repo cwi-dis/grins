@@ -7,8 +7,8 @@ import ToolTip
 from XTopLevel import toplevel
 from XCommand import _CommandSupport
 from XButtonSupport import _ButtonSupport
-from XConstants import *
-from XConstants import _def_useGadget, _WAITING_CURSOR, _READY_CURSOR
+from XConstants import error, TRUE, FALSE, TOP, BOTTOM, CENTER, \
+     _def_useGadget, _WAITING_CURSOR, _READY_CURSOR
 from XHelpers import _create_menu, _setcursor
 
 class _MenuSupport:

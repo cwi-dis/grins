@@ -5,8 +5,7 @@ import os
 from types import StringType
 from XTopLevel import toplevel
 import ToolTip
-from XConstants import *
-from XConstants import _WAITING_CURSOR, _READY_CURSOR
+from XConstants import TRUE, FALSE, _WAITING_CURSOR, _READY_CURSOR
 from XHelpers import _setcursor
 
 class showmessage:
@@ -109,7 +108,6 @@ class FileDialog:
 	_cursor = ''
 	def __init__(self, prompt, directory, filter, file, cb_ok, cb_cancel,
 		     existing = 0, parent = None):
-		import os
 		self.cb_ok = cb_ok
 		self.cb_cancel = cb_cancel
 		attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
@@ -222,7 +220,6 @@ class FileDialog:
 		toplevel.setready()
 
 	def _do_ok_callback(self, widget, existing, call_data):
-		import os
 		filename = call_data.value
 		dir = call_data.dir
 		filter = call_data.pattern

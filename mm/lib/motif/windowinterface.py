@@ -5,8 +5,6 @@ from WMEVENTS import *
 
 from XConstants import *
 
-import ToolTip
-
 from XTopLevel import *			# toplevel and various functions
 
 from XFont import *
@@ -50,8 +48,7 @@ class _Question:
 # 		self.looping = TRUE
 # 		toplevel.setready()
 # 		while self.looping:
-# 			event = Xt.NextEvent()
-# 			Xt.DispatchEvent(event)
+# 			Xt.DispatchEvent(Xt.NextEvent())
 		return self.answer
 
 	def callback(self, answer):
@@ -79,8 +76,7 @@ class _MultChoice:
 		self.looping = TRUE
 		toplevel.setready()
 		while self.looping:
-			event = Xt.NextEvent()
-			Xt.DispatchEvent(event)
+			Xt.DispatchEvent(Xt.NextEvent())
 		return self.answer
 
 	def callback(self, msg):

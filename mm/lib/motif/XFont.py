@@ -3,6 +3,7 @@ __version__ = "$Id$"
 import string
 from types import StringType
 from XTopLevel import toplevel
+from XConstants import error
 
 _fontmap = {
 	  'Times-Roman': '-*-times-medium-r-normal-*-*-*-*-*-*-*-iso8859-1',
