@@ -36,10 +36,10 @@ class LinkEdit(ViewDialog):
 		self.root = self.toplevel.root
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
-		title = 'Hyperlinks (' + toplevel.basename + ')'
-		self.window = windowinterface.Window(title, resizable = 1,
+		title = self.__maketitle()
+		self.window = w = windowinterface.Window(title, resizable = 1,
 					deleteCallback = (self.hide, ()))
-		self.showing = self.window.is_showing()
+		self.showing = w.is_showing()
 		self.left = Struct()
 		self.right = Struct()
 		self.left.fillfunc = self.fill_none
@@ -51,18 +51,19 @@ class LinkEdit(ViewDialog):
 		self.left.hidden = 0
 		self.right.hidden = 0
 
-		self.link_dir = self.window.OptionMenu('Link direction:',
+		self.edit_group = w.SubWindow(bottom = None, left = None,
+					      right = None)
+		self.link_dir = self.edit_group.OptionMenu('Link direction:',
 				dirstr, 0, (self.linkdir_callback, ()),
-				bottom = None, left = None)
-
-		self.ok_group = self.window.ButtonRow(
+				bottom = None, left = None, top = None)
+		self.ok_group = self.edit_group.ButtonRow(
 			[('OK', (self.ok_callback, ())),
 			 ('Cancel', (self.cancel_callback, ()))],
 			bottom = None, left = self.link_dir, right = None,
-			vertical = 0)
+			top = None, vertical = 0)
 
-		win1 = self.window.SubWindow(top = None, left = None,
-				bottom = self.link_dir, right = 0.333)
+		win1 = w.SubWindow(top = None, left = None,
+				bottom = self.edit_group, right = 0.333)
 		menu = win1.PulldownMenu([
 			('Set anchorlist',
 			 [('All', (self.menu_callback, (self.left, M_ALL))),
@@ -85,24 +86,23 @@ class LinkEdit(ViewDialog):
 				 left = None, right = None)
 		self.left.browser = list
 
-		win2 = self.window.SubWindow(top = None, left = win1,
-				bottom = self.link_dir, right = 0.667)
+		win2 = w.SubWindow(top = None, left = win1,
+				bottom = self.edit_group, right = 0.667)
 		dummymenu = win2.PulldownMenu([('placeholder', [])],
 				top = None, left = None, right = None)
 		self.link_edit = win2.ButtonRow(
-			[('Edit...', (self.link_edit_callback, ())),
-			 ('Delete', (self.link_delete_callback, ()))],
-			bottom = None, left = None, right = None, vertical = 0)
-		self.link_new = win2.ButtonRow(
-			[('Add...', (self.link_new_callback, ()))],
-			bottom = self.link_edit, left = None, right = None)
+			[('Add...', (self.link_new_callback, ())),
+			 ('Edit...', (self.link_edit_callback, ())),
+			 ('Delete', (self.link_delete_callback, ())),
+			 ],
+			bottom = None, left = None, right = None, vertical = 1)
 		self.link_browser = win2.List('links:', [],
 				(self.link_browser_callback, ()),
-				top = dummymenu, bottom = self.link_new,
+				top = dummymenu, bottom = self.link_edit,
 				left = None, right = None)
 
-		win3 = self.window.SubWindow(top = None, left = win2,
-				bottom = self.link_dir, right = None)
+		win3 = w.SubWindow(top = None, left = win2,
+				bottom = self.edit_group, right = None)
 		menu = win3.PulldownMenu([
 			('Set anchorlist',
 			 [('All', (self.menu_callback, (self.right, M_ALL))),
@@ -133,7 +133,7 @@ class LinkEdit(ViewDialog):
 				 left = None, right = None)
 		self.right.browser = list
 
-		self.window.fix()
+		w.fix()
 
 		dummymenu.hide()
 
@@ -141,9 +141,12 @@ class LinkEdit(ViewDialog):
 		self.linkfocus = None
 		self.interesting = []
 
+	def __maketitle(self):
+		return 'Hyperlinks (' + self.toplevel.basename + ')'
+
 	def fixtitle(self):
 		if self.is_showing():
-			self.window.settitle('Hyperlinks (' + self.toplevel.basename + ')')
+			self.window.settitle(self.__maketitle())
 
 	def __repr__(self):
 		return '<LinkEdit instance, root=' + `self.root` + '>'
@@ -427,10 +430,8 @@ class LinkEdit(ViewDialog):
 		if slf is None or (srf is None and not self.right.hidden):
 			# At least one unfocussed anchorlist. No browser
 			self.link_browser.hide()
-			self.link_new.hide()
 			self.link_edit.hide()
-			self.link_dir.hide()
-			self.ok_group.hide()
+			self.edit_group.hide()
 			self.linkfocus = None
 			self.linkedit = 0
 			return
@@ -460,22 +461,21 @@ class LinkEdit(ViewDialog):
 		if self.links and self.linkfocus is None and not self.linkedit:
 			self.linkfocus = 0
 		if self.linkfocus is None:
-			self.link_edit.setsensitive(0, 0)
 			self.link_edit.setsensitive(1, 0)
+			self.link_edit.setsensitive(2, 0)
 		else:
 			self.link_browser.selectitem(self.linkfocus)
 			if not self.link_browser.is_visible(self.linkfocus):
 				self.link_browser.scrolllist(self.linkfocus,
 							windowinterface.CENTER)
-			self.link_edit.setsensitive(0, 1)
 			self.link_edit.setsensitive(1, 1)
+			self.link_edit.setsensitive(2, 1)
 		self.link_browser.show()
-		self.link_new.show()
 		self.link_edit.show()
 		if self.right.hidden:
-			self.link_new.setsensitive(0, 0)
+			self.link_edit.setsensitive(0, 0)
 		else:
-			self.link_new.setsensitive(0, 1)
+			self.link_edit.setsensitive(0, 1)
 		if self.linkfocus:
 			link = self.links[self.linkfocus]
 			lfocus = link[ANCHOR1]
@@ -488,10 +488,9 @@ class LinkEdit(ViewDialog):
 		   (lanchor[A_TYPE] in DestOnlyAnchors and
 		    ranchor[A_TYPE] in DestOnlyAnchors):
 			# can't add a link between destination-only anchors
-			self.link_new.setsensitive(0, 0)
+			self.link_edit.setsensitive(0, 0)
 		if self.linkedit:
 			self.set_radio_buttons()
-			self.link_dir.show()
 			if lanchor is None or ranchor is None:
 				# shouldn't happen
 				return
@@ -511,8 +510,7 @@ class LinkEdit(ViewDialog):
 				self.link_dir.setsensitive(1, 1)
 				self.link_dir.setsensitive(2, 1)
 		else:
-			self.link_dir.hide()
-			self.ok_group.hide()
+			self.edit_group.hide()
 
 	# Reload/redisplay all data
 	def updateform(self, str = None):
@@ -573,7 +571,7 @@ class LinkEdit(ViewDialog):
 		linkdir = self.editlink[DIR]
 		linktype = self.editlink[TYPE]
 		self.link_dir.setpos(linkdir)
-		self.ok_group.show()
+		self.edit_group.show()
 		if self.linkfocus is None:
 			# We seem to be adding
 			self.ok_group.setsensitive(0, 1)
