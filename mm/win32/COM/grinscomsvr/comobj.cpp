@@ -41,6 +41,8 @@ HRESULT CoRegisterGRiNSPlayerAutoClassObject(IClassFactory* pIFactory, LPDWORD  
 #define WM_USER_GETSTATUS WM_USER+6
 #define WM_USER_SETHWND WM_USER+7
 #define WM_USER_UPDATE WM_USER+8
+#define WM_USER_MOUSE_CLICKED WM_USER+9
+#define WM_USER_MOUSE_MOVED WM_USER+10
 
 class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 	{
@@ -79,18 +81,21 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
     virtual HRESULT __stdcall setTime(/* [in] */ double t);
     virtual HRESULT __stdcall getSpeed(/* [out] */ double __RPC_FAR *ps);
 	virtual HRESULT __stdcall setSpeed(/* [in] */ double s);
-	
+    virtual HRESULT __stdcall mouseClicked(/* [in] */ int x, /* [in] */ int y);
+    virtual HRESULT __stdcall mouseMoved(/* [in] */ int x, /* [in] */ int y, /* [out] */ BOOL __RPC_FAR *phot);	
 
 	// Implemenation
 	GRiNSPlayerAuto(GRiNSPlayerComModule *pModule);
 	~GRiNSPlayerAuto();
 	HWND getListener() {return m_pModule->getListenerHwnd();}
 	void adviceSetSize(int w, int h){m_width=w;m_height=h;}
+	void adviceSetCursor(char *cursor){memcpy(m_cursor, cursor, strlen(cursor)+1);}
 	private:
 	long m_cRef;
 	GRiNSPlayerComModule *m_pModule;
 	HWND m_hWnd;
 	int m_width, m_height;
+	char m_cursor[32];
 	};
 
 HRESULT GetGRiNSPlayerAutoClassObject(IClassFactory** ppv, GRiNSPlayerComModule *pModule)
@@ -107,14 +112,20 @@ void GRiNSPlayerAutoAdviceSetSize(int id, int w, int h)
 		p->adviceSetSize(w, h);
 		}
 	}
-
-void GRiNSPlayerAutoCheckPeer(int id)
+void GRiNSPlayerAutoAdviceSetCursor(int id, char *cursor)
 	{
+	if(id!=0)
+		{
+		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
+		p->adviceSetCursor(cursor);
+		}
 	}
+
 
 GRiNSPlayerAuto::GRiNSPlayerAuto(GRiNSPlayerComModule *pModule)
 :	m_cRef(1), m_pModule(pModule), m_hWnd(0), m_width(0), m_height(0)
 	{
+	adviceSetCursor("arrow");
 	m_pModule->lock();
 	}
 
@@ -207,6 +218,21 @@ HRESULT __stdcall GRiNSPlayerAuto::getSpeed(/* [out] */ double __RPC_FAR *ps)
 
 HRESULT __stdcall GRiNSPlayerAuto::setSpeed(/* [in] */ double s)
 	{
+	return S_OK;
+	}
+
+HRESULT __stdcall GRiNSPlayerAuto::mouseClicked(/* [in] */ int x, /* [in] */ int y)
+	{
+	PostMessage(getListener(), WM_USER_MOUSE_CLICKED, WPARAM(this), MAKELPARAM(x,y));	
+	return S_OK;
+	}
+
+HRESULT __stdcall GRiNSPlayerAuto::mouseMoved(/* [in] */ int x, /* [in] */ int y, /* [out] */ BOOL __RPC_FAR *phot)
+	{
+	PostMessage(getListener(), WM_USER_MOUSE_MOVED, WPARAM(this), MAKELPARAM(x,y));	
+	*phot=FALSE;
+	if(strcmpi(m_cursor,"hand")==0)
+		*phot=TRUE;
 	return S_OK;
 	}
 

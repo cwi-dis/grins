@@ -139,16 +139,17 @@ ComModule_AdviceSetSize(ComModuleObject *self, PyObject *args)
 	return Py_None;
 }
 
-static char ComModule_CheckPeer__doc__[] =
+static char ComModule_AdviceSetCursor__doc__[] =
 ""
 ;
 static PyObject *
-ComModule_CheckPeer(ComModuleObject *self, PyObject *args)
+ComModule_AdviceSetCursor(ComModuleObject *self, PyObject *args)
 {
 	int id;
-	if(!PyArg_ParseTuple(args, "i", &id))
+	char *cursor;
+	if(!PyArg_ParseTuple(args, "is", &id, &cursor))
 		return NULL;
-	self->pModule->checkPeer(id);
+	self->pModule->AdviceSetCursor(id, cursor);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -161,6 +162,7 @@ static struct PyMethodDef ComModule_methods[] = {
 	{"Unlock", (PyCFunction)ComModule_Unlock, METH_VARARGS, ComModule_Unlock__doc__},
 	{"SetListener", (PyCFunction)ComModule_SetListener, METH_VARARGS, ComModule_SetListener__doc__},
 	{"AdviceSetSize", (PyCFunction)ComModule_AdviceSetSize, METH_VARARGS, ComModule_AdviceSetSize__doc__},
+	{"AdviceSetCursor", (PyCFunction)ComModule_AdviceSetCursor, METH_VARARGS, ComModule_AdviceSetCursor__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
