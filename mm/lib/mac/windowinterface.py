@@ -11,6 +11,7 @@ import struct
 import string
 import macfs
 import MacOS
+import os
 import Res
 import List
 MacList=List
@@ -1111,7 +1112,7 @@ class FileDialog:
 	def __init__(self, prompt, directory, filter, file, cb_ok, cb_cancel,
 		     existing=0):
 		# We implement this modally for the mac.
-		macfs.SetFolder(directory + ':placeholder')
+		macfs.SetFolder(os.path.join(directory + ':placeholder'))
 		if existing:
 			fss, ok = macfs.PromptGetFile(prompt)
 		else:
