@@ -20,6 +20,7 @@ class ChannelViewDialog(ViewDialog):
 			'G': PLAYFROM,
 			'f': PUSHFOCUS,
 			's': FINISH_ARC,
+			'T': CREATEANCHOR,
 			'L': FINISH_LINK,
 			'e': CONTENT,
 			't': ANCHORS,
@@ -48,7 +49,8 @@ class ChannelViewDialog(ViewDialog):
 				('Show anchors...', ANCHORS),
 				('Edit content...', CONTENT),
 				None,
-				('Finish hyperlink to focus...', FINISH_LINK),
+				('Create simple anchor', CREATEANCHOR),
+				('Finish hyperlink to focus', FINISH_LINK),
 				('Finish sync arc from focus...', FINISH_ARC),
 				None,
 				('Select sync arc', SYNCARCS),
@@ -145,7 +147,8 @@ class ChannelBoxCommand:
 
 class NodeBoxCommand:
 	POPUP_NODE = (
-		('Finish hyperlink to focus...', FINISH_LINK),
+		('Create simple anchor', CREATEANCHOR),
+		('Finish hyperlink to focus', FINISH_LINK),
 		('Finish sync arc from focus...', FINISH_ARC),
 		None,
 		('Play node', PLAYNODE),
