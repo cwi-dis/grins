@@ -342,12 +342,6 @@ attrgrs=(
 		'direction',
 		]},
 
-	{'name':'anchorlist',
-	'title':'Anchors',
-	'attrs':[
-		'.anchorlist',
-		]},
-
 	{'name':'convert5',
 	'title':'Conversion',
 	'attrs':[
