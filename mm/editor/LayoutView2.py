@@ -2567,7 +2567,7 @@ class Region(Node):
 			else:
 				self._curattrdict['bgcolor'] = self._nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
 				self._curattrdict['transparent'] = self._nodeRef.GetInherAttrDef('transparent', 1)
-		
+
 		self._curattrdict['wingeom'] = self._nodeRef.getPxGeom()
 		self._curattrdict['z'] = self._nodeRef.GetAttrDef('z', 0)
 	
@@ -2645,7 +2645,7 @@ class MediaRegion(Region):
 		wingeom = self._nodeRef.getPxGeom()
 
 		# determinate the real fit attribute		
-		self.fit = fit = self._nodeRef.GetInherAttrDef(self._nodeRef,'fit')
+		self.fit = fit = self._nodeRef.GetAttrDef('fit','hidden')
 
 		# ajust the internal geom for edition. If no constraint neither on right nor botton,
 		# with fit==hidden: chg the internal region size.
