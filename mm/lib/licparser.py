@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Lowlevel handling of licenses (shared between editor and generating
 # programs)
 import string
