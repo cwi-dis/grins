@@ -22,7 +22,7 @@ update ostransactions
 	set transaction_state='revoke'
 	from licenses
 	where licenses.licensekey='%s'
-	  and licenses.transactid=ostransactions.transactid
+	  and licenses.transactid=ostransactions.transactid;
 """
 
 
