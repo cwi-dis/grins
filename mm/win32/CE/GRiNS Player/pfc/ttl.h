@@ -38,6 +38,7 @@ class Application
 	bool init(HINSTANCE hInstance)
 		{
 		m_hInstance = hInstance;
+		return true;
 		}
 	std::basic_string<charT> m_name;
 	HINSTANCE m_hInstance;
