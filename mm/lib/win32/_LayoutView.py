@@ -25,7 +25,7 @@ import win32ui,win32con,win32api
 import win32mu,components
 
 # std mfc windows stuf
-from pywin.mfc import window,object,docview,dialog
+from pywinlib.mfc import window,object,docview,dialog
 import afxres,commctrl
 
 # UserCmds
