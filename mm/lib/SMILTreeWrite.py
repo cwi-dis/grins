@@ -118,8 +118,8 @@ def getcmifattr(writer, node, attr):
 
 def geturlattr(writer, node, attr):
 	val = getcmifattr(writer, node, attr)
-	if val is not None:
-		val = MMurl.quote(val)
+##	if val is not None:
+##		val = MMurl.quote(val)
 	return val
 
 def getchname(writer, node):
@@ -812,9 +812,10 @@ class SMILWriter(SMIL):
 		else:
 			base = ''
 			tag = self.uid2name[uid2]
-		href = MMurl.quote(base)
+##		href = MMurl.quote(base)
 		if tag:
-			href = href + '#' + MMurl.quote(tag)
+##			href = href + '#' + MMurl.quote(tag)
+			href = href + '#' + tag
 		attrs.append(('href', href))
 		return attrs
 

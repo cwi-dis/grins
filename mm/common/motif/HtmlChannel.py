@@ -366,22 +366,25 @@ class HtmlChannel(Channel.ChannelWindow):
 			print 'HtmlChannel: unknown enctype:', enctype
 			return
 		data = None
-		if href:
-			if href == 'XXXX:back':
-				if len(self.backlist) > 1:
-					href, data = self.backlist[-2]
-					del self.backlist[-2:]
-				else:
-					href = 'XXXX:play/node'
-			if href == 'XXXX:play/node':
-				self.backlist = []
-				self.url = self.played_url
-				url, tag = MMurl.splittag(self.played_url)
-				self.htmlw.SetText(self.played_str, '', '', 0, tag)
-				return
-			href = MMurl.basejoin(self.url, href)
-		else:
-			href = self.url
+		href, tag = MMurl.splittag(href)
+		if not href:
+			if tag:
+				self.htmlw.GotoId(self.htmlw.AnchorToId(tag))
+			return
+		if href == 'XXXX:back':
+			if len(self.backlist) > 1:
+				href, tag, data = self.backlist[-2]
+				del self.backlist[-2:]
+				self.url = ''
+			else:
+				href = 'XXXX:play/node'
+		if href == 'XXXX:play/node':
+			self.backlist = []
+			self.url = self.played_url
+			url, tag = MMurl.splittag(self.played_url)
+			self.htmlw.SetText(self.played_str, '', '', 0, tag)
+			return
+		href = MMurl.basejoin(self.url, href)
 		utype, rest = MMurl.splittype(href)
 		if method not in (None, 'GET') and \
 		   (utype != 'http' or method != 'POST'):
@@ -397,10 +400,10 @@ class HtmlChannel(Channel.ChannelWindow):
 				data = mkquery(list)
 			else:
 				href = addquery(href, list)
-		self.backlist.append((href, data))
-		self.url, tag = MMurl.splittag(href)
+		self.url = href
+		self.backlist.append((href, tag, data))
 		try:
-			fn, hdrs = MMurl.urlretrieve(self.url, data)
+			fn, hdrs = MMurl.urlretrieve(href, data)
 		except IOError:
 			newtext = '<H1>Cannot Open</H1><P>'+ \
 				  'Cannot open '+self.url+':<P>'+ \
@@ -409,9 +412,10 @@ class HtmlChannel(Channel.ChannelWindow):
 		else:
 			if hdrs.has_key('Content-Location'):
 				self.url = hdrs['Content-Location']
+				self.backlist[-1] = self.url, tag, data
 			if hdrs.type != 'text/html':
 				import Hlinks
-				self._player.toplevel.jumptoexternal(self.url, None, Hlinks.TYPE_JUMP)
+				self._player.toplevel.jumptoexternal(self.url, tag, Hlinks.TYPE_JUMP)
 				return
 			else:
 				newtext = open(fn, 'rb').read()
