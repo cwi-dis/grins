@@ -10,7 +10,7 @@ class reader:
 		self.format_choices = (self.format,)
 		import imgcolormap
 		self.colormap = imgcolormap.new('''\
-\0\0\0\377\0\377\377\377''')
+\0\0\0\0\377\377\377''')
 		self.transparent = 1
 		self.top = 0
 		self.left = 0
