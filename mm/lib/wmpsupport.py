@@ -63,7 +63,7 @@ class Exporter:
 		return self.writer
 			
 	def changed(self, topchannel, window, event, timestamp):
-		"""Callback from the player: the bits in the window have changed"""
+		# Callback from the player: the bits in the window have changed
 		if self.topwindow:
 			if self.topwindow != window:
 				return

@@ -423,7 +423,7 @@ class SlideShow:
 
 
 ##	def computebandwidth(self):
-##		"""See whether bandwidth usage of our (slide) children is OK"""
+##		# See whether bandwidth usage of our (slide) children is OK
 ##		import Bandwidth
 ##		seconds_extra = 0
 ##		errorcount = 0
