@@ -172,7 +172,7 @@ class _DisplayList:
 		cmd = entry[0]
 		window = self._window
 		wid = window._wid
-		xscrolloffset, yscrolloffset = window.scrolloffset()
+		xscrolloffset, yscrolloffset = window._scrolloffset()
 		
 		if cmd == 'clear':
 			Qd.EraseRect(window.qdrect())
@@ -516,7 +516,7 @@ class _DisplayList:
 	def _polyhandle(self, pointlist):
 		"""Return poligon structure"""
 		# XXXX Note: This leaks handles like anything!!
-		xscrolloffset, yscrolloffset = self._window.scrolloffset()
+		xscrolloffset, yscrolloffset = self._window._scrolloffset()
 
 		# Find the bounding box
 		minx = maxx = pointlist[0][0]

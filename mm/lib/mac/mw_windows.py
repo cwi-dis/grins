@@ -359,7 +359,6 @@ class _CommonWindow:
 		left = int(left * xsize + 0.5)
 		right = int(right * xsize + 0.5)
 		if coordinates is None:
-##			x, y, width, height = self._rect # XXXXSCROLL
 			x, y, width, height = self._convert_coordinates((0,0,1,1))
 		else:
 			x, y, width, height = self._convert_coordinates(coordinates)
@@ -419,25 +418,16 @@ class _CommonWindow:
 		in toplevel-window relative pixels"""
 		
 		x, y = coordinates[:2]
-##		if not (0 <= x <= 1 and 0 <= y <= 1):
-##			raise error, 'coordinates out of bounds'
-##		px = int((self._rect[_WIDTH] - 1) * x + 0.5) + self._rect[_X]
-##		py = int((self._rect[_HEIGHT] - 1) * y + 0.5) + self._rect[_Y]
 		px = int(self._rect[_WIDTH] * x)  + self._rect[_X]
 		py = int(self._rect[_HEIGHT] * y)  + self._rect[_Y]
 		if len(coordinates) == 2:
 			return px, py
 		w, h = coordinates[2:]
-##		if not (0 <= w <= 1 and 0 <= h <= 1 and
-##			0 <= x + w <= 1 and 0 <= y + h <= 1):
-##			raise error, 'coordinates out of bounds'
-##		pw = int((self._rect[_WIDTH] - 1) * w + 0.5)
-##		ph = int((self._rect[_HEIGHT] - 1) * h + 0.5)
 		pw = int(self._rect[_WIDTH] * w)
 		ph = int(self._rect[_HEIGHT] * h)
 		return px, py, pw, ph
 		
-	def scrolloffset(self):
+	def _scrolloffset(self):
 		"""Return the x,y to be added to coordinates to convert them to QD
 		values"""
 		return 0, 0
@@ -445,14 +435,17 @@ class _CommonWindow:
 	def _convert_qdcoords(self, coordinates):
 		"""Convert QD coordinates to fractional xy or xywh coordinates"""
 		x0, y0 = coordinates[:2]
-		wx, wy, ww, wh = self._rect
+		wx, wy, ww, wh = self._convert_coordinates((0,0,1,1))
+		xscrolloff, yscrolloff = self._scrolloffset()
+		wx, wy = wx+xscrolloff, wy+yscrolloff
 		x, y = x0-wx, y0-wy
 		if len(coordinates) == 2:
-			return float(x)/ww, float(y)/wh
+			rv = float(x)/ww, float(y)/wh
 		else:
 			x1, y1 = coordinates[2:]
 			w, h = x1-x0, y1-y0
-			return float(x)/ww, float(y)/wh, float(w)/ww, float(h)/wh
+			rv = float(x)/ww, float(y)/wh, float(w)/ww, float(h)/wh
+		return rv
 		
 	def _convert_color(self, (r, g, b)):
 		"""Convert 8-bit r,g,b tuple to 16-bit r,g,b tuple"""
@@ -741,7 +734,11 @@ class _CommonWindow:
 		del self._rb_display
 
 	def _rb_cvbox(self):
-		return self._convert_qdcoords(self._rb_box)
+		x0, y0, x1, y1 = self._rb_box
+		xscrolloff, yscrolloff = self._scrolloffset()
+		x0, y0 = x0+xscrolloff, y0+yscrolloff
+		x1, y1 = x1+xscrolloff, y1+yscrolloff
+		return self._convert_qdcoords((x0, y0, x1, y1))
 
 	def _rb_done(self):
 		callback = self._rb_callback
@@ -773,6 +770,8 @@ class _CommonWindow:
 		
 	def _rb_movebox(self, where, final=0):
 		x, y = where
+		xscrolloff, yscrolloff = self._scrolloffset()
+		x, y = x-xscrolloff, y-yscrolloff
 		x0, y0, x1, y1 = self._rb_box
 		if self._rb_dragpoint == 0:	# top left
 			x0, y0 = x, y
@@ -823,7 +822,7 @@ class _CommonWindow:
 		Qd.PenMode(oldmode)
 		
 	def _rb_doredraw(self):
-		xscroll, yscroll = self.scrolloffset()
+		xscroll, yscroll = self._scrolloffset()
 		x0, y0, x1, y1 = self._rb_box
 		if x0 > x1: x0, x1 = x1, x0
 		if y0 > y1: y0, y1 = y1, y0
@@ -836,7 +835,7 @@ class _CommonWindow:
 	def _rb_smallboxes(self, scroll=0):
 		x0, y0, x1, y1 = self._rb_box
 		if scroll:
-			xscroll, yscroll = self.scrolloffset()
+			xscroll, yscroll = self._scrolloffset()
 			x0, y0 = x0+xscroll, y0+yscroll
 			x1, y1 = x1+xscroll, y1+yscroll
 		points = [
@@ -851,7 +850,10 @@ class _CommonWindow:
 		return smallboxes
 
 	def _rb_constrain(self, where):
-		x0, y0, x1, y1 = self.qdrect() # XXXXSCROLL
+		x0, y0, x1, y1 = self.qdrect()
+		xscrolloff, yscrolloff = self._scrolloffset()
+		x0, y0 = x0 - xscrolloff, y0 - yscrolloff
+		x1, y1 = x1 - xscrolloff, y1 - yscrolloff
 		x, y = where
 		if x < x0: x = x0
 		if x > x1: x = x1
@@ -863,6 +865,8 @@ class _CommonWindow:
 		# called on mouse press
 		self._rb_display.render()
 		x, y = where
+		xscrolloff, yscrolloff = self._scrolloffset()
+		x, y = x - xscrolloff, y - yscrolloff
 		dragpoint = None
 		if self._rb_box:
 			smallboxes = self._rb_smallboxes()
@@ -952,6 +956,10 @@ class _ScrollMixin:
 		
 	def close(self):
 		pass
+		
+	def _canscroll(self):
+		"""Return true if this window may be scrolled"""
+		return not not self._canvassize
 		
 	def _needs_grow_cursor(self):
 		if self._barx:
@@ -1347,6 +1355,10 @@ class _SubWindow(_CommonWindow):
 		_CommonWindow.__init__(self, parent, wid, z)
 		
 		x, y, w, h = parent._convert_coordinates(coordinates)
+		xscrolloff, yscrolloff = parent._scrolloffset()
+		x, y = x+xscrolloff, y+yscrolloff
+		if parent._canscroll():
+			raise 'Subwindow in scrollable parent not implemented'
 		self._rect = x, y, w, h
 		if w <= 0 or h <= 0:
 			raise 'Empty subwindow', coordinates
@@ -1457,6 +1469,8 @@ class _SubWindow(_CommonWindow):
 		parent = self._parent
 		## XXXX Should have crop=1?
 		x, y, w, h = parent._convert_coordinates(self._sizes)
+		xscrolloff, yscrolloff = parent._scrolloffset()
+		x, y = x+xscrolloff, y+yscrolloff
 		self._rect = x, y, w, h
 		w, h = self._sizes[2:]
 		if w == 0:
@@ -1479,6 +1493,10 @@ class _SubWindow(_CommonWindow):
 	def _del_control(self, ctl):
 		"""Delete a control. Propagate up to the toplevel window"""
 		self._parent._del_control(ctl)
+		
+	def _canscroll(self):
+		"""Return true if this window or any of its ancestors is scrollable"""
+		return self._parent._canscroll()
 
 class DialogWindow(_Window):
 	def __init__(self, resid, title='Dialog', default=None, cancel=None,
