@@ -19,10 +19,8 @@ import getopt
 def usage(msg):
 	sys.stdout = sys.stderr
 	print msg
-	print 'usage: cmifed [-qpsnTHPSL] [-h helpdir] file ...'
-	print '-q         : quiet (don\'t print anything to stdout)'
-	print '-j name    : start playing at given global anchor'
-	print 'file ...   : one or more CMIF files'
+	print 'usage: grins file ...'
+	print 'file ...   : one or more SMIL or CMIF files or URLs'
 	sys.exit(2)
 
 from MainDialog import MainDialog
