@@ -491,6 +491,9 @@ class SMILParser(xmllib.XMLParser):
 					ch['scale'] = 0
 				elif scale == 'visible':
 					ch['scale'] = 1
+				elif scale == 'slice':
+					ch['scale'] = -1
+				ch['center'] = 0
 				# other scale options not implemented
 				x = attrdict['left']
 				y = attrdict['top']
