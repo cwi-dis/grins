@@ -1417,7 +1417,6 @@ class AttrEditor(AttrEditorDialog):
 				print 'DBG changed', b
 				print 'VALUE', b.getvalue()
 				print 'CURRENT', b.getcurrent()
-				import pdb ; pdb.set_trace()
 				return 1
 		return 0
 				
