@@ -4,36 +4,36 @@ __version__ = "$Id$"
 # WIN32 HTML channel.
 #
 	
-""" @win32doc|HtmlChannel
-The HtmlChannel extends the ChannelWindow
+# @win32doc|HtmlChannel
+# The HtmlChannel extends the ChannelWindow
 
-For this channel to work the window
-must support beyond the standard interface
-the following interface:
+# For this channel to work the window
+# must support beyond the standard interface
+# the following interface:
 
-interface IHtmlWnd:
-	def RetrieveUrl(self,url):pass
-	def DestroyHtmlCtrl(self):pass
-	def SetBackColor(self,clr):pass
-	def SetImmHtml(self,str):pass
-	def setanchorcallback(self,cbanchor):pass
+# interface IHtmlWnd:
+# 	def RetrieveUrl(self,url):pass
+# 	def DestroyHtmlCtrl(self):pass
+# 	def SetBackColor(self,clr):pass
+# 	def SetImmHtml(self,str):pass
+# 	def setanchorcallback(self,cbanchor):pass
 
-The window or an agent of the window is supposed
-to call back the HtmlChannel's callback set by
-the setanchorcallback method when a cmif: anchor
-is fired.
+# The window or an agent of the window is supposed
+# to call back the HtmlChannel's callback set by
+# the setanchorcallback method when a cmif: anchor
+# is fired.
 
-The _SubWindow defined in lib/win32/_CmifView.py
-supports this interface
+# The _SubWindow defined in lib/win32/_CmifView.py
+# supports this interface
 
-Note:
-For not local files we get the url by calling
-the channel's method getfileurl(node) and pass
-it directly through RetrieveUrl.
-For local files we follow the Internet Explorer
-convention of passing the absolute local filename
-through RetrieveUrl.
-"""
+# Note:
+# For not local files we get the url by calling
+# the channel's method getfileurl(node) and pass
+# it directly through RetrieveUrl.
+# For local files we follow the Internet Explorer
+# convention of passing the absolute local filename
+# through RetrieveUrl.
+
 import Channel
 
 # node attributes
@@ -82,7 +82,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		Channel.ChannelWindow.destroy(self)
 	
 	def mustreshow(self):
-		"""Return true if control setting changed"""
+		# Return true if control setting changed
 		import settings
 		if self.__which_control == settings.get('html_control'):
 			return 0

@@ -1690,12 +1690,12 @@ class ArmStorageTree:
 		self.onemoretime = 0
 
 	def setparents(self):
-		"""Last stage of tree buildup: link children back to parent"""
+		# Last stage of tree buildup: link children back to parent
 		for c in self.children:
 			c.parent = self
 
 	def destroy(self):
-		"""Destroy the whole tree starting at any node"""
+		# Destroy the whole tree starting at any node
 		if self.parent:
 			raise error, 'Destroy with parent!'
 		for c in self.children:
@@ -1705,23 +1705,23 @@ class ArmStorageTree:
 		del self.children
 
 	def cancel(self, node):
-		"""Cancel arms for node and descendents, knowing that
-		node is currently active (so somewhere between current and
-		root)"""
+		# Cancel arms for node and descendents, knowing that
+		# node is currently active (so somewhere between current and
+		# root)
 		if node == self.node:
 			self.do_cancel()
 		elif self.parent:
 			self.parent.cancel(node)
 
 	def do_cancel(self):
-		"""Cancel arm for this node and its descendents"""
+		# Cancel arm for this node and its descendents
 		self.index = len(self.children)+1
 		self.onemoretime = 0
 		for ch in self.children[self.index:]:
 			ch.do_cancel()
 
 	def next(self):
-		"""Return next ArmStorage to query and next node to arm"""
+		# Return next ArmStorage to query and next node to arm
 		if self.index >= len(self.children) and self.onemoretime:
 ##			print 'ONEMOREARM', self.node
 			for ch in self.children:

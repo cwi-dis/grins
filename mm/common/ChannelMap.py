@@ -129,8 +129,8 @@ shortcuts = {
 	}
 
 def getvalidchanneltypes(context):
-	"""Return the list of channels to be shown in menus and such.
-	Either the full list or the SMIL-supported list is returned."""
+	# Return the list of channels to be shown in menus and such.
+	# Either the full list or the SMIL-supported list is returned.
 	import settings
 	if settings.get('cmif'):
 		return commonchanneltypes + otherchanneltypes

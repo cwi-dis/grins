@@ -1,21 +1,19 @@
 __version__ = "$Id$"
 
-""" @win32doc|MediaChannel
+# @win32doc|MediaChannel
 
-This module encapsulates a sufficient part
-of the DirectShow infrastructure to
-implement win32 audio and video media channels.
+# This module encapsulates a sufficient part
+# of the DirectShow infrastructure to
+# implement win32 audio and video media channels.
 
-Any media type supported by Windows Media Player is also supported by
-this module: (.avi,.asf,.rmi,.wav,.mpg,.mpeg,.m1v,.mp2,.mpa,.mpe,.mid,
-.rmi,.qt,.aif,.aifc,.aiff,.mov,.au,.snd)
+# Any media type supported by Windows Media Player is also supported by
+# this module: (.avi,.asf,.rmi,.wav,.mpg,.mpeg,.m1v,.mp2,.mpa,.mpe,.mid,
+# .rmi,.qt,.aif,.aifc,.aiff,.mov,.au,.snd)
 
-Note that DirectShow builds a graph of filters
-appropriate to parse-render each media type from those filters
-available on the machine. A new parsing filter installed enhances 
-the media types that can be played both by GRiNS and Windows MediaPlayer.
-
-"""
+# Note that DirectShow builds a graph of filters
+# appropriate to parse-render each media type from those filters
+# available on the machine. A new parsing filter installed enhances 
+# the media types that can be played both by GRiNS and Windows MediaPlayer.
 
 # node attributes
 import MMAttrdefs
