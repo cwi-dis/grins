@@ -1024,7 +1024,7 @@ class EffectiveAnimator:
 		for a in self.__animators:
 			if animator and id(a) == id(animator):
 				break
-			if a.isAdditive():
+			if a.isAdditive() and not a.isEffValueAnimator():
 				cv = a.addCurrValue(cv)
 			else:
 				cv = a.getCurrValue()
