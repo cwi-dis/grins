@@ -50,10 +50,13 @@ class Player(ViewDialog, PlayerCore):
 		self.toplevel = toplevel
 		self.showing = 0
 		self.waiting = 0
+		self.do_makemenu = 0
 		self.last_geometry = None
 		self.window = None
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback
+		if len(titles) < 3:
+			self.updateuibaglist = self.dummy_updateuibaglist
 
 	def destroy(self):
 		self.close()
@@ -97,11 +100,9 @@ class Player(ViewDialog, PlayerCore):
 		window.register(WMEVENTS.Mouse0Release, self._mouse, None)
 		window.register(WMEVENTS.ResizeWindow, self.resize, None)
 		window.register(WMEVENTS.WindowExit, self.hide, None)
-		self.toplevel.setwaiting()
 		self.toplevel.checkviews()
 		self.showchannels()
 		self.showstate()
-		self.toplevel.setready()
 
 	def resize(self, *rest):
 		window = self.window
@@ -183,7 +184,6 @@ class Player(ViewDialog, PlayerCore):
 		if not self.showing: return
 		self.showing = 0
 		self.toplevel.showstate(self, 0)
-		self.toplevel.setwaiting()
 		self.stop()
 		self.fullreset()
 		self.save_geometry()
@@ -191,7 +191,6 @@ class Player(ViewDialog, PlayerCore):
 		self.window = None
 		self.toplevel.checkviews()
 		self.destroychannels()
-		self.toplevel.setready()
 
 	def save_geometry(self):
 		ViewDialog.save_geometry(self)
@@ -205,6 +204,7 @@ class Player(ViewDialog, PlayerCore):
 	def _mouse(self, dummy, window, ev, val):
 		if window is not self.window:
 			return
+		self.toplevel.setwaiting()
 		x, y = val[:2]
 		if .01 < y < .49:
 			if .01 * self.width < x < .49 * self.width:
@@ -213,6 +213,7 @@ class Player(ViewDialog, PlayerCore):
 				self.pause_callback()
 		elif .51 < y < .99 and .01 * self.width < x < .99 * self.width:
 			self.stop_callback()
+		self.toplevel.setready()
 	#
 	# FORMS callbacks.
 	#
@@ -345,6 +346,8 @@ class Player(ViewDialog, PlayerCore):
 			l = list[i]
 			menu.append('', l, (self.slotmenu_callback, (i,)))
 		self.subwin[2].create_menu(menu, title = 'Run slots')
+	def dummy_updateuibaglist(self):
+		pass
 
 	def makeomenu(self):
 		if not self.is_showing():
@@ -394,6 +397,10 @@ class Player(ViewDialog, PlayerCore):
 	def makemenu(self):
 		if not self.is_showing():
 			return
+		if self.waiting:
+			self.do_makemenu = 1
+			return
+		self.do_makemenu = 0
 		menu = []
 		for name in self.channelnames:
 			if self.channels[name].is_showing():
@@ -413,6 +420,8 @@ class Player(ViewDialog, PlayerCore):
 	#
 	def setready(self):
 		self.waiting = 0
+		if self.do_makemenu:
+			self.makemenu()
 		if self.window:
 			self.window.setcursor('')
 		for cname in self.channelnames:
