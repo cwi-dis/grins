@@ -1273,6 +1273,7 @@ class AnimateElementParser:
 			else:
 				coords = self.__getNumPairInterpolationValues()
 				coords = self.translateToParent(coords=coords)
+				path.constructFromPoints(coords)
 			if path.getLength():
 				anim = MotionAnimator(attr, domval, path, dur, mode, times, splines,
 					accumulate, additive)
@@ -1430,33 +1431,38 @@ class AnimateElementParser:
 	#
 	#  Translate coordinates
 	#
-	def translateTo(self, pt, coords=None, path=None):
+	def translateTo(self, pt, coords, path):
 		dx, dy = pt
 		if coords:
 			tcoords = []
 			for x, y in coords:
 				tcoords.append((x-dx, y-dy))
-			return tcoords
+			return tuple(tcoords)
 		elif path:
 			path.translate(-dx, -dy)
 			return path
 			
 	# translate from DOM origin to parent (our default origin)
-	def translateFromDOMToParent(self, pt, coords=None, path=None):
+	def translateFromDOMToParent(self, coords, path):
 		x, y = self.__domval.real, self.__domval.imag
 		return self.translateTo((-x,-y), coords, path)	
 
 	# translate from topLayout to parent (our default origin)
-	def translateFromTopLayoutToParent(self, pt, coords=None, path=None):
+	def translateFromTopLayoutToParent(self, coords, path):
 		x, y = self.__animateContext.getParentAbsPos(self.__mmtarget)
 		return self.translateTo((x, y), coords, path)	
 	
+	# dissabled until origin values are clarified
 	def translateToParent(self, coords=None, path=None):
+		if coords: return coords
+		elif path: return path
+		# probably
 		origin = self.getOrigin()
-		if not origin or origin=='parent':
+		if not origin or origin=='default':
+			return self.translateFromDOMToParent(coords, path)
+		elif origin=='parent':
 			if coords: return coords
 			elif path: return path
-		# ++ waiting spec for clarification...
 		 
 	#
 	# The following 3 translate methods are used by SMILTreeWriteHtmlTime
