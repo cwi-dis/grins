@@ -562,7 +562,7 @@ no)	;;
 		install -m 0444 -idb $dist.relnotes.$help -src www-GRiNS/$help/IRIX6.3/relnotes.html -F /usr/local/grins -O relnotes.html &&
 		case $dist in
 		grinsed)
-			install -m 0444 -idb $dist.help.quickstart -src mm/QuickStart.pdf -F /usr/local/grins -O QuickStart.pdf &&
+			install -m 0444 -idb $dist.help.quickstart -src mm/Build/common/QuickStart.pdf -F /usr/local/grins -O QuickStart.pdf &&
 			for f in mm/Templates/*
 			do
 				case "${f##*/}" in
