@@ -637,11 +637,12 @@ class AnchorlistCtrl(AttrCtrl, AnchorList):
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_ATYPE),'Type of current anchor',None,0)
 		for c in self._xywh:
 			tooltipctrl.AddTool(self._wnd.GetDlgItem(c._id),'Coordinates of current anchor',None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_22),'Start time of current anchor',None,0)
-		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_32),'End time of current anchor',None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_22),'Start time of current anchor in seconds',None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_32),'Duration of current anchor in seconds',None,0)
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_PLAY),'Play',None,0)
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_PAUSE),'Pause',None,0)
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_STOP),'Stop',None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(grinsRC.IDC_LINK), 'Go to Hyperlink View',None,0)
 		
 ##################################
 class FileCtrl(AttrCtrl):
