@@ -49,10 +49,10 @@ MENUBAR=(
 		(FLAG_QT, ENTRY, 'Pu&blish for QuickTime and upload...', None, UPLOAD_QT),
 		(FLAG_G2|FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for &G2...', None, EXPORT_G2),
 		(FLAG_G2|FLAG_PRO|FLAG_SNAP, ENTRY, 'Pu&blish for G2 and upload...', None, UPLOAD_G2),
-                # TODO: These should not appear on all versions of GRiNS!
-                (FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for &Windows Media...', None, EXPORT_WMP), # mjvdg 11-oct-2000
-                (FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for Windows Media and upload...', None, UPLOAD_WMP),
-                
+		# TODO: These should not appear on all versions of GRiNS!
+		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for &Windows Media...', None, EXPORT_WMP), # mjvdg 11-oct-2000
+		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for Windows Media and upload...', None, UPLOAD_WMP),
+		
 		(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, '&Publish for SMIL 2.0...', None, EXPORT_SMIL),
 		(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'Pu&blish for SMIL 2.0 and upload...', None, UPLOAD_SMIL),
 		(FLAG_SMIL_1_0 | FLAG_QT | FLAG_G2 | FLAG_PRO, SEP,),
