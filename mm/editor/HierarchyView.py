@@ -730,6 +730,11 @@ class HierarchyView(HierarchyViewDialog):
 				mtype = 'error', parent = self.window)
 			return
 		parent = node.GetParent()
+		# pnode -- prospective parent of new node
+		if where:
+			pnode = parent
+		else:
+			pnode = node
 		if parent is None and where <> 0:
 			self.opt_render()
 			windowinterface.showmessage(
@@ -773,18 +778,24 @@ class HierarchyView(HierarchyViewDialog):
 			# to do to find the two possible channel names. This code also needs
 			# a bit of cleanup, as the channelname<->regionname mapping may be
 			# different.
-			dftchannel = MMAttrdefs.getattr(node, 'project_default_region')
+			dftchannel = MMAttrdefs.getattr(pnode, 'project_default_region')
 			if dftchannel == 'undefined':
 				dftchannel = None
-			if dftchannel:
-				dftchannelalt = dftchannel + ' 0'
-			else:
-				dftchannelalt = None
+			dftchtype = MMAttrdefs.getattr(pnode, 'project_default_type')
+			if dftchtype != 'undefined':
+				if chtype is None:
+					chtype = dftchtype
+				elif chtype != dftchtype:
+					self.opt_render()
+					windowinterface.showmessage('Incompatible file', mtype = 'error', parent = self.window)
+					return
 			chlist = ctx.compatchannels(url, chtype)
-			if dftchannel and dftchannel in chlist:
-				chlist = [dftchannel]
-			elif dftchannelalt and dftchannelalt in chlist:
-				chlist = [dftchannelalt]
+			if dftchannel:
+				nchlist = []
+				for chname in chlist:
+					if ctx.getchannel(chname).GetLayoutChannel().name == dftchannel:
+						nchlist.append(chname)
+				chlist = nchlist
 			if chlist:
 				if len(chlist) > 1:
 					i = windowinterface.multchoice('Choose a channel for this file', chlist, 0, parent = self.window)

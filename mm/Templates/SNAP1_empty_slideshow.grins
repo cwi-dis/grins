@@ -20,18 +20,18 @@
   </head>
   <body>
     <par id="Simple_Slideshow">
-      <seq id="Image_Sequence" GRiNS:project_default_region="imageRegion" GRiNS:project_bandwidth_fraction="0.4">
+      <seq id="Image_Sequence" GRiNS:project_default_region="imageRegion" GRiNS:project_default_type="image" GRiNS:project_bandwidth_fraction="0.4">
         <img id="Image_1" region="imageRegion" src="media/rp-slide-1.jpg" dur="5s"/>
       </seq>
-	  <seq id="Caption_Audio" GRiNS:project_bandwidth_fraction="0.4" GRiNS:project_default_region="audioRegion_2">
+      <seq id="Caption_Audio" GRiNS:project_bandwidth_fraction="0.4" GRiNS:project_default_region="audioRegion_2" GRiNS:project_default_type="sound">
         <audio id="Clip_1" region="audioRegion_2" src="media/background-sound.aiff"/>
-	  </seq>
-	  <seq id="Background_Audio" GRiNS:project_bandwidth_fraction="0.1" GRiNS:project_default_region="audioRegion_1">
+      </seq>
+      <seq id="Background_Audio" GRiNS:project_bandwidth_fraction="0.1" GRiNS:project_default_region="audioRegion_1" GRiNS:project_default_type="sound">
         <audio id="Bkgd-Clip_1" region="audioRegion_1" src="media/bkgd_audio_example.aiff"/>
-	  </seq>
-	  <seq id="Background_Image" GRiNS:project_bandwidth_fraction="0.1" GRiNS:project_default_region="bkgd_imageRegion">
+      </seq>
+      <seq id="Background_Image" GRiNS:project_bandwidth_fraction="0.1" GRiNS:project_default_region="bkgd_imageRegion" GRiNS:project_default_type="image">
         <img id="Background_1" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg" fill="freeze"/>
-	  </seq>
+      </seq>
     </par>
   </body>
 </smil>
