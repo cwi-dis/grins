@@ -1540,7 +1540,7 @@ class _SubWindow(_Window):
 			w._do_resize1()
 
 	# Experimental animation interface
-	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
+	def updatecoordinates(self, coordinates, units=UNIT_SCREEN, scale=1):
 		parent = self._parent
 
 		# first convert any coordinates to pixel
