@@ -1884,6 +1884,14 @@ class AttrEditForm(GenFormView):
 				return page._attr
 		return None
 
+	def setcurattr(self, attr):
+		if not attr:
+			return
+		p = self._a2p.get(attr)
+		if not p:
+			return
+		self._prsht.SetActivePage(p)
+
 	def creategrouppages(self):
 		grattrl=[]	 # all attr in groups
 		l=self._attriblist[:]
