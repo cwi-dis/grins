@@ -26,8 +26,8 @@ PASSWD=os.path.join(DIR, ".htpasswd")
 RESPONSE_OK=os.path.join(grinsdb.DATABASE, ".mail-lost-passwd")
 RESPONSE_NOTOK=os.path.join(grinsdb.DATABASE, ".mail-no-passwd")
 RESPONSE_SENDER="grins-request@oratrix.com"
-RESPONSE_URL="http://www.cwi.nl/GRiNS/player/index.html"
-REGISTER_URL="http://www.cwi.nl/GRiNS/download.html"
+RESPONSE_URL="http://www.oratrix.com/GRiNS/Download/down-sw1.html"
+REGISTER_URL="http://www.oratrix.com/cgi-bin/warm?register.warm"
 
 SENDMAIL="/usr/lib/sendmail -t"
 
@@ -70,6 +70,8 @@ def lostkey(file, filename):
 		obj = dbase.open(list[0])
 		passwd = obj['password']
 		mailok(email, passwd)
+	while file.read(10000):
+		pass
 
 def mailok(user, passwd):
 	dict = {
