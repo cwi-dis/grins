@@ -956,8 +956,8 @@ class EffectiveAnimator:
 			# animateMotion for subregions seems not to be allowed in SMIL20 profile
 			# Since the origin for the animateMotion when applied to media elements 
 			# is the regAlign value animate regPoint
-			moveSubregion = 0
-			moveRegPoint = 1
+			moveSubregion = 1
+			moveRegPoint = 0
 			csssubregion = self.getCssObj(self.__node)
 			if moveSubregion:
 				csssubregion.move(value)
@@ -1662,9 +1662,10 @@ class AnimateElementParser:
 		elif self.__target._type == 'mmnode':
 
 			if origin == 'parent':
+				pass
 				# coordinates of parent with respect to layout
-				x, y = self.__animateContext.getNodePosRelToParent(self.__target)
-				return self.translateTo((-x, -y), coords, path)	
+				#x, y = self.__animateContext.getNodePosRelToParent(self.__target)
+				#return self.translateTo((-x, -y), coords, path)	
 
 			elif origin == 'layout':
 				pass
