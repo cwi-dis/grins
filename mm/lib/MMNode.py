@@ -1648,7 +1648,7 @@ class MMChannel(MMTreeElement):
 	
 	def applyAnimationData(self, editmgr):
 		if self._animationData:
-			self._animationData.applyData(editmgr)
+			self._animationData.applyData(editmgr, replace=1)
 
 		
 class MMViewport(MMChannel):
@@ -5075,24 +5075,7 @@ class MMNode(MMTreeElement):
 	
 	def applyAnimationData(self, editmgr):
 		if self._animationData:
-			
-			# XXX HACK: remove the previous animation nodes to make things working
-			# XXX should be removed or move in another location when we know exactly what we need
-			animparent = target = self
-			root = animparent.GetRoot()
-			if not editmgr.transaction():
-				return 0
-			animationList = []
-			for c in animparent.GetChildren():
-				if c.GetType() == 'animate':
-					animationList.append(c)
-			for animation in animationList:
-				editmgr.delnode(animation)
-			from AnimationData import AnimationTarget
-			self._animationData._target = AnimationTarget(root, target, animparent) # animation target
-			# end HACK
-			
-			self._animationData.applyData(editmgr)
+			self._animationData.applyData(editmgr, replace=1)
 		
 class FakeRootNode(MMNode):
 	def __init__(self, root):
