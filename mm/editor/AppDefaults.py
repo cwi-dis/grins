@@ -84,7 +84,6 @@ class sizes_notime:
 	HEDGSIZE = 3 #3						# size of edges
 	VEDGSIZE = 3 #3						# size of edges
 	HANDLESIZE = 16;
-
 	DROPAREASIZE = 32;		# size of the decoration at the end of a "roll of film"
 	FLATBOX = 0
 	TIMEBARHEIGHT = 0
