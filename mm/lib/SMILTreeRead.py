@@ -1919,13 +1919,35 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__tops[top]['width'] = 640
 		if self.__tops[top]['height'] == 0:
 			self.__tops[top]['height'] = 480
-		layout['winsize'] = self.__tops[top]['width'], self.__tops[top]['height']
+
+		# default values
+		open = 'always'
+		close = 'never'
+		width = 640
+		height = 480
+		for attr,val in self.__tops[top].items():
+			if attr == 'width':
+				width = val
+			elif attr == 'height':
+				height = val
+			elif attr == 'close':
+				close = val
+			elif attr == 'open':
+				open = val
+			elif attr in ('attrs','declwidth','declheight','skip-content'):
+				# special key
+				pass
+			else:
+				# parse all other attributes
+				try:
+					layout[attr] = parseattrval(attr, val, self.__context)
+				except:
+					self.syntax_error("couldn't parse `%s' value" % attr)
+					pass
+				
+		layout['winsize'] = width, height
 		layout['units'] = UNIT_PXL
-		# for the root-layout element, this attribute may be undefined
-		close = self.__tops[top].get('close', 'never')
 		layout['close'] = close
-		# for the root-layout element, this attribute may be undefined
-		open = self.__tops[top].get('open', 'always')
 		layout['open'] = open
 
 	def FixBaseWindow(self):
@@ -2989,60 +3011,44 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						
 		self.__viewport = id
 		self.__childregions[id] = []
-		width = attributes['width']
-		if width[-2:] == 'px':
-			width = width[:-2]
-		try:
-			width = string.atoi(width)
-		except string.atoi_error:
-			self.syntax_error('root-layout width not an integer')
-			width = 0
-		else:
-			if width < 0:
-				self.syntax_error('root-layout width not a positive integer')
-				width = 0
-		height = attributes['height']
-		if height[-2:] == 'px':
-			height = height[:-2]
-		try:
-			height = string.atoi(height)
-		except string.atoi_error:
-			self.syntax_error('root-layout height not an integer')
-			height = 0
-		else:
-			if height < 0:
-				self.syntax_error('root-layout height not a positive integer')
-				height = 0
 
-		close = attributes.get('close')
-		if close != None:
-			if close not in ('never', 'whenNotActive'):
-				self.syntax_error('illegal close attribute value')
-				close = 'never'
-		else:
-			close = 'never'
+		# define some default values,
+		# and keep the original attributes for background value !!!. These two attributes are
+		# used in CreateLayout method
+		attrdict = {'close':'never',
+					'open':'always',
+					'attrs':attributes}
 
-		open = attributes.get('open')
-		if open != None:
-			if open not in ('always', 'whenActive'):
-				self.syntax_error('illegal open attribute value')
-				open = 'always'
-		else:
-			open = 'always'
-
-		self.__tops[id] = {'width':width,
-				   'height':height,
-				   'declwidth':width,
-				   'declheight':height,
-				   'close':close,
-				   'open':open,
-				   'attrs':attributes}
-
-		# experimental code for switch layout
-		if len(self.__switchstack) > 0:
-			attrdict = {}
-			for attr,val in attributes.items():
-				if attr == 'system-bitrate':
+		for attr,val in attributes.items():
+			if attr == 'id':
+				self.__tops[val] = attrdict
+			elif attr == 'open':
+				if val not in ('always', 'whenActive'):
+					self.syntax_error('illegal open attribute value')
+					val = 'always'
+				attrdict[attr] = val
+			elif attr == 'close':
+				if val not in ('never', 'whenNotActive'):
+					self.syntax_error('illegal close attribute value')
+					val = 'never'					
+				attrdict[attr] = val
+			elif attr in ('height', 'width'):
+				if val[-2:] == 'px':
+					val = val[:-2]
+				try:
+					val = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('root-layout %s not an integer'%attr)
+					val = 0
+				else:
+					if val < 0:
+						self.syntax_error('root-layout %s not a positive integer'%attr)
+						val = 0
+				attrdict[attr] = val
+			elif attr in ('background-color', 'backgroundColor'):
+				# these two attribute are parsed in CreateLayout method
+				pass
+			elif attr == 'system-bitrate':
 					try:
 						bitrate = string.atoi(val)
 					except string.atoi_error:
@@ -3050,111 +3056,116 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						if not attrdict.has_key('system_bitrate'):
 							attrdict['system_bitrate'] = bitrate
-				elif attr == 'systemBitrate':
-					try:
-						bitrate = string.atoi(val)
-					except string.atoi_error:
-						self.syntax_error('bad bitrate attribute')
-					else:
-						attrdict['system_bitrate'] = bitrate
-				elif attr == 'system-screen-size':
-					res = screen_size.match(val)
-					if res is None:
-						self.syntax_error('bad screen-size attribute')
-					else:
-						if not attrdict.has_key('system_screen_size'):
-							attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
-				elif attr == 'systemScreenSize':
-					res = screen_size.match(val)
-					if res is None:
-						self.syntax_error('bad screen-size attribute')
-					else:
+			elif attr == 'systemBitrate':
+				try:
+					bitrate = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('bad bitrate attribute')
+				else:
+					attrdict['system_bitrate'] = bitrate
+			elif attr == 'system-screen-size':
+				res = screen_size.match(val)
+				if res is None:
+					self.syntax_error('bad screen-size attribute')
+				else:
+					if not attrdict.has_key('system_screen_size'):
 						attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
-				elif attr == 'system-screen-depth':
-					try:
-						depth = string.atoi(val)
-					except string.atoi_error:
-						self.syntax_error('bad screen-depth attribute')
-					else:
-						if not attrdict.has_key('system_screen_depth'):
-							attrdict['system_screen_depth'] = depth
-				elif attr == 'systemScreenDepth':
-					try:
-						depth = string.atoi(val)
-					except string.atoi_error:
-						self.syntax_error('bad screen-depth attribute')
-					else:
+			elif attr == 'systemScreenSize':
+				res = screen_size.match(val)
+				if res is None:
+					self.syntax_error('bad screen-size attribute')
+				else:
+					attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
+			elif attr == 'system-screen-depth':
+				try:
+					depth = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('bad screen-depth attribute')
+				else:
+					if not attrdict.has_key('system_screen_depth'):
 						attrdict['system_screen_depth'] = depth
-				elif attr == 'system-captions':
-					if val == 'on':
-						if not attrdict.has_key('system_captions'):
-							attrdict['system_captions'] = 1
-					elif val == 'off':
-						if not attrdict.has_key('system_captions'):
-							attrdict['system_captions'] = 0
-					else:
-						self.syntax_error('bad system-captions attribute')
-				elif attr == 'systemCaptions':
-					if val == 'on':
+			elif attr == 'systemScreenDepth':
+				try:
+					depth = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('bad screen-depth attribute')
+				else:
+					attrdict['system_screen_depth'] = depth
+			elif attr == 'system-captions':
+				if val == 'on':
+					if not attrdict.has_key('system_captions'):
 						attrdict['system_captions'] = 1
-					elif val == 'off':
+				elif val == 'off':
+					if not attrdict.has_key('system_captions'):
 						attrdict['system_captions'] = 0
-					else:
-						self.syntax_error('bad system-captions attribute')
-				elif attr == 'systemAudioDesc':
-					if val == 'on':
-						attrdict['system_audiodesc'] = 1
-					elif val == 'off':
-						attrdict['system_audiodesc'] = 0
-					else:
-						self.syntax_error('bad system-audiodesc attribute')
-				elif attr == 'system-language':
-					if not attrdict.has_key('system_language'):
-						attrdict['system_language'] = val
-				elif attr == 'systemLanguage':
+				else:
+					self.syntax_error('bad system-captions attribute')
+			elif attr == 'systemCaptions':
+				if val == 'on':
+					attrdict['system_captions'] = 1
+				elif val == 'off':
+					attrdict['system_captions'] = 0
+				else:
+					self.syntax_error('bad system-captions attribute')
+			elif attr == 'systemAudioDesc':
+				if val == 'on':
+					attrdict['system_audiodesc'] = 1
+				elif val == 'off':
+					attrdict['system_audiodesc'] = 0
+				else:
+					self.syntax_error('bad system-audiodesc attribute')
+			elif attr == 'system-language':
+				if not attrdict.has_key('system_language'):
 					attrdict['system_language'] = val
-				elif attr == 'systemCPU':
-					attrdict['system_cpu'] = string.lower(val)
-				elif attr == 'systemOperatingSystem':
-					attrdict['system_operating_system'] = string.lower(val)
-				elif attr == 'system-overdub-or-caption':
-					if val in ('caption', 'overdub'):
-						if not attrdict.has_key('system_overdub_or_caption'):
-							attrdict['system_overdub_or_caption'] = val
-					else:
-						self.syntax_error('bad system-overdub-or-caption attribute')
-				elif attr == 'systemOverdubOrSubtitle':
-					if val in ('subtitle', 'overdub'):
-						if val == 'subtitle':
-							val = 'overdub'
+			elif attr == 'systemLanguage':
+				attrdict['system_language'] = val
+			elif attr == 'systemCPU':
+				attrdict['system_cpu'] = string.lower(val)
+			elif attr == 'systemOperatingSystem':
+				attrdict['system_operating_system'] = string.lower(val)
+			elif attr == 'system-overdub-or-caption':
+				if val in ('caption', 'overdub'):
+					if not attrdict.has_key('system_overdub_or_caption'):
 						attrdict['system_overdub_or_caption'] = val
-					else:
-						self.syntax_error('bad systemOverdubOrSubtitle attribute')
-				elif attr == 'system-required':
-					if not attrdict.has_key('system_required'):
-						nsdict = self.getnamespace()
-						nsuri = nsdict.get(val)
-						if not nsuri:
-							self.syntax_error('no namespace declaration for %s in effect' % val)
-						else:
-							attrdict['system_required'] = nsuri
-				elif attr == 'systemRequired':
+				else:
+					self.syntax_error('bad system-overdub-or-caption attribute')
+			elif attr == 'systemOverdubOrSubtitle':
+				if val in ('subtitle', 'overdub'):
+					if val == 'subtitle':
+						val = 'overdub'
+					attrdict['system_overdub_or_caption'] = val
+				else:
+					self.syntax_error('bad systemOverdubOrSubtitle attribute')
+			elif attr == 'system-required':
+				if not attrdict.has_key('system_required'):
 					nsdict = self.getnamespace()
 					nsuri = nsdict.get(val)
 					if not nsuri:
 						self.syntax_error('no namespace declaration for %s in effect' % val)
 					else:
 						attrdict['system_required'] = nsuri
-	
+			elif attr == 'systemRequired':
+				nsdict = self.getnamespace()
+				nsuri = nsdict.get(val)
+				if not nsuri:
+					self.syntax_error('no namespace declaration for %s in effect' % val)
+				else:
+					attrdict['system_required'] = nsuri
+			else:
+				# catch all
+				attrdict[attr] = val
+
+		attrdict['declwidth'] = attrdict.get('width')
+		attrdict['declheight'] = attrdict.get('height')
+
+		# experimental code for switch layout
+		if len(self.__switchstack) > 0:			
 			if not hasattr(self,'_elementindex'):
 				self._elementindex = 1
 			else:
 				self._elementindex = self._elementindex+1
-			attrdict['elementindex'] = self._elementindex
-					
-			for key,val in attrdict.items():
-				self.__tops[id][key] = val
-			
+			self.__tops[id]['elementindex'] = self._elementindex
+				
 			notmatch = 0
 			if self.__alreadymatch:
 				notmatch = 1
@@ -3172,7 +3183,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__tops[id]['open'] = 'whenActive'
 			else:
 				self.__alreadymatch = 1
-
 		# end experimental code for switch
 		
 	def end_viewport(self):
