@@ -4,12 +4,16 @@ __version__ = "$Id$"
 import windowinterface
 import Xm, Xmd, X
 
+_dialog_widget = None
+
 class LicenseDialog:
 	def __init__(self):
 		import splash, splashimg, imgconvert
+		global _dialog_widget
 		fg = windowinterface.toplevel._convert_color((0,0,0), 0)
 		bg = windowinterface.toplevel._convert_color((0x99,0x99,0x99), 0)
 		w = windowinterface.toplevel._main.CreateTemplateDialog('license', {'autoUnmanage': 0, 'foreground': fg, 'background': bg})
+		_dialog_widget = w
 		tryb = w.CreatePushButton('try', {'labelString': 'Try', 'foreground': fg, 'background': bg})
 		tryb.ManageChild()
 		tryb.AddCallback('activateCallback', self.__callback, (self.cb_try, ()))
@@ -56,6 +60,8 @@ class LicenseDialog:
 		self.__window.ManageChild()
 		
 	def close(self):
+		global _dialog_widget
+		_dialog_widget = None
 		self.__window.DestroyWidget()
 		self.__window = None
 		del self.__window
@@ -101,6 +107,108 @@ class LicenseDialog:
 	def __callback(self, w, callback, call_data):
 		apply(apply, callback)
 
-def EnterkeyDialog(ok_callback):
-		import windowinterface
-		windowinterface.InputDialog("Enter key:", "", self.ok_callback)
+class EnterkeyDialog:
+	def __init__(self, ok_callback):
+		if _dialog_widget:
+			parent = _dialog_widget
+		else:
+			parent = windowinterface.toplevel._main
+		self.__ok_callback = ok_callback
+		w = parent.CreateTemplateDialog('license',
+			{'cancelLabelString': 'Cancel',
+			 'okLabelString': 'OK',
+			 'resizePolicy': Xmd.RESIZE_NONE,
+			 'noResize': 1,
+			 'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL})
+		w.AddCallback('cancelCallback', self.__cancel, None)
+		w.AddCallback('okCallback', self.__ok, None)
+		s = w.CreateForm('form', {})
+		f1 = s.CreateForm('form1',
+				  {'topAttachment': Xmd.ATTACH_FORM,
+				   'leftAttachment': Xmd.ATTACH_FORM,
+				   'rightAttachment': Xmd.ATTACH_FORM})
+		l1 = f1.CreateLabel('label1',
+				    {'topAttachment': Xmd.ATTACH_FORM,
+				     'leftAttachment': Xmd.ATTACH_FORM,
+				     'bottomAttachment': Xmd.ATTACH_FORM,
+				     'labelString': 'Name:'})
+		t1 = f1.CreateTextField('text1',
+					{'topAttachment': Xmd.ATTACH_FORM,
+					 'leftAttachment': Xmd.ATTACH_WIDGET,
+					 'leftWidget': l1,
+					 'rightAttachment': Xmd.ATTACH_FORM,
+					 'bottomAttachment': Xmd.ATTACH_FORM})
+		self.__name = t1
+		t1.AddCallback('valueChangedCallback', self.__changed, None)
+		f2 = s.CreateForm('form2',
+				  {'topAttachment': Xmd.ATTACH_WIDGET,
+				   'topWidget': f1,
+				   'leftAttachment': Xmd.ATTACH_FORM,
+				   'rightAttachment': Xmd.ATTACH_FORM})
+		l2 = f2.CreateLabel('label2',
+				    {'topAttachment': Xmd.ATTACH_FORM,
+				     'leftAttachment': Xmd.ATTACH_FORM,
+				     'bottomAttachment': Xmd.ATTACH_FORM,
+				     'labelString': 'Organization:'})
+		t2 = f2.CreateTextField('text2',
+					{'topAttachment': Xmd.ATTACH_FORM,
+					 'leftAttachment': Xmd.ATTACH_WIDGET,
+					 'leftWidget': l2,
+					 'rightAttachment': Xmd.ATTACH_FORM,
+					 'bottomAttachment': Xmd.ATTACH_FORM})
+		self.__org = t2
+		t2.AddCallback('valueChangedCallback', self.__changed, None)
+		f3 = s.CreateForm('form3',
+				  {'topAttachment': Xmd.ATTACH_WIDGET,
+				   'topWidget': f2,
+				   'leftAttachment': Xmd.ATTACH_FORM,
+				   'rightAttachment': Xmd.ATTACH_FORM,
+				   'bottomAttachment': Xmd.ATTACH_FORM})
+		l3 = f3.CreateLabel('label3',
+				    {'topAttachment': Xmd.ATTACH_FORM,
+				     'leftAttachment': Xmd.ATTACH_FORM,
+				     'bottomAttachment': Xmd.ATTACH_FORM,
+				     'labelString': 'License key:'})
+		t3 = f3.CreateTextField('text3',
+					{'topAttachment': Xmd.ATTACH_FORM,
+					 'leftAttachment': Xmd.ATTACH_WIDGET,
+					 'leftWidget': l3,
+					 'rightAttachment': Xmd.ATTACH_FORM,
+					 'bottomAttachment': Xmd.ATTACH_FORM})
+		self.__key = t3
+		t3.AddCallback('valueChangedCallback', self.__changed, None)
+		f1.ManageChild()
+		l1.ManageChild()
+		t1.ManageChild()
+		f2.ManageChild()
+		l2.ManageChild()
+		t2.ManageChild()
+		f3.ManageChild()
+		l3.ManageChild()
+		t3.ManageChild()
+		s.ManageChild()
+		self.__ok = w.MessageBoxGetChild(Xmd.DIALOG_OK_BUTTON)
+		self.__changed(None, None, None)
+		w.ManageChild()
+
+	def __cancel(self, w, client_data, call_data):
+		del self.__ok
+		del self.__name
+		del self.__org
+		del self.__key
+
+	def __ok(self, w, client_data, call_data):
+		name = self.__name.TextFieldGetString()
+		org = self.__org.TextFieldGetString()
+		key = self.__key.TextFieldGetString()
+		self.__ok_callback(key, name, org)
+		self.__cancel(w, client_data, call_data)
+
+	def __changed(self, w, client_data, call_data):
+		name = self.__name.TextFieldGetString()
+		org = self.__org.TextFieldGetString()
+		key = self.__key.TextFieldGetString()
+		if (name or org) and key:
+			self.__ok.SetSensitive(1)
+		else:
+			self.__ok.SetSensitive(0)
