@@ -98,46 +98,26 @@ class MMNodeContext:
 		# return a list of channels compatible with the given URL
 		if url:
 			# ignore chtype if url is set
-			import mimetypes
+			import mimetypes, ChannelMime
 			mtype = mimetypes.guess_type(url)[0]
 			if not mtype:
 				return []
-			maintype, subtype = string.split(string.lower(mtype), '/')
-			if string.find(subtype, 'real') >= 0:
-				# for Real media look inside the file
+			if mtype == 'video/vnd.rn-realvideo':
+				# for RealVideo look inside the file
 				import realsupport
 				info = realsupport.getinfo(self.findurl(url))
-				if info.has_key('width'):
-					if maintype == 'image':
-						chtype = 'RealPix'
-					elif maintype == 'text':
-						chtype = 'RealText'
-					else:
-						chtype = 'video'
-				else:
-					chtype = 'sound'
-			elif maintype == 'image':
-				chtype = 'image'
-			elif maintype == 'audio':
-				chtype = 'sound'
-			elif maintype == 'video':
-				chtype = 'video'
-			elif maintype == 'text':
-				if subtype == 'html':
-					chtype = 'html'
-				else:
-					chtype = 'text'
-			elif string.find(subtype, 'flash') >= 0:
-				# Shockwave Flash or RealFlash
-				chtype = 'video'
-			else:
-				return []
+				if info and not info.has_key('width'):
+					mtype = 'audio/vnd.rn-realaudio'
+			chtypes = ChannelMime.MimeChannel.get(mtype, [])
+		elif chtype:
+			chtypes = [chtype]
+		else:
+			# no URL and no channel type given
+			return []
 		chlist = []
 		for ch in self.channels:
-			if ch['type'] == chtype:
+			if ch['type'] in chtypes:
 				chlist.append(ch.name)
-##			if chtype == 'image' and ch['type'] == 'RealPix':
-##				chlist.append(ch.name)
 		chlist.sort()
 		return chlist
 
