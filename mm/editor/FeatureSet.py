@@ -36,6 +36,7 @@ __version__ = "$Id$";
 	SOURCE_VIEW,			# show the source view for editing smil source.
 	USER_GROUPS,
 	SOURCE,
+	ERRORS_VIEW,
 
 	UNIFIED_FOCUS,						# All views share their focus
 	CUSTOM_REGIONS,						# Allow to create/delete its own region
@@ -47,4 +48,4 @@ __version__ = "$Id$";
 	H_DROPBOX,							# Show an empty drop box at the end of a sequence.
 	H_COLLAPSE,							# Enable internal node collapsing.
 	H_TIMESTRIP,						# Show snap!-like documents with correct toplevel par/seq
-] = range(28)							# don't forget to update this range!
+] = range(29)							# don't forget to update this range!
