@@ -923,7 +923,7 @@ class PreferenceWrapper(Wrapper):
 	def setwaiting(self):
 		pass
 
-	def registers(self, object):
+	def register(self, object):
 		import settings
 		settings.register(object)
 
