@@ -73,17 +73,17 @@ class CLOSE(_CommandBase):
 # TopLevel commands
 #
 class PLAYERVIEW(_CommandBase):
-	help = 'Show/hide Player View'
+	help = 'Show Player View'
 class HIERARCHYVIEW(_CommandBase):
-	help = 'Show/hide Structure View'
+	help = 'Show Structure View'
 class CHANNELVIEW(_CommandBase):
-	help = 'Show/hide Channel View'
+	help = 'Show Timeline View'
 class LINKVIEW(_CommandBase):
-	help = 'Show/hide Hyperlink Editor'
+	help = 'Show Hyperlink Editor'
 class LAYOUTVIEW(_CommandBase):
-	help = 'Show/hide Layout View'
+	help = 'Show Layout View'
 class USERGROUPVIEW(_CommandBase):
-	help = 'Show/hide User Group Editor'
+	help = 'Show User Group Editor'
 
 # These are to hide the various views. They are basically
 # a workaround for Windows, where the "close" command is
@@ -176,10 +176,10 @@ class PUSHFOCUS(_CommandBase):
 	help = 'Select the selected node in other views'
 class CREATEANCHOR(_CommandBase):
 	help = 'Create a simple fullnode anchor on the selection'
-class FINISH_LINK(_CommandBase): 
+class FINISH_LINK(_CommandBase):
 	help = 'Create hyperlink from recent anchor to selection'
-class FINISH_ARC(_CommandBase): 
-	help = 'Lock selection, create sync arc to next selected node' 
+class FINISH_ARC(_CommandBase):
+	help = 'Lock selection, create sync arc to next selected node'
 class THUMBNAIL(_CommandBase):
 	help = 'Toggle between showing and not showing thumbnails'
 
@@ -226,4 +226,3 @@ class ADD_CHANNEL(_CommandBase):
 	help = 'Add channel to layout'
 class RENAME(_CommandBase):
 	help = 'Rename the current layout'
-
