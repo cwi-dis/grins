@@ -36,6 +36,7 @@ class ToolbarMixin:
 		# values are GRiNSToolbar instances.
 		#
 		self._bars = {}
+		self._pbar = None
 		#
 		# Pulldown adornments. Indexed by pulldown name,
 		# values are (valuelist, callback, initialvalue).
@@ -78,6 +79,9 @@ class ToolbarMixin:
 		self.RecalcLayout()
 
 	def OnClose(self):
+		if self._pbar:
+			self._pbar.DestroyWindow()
+			self._pbar = None	
 		self.SaveBarState("GRiNSToolBars")
 
 	def CreateToolbars(self):
@@ -89,6 +93,11 @@ class ToolbarMixin:
 		self._recalcPulldownEnable()
 		self._restoreToolbarState()
 		self.RecalcLayout()
+		
+		import winplayerdlg
+		pbar = winplayerdlg.PlayerDlgBar()
+		pbar.createWindow(self)
+		self._pbar = pbar
 
 	def DestroyToolbars(self):
 		for bar in self._bars.values():
@@ -138,6 +147,7 @@ class ToolbarMixin:
 
 		# Create the toolbar
 		cmdid = usercmdui.usercmd2id(command)
+		if resid<=0: return
 		bar = GRiNSToolbar(self, name, barid, resid, candrag)
 		self._bars[cmdid] = bar
 		self.DockControlBar(bar)
@@ -209,14 +219,14 @@ class ToolbarMixin:
 			self._pulldowncallbackdict[id] = (combo, callback)
 
 	def _createPulldown(self, bar, index, name):
-			# the return object is a components.ComboBox
-			global ID_TOOLBAR_COMBO
-			tbcb = self.createToolBarCombo(bar, index, ID_TOOLBAR_COMBO, TOOLBAR_COMBO_WIDTH, TOOLBAR_COMBO_HEIGHT, self.onToolbarCombo)
-			ID_TOOLBAR_COMBO = ID_TOOLBAR_COMBO + 1
-			bar._toolbarCombos[name] = tbcb
-			tbcb.addstring(name)
-			tbcb.setcursel(0)
-			tbcb.enable(0)
+		# the return object is a components.ComboBox
+		global ID_TOOLBAR_COMBO
+		tbcb = self.createToolBarCombo(bar, index, ID_TOOLBAR_COMBO, TOOLBAR_COMBO_WIDTH, TOOLBAR_COMBO_HEIGHT, self.onToolbarCombo)
+		ID_TOOLBAR_COMBO = ID_TOOLBAR_COMBO + 1
+		bar._toolbarCombos[name] = tbcb
+		tbcb.addstring(name)
+		tbcb.setcursel(0)
+		tbcb.enable(0)
 
 	def createToolBarCombo(self, bar, index, ctrlid, width, ddheight, responseCb=None):
 		bar.SetButtonInfo(index, ctrlid, afxexttb.TBBS_SEPARATOR, width)
