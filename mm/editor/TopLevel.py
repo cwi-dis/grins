@@ -58,7 +58,7 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		BasicDialog.destroy(self)
 		self.destroyviews()
 		AttrEdit.hideall(self.root)
-		NodeInfo.closeall(self.root)
+		NodeInfo.hideall(self.root)
 	#
 	# Main interface.
 	#
@@ -223,6 +223,7 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		self.editmgr.rollback()
 		self.destroyviews()
 		AttrEdit.hideall(self.root)
+		NodeInfo.hideall(self.root)
 		self.editmgr.unregister(self)
 		self.context.seteditmgr(None)
 		self.root.Destroy()
