@@ -287,6 +287,7 @@ class VideoStream:
 		self.__paused=1
 		self.__fiber_id=None
 		self.__rcMediaWnd = None
+		self.__qid = self.__dqid = None
 
 	def destroy(self):
 		if self.__window:
@@ -321,7 +322,9 @@ class VideoStream:
 
 		self.play_loop = self.__channel.getloop(node)
 		self.__iteration = 0
+		self.__pausedelay = 0
 		duration = node.GetAttrDef('duration', None)
+		self.__duration = duration
 		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
 		if repeatdur and self.play_loop == 1:
 			self.play_loop = 0
@@ -370,6 +373,9 @@ class VideoStream:
 		
 		window.setvideo(self.__mmstream._dds, self.__channel.getMediaWndRect(), self.__mmstream._rect)
 		self.__window = window
+		if self.__duration:
+			self.__node = node
+			self.__dqid = self.__channel._scheduler.enterabs(node.start_time + (self.__iteration + 1) * self.__duration, 0, self.onMediaEnd, ())
 		self.__mmstream.run()
 		self.__mmstream.update()
 		self.__window.update()
@@ -378,22 +384,52 @@ class VideoStream:
 		return 1
 
 	def __stoprepeat(self):
+		self.__qid = None
 		self.stopit()
 		self.__channel.playdone(0)
 
 	def stopit(self):
+		if self.__dqid:
+			try:
+				self.__channel._scheduler.cancel(self.__dqid)
+			except:
+				pass
+			self.__dqid = None
+		if self.__qid:
+			try:
+				self.__channel._scheduler.cancel(self.__qid)
+			except:
+				pass
+			self.__qid = None
 		if self.__mmstream:
 			self.__mmstream.stop()
 			self.__unregister_for_timeslices()
 
 	def pauseit(self, paused):
 		if self.__mmstream:
+			t0 = self.__channel._scheduler.timefunc()
 			if paused:
+				if self.__dqid:
+					try:
+						self.__channel._scheduler.cancel(self.__dqid)
+					except:
+						pass
+					self.__dqid = None
+				if self.__qid:
+					try:
+						self.__channel._scheduler.cancel(self.__qid)
+					except:
+						pass
+					self.__qid = None
 				self.__mmstream.stop()
 				self.__unregister_for_timeslices()
+				self.__pausetime = t0
 			else:
+				self.__pausedelay = self.__pausedelay + t0 - self.__pausetime
 				self.__mmstream.run()
 				self.__register_for_timeslices()
+				if self.__duration:
+					self.__dqid = self.__channel._scheduler.enterabs(self.__node.start_time + self.__pausedelay + (self.__iteration + 1) * self.__duration, 0, self.onMediaEnd, ())
 
 	def freezeit(self):
 		if self.__mmstream:
@@ -411,11 +447,15 @@ class VideoStream:
 					# incomplete last iteration
 					self.__playEnd = self.__playBegin + (self.__playEnd - self.__playBegin) * self.play_loop
 				self.__channel.event('repeat(%d)' % self.__iteration)
+				if self.__duration:
+					self.__dqid = self.__channel._scheduler.enterabs(self.__node.start_time + (self.__iteration + 1) * self.__duration, 0, self.onMediaEnd, ())
 				self.__mmstream.seek(self.__playBegin)
 				return
 			# no more loops
 			self.__playdone=1
 			self.__channel.playdone(0)
+			self.__node = None
+			del self.__node
 			return
 		# self.play_loop is 0 so repeat
 		self.__mmstream.seek(self.__playBegin)
@@ -427,7 +467,8 @@ class VideoStream:
 			if self.__window:
 				self.__window.update(self.__window.getwindowpos())
 			if not running or t_sec >= self.__playEnd:
-				self.onMediaEnd()
+				if not self.__duration:
+					self.onMediaEnd()
 	
 	def __register_for_timeslices(self):
 		if self.__fiber_id is None:
