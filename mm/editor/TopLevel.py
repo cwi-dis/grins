@@ -99,34 +99,29 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
-		#self.__save = None
 		if self.main.cansave():
 			self.commandlist = self.commandlist + [
 				SAVE_AS(callback = (self.saveas_callback, ())),
 				SAVE(callback = (self.save_callback, ())),
-##				]
-##			if compatibility.G2 == features.compatibility:
-##				self.commandlist = self.commandlist + [
-					EXPORT_G2(callback = (self.bandwidth_callback, (self.export_G2_callback, ))),
-					UPLOAD_G2(callback = (self.bandwidth_callback, (self.upload_G2_callback, ))),
-##				]
-##			if compatibility.QT == features.compatibility:
-##				self.commandlist = self.commandlist + [
-					EXPORT_QT(callback = (self.bandwidth_callback, (self.export_QT_callback,))),
-					UPLOAD_QT(callback = (self.bandwidth_callback, (self.upload_QT_callback,))),
 				]
-				
+			self.commandlist_g2 = self.commandlist + [
+				EXPORT_G2(callback = (self.bandwidth_callback, (self.export_G2_callback, ))),
+				UPLOAD_G2(callback = (self.bandwidth_callback, (self.upload_G2_callback, ))),
+				]
+			self.commandlist = self.commandlist + [
+				EXPORT_QT(callback = (self.bandwidth_callback, (self.export_QT_callback,))),
+				UPLOAD_QT(callback = (self.bandwidth_callback, (self.upload_QT_callback,))),
+				]
+
 #			print "TODO: make this version dependant. TopLevel.py:__init__()"
 ##			self.commandlist.append(EXPORT_WMP(callback = (self.bandwidth_callback, (self.export_WMP_callback,))));
 			self.commandlist.append(EXPORT_WMP(callback = (self.export_WMP_callback,())))
 			self.commandlist.append(UPLOAD_WMP(callback = (self.bandwidth_callback, (self.upload_WMP_callback,))));
 			
-##			if compatibility.SMIL10 == features.compatibility:
 			self.commandlist = self.commandlist + [
 					EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_SMIL_callback,))),
 					UPLOAD_SMIL(callback = (self.bandwidth_callback, (self.upload_SMIL_callback,))),
 				]								
-			#self.__save = SAVE(callback = (self.save_callback, ()))
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(
@@ -148,6 +143,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		TopLevelDialog.show(self)
 		if self.context.attributes.get('project_boston', 0):
 			self.setcommands(self.commandlist + self.__ugroup)
+		else:
+			self.setcommands(self.commandlist + self.commandlist_g2)
 		self.showdefaultviews()
 		
 	def showdefaultviews(self):
@@ -798,7 +795,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self.context.attributes.get('project_boston', 0):
 			self.setcommands(self.commandlist + self.__ugroup)
 		else:
-			self.setcommands(self.commandlist)
+			self.setcommands(self.commandlist + self.commandlist_g2)
 		return 1
 		
 	def save_to_ftp(self, filename, smilurl, w_ftpparams, m_ftpparams):
@@ -860,7 +857,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self.context.attributes.get('project_boston', 0):
 			self.setcommands(self.commandlist + self.__ugroup)
 		else:
-			self.setcommands(self.commandlist)
+			self.setcommands(self.commandlist + self.commandlist_g2)
 		return 1
 		
 	def cancel_upload(self):
@@ -1060,9 +1057,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self.context.attributes.get('project_boston', 0):
 			self.setcommands(self.commandlist + self.__ugroup)
 		else:
-			self.setcommands(self.commandlist)
-		#if self.__save is not None:
-		#	self.setcommands(self.commandlist + [self.__save])
+			self.setcommands(self.commandlist + self.commandlist_g2)
 
 	def rollback(self):
 		# Nothing has happened.
