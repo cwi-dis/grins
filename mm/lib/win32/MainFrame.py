@@ -108,7 +108,6 @@ class GRiNSDlgBar(window.Wnd):
 		self._tab.setcursel(ix)
 
 ####################################
-		
 class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	wndpos=None
 	wndsize=None
@@ -242,7 +241,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# override DropTarget.OnDragOver to protect childs
 	def OnDragOver(self,dataobj,kbdstate,x,y):
-		filename=dataobj.GetGlobalData('FileName')
+		filename=dataobj.GetGlobalData(self.CF_FILE)
 		if not filename:return DROPEFFECT_NONE
 
 		client=self.GetMDIClient()

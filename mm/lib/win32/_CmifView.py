@@ -383,6 +383,9 @@ class _CmifStructView(_CmifView):
 		self._button_down=0
 		self._drag_cmd_send=0
 
+		# shortcut for GRiNS private clipboard format
+		self.CF_NODE=self.getClipboardFormat('Node')
+
 		# enable or dissable node drag and drop
 		self._enableNodeDragDrop=1
 			
@@ -483,12 +486,12 @@ class _CmifStructView(_CmifView):
 		dropRes=0
 		if dragCmd:
 			str='%d %d' % pos
-			dropRes=self.DoDragDrop('Node',str)
+			dropRes=self.DoDragDrop(self.CF_NODE,str)
 		return dropRes
 	
 		
 	def dragnode(self,dataobj,kbdstate,x,y):
-		node=dataobj.GetGlobalData('Node')
+		node=dataobj.GetGlobalData(self.CF_NODE)
 		self._last_paste_cmd=None
 		if node:
 			dragCmd=None
@@ -498,7 +501,7 @@ class _CmifStructView(_CmifView):
 		return 0
 
 	def dropnode(self,dataobj,effect,x,y):
-		node=dataobj.GetGlobalData('Node')
+		node=dataobj.GetGlobalData(self.CF_NODE)
 		if node:
 			self.onMouseEvent((x,y),Mouse0Press)
 			self._parent.SendMessage(win32con.WM_COMMAND,self._last_paste_cmd.id)
