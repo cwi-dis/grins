@@ -1,0 +1,49 @@
+
+
+import "unknwn.idl";
+
+
+// {C3E71113-E006-45ff-B0E2-A1C98613A5AE}
+//DEFINE_GUID(<<name>>, 
+//0xc3e71113, 0xe006, 0x45ff, 0xb0, 0xe2, 0xa1, 0xc9, 0x86, 0x13, 0xa5, 0xae);
+
+[
+	object,
+	uuid(C3E71113-E006-45ff-B0E2-A1C98613A5AE),
+	helpstring("IGRiNSPlayerAuto Interface"),
+	pointer_default(unique)
+]
+
+
+interface IGRiNSPlayerAuto : IUnknown
+	{
+	HRESULT setWindow([in] HWND hwnd);
+	HRESULT open([in, string] wchar_t *szFileOrUrl);
+	HRESULT close();
+	HRESULT play();
+	HRESULT stop();
+	HRESULT pause();
+	}
+
+// {8443A49C-5957-4019-AEC5-D13CEBF3FCF3}
+//DEFINE_GUID(<<name>>, 
+//0x8443a49c, 0x5957, 0x4019, 0xae, 0xc5, 0xd1, 0x3c, 0xeb, 0xf3, 0xfc, 0xf3);
+
+[
+	uuid(8443A49C-5957-4019-AEC5-D13CEBF3FCF3),
+	version(1.0),
+	helpstring("GRiNSPlayerAuto COM Library")
+]
+
+// {56EF6B3D-E9D9-4e2f-8C62-D5DDC7AAF20C}
+//DEFINE_GUID(<<name>>, 
+//0x56ef6b3d, 0xe9d9, 0x4e2f, 0x8c, 0x62, 0xd5, 0xdd, 0xc7, 0xaa, 0xf2, 0xc);
+
+library GRiNSPlayerAutoLib
+{
+	[uuid(56EF6B3D-E9D9-4e2f-8C62-D5DDC7AAF20C)]
+	coclass GRiNSPlayerAuto {
+		[default] interface IGRiNSPlayerAuto;
+		// interface IOther;
+	}
+}
