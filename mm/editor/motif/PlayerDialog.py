@@ -1,4 +1,4 @@
-"""Dialog for the Player control panel.
+"""Dialog for the Previewer control panel.
 
 The PlayerDialog is a window that displays VCR-like controls to
 control the player plus an interface to turn channels on and off and
@@ -25,8 +25,8 @@ class PlayerDialog(PlayerDialogBase):
 			(FLAG_ALL, 'Close', [
 				(FLAG_ALL, 'Close', CLOSE_WINDOW),
 				]),
-			(FLAG_ALL, 'Play', [
-				(FLAG_ALL, 'Play', PLAY, 't'),
+			(FLAG_ALL, 'Preview', [
+				(FLAG_ALL, 'Preview', PLAY, 't'),
 				(FLAG_ALL, 'Pause', PAUSE, 't'),
 				(FLAG_ALL, 'Stop', STOP, 't'),
 				]),
