@@ -80,6 +80,9 @@ class Animator:
 		self._decelerate = 0.0
 		self._autoReverse = 0
 
+		# context of this animator
+		self.__effectiveAnimator = None
+
 	def getDOMValue(self):
 		return self._domval
 
@@ -170,6 +173,12 @@ class Animator:
 		ix, pdt = self._getinterval(t)
 		return vl[ix] + (vl[ix+1]-vl[ix])*self.bezier(pdt, el[ix])
 
+	def _calcto(self, t):
+		if not self.__effectiveAnimator:
+			return self._postinterpol(t)
+		self._values[0] = self.__effectiveAnimator.getcurrentbasevalue(self)
+		return self._postinterpol(t)
+
 	# set legal attr values range
 	def setRange(self, range):
 		self._range = range
@@ -203,6 +212,9 @@ class Animator:
 
 	def freeze(self):
 		pass
+
+	def setEffectiveAnimator(self, ea):
+		self.__effectiveAnimator = ea
 
 	#
 	# begin time manipulation section
@@ -287,14 +299,6 @@ class Animator:
 def _round(val):
 	return int(val+0.5)
 
-
-###########################
-class FeatureNotImplementedException:
-    def __init__(self, msg=''):
-        self.__msg = msg
-    def __repr__(self):
-        return self.__msg
-
 ###########################
 # 'set' element animator
 class SetAnimator(Animator):
@@ -304,8 +308,14 @@ class SetAnimator(Animator):
 ###########################
 # A special animator to manage to-only additive animate elements
 class EffValueAnimator(Animator):
-	pass
-	
+	def __init__(self, attr, domval, value, dur):
+		Animator.__init__(self, attr, domval, (domval, value,), dur, mode='linear',
+			times=None, splines=None, accumulate='none', additive='replace') 
+		self._postinterpol = self._inrepol
+		self._inrepol = self._calcto
+		self._values = list(self._values)
+
+
 ###########################
 class TupleAnimator(Animator):
 	def __init__(self, attr, domval, values, dur, mode='linear', 
@@ -467,6 +477,8 @@ class EffectiveAnimator:
 			if id(a) == id(animator):
 				self.__animators.remove(animator)			
 		self.__animators.append(animator)
+		animator.setEffectiveAnimator(self)
+
 		if not self.__node:
 			self.__node = targNode
 		if not self.__chan:
@@ -499,6 +511,16 @@ class EffectiveAnimator:
 			self.__chan.updateattr(self.__node, self.__attr, displayValue)
 		self.__currvalue = cv
 	
+	def getcurrentbasevalue(self, animator=None):
+		cv = self.__domval
+		for a in self.__animators:
+			if animator and id(a) == id(animator):
+				break
+			if a.isAdditive():
+				cv = a.addCurrValue(cv)
+			else:
+				cv = a.getCurrValue()
+		return cv
 
 ###########################
 # AnimateContext is an EffectiveAnimator repository
@@ -551,7 +573,7 @@ class AnimateElementParser:
 		self.__elementTag = anim.attrdict['tag']
 
 		self.__hasValidTarget = self.__checkTarget()
-		if self.__hasValidTarget:
+		if self.__hasValidTarget and not self.__grinsext:
 			self.__attrtype = MMAttrdefs.getattrtype(self.__attrname)
 
 		self.__additive = MMAttrdefs.getattr(self.__anim, 'additive')
@@ -576,9 +598,19 @@ class AnimateElementParser:
 
 
 	def getAnimator(self):
+		# set elements
 		if self.__elementTag=='set':
 			return self.__getSetAnimator()
-	
+
+		# to-only animation for additive attributes
+		if self.__isToOnly() and self.__canBeAdditive() and self.__calcMode!='discrete':
+			v = self.getTo()
+			v = string.atof(v)
+			anim = EffValueAnimator(self.__attrname, self.__domval, v, self.getDuration())
+			if self.__attrtype=='int':
+				anim.setRetunedValuesConverter(_round)
+			return anim
+
 		# 1. Read animation attributes
 		attr = self.__attrname
 		domval = self.__domval
@@ -589,8 +621,6 @@ class AnimateElementParser:
 		accumulate = self.__accumulate
 		additive = self.__additive
 
-		# for animateMotion we need also 'path' and 'origin'
-		#...
 
 		# 1+: force first value display (fulfil: use f(0) if duration is undefined)
 		if not dur or (type(dur)==type('') and dur=='indefinite'): dur=0
@@ -612,10 +642,6 @@ class AnimateElementParser:
 		# 'by-only animation' implies sum 
 		if self.__isByOnly(): additive = 'sum'
 
-		# 'to-only animation for additive attributes' is very special
-		if self.__isToOnly() and self.__canBeAdditive() and mode!='discrete':
-			pass # manage special case: return EffValueAnimator(...)
-
 		if self.__elementTag=='animateColor':
 			values = self.__getColorValues()
 			return ColorAnimator(attr, domval, values, dur, mode, times, splines,
@@ -635,11 +661,6 @@ class AnimateElementParser:
 		## Begin temp grins extensions
 		# position animation
 		if self.__grinsext:
-			if self.__elementTag=='animateMotion':
-				strpath = MMAttrdefs.getattr(self.__anim, 'path')
-				path = svgpath.Path(strpath)
-				return MotionAnimator(attr, domval, path, dur, mode, times, splines,
-					accumulate, additive)
 			values = self.__getNumInterpolationValues()
 			anim = Animator(attr, domval, values, dur, mode, times, splines, 
 					accumulate, additive)
@@ -768,6 +789,8 @@ class AnimateElementParser:
 		return 1
 
 	def __isByOnly(self):
+		values =  self.getValues()
+		if values: return 0
 		v1 = self.getFrom()
 		if v1!='': return 0
 		v2 = self.getTo()
@@ -775,14 +798,17 @@ class AnimateElementParser:
 		return 1
 
 	def __isToOnly(self):
+		values =  self.getValues()
+		if values: return 0
 		v1 = self.getFrom()
-		if v1!='': return 0
+		if v1!=None and v1!='': return 0
 		v2 = self.getTo()
-		if v2!='': return 1
+		if v2!=None and v2!='': return 1
 		return 0
 
 	def __canBeAdditive(self):
 		 return self.__attrtype == 'int' or self.__attrtype == 'float'
+
 	
 	# return list of interpolation values
 	def __getNumInterpolationValues(self):	
@@ -964,7 +990,7 @@ class AnimateElementParser:
 		n = 0
 		v1 = self.getFrom()
 		if v1: n = n + 1
-		elif self._mode != 'discrete': n = n + 1
+		elif self.__calcMode != 'discrete': n = n + 1
 
 		v2 = self.getTo()
 		dv = self.getBy()
@@ -1059,6 +1085,8 @@ class AnimateElementParser:
 				self.__domval = base_winoff[2]
 			elif self.__attrname == 'region.height':
 				self.__domval = base_winoff[3]
+		if self.__attrname:
+			self.__attrtype = 'int'
 
 	# temp
 	def _dump(self):
