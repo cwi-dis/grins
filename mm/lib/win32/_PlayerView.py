@@ -134,6 +134,7 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 	def OnEraseBkgnd(self,dc):
 		if not self._usesLightSubWindows or not self._active_displist:
 			return _CmifView.OnEraseBkgnd(self,dc)
+		win32mu.DrawRectangle(GetClientRect(), self._bgcolor or (255, 255, 255))
 		return 1
 		
 	def update(self):
@@ -143,11 +144,13 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 			if not self._frontBuffer.Restore():
 				# we can't do anything for this
 				# system is busy with video memory
-				return 
+				self.InvalidateRect(self.GetClientRect())
+				return
 		if self._backBuffer.IsLost():
 			if not self._backBuffer.Restore():
 				# and for this either
 				# system should be out of memory
+				self.InvalidateRect(self.GetClientRect())
 				return
 		self.paint()
 		rcBack = self._wnd.GetClientRect()
