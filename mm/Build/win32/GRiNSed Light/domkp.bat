@@ -43,6 +43,9 @@ set PYTHONPATH=%GRINS_HOME%
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\g2lite
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\g2lite\win32
+IF NOT %INCLUDE_MMEXTENSIONS%==yes GOTO restpath
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\mmextensions\real\win32
+:restpath
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\common\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%
@@ -173,7 +176,6 @@ echo -x imgpgm >> FreezeOpts
 echo -x imgpng >> FreezeOpts
 echo -x imgppm >> FreezeOpts
 echo -x imgtiff >> FreezeOpts
-echo -x gear32sd >> FreezeOpts
 
 rem producer stuff
 echo -x producer >> FreezeOpts
