@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from Carbon import Win
 from Carbon import Windows
 from Carbon import Qd
