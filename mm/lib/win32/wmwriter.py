@@ -142,8 +142,11 @@ class WMWriter:
 
 		enumpins=aurenderer.EnumPins()
 		pin=enumpins.Next()
-		aulastpin=pin.ConnectedTo()
-		fg.RemoveFilter(aurenderer)
+		try:
+			aulastpin=pin.ConnectedTo()
+			fg.RemoveFilter(aurenderer)
+		except:
+			return None
 		try:
 			f = dshow.CreateFilter('Audio Windows Media Converter')
 		except:
