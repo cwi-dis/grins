@@ -75,6 +75,7 @@ class LinkBrowserDialog:
 				'RightPushFocus':(self.show_callback, (cbarg2,)),
 				'RightAnchorEd':(self.anchoredit_callback, (cbarg2,)),
 				'RightList':(self.anchor_browser_callback, (cbarg2,)),
+				'AddExternal':(self.add_external_callback, ()),
 			}
 		}
 		# hold args so that we can create wnd later
@@ -283,6 +284,9 @@ class LinkBrowserDialog:
 			sensitive or insensitive
 		"""
 		self.window.rightbuttonssetsensitive(sensitive)
+
+	def addexternalsetsensitive(self, sensitive):
+		self.window.addexternalsetsensitive(sensitive)
 
 	# Interface to the middle list and associated buttons.
 	def middlehide(self):
