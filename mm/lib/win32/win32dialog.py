@@ -1520,6 +1520,17 @@ class ReplaceDialog(FindDialog):
 		# additional hook commands
 		self._replaceBtn.hookcommand(self, self._onReplace)
 		self._replaceAllBtn.hookcommand(self, self._onReplaceAll)
+		self.HookMessage(self._onCommand, win32con.WM_COMMAND)
+
+	def _onCommand(self, params):
+		# crack win32 message
+		msg=win32mu.Win32Msg(params)
+		code = msg.HIWORD_wParam()
+
+		if code == win32con.EN_CHANGE:
+			# disable the replace button
+			self.enableReplace(0)
+		return 1
 		
 	def _onReplace(self, id, value):
 		if self._replaceCallback != None:
