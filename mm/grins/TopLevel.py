@@ -8,6 +8,9 @@ from MMExc import *
 from Hlinks import *
 from usercmd import *
 import settings
+# RTIPA start
+import features
+# RTIPA end
 
 from TopLevelDialog import TopLevelDialog
 
