@@ -11,8 +11,6 @@ improved
 redo the user interface for creating and editing hyperlinks to be more
 intuitive
 
-make text anchors be text selections, not boxes in the window
-
 perhaps: make things more object-oriented so the list of commands
 pertaining to an object depends on the object only, not on the view...
 
@@ -40,10 +38,16 @@ Kaboo!: None
 
 ------------------------------ BUGS -------------------------------
 
-ImageChannel: anchor editing doesn't scale the anchor we're editing
-right
+There's a hack in MMAttrdefs which calls toplevel.findfile() when it
+is getting 'file' attributes, however now we can have multiple
+toplevel menus this should be done differently (possibly each channel
+should call a function of the toplevel).  (Also this might put
+absolute filenames in the attributes???)
 
-Player: "Ignore delays" option makes the time run as fast as it can
+ImageChannel: anchor editing doesn't scale the anchor we're editing
+right (once you edit it comes at the right place though)
+
+Player: "Ignore delays" option makes the time run like mad
 
 Nodes with unknown channel name still cause problems.
 
