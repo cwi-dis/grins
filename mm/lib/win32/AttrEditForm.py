@@ -32,7 +32,6 @@ error = 'lib.win32.AttrEditForm.error'
 
 class AttrCtrl:
 	want_colon_after_label = 1
-	want_default_help = 1
 
 	def __init__(self,wnd,attr,resid):
 		self._wnd=wnd
@@ -46,7 +45,7 @@ class AttrCtrl:
 		infoc=self._wnd._attrinfo
 		a=self._attr
 		hd=a.gethelpdata()
-		if hd[1] and self.want_default_help:
+		if hd[1]:
 			infoc.settext("%s (leave empty for %s)"%(hd[2], hd[1]))
 		else:
 			infoc.settext(hd[2])
@@ -56,6 +55,9 @@ class AttrCtrl:
 
 	def drawOn(self,dc):
 		pass
+
+	def enableApply(self,flag=1):
+		self._wnd._form._prsht.enableApply(flag)
 
 # temp stuff not safe
 def atoft(str):
@@ -69,8 +71,6 @@ def fttoa(t,n,prec):
 
 ##################################
 class OptionsCtrl(AttrCtrl):
-	want_default_help = 0
-
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
 		self._attrname=components.Edit(wnd,resid[0])
@@ -117,6 +117,8 @@ class OptionsCtrl(AttrCtrl):
 
 	def OnCombo(self,id,code):
 		self.sethelp()
+		if code==win32con.CBN_SELCHANGE:
+			self.enableApply()
 
 class ChannelCtrl(OptionsCtrl):
 	def OnInitCtrl(self):
@@ -128,8 +130,6 @@ class ChannelCtrl(OptionsCtrl):
 			self._attr.channelprops()
 
 class OptionsRadioCtrl(AttrCtrl):
-	want_default_help = 0
-
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
 		self._attrname=components.Control(wnd,resid[0])
@@ -187,10 +187,9 @@ class OptionsRadioCtrl(AttrCtrl):
 
 	def OnRadio(self,id,code):
 		self.sethelp()
+		self.enableApply()
 
 class OptionsCheckCtrl(AttrCtrl):
-	want_default_help = 0
-
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
 		self._attrname=components.Control(wnd,resid[0])
@@ -253,6 +252,7 @@ class OptionsCheckCtrl(AttrCtrl):
 
 	def OnCheck(self,id,code):
 		self.sethelp()
+		self.enableApply()
 
 ##################################
 class FileCtrl(AttrCtrl):
@@ -293,6 +293,7 @@ class FileCtrl(AttrCtrl):
 		elif code==win32con.EN_CHANGE:
 			if hasattr(self._wnd,'onAttrChange'):
 				self._wnd.onAttrChange()
+			self.enableApply()
 
 ##################################
 class ColorCtrl(AttrCtrl):
@@ -391,6 +392,7 @@ class ColorCtrl(AttrCtrl):
 			self.sethelp()
 		elif code==win32con.EN_CHANGE:
 			self.invalidateInd()
+			self.enableApply()
 
 ##################################
 class StringCtrl(AttrCtrl):
@@ -428,6 +430,8 @@ class StringCtrl(AttrCtrl):
 	def OnEdit(self,id,code):
 		if code==win32con.EN_SETFOCUS:
 			self.sethelp()
+		elif code==win32con.EN_CHANGE:
+			self.enableApply()
 
 class TupleCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -476,7 +480,9 @@ class TupleCtrl(AttrCtrl):
 	def OnEdit(self,id,code):
 		if code==win32con.EN_SETFOCUS:
 			self.sethelp()
-
+		elif code==win32con.EN_CHANGE:
+			self.enableApply()
+	
 class IntTupleCtrl(TupleCtrl):
 	def setvalue(self, val):
 		if self._initctrl:
@@ -518,17 +524,29 @@ class AttrSheet(dialog.PropertySheet):
 		dll=__main__.resdll
 		dialog.PropertySheet.__init__(self,grinsRC.IDR_GRINSED,dll)
 		self.HookMessage(self.onInitDialog,win32con.WM_INITDIALOG)
+		self._apply=components.Button(self,afxres.ID_APPLY_NOW)
 
 	def onInitDialog(self,params):
 		self.HookCommand(self.onApply,afxres.ID_APPLY_NOW)
 		self.HookCommand(self.onOK,win32con.IDOK)
 		self.HookCommand(self.onCancel,win32con.IDCANCEL)
+		self._apply.attach_to_parent()
 
-	def onApply(self,id,code): self._form.call('Apply')
-	def onOK(self,id,code): self._form.call('OK')
-	def onCancel(self,id,code):self._form.call('Cancel')
+	def onApply(self,id,code): 
+		self._form.call('Apply')
+		self.enableApply(0)
 
+	def onOK(self,id,code): 
+		self._form.call('OK')
 
+	def onCancel(self,id,code):
+		self._form.call('Cancel')
+
+	def enableApply(self,flag):
+		if self._apply:
+			self._apply.enable(flag)
+		
+		
 class AttrPage(dialog.PropertyPage):
 	def __init__(self,form):
 		self._form=form
@@ -562,7 +580,7 @@ class AttrPage(dialog.PropertyPage):
 	def drawOn(self,dc):
 		for ctrl in self._cd.values():
 			ctrl.drawOn(dc)
-					
+						
 	def setvalue(self, attr, val):
 		if self._cd.has_key(attr): 
 			self._cd[attr].setvalue(val)
@@ -1738,10 +1756,6 @@ class AttrEditForm(GenFormView):
 		prsht.SetActivePage(self._pages[0])
 		prsht.RedrawWindow()
 
-		# enable apply
-		temp=components.Control(prsht,afxres.ID_APPLY_NOW)
-		temp.attach_to_parent()
-		temp.enable(1)
 
 	def creategrouppages(self):
 		grattrl=[]	 # all attr in groups
