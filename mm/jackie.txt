@@ -5,45 +5,72 @@ Suggestions for Changes/ Queries/Defects
 1. Menus do not have "ampersand shortcuts" displaying - Have they been
 implemented throughout as they only appear in the Menu titles
 currently?
+	Sjoerd: Shortcuts need to be implemented.
 
 2. File Menu - This has the menu item `Charset' is this name
 sufficient for a new user who may not be familiar with the different
-Character sets available and their use. It may be better to use the
+Character sets available and their use.  It may be better to use the
 full name.
+	Sjoerd: This seems to be an attempt to deal with different
+	character sets in a document.  When a text file is retrieved,
+	its charset should be obeyed (I don't know whether it is), and
+	there should be a way of specifying the charset of immediate
+	text nodes.  But this is not the way.  This needs thought, and 
+	probably some system-independent code.
 
 3. File Menu - "Open" menu item takes the User to the dialog `Open
-Location'. This refers to the file so should read `Open file', the
+Location'.  This refers to the file so should read `Open file', the
 location of which either needs to be inserted manually or can be
 obtained by Browsing.
+	Sjoerd: It can be argued that the label is not very clear, but
+	the intention is that you specify a URL, not a file.  If you
+	want to specify a file, you need to use URL syntax.  The
+	Browse... dialog takes care of the conversion (or at least it
+	should).
 
 4. File Menu - New Menu item - I find it slightly confusing that have
-to select a template before I can be given a new document. (However
+to select a template before I can be given a new document.  (However
 this may be clarified if I were to read the Tutotrial and/or
 documentation:-)) Also can the user define their own Template???
+	Sjoerd: There should be a way to say, I don't want to use a
+	template, although using the empty.smil or empty.cmif template 
+	accomplishes that.
 
 5. File menu - Preferences- GRiNS Preferences dialog - The `Preferred
-language' requests 2 characters. This can be come confusing as not
+language' requests 2 characters.  This can be come confusing as not
 everyone uses `Gr, Fr, It, Sp' etc some people use `D, F, I, E' for
 the countries it might be better for some sort of confirmation of the
-language actually selected. eg. typing `Gr' displays `German' in the
-field. A bit of a pain but it avoids confusion. OR maybe this should
+language actually selected.  eg. typing `Gr' displays `German' in the
+field.  A bit of a pain but it avoids confusion.  OR maybe this should
 be a selectable list box of the countries.
+	Sjoerd: This uses an international standard. But I suppose
+	there could be a more user-friendly interface to the
+	standard.  If we do anything, it should be done
+	system-independently.
 
 6. View Menu - `Select syncarc' menu item I think this should read
 `Select sync arc' with a space to match the later Menu item `Display
 sync arcs'.
+	Sjoerd: I agree.
 
 7. Layout View - Can the `X' on the top right be made bold so that it
 looks more like a close button for the View.
+	Sjoerd: I agree.  Can the layout view be made more like the
+	other views with the same type of window border?
 
 8. Layout View - Choosing `New...' in the Layouts section gives the
 dialog titled `Name for Layout' - I think the dialog Title should read
 `Layout name' and the dialog text should read `Layout name:'with the
 `:' to match the dialog `New channel'.
+	Sjoerd: Maybe the dialog should be called "New lyaout" and the 
+	prompt should be "Layout name:".  The new channel dialog
+	should then be called "New channel" and the prompt should be
+	"Channel name:".
 
 9. Layout View - Choosing `New..'in the Layout channels section gives
-the `New Channel' dialog. The dialog text `Name for channel:' should
-read `New channel name:'.
+the `New Channel' dialog.  The dialog text `Name for channel:' should
+read `New channel name:'
+	Sjoerd: See above..
 
 10. Doing the following produces a crash ( Windows 98, 48MB RAM, Hard
 Drive 1.96 GB, Free 140MB):
@@ -59,6 +86,14 @@ h. From the middle section choose the `Add...' button.
 
 Results:
 This displays the Debugging window with the error message and report.
+	Sjoerd: No crash in latest (Dec 7) version.
+	I did get an illegal operation crash after I did the following 
+	additional steps:
+	i. Press cancel in hyperlink view.
+	j. Click on X at the top-right corner of the GRiNS editor
+	   window.
+	I have seen similar crashes when exiting the GRiNS editor in
+	this same way.
 
 11.Doing the following causes a crash:
 Steps to Recreate:
@@ -72,33 +107,46 @@ e. In the `Info for Node:' dialog, select from the Channel scrollable
 
 Result
 This displays the Debugging window with the error message and report.
-
+	Sjoerd: Indeed it does.
+	The Motif version of NodeInfoDialog.askchannelname uses
+	windowinterface.InputDialog and gives it a named argument
+	called "parent".  The Windows version does the same, but
+	aparently the Windows versino of InputDialog does not support
+	the "parent " argument.
+	
+	When I terminated this invocation using the X on the pop-up
+	debugging window I again got an illegal operatin crash.
 
 12. Attributes for node: Dialog
 Is it normal to be able to move all the headings on top of each other
 by dragging right to left so that eventually no headings are visible?
 Pretty silly thing to do, I know, but maybe somebody could do it then
-wonder where their text has gone to. Although, when they re-open the
-dialog the headings are all visible once more. I think if possible the
+wonder where their text has gone to.  Although, when they re-open the
+dialog the headings are all visible once more.  I think if possible the
 user should be able to set the spacing of these headings to a
 different size to the default but not be able to reduce the size of
 the Heading to less than the minimum required to view the complete
-Title text. That way the user can set it up to view all of the
+Title text.  That way the user can set it up to view all of the
 explanations which could be quite long and useful, but no be able to
 reduce the Headings so that you can't see them.
-
+	Sjoerd: I agree.
 
 13. Tools Menu - Anchors for node: dialog - While there is nothing in
-this dialog the Buttons `Edit...' and `Export...' are active. However,
-when they are clicked upon nothing happens. I think they should be
+this dialog the Buttons `Edit...' and `Export...' are active.  However,
+when they are clicked upon nothing happens.  I think they should be
 ghosted until there has been the appropriate selection made to
-activate them. I notice that once a new anchor has been created that
+activate them.  I notice that once a new anchor has been created that
 although you can then go back and Edit this the `Export...' button
-still seems to produce nothing when clicked upon. (This could be that
+still seems to produce nothing when clicked upon.  (This could be that
 the creation of a new anchor of the type `all' is not suitable for
 exportation again I would expect the `Export...' button not to be
 available to me until I have the correct type of anchor suitable for
 exportation.)
+	Sjoerd: Ghosting out the Edit and Export buttons seem to be
+	working in the Dec 7 version.
+	As to the other Export problem, it looks like clicking the
+	button doesn't invoke the callback.  In any case, the dialog
+	asking for the external name for the anchor isn't popped up.
 
 14. Doing the following caused a Crash
 Steps to recreate:
@@ -115,20 +163,25 @@ Results
 The following message is displayed in a `GRiNS' titled dialog
 `_MultiChoice requestChoose source anchor' Choose OK gives the usual
 Debugging Window.
-
+	Sjoerd: The windowinterface.multchoice function hasn't been
+	implemented.
 
 15. Choosing `Edit contents...' from the Tools menu gives a Dialog
 Titled `Choose' I think there's some text missing it should read
-`Choose Editor'. The dropdown list box in this dialog has `Cancel' as
+`Choose Editor'.  The dropdown list box in this dialog has `Cancel' as
 an item I don't think it should be there.
+	Sjoerd: I agree.
 
 16. Error message about inserting new channel while playing a document
 has `OK' and `Cancel' buttons choosing `Cancel' stopped playing and
-allowed me to create a new channel. I though it would `Cancel the
-requested action' ie. creation of the new channel and leave the
-section playing. Dialog had no title just `Message' If in doubt on a
+allowed me to create a new channel.  I though it would `Cancel the
+requested action' ie.  creation of the new channel and leave the
+section playing.  Dialog had no title just `Message' If in doubt on a
 title for a Dialog maybe it's better to use `GRiNS Editor'
-
+	Sjoerd: I agree.  The Cancel action should cancel the request
+	to create a new channel.  It seems the
+	windowinterface.showquestion function doesn't function
+	properly.
 
 17. Doing the following causes a Crash
 Steps to Recreate:
@@ -142,6 +195,7 @@ f. Then click on the item now highlighted in yellow.
 
 Results
 The Debugging Window appears with the message and report.
+	Sjoerd: self.cview seems to be None in ArcInfoDialog.__init__.
 
 18. Shortcuts
 Main Menu shortcuts should be given for Main features Open, Close,
@@ -149,31 +203,38 @@ Exit, Cut, Copy, Paste as well as the Views together with any other
 Features that are considered important.
 
 19. General - all dialog boxes should have an ampersand shortcut in
-them. If this extends to the OK and Cancel buttons then it should be
+them.  If this extends to the OK and Cancel buttons then it should be
 followed consistently through out the application.
 
 20. When two copies of the Editor are running and an item is copied to
 the clipboard in one it is not then available for Pasting into the
-other Editor that is running too. Is this a Feature or should it be
+other Editor that is running too.  Is this a Feature or should it be
 available between the two copies of the Editor running? I ask this as
 it appears that you can only have one .smil document open at anytime
-in the Editor. If the Copy/Paste facility where available between
+in the Editor.  If the Copy/Paste facility where available between
 running versions then the user could more quickly be able to leverage
-information. There may be another way to do this that I haven't
+information.  There may be another way to do this that I haven't
 encountered yet!!
+	Sjoerd: Copy/Paste only works within a document.  It is hard
+	to do it between documents since the channels in the two
+	documents may be different.
+	An "intelligent" Paste might be possible.  This paste would
+	probably have to remove all channel attributes in all nodes.
 
 21. Tools Menu - The menu item `Create syncarc from focus...' should
 read `Create sync arc from focus...' to maintain consistency with the
 other references in the View menu.
+	Sjoerd: I agree.
 
 22. Using a new document with Undefined nodes pasted into the Template
-`empty.smil' in the Hierarchy view. Move to the Timeline view and then
-from the Tools menu choose New Node - Under. This brings up the `Info
-for node:' dialog which has the Type: default of `ext'. When this is
+`empty.smil' in the Hierarchy view.  Move to the Timeline view and then
+from the Tools menu choose New Node - Under.  This brings up the `Info
+for node:' dialog which has the Type: default of `ext'.  When this is
 change to `seq' the dialog should resize itself to display the
-Content; information which is displayed. CRASH: Clicking on the `Open'
+Content; information which is displayed.  CRASH: Clicking on the `Open'
 button at this stage causes the Debugging windows to be displayed and
 the application crashes.
+	Sjoerd: I haven't been able to reproduce this.
 
 23. Doing the following causes a crash
 Steps to Recreate:
@@ -188,6 +249,12 @@ f. Type characters into the `ID' field.
 
 Results
 This produces the Debugging window with it's message and report.
+	Sjoerd: Yes, this produces a crash.  In this case, the
+	composite type should not be selectable.  Only the dest-only,
+	auto-firing, and whole node types should be selectable at this 
+	point.
+	Also, the focus on the anchor in the list of anchors seems to
+	be lost.  In any case the visual cue is lost.
 
 24. Doing the following causes a crash
 Steps to recreate:
@@ -203,10 +270,12 @@ f. Choose the `Edit...' button in the middle.
 
 Results
 This causes the Debugging windws to be displayed with it's message and report.
+	Sjoerd: Looks like the same problem as nr. 10 above.  Seems to 
+	be fixed in the Dec 7 version.
 
 25. This is only a comment - It seems strange that the user is unable
-to Edit the `Source' document in the Editor. Although the User can use
-a Text Editor which is available with the Operating System. The
+to Edit the `Source' document in the Editor.  Although the User can use
+a Text Editor which is available with the Operating System.  The
 document Type is associated with the GRiNS Editor which means that it
 will always open in the Editor therefore the Use would have to set up
 dragging and dropping the .smil files onto a Text Editor, I use Text
@@ -215,18 +284,20 @@ I prefer to choose the Editor that I wish to use and this can only be
 achieved if the Associated Editor is left undefined.
 
 26. Another suggestion - It would be nice to see some right mouse
-button facilities even if it were for basics eg. Cut, Copy, Paste and
-possibly the views. I have become used to using the right mouse button
+button facilities even if it were for basics eg.  Cut, Copy, Paste and
+possibly the views.  I have become used to using the right mouse button
 in Windows for Copying and Pasting.
+	Sjoerd: This is implemented in the Dec 7 version.
 
 27. WHY??? In the Editor the user can open more than one document but
 must `close' a document to be able to reach the previously opened
-one. WOuld it not be better to allow the user to Select the Document
-they wish to work on from the Window menu. In the Window Menu I could
-show the `View' and for which document eg. Timeline View (stroll4sw),
-Hierarchy (stroll6sw) . This would also help clarify/rectify the
+one.  WOuld it not be better to allow the user to Select the Document
+they wish to work on from the Window menu.  In the Window Menu I could
+show the `View' and for which document eg.  Timeline View (stroll4sw),
+Hierarchy (stroll6sw) .  This would also help clarify/rectify the
 quirkyness of the copying and pasting to the Clipboard.
-
+	Sjoerd: At least in the Dec 7 version you can edit (and look
+	at) two or more documents at the same time.
 
 Information Required
 
@@ -241,3 +312,5 @@ Crash encountered on Sunday
 
 When playing `Martin' in the Kids Demo a crash occurred when the
 Timeline View was opened.
+	Sjoerd: I couldn't reproduce this one.  I guess it has been
+	fixed.
