@@ -73,9 +73,9 @@ class HierarchyViewDialog(ViewDialog):
 					(FLAG_ALL, 'Whole Document, Adaptive', TIMESCALE, 't'),
 					(FLAG_ALL, 'Selection Only, Adaptive', LOCALTIMESCALE, 't'),
 					(FLAG_ALL, 'Selection Only, Fixed', CORRECTLOCALTIMESCALE, 't'),
-					(FLAG_ALL, 'Zoom in timeline', TIMELINEZOOMIN),
-					(FLAG_ALL, 'Zoom out timeline', TIMELINEZOOMOUT),
-					(FLAG_ALL, 'Reset timeline zoom', TIMELINEZOOMRESET),
+					(FLAG_ALL, 'Zoom in timeline', ZOOMIN),
+					(FLAG_ALL, 'Zoom out timeline', ZOOMOUT),
+					(FLAG_ALL, 'Reset timeline zoom', ZOOMRESET),
 					]),
 				]),
 			(FLAG_ALL, 'Help', [

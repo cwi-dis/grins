@@ -156,9 +156,9 @@ class HierarchyView(HierarchyViewDialog):
 			self.commands.append(PLAYABLE(callback = (self.playablecall, ())))
 
 		self.timelinezoomcommands = [
-			TIMELINEZOOMIN(callback = (self.timelinezoom, ('in',))),
-			TIMELINEZOOMOUT(callback = (self.timelinezoom, ('out',))),
-			TIMELINEZOOMRESET(callback = (self.timelinezoom, (None,))),
+			ZOOMIN(callback = (self.timelinezoom, ('in',))),
+			ZOOMOUT(callback = (self.timelinezoom, ('out',))),
+			ZOOMRESET(callback = (self.timelinezoom, (None,))),
 			]
 
 		self.mediacommands = self._getmediacommands(self.toplevel.root.context)
