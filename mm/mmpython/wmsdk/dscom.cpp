@@ -16,6 +16,149 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "mtpycall.h"
 
+
+////////////////////////////////////////
+//
+typedef struct {
+	PyObject_HEAD
+	IMediaSample *pI;
+} MediaSampleObject;
+
+staticforward PyTypeObject MediaSampleType;
+
+static MediaSampleObject *newMediaSampleObject(IMediaSample *pMediaSample)
+{
+	MediaSampleObject *self;
+	self = PyObject_NEW(MediaSampleObject, &MediaSampleType);
+	if (self == NULL) return NULL;
+	self->pI = pMediaSample;
+	return self;
+}
+
+
+//
+typedef struct {
+	PyObject_HEAD
+	const CMediaType *pmt;
+} MediaTypeObject;
+
+staticforward PyTypeObject MediaTypeType;
+
+static MediaTypeObject *newMediaTypeObject(const CMediaType *pmt)
+{
+	MediaTypeObject *self;
+	self = PyObject_NEW(MediaTypeObject, &MediaTypeType);
+	if (self == NULL) return NULL;
+	self->pmt = pmt;
+	return self;
+}
+
+
+////////////////////////////////////////////
+// MediaSample object 
+
+static struct PyMethodDef MediaSample_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+MediaSample_dealloc(MediaSampleObject *self)
+{
+	PyMem_DEL(self);
+}
+
+static PyObject *
+MediaSample_getattr(MediaSampleObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(MediaSample_methods, (PyObject *)self, name);
+}
+
+static char MediaSampleType__doc__[] =
+""
+;
+
+static PyTypeObject MediaSampleType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"MediaSample",			/*tp_name*/
+	sizeof(MediaSampleObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)MediaSample_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)MediaSample_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	MediaSampleType__doc__ /* Documentation string */
+};
+
+// End of code for MediaSample object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// MediaType object 
+
+static struct PyMethodDef MediaType_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+MediaType_dealloc(MediaTypeObject *self)
+{
+	PyMem_DEL(self);
+}
+
+static PyObject *
+MediaType_getattr(MediaTypeObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(MediaType_methods, (PyObject *)self, name);
+}
+
+static char MediaTypeType__doc__[] =
+""
+;
+
+static PyTypeObject MediaTypeType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"MediaType",			/*tp_name*/
+	sizeof(MediaTypeObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)MediaType_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)MediaType_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	MediaTypeType__doc__ /* Documentation string */
+};
+
+// End of code for MediaType object 
+////////////////////////////////////////////
+
+
 ////////////////////////////////////////
 
 class PyRenderingListener : 
@@ -124,10 +267,13 @@ HRESULT STDMETHODCALLTYPE PyRenderingListener::OnSetMediaType(/* [in] */ const C
 {
 	if(m_pyobj)
 		{
+		
 		CallbackHelper helper("OnSetMediaType",m_pyobj);
 		if(helper.cancall())
 			{
-			PyObject *arg = Py_BuildValue("()");
+			PyObject *obj = (PyObject*)newMediaTypeObject(pmt);
+			PyObject *arg = Py_BuildValue("(O)",obj);
+			Py_XDECREF(obj);
 			helper.call(arg);
 			}
 		}	
@@ -169,10 +315,14 @@ HRESULT STDMETHODCALLTYPE PyRenderingListener::OnRenderSample(/* [in] */ IMediaS
 		CallbackHelper helper("OnRenderSample",m_pyobj);
 		if(helper.cancall())
 			{
-			PyObject *arg = Py_BuildValue("()");
+			PyObject *obj = (PyObject*)newMediaSampleObject(pMediaSample);
+			PyObject *arg = Py_BuildValue("(O)",obj);
+			Py_XDECREF(obj);
 			helper.call(arg);
 			}
 		}				
 	return S_OK;
 }
 
+
+///////////////////////////////////////
