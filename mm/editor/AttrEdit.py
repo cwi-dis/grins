@@ -2168,6 +2168,18 @@ class TransitionAttrEditorField(PopupAttrEditorField):
 		list = self.wrapper.context.transitions.keys()
 		list.sort()
 		return [self.default] + list
+		
+	def parsevalue(self, str):
+		if type(str) == type(''):
+			return (str,)
+		return str
+		
+	def valuerepr(self, value):
+		if type(value) in (type([]), type(())) and len(value):
+			if len(value) > 1:
+				windowinterface.showmessage("Warning: multiple transitions not supported yet")
+			return value[0]
+		return value
 
 class WipeDirectionAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['left', 'right', 'up', 'down']
