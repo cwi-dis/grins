@@ -20,6 +20,7 @@ import windowinterface
 
 debug=0
 
+import rma
 USE_WINDOWLESS_REAL_RENDERING = 0
 	
 class VideoChannel(Channel.ChannelWindowAsync):
@@ -273,6 +274,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def getMediaWndRect(self):
 		return self.__rcMediaWnd
 
+	
 	#############################
 	def getRealVideoRenderer(self):
 		self.initVideoRenderer()
@@ -281,6 +283,27 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	# 
 	# Implement interface of real video renderer
 	# 
+	videofmts = { rma.RMA_RGB: 'RGB', # windows RGB
+		rma.RMA_RLE8: 'RLE8',
+		rma.RMA_RLE4: 'RLE4',
+		rma.RMA_BITFIELDS: 'BITFIELDS',
+		rma.RMA_I420: 'I420', # planar YCrCb
+		rma.RMA_YV12: 'YV12', # planar YVU420
+		rma.RMA_YUY2: 'YUY2', # packed YUV422
+		rma.RMA_UYVY: 'UYVY', # packed YUV422
+		rma.RMA_YVU9: 'YVU9', # Intel YVU9
+
+		rma.RMA_YUV420: 'YUV420',
+		rma.RMA_RGB555: 'RGB555',
+		rma.RMA_RGB565: 'RGB565',
+		}
+
+	def toStringFmt(self, fmt):
+		if VideoChannel.videofmts.has_key(fmt):
+			return VideoChannel.videofmts[fmt]
+		else:
+			return 'FOURCC(%d)' % fmt
+
 	def initVideoRenderer(self):
 		self.__rmdds = None
 		self.__rmrender = None
@@ -291,11 +314,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__rmdds = None
 		self.__rmrender = None
 
-	def OnFormatChange(self, w, h, bpp, comp):
-		#print 'OnFormatChange', w, h, bpp, comp
-		import rma, ddraw
-		if not self.window: return
+	def OnFormatBitFields(self, rmask, gmask, bmask):
+		self.__bitFieldsMask = rmask. gmask, bmask
 
+	def OnFormatChange(self, w, h, bpp, fmt):
+		if not self.window: return
 		self.__rmdds = self.window._topwindow.CreateSurface(w, h)
 		self.__RGB_On_RGB = {
 			'32-32': self.__rmdds.Blt_RGB32_On_RGB32,
@@ -309,13 +332,15 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 		screenBPP = self.window._topwindow.getRGBBitCount()
 		self.__rmrender = None
+		
+		print 'Rendering real video: %s bpp=%d (%d x %d) on RGB%d' % (self.toStringFmt(fmt), bpp, w, h, screenBPP)
 
-		if comp==rma.RMA_RGB:
+		if fmt==rma.RMA_RGB:
 			pair = '%d-%d' % (bpp, screenBPP)
 			if self.__RGB_On_RGB.has_key(pair):
 				self.__rmrender = self.__RGB_On_RGB[pair], w, h
 
-		elif comp==rma.RMA_YUV420:
+		elif fmt==rma.RMA_YUV420:
 			if screenBPP==32:
 				self.__rmrender = self.__rmdds.Blt_YUV420_On_RGB32, w, h
 			elif screenBPP==24:
@@ -330,10 +355,16 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.__rmdds = None
 			
 	def Blt(self, data):
-		if self.__rmdds:
+		if self.__rmdds and self.__rmrender:
 			blt, w, h = self.__rmrender
 			blt(data, w, h)
 			if self.window:
 				self.window.update()
+
+	def EndBlt(self):
+		# do not remove video yet 
+		# it may be frozen
+		self.__rmrender = None
+
 
 
