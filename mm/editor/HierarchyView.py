@@ -127,6 +127,11 @@ class HierarchyView(HierarchyViewDialog):
 			CREATE_BEGIN_EVENT_SOURCE(callback = (self.create_begin_event_source, ())),
 			CREATE_BEGIN_EVENT_DESTINATION(callback = (self.create_begin_event_dest, ())),
 			FIND_EVENT_SOURCE(callback = (self.find_event_source, ())),
+			DRAG_PAR(),
+			DRAG_SEQ(),
+			DRAG_SWITCH(),
+			DRAG_EXCL(),
+			DRAG_PRIO(),
 			]
 
 		self.interiorcommands = self._getmediaundercommands(self.toplevel.root.context) + [
@@ -1357,6 +1362,28 @@ class HierarchyView(HierarchyViewDialog):
 		return 1
 
 	# Copy node at position src to position dst
+	def dropnewstructnode(self, type, dest, pos):
+		self.toplevel.setwaiting()
+		xd, yd = pos
+		# Problem: dstobj will be an internal node.
+		dstobj = self.whichhit(xd, yd)
+		self.focusnode = dstobj.node
+		if type == DRAG_PAR:
+			ntype = 'par'
+		elif type == DRAG_SEQ:
+			ntype = 'seq'
+		elif type == DRAG_SWITCH:
+			ntype = 'switch'
+		elif type == DRAG_EXCL:
+			ntype = 'excl'
+		elif type == DRAG_PRIO:
+			ntype = 'prio'
+		else:
+			print 'Unknown dragtool:', type
+			return
+		dummy = self.create(0, ntype=ntype)
+
+	# Copy node at position src to position dst
 	def copynode(self, dst, src):
 		self.toplevel.setwaiting()
 		xd, yd = dst
@@ -1816,6 +1843,7 @@ class HierarchyView(HierarchyViewDialog):
 		if not em.transaction():
 			return -1
 
+
 		# Events..
 		#-------------
 		# 1. Search through the whole tree looking for events. Don't forget that I'm also in the tree.
@@ -1915,7 +1943,6 @@ class HierarchyView(HierarchyViewDialog):
 				if s.dstnode is node:
 					return_me.append(current)
 					break
-				
 		for c in current.children:
 			return_me = return_me + self.find_events_to_node(node, c)
 		return return_me
