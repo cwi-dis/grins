@@ -194,7 +194,7 @@
 (popup (bool) 1 'Popup on play' default
 	'Determines whether channel pops up upon playing a node' raw cmif)
 
-(project_audiotype (int) 0 'Audio type' default
+(project_audiotype (int) 0 'Audio type' audiotype
 	'Audio type (determines quality of audio when converting to RealAudio)'
 	raw light)
 
@@ -225,10 +225,10 @@
 (project_smil_url (string) '' 'Mediaserver URL' default
 	'URL of SMIL document on the media server' raw light)
 
-(project_targets (int) 3 'Target audience' default
+(project_targets (int) 3 'Target audience' targets
 	'Set of target bandwidths' raw light)
 
-(project_videotype (int) 0 'Video type' default
+(project_videotype (int) 0 'Video type' videotype
 	'Video type (determines quality of video when converting to RealVideo)'
 	raw light)
 
