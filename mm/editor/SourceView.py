@@ -73,6 +73,8 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 				self.write_text_and_close() # Which will close all windows.
 			elif saveme == 1: # Which means "No"
 				self.hide()
+		else:
+			self.hide()
 
 	def kill(self):
 		self.destroy()
