@@ -70,7 +70,10 @@ class Selecter:
 				windowinterface.showmessage( \
 				'No hyperlink source at this anchor')
 			return 0
+		root = node.GetRoot()
 		for dest in destlist:
+			if not self.context.isgoodlink(dest, root):
+				continue
 			if not self.gotoanchor(dest, arg):
 				return 0
 ## 		if arg:

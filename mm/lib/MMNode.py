@@ -533,6 +533,12 @@ class MMNodeContext:
 	def getexternalanchors(self):
 		return self.externalanchors
 
+	def isgoodlink(self, link, root):
+		self._roots = [root]
+		rv = self._isgoodlink(link)
+		del self._roots
+		return rv
+
 	#
 	# Layout administration
 	#
