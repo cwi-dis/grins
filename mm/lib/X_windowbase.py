@@ -219,6 +219,14 @@ class _Toplevel:
 		    (b << self._blue_shift)
 		return c
 
+	def getscreensize(self):
+		"""Return screen size in pixels"""
+		return self._screenwidth, self._screenheight
+
+	def getscreendepth(self):
+		"""Return screen depth"""
+		return self._visual.depth
+
 class _Timer:
 	def set(self, id):
 		self.__id = id
