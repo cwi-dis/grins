@@ -27,9 +27,7 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer)
     , m_pSiteManager(NULL)
     , m_pCCF(NULL)
     , m_pUnkPlayer(pUnkPlayer)
-    , m_posSizeValid(0)
-	,m_showInNewWnd(FALSE)
-	{
+{
     if (m_pUnkPlayer)
 		{
 		m_pUnkPlayer->QueryInterface(IID_IRMASiteManager,
@@ -40,8 +38,9 @@ ExampleSiteSupplier::ExampleSiteSupplier(IUnknown* pUnkPlayer)
 
 		m_pUnkPlayer->AddRef();
 		}
-	memset(&m_PNxWindow,0,sizeof(PNxWindow));
-	};
+    memset(&m_PNxWindow,0,sizeof(PNxWindow));
+    m_WindowWasCreated = 0;
+}
 
 
 /****************************************************************************
@@ -123,17 +122,14 @@ ExampleSiteSupplier::SitesNeeded
 		style = WS_SYSMENU | WS_OVERLAPPED | WS_VISIBLE | WS_CLIPCHILDREN;
 #endif
 
-	if(m_showInNewWnd || !m_PNxWindow.window)
+	if(!m_PNxWindow.window) {
 		hres = pSiteWindowed->Create(m_PNxWindow.window,style);
-	else
+		m_WindowWasCreated = 1;
+	} else {
 		hres=pSiteWindowed->AttachWindow(&m_PNxWindow);
+	}
 
     if (PNR_OK != hres)goto exit;
-    
-	if (m_posSizeValid) {
-		pSite->SetPosition(m_positionInWindow);
-		pSite->SetSize(m_sizeInWindow);
-	}
 
     /*
      * We need to wait until we have set all the properties before
@@ -172,15 +168,17 @@ ExampleSiteSupplier::SitesNotNeeded(UINT32 uRequestID)
     m_pSiteManager->RemoveSite(pSite);
 
 	pSite->QueryInterface(IID_IRMASiteWindowed,(void**)&pSiteWindowed);
-	if(m_showInNewWnd)
+	if(m_WindowWasCreated) {
 		pSiteWindowed->Destroy();
-	else 
-		{
+	} else {
 		pSiteWindowed->DetachWindow();
 #ifdef _WINDOWS
 		::InvalidateRect((HWND)m_PNxWindow.window,NULL,TRUE);
 #endif
-		}
+		Py_XDECREF(pPythonWin);
+		pPythonWin = NULL;
+		memset(&m_PNxWindow,0,sizeof(PNxWindow));
+	}
 	pSiteWindowed->Release();
 
 	// ref count = 1; deleted from this object's view!

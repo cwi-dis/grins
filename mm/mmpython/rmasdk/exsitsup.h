@@ -23,11 +23,15 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
     FiveMinuteMap m_CreatedSites;
 
 	PNxWindow m_PNxWindow;
-	BOOL m_showInNewWnd;
+	BOOL m_WindowWasCreated;
 	
-	PNxPoint m_positionInWindow;
-	PNxSize  m_sizeInWindow;
-	BOOL m_posSizeValid;
+//	BOOL m_showInNewWnd;
+	
+//	PNxPoint m_positionInWindow;
+//	PNxSize  m_sizeInWindow;
+//	BOOL m_posSizeValid;
+
+	PyObject *pPythonWindow;
 
     public:
     /****** Public Class Methods ******************************************/
@@ -37,12 +41,18 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
     /************************************************************************
      *  Custom Interface Methods                     
 	 */
-	void SetOsWindow(void* p){m_PNxWindow.window=p;}
-	void ShowInNewWindow(BOOL f){m_showInNewWnd=f;}
+	void SetOsWindow(void* p, PyObject *pw) {
+		m_PNxWindow.window = p;
+		Py_XDECREF(pPythonWindow);
+		pPythonWindow = pw;
+		Py_XINCREF(pPythonWindow);
+	}
+	
+	void ShowInNewWindow(BOOL f) {
+		m_showInNewWnd=f;
+	}
+	
 	void SetOsWindowPosSize(PNxPoint p, PNxSize s) {
-		m_positionInWindow = p;
-		m_sizeInWindow = s;
-		// Try by Jack
 		m_PNxWindow.x = p.x;
 		m_PNxWindow.y = p.y;
 		m_PNxWindow.width = s.cx;
@@ -51,9 +61,6 @@ class ExampleSiteSupplier :  public IRMASiteSupplier
 		m_PNxWindow.clipRect.top = p.y;
 		m_PNxWindow.clipRect.right = p.x+s.cx;
 		m_PNxWindow.clipRect.bottom = p.y+s.cy;
-		// End try
-		
-		m_posSizeValid = 1;
 	}
 
 
