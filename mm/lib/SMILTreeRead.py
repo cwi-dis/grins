@@ -1145,6 +1145,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 ##			self.__base = content
 		elif name in ('pics-label', 'PICS-label', 'generator'):
 			pass
+		elif name[:9] == 'template_':
+			# We use these meta names for storing information such as snapshot
+			# and description in templates. Don't import them.
+			pass
 		else:
 			if self.__warnmeta:
 				self.warning('unrecognized meta property', self.lineno)
