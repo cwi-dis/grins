@@ -36,6 +36,7 @@ ChannelMime = {
 		'video/quicktime',
 		'video/vnd.rn-realvideo',
 		'video/x-msvideo',
+		'video/msvideo',	# some servers erroneously use this
 		'video/x-sgi-movie',
 		],
 	'html': ['text/html',],
