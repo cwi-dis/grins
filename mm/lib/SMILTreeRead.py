@@ -283,14 +283,25 @@ class SMILParser(xmllib.XMLParser):
 			# deal with hyperlink
 			href, ltype, id = self.__in_a[:3]
 			try:
-				anchorlist = node.attrdict['anchorlist']
-			except KeyError:
-				node.attrdict['anchorlist'] = anchorlist = []
-			id = _uniqname(map(lambda a: a[A_ID], anchorlist), id)
-			anchorlist.append((id, ATYPE_WHOLE, []))
+				anchorlist = node.__anchorlist
+			except AttributeError:
+				node.__anchorlist = anchorlist = []
+			id = _uniqname(map(lambda a: a[2], anchorlist), id)
+			anchorlist.append((0, len(anchorlist), id, ATYPE_WHOLE, []))
 			self.__links.append((node.GetUID(), id, href, ltype))
 
 	def EndNode(self):
+		node = self.__node
+		try:
+			anchorlist = node.__anchorlist
+		except AttributeError:
+			pass
+		else:
+			alist = []
+			anchorlist.sort()
+			for a in anchorlist:
+				alist.append(a[2:])
+			node.attrdict['anchorlist'] = alist
 		self.__node = None
 
 	def NewContainer(self, type, attributes):
@@ -494,7 +505,7 @@ class SMILParser(xmllib.XMLParser):
 						print 'warning: unknown node id',href[1:]
 						continue
 					else:
-						dst = _wholenodeanchor(dst)
+						dst = self.__wholenodeanchor(dst)
 				hlinks.addlink((src, dst, DIR_1TO2, ltype))
 			else:
 				href, tag = MMurl.splittag(href)
@@ -850,6 +861,15 @@ class SMILParser(xmllib.XMLParser):
 			ltype = TYPE_JUMP
 		atype = ATYPE_WHOLE
 		aargs = []
+		z = attributes['z-index']
+		try:
+			z = string.atoi(z)
+		except string.atoi_error:
+			self.syntax_error('invalid z-index value')
+			z = 0
+		if z < 0:
+			self.syntax_error('anchor with negative z-index')
+			z = 0
 		coords = attributes.get('coords')
 		if coords is not None:
 ## 			if attributes.has_key('shape') and attributes['shape'] != 'rect':
@@ -881,10 +901,10 @@ class SMILParser(xmllib.XMLParser):
 			# percentages, otherwise they are ints.
 			aargs = [x, y, w, h]
 		try:
-			anchorlist = self.__node.attrdict['anchorlist']
-		except KeyError:
-			self.__node.attrdict['anchorlist'] = anchorlist = []
-		aid = _uniqname(map(lambda a: a[A_ID], anchorlist), None)
+			anchorlist = self.__node.__anchorlist
+		except AttributeError:
+			self.__node.__anchorlist = anchorlist = []
+		aid = _uniqname(map(lambda a: a[2], anchorlist), None)
 		if attributes.has_key('iid'):
 			aid = attributes['iid']
 			atype = ATYPE_NORMAL
@@ -893,7 +913,7 @@ class SMILParser(xmllib.XMLParser):
 			aid = aid[len(nname)+1:]
 		if aname is not None:
 			self.__anchormap[aname] = (uid, aid)
-		anchorlist.append((aid, atype, aargs))
+		anchorlist.append((z, len(anchorlist), aid, atype, aargs))
 		if href is not None:
 			self.__links.append((uid, (aid, atype, aargs),
 					     href, ltype))
@@ -1020,18 +1040,31 @@ class SMILParser(xmllib.XMLParser):
 			delay = 0
 		return name, counter, delay
 
+	def __wholenodeanchor(self, node):
+		try:
+			anchorlist = node.__anchorlist
+		except AttributeError:
+			node.__anchorlist = anchorlist = []
+		for a in anchorlist:
+			if a[3] == ATYPE_DEST:
+				break
+		else:
+			a = 0, len(anchorlist), '0', ATYPE_DEST, []
+			anchorlist.append(a)
+		return node.GetUID(), a[2]
+
 def ReadFile(url):
 	return ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode))
 
 def ReadFileContext(url, context):
 	import posixpath
-	type, str = MMurl.splittype(url)
+	utype, str = MMurl.splittype(url)
 	host, path = MMurl.splithost(str)
 	dir = posixpath.dirname(path)
 	if host:
 		dir = '//%s%s' % (host, dir)
-	if type:
-		dir = '%s:%s' % (type, dir)
+	if utype:
+		dir = '%s:%s' % (utype, dir)
 	context.setdirname(dir)
 	p = SMILParser(context)
 	u = MMurl.urlopen(url)
@@ -1094,19 +1127,6 @@ def _uniqname(namelist, defname):
 	while ('%s_%d' % (defname, id)) in namelist:
 		id = id + 1
 	return '%s_%d' % (defname, id)
-
-def _wholenodeanchor(node):
-	try:
-		anchorlist = node.attrdict['anchorlist']
-	except KeyError:
-		node.attrdict['anchorlist'] = anchorlist = []
-	for a in anchorlist:
-		if a[A_TYPE] == ATYPE_DEST:
-			break
-	else:
-		a = '0', ATYPE_DEST, []
-		anchorlist.append(a)
-	return node.GetUID(), a[A_ID]
 
 npt_time = r'(?:now|\d+(?:\.\d*)?|\d+:\d{2}:\d{2}(?:\.\d*)?)?'
 utc_time = r'(?:\d{8}T\d{6}(?:\.\d*)?Z)?'
