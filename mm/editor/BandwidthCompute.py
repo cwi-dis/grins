@@ -126,6 +126,9 @@ class BandwidthAccumulator:
 			self.used[i] = (t0, newusedbps, maxusedbps)
 			
 			bits = bits - usedbps*(cur_t1-t0)
+			if bits < 0x7fffffff:
+				# Prefer ints
+				bits = round(bits)
 			assert (bits >= 0)
 			if t1-t0 < 1.0 or cur_t1 >= t1:
 				assert(bits == 0)
@@ -229,7 +232,7 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 	#
 	i = 0
 	# Skip the streaming data (which is now at the front)
-	while i < len(allbandwidthdata) and allbandwidthdata[1][0] == STREAM:
+	while i < len(allbandwidthdata) and allbandwidthdata[i][0] == STREAM:
 		i = i + 1
 	# Compute prearms for t0=0
 	while i<len(allbandwidthdata):
