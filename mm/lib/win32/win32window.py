@@ -885,9 +885,6 @@ class Window:
 	def begintransition(self, outtrans, runit, dict, cb):
 		pass
 
-	def begininlinetransition(self, trtype, trsubtype, trmode='in'):
-		pass
-
 	def endtransition(self):
 		pass
 
@@ -2007,8 +2004,8 @@ class Region(Window):
 		else:
 			self._multiElement = 0
 			self._childrenClip = 0
-			self._outtrans = 0
-			self._transition = win32transitions.InlineTransitionEngine(self, dict, cb)
+			self._outtrans = outtrans
+			self._transition = win32transitions.InlineTransitionEngine(self, outtrans, runit, dict, cb)
 			self._transition.begintransition()
 
 	def endtransition(self):

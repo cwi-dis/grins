@@ -183,7 +183,7 @@ class TransitionEngine:
 
 
 class InlineTransitionEngine:
-	def __init__(self, window, dict, cb):
+	def __init__(self, window, outtrans, runit, dict, cb):
 		self.window = window
 		self.dict = dict
 		self.cb = cb
