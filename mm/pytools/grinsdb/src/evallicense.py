@@ -79,6 +79,10 @@ def evallicense(file, filename):
 		now = time.localtime(time.time())
 		elr = elr + time.strftime("%d-%h-%Y", now)
 		obj['Eval-License-Req'] = elr
+		try:
+			obj['Eval-License'] = string.split(license)[1]
+		except:
+			pass
 		dbase.save(obj)
 		mailok(email, license)
 	while file.read(10000):
