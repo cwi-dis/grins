@@ -36,13 +36,17 @@ class TopLevel(TopLevelDialog):
 				width, height = windowinterface.getscreensize()
 				query = 'width=%d&height=%d' % (width, height)
 				try:
-					ip = socket.gethostbyname(host)
+					hostname = host
+					i = hostname.find(':')
+					if i > 0:
+						hostname = hostname[:i]
+					ip = socket.gethostbyname(hostname)
 				except socket.error:
 					# host unknown
 					pass
 				else:
 					ip = socket.inet_aton(ip)
-					qos = settings.get('RTIPA_QoS').get(ip)
+					qos = settings.RTIPA_classes.get(ip)
 					if qos is not None:
 						query = query + '&class=' + qos
 			# RTIPA end

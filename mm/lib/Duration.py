@@ -31,26 +31,8 @@ def getintrinsicduration(node, wanterror):
 		return dur
 	# we hadn't cached the duration, do the hard work
 	# first figure out MIME type
-	if cache.has_key('mimetype'):
-		mtype = cache['mimetype']
-		if not mtype:
-			return 0
-		maintype, subtype = mtype.split('/')
-	else:
-		# MIME type not cached, get it
-		import MMurl
-		try:
-			u = MMurl.urlopen(url)
-		except IOError, arg:
-			# don't cache non-existing file
-			if wanterror:
-				raise IOError, arg
-			return 0
-		maintype = u.headers.getmaintype()
-		subtype = u.headers.getsubtype()
-		cache['mimetype'] = maintype, subtype
-		u.close()
-		del u
+	mtype = urlcache.mimetype(url)
+	maintype, subtype = mtype.split('/')
 	# now figure out duration depending on type
 	if string.find(subtype, 'real') >= 0 or string.find(subtype, 'shockwave') >= 0:
 		if platform == 'win32':

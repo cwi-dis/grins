@@ -145,8 +145,8 @@ default_settings = {
 
 	# RTIPA start
 	'RTIPA_config': '',	# URL where RTIPA config file is to be found
-	'RTIPA_QoS': {'AF': 1000000, 'EF': 115200,}, # mapping from QoS class to bitrate
-	'RTIPA_add_params': 0,		# add query params with widht/height/class to SMIL file URL
+	'RTIPA_QoS': {'AF11': 115200, 'EF': 1000000,}, # mapping from QoS class to bitrate
+	'RTIPA_add_params': 1,		# add query params with widht/height/class to SMIL file URL
 	# RTIPA end
 }
 
@@ -397,11 +397,11 @@ def match_bitrate_RTIPA(wanted_value, host):
 # we're interested in the IP address and the class
 import re
 RTIPA_re = re.compile('^[^/]*'		# router name
-		      '/add_flow'	# command we're looking for
+		      '/add flow'	# command we're looking for
 		      ' +dev +.* '	# device (e.g. eth0)
 		      'src_addr +'
 		      r'(?P<IP>[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)'	# IP address
-		      '/32'		# IP address ends with /32
+		      '/32.*'		# IP address ends with /32
 		      ' class '
 		      '(?P<class>[^ ]+)' # class of service (currently only AF or EF)
 		      )
