@@ -972,6 +972,8 @@ smil_attrs=[
 	("showtime", getshowtime, None),
 	("timezoom", gettimezoom, None),
 	("allowedmimetypes", getallowedmimetypes, None),
+	("project_autoroute", lambda writer, node:getboolean(writer, node, "project_autoroute", 1, 0), "project_autoroute"),
+	("project_readonly", lambda writer, node:getboolean(writer, node, "project_readonly", 1, 0), "project_readonly"),
 ]
 prio_attrs = [
 	("id", getid, None),
@@ -998,6 +1000,21 @@ prio_attrs = [
 	("timezoom", gettimezoom, None),
 	]
 real_media_attrs = [
+	("project_audiotype", lambda writer, node:getcmifattr(writer, node, "project_audiotype"), "project_audiotype"),
+	("project_convert", lambda writer, node:getboolean(writer, node, "project_convert", 1, 1), "project_convert"),
+	("project_ftp_dir", lambda writer, node:getcmifattr(writer, node, "project_ftp_dir"), "project_ftp_dir"),
+	("project_ftp_dir_media", lambda writer, node:getcmifattr(writer, node, "project_ftp_dir_media"), "project_ftp_dir_media"),
+	("project_ftp_host", lambda writer, node:getcmifattr(writer, node, "project_ftp_host"), "project_ftp_host"),
+	("project_ftp_host_media", lambda writer, node:getcmifattr(writer, node, "project_ftp_host_media"), "project_ftp_host_media"),
+	("project_ftp_user", lambda writer, node:getcmifattr(writer, node, "project_ftp_user"), "project_ftp_user"),
+	("project_ftp_user_media", lambda writer, node:getcmifattr(writer, node, "project_ftp_user_media"), "project_ftp_user_media"),
+	("project_html_page", lambda writer, node:getcmifattr(writer, node, "project_html_page"), "project_html_page"),
+	("project_mobile", lambda writer, node:getboolean(writer, node, "project_mobile", 1, 0), "project_mobile"),
+	("project_perfect", lambda writer, node:getboolean(writer, node, "project_perfect", 1, 1), "project_perfect"),
+	("project_quality", lambda writer, node:getcmifattr(writer, node, "project_quality"), "project_quality"),
+	("project_smil_url", lambda writer, node:getcmifattr(writer, node, "project_smil_url"), "project_smil_url"),
+	("project_targets", lambda writer, node:getcmifattr(writer, node, "project_targets"), "project_targets"),
+	("project_videotype", lambda writer, node:getcmifattr(writer, node, "project_videotype"), "project_videotype"),
 	("backgroundOpacity", lambda writer, node: getpercentage(writer, node, 'backgroundOpacity', 1), "backgroundOpacity"),
 	("chromaKey", lambda writer, node: getcolor(writer, node, "chromaKey"), "chromaKey"),
 	("chromaKeyOpacity", lambda writer, node: getpercentage(writer, node, 'chromaKeyOpacity', 0), "chromaKeyOpacity"),
@@ -2233,7 +2250,10 @@ class SMILWriter(SMIL):
 			val = func(self, node)
 			if val is None:
 				continue
-			attrlist.append(('%s:%s' % (NSRP9prefix, smilattr), val))
+			if smilattr[:8] == 'project_':
+				attrlist.append(('%s:%s' % (NSGRiNSprefix, smilattr), val))
+			else:
+				attrlist.append(('%s:%s' % (NSRP9prefix, smilattr), val))
 
 	def writemedianode(self, x, attrlist, mtype):
 		# XXXX Not correct for imm
