@@ -236,6 +236,8 @@ def has_key(name):
 		return 1
 	return name == 'system_screen_size' or name == 'system_screen_depth'
 
+components = ['http://www.oratrix.com/GRiNS/']
+
 def match(name, wanted_value):
 	if name == 'system_operating_system':
 		import opsys, string
@@ -253,8 +255,9 @@ def match(name, wanted_value):
 		return 1
 	if name == 'system_component':
 		if wanted_value:
-			# we don't support any special components
-			return 0
+			for val in wanted_value.split():
+				if val not in components:
+					return 0
 		return 1
 	real_value = get(name)
 	if name in EXACT:

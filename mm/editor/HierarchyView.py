@@ -1401,8 +1401,8 @@ class HierarchyView(HierarchyViewDialog):
 		if url is not None:
 			node.SetAttr('file', url)
 			# if node has no intrinsic duration, set a default duration
-			if Duration.getintrinsicduration(node, 0) == 0:
-				node.SetAttr('duration', MMAttrdefs.getattr(cnode, 'project_default_duration'))
+			cnode.setduration = 1
+
 			# figure out a reasonable default name for the new node
 			# the name is the basename of the URL
 			# figure out file name part
@@ -1455,6 +1455,18 @@ class HierarchyView(HierarchyViewDialog):
 		   self.toplevel.layoutview.curlayout is not None:
 			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
 		if self.insertnode(cnode, where, index, start_transaction = start_transaction, end_transaction = 0):
+			if hasattr(cnode, 'setduration'):
+				if cnode.setduration:
+					if Duration.getintrinsicduration(node, 0) == 0:
+						computedType = node.GetChannelType()
+						dur = 0
+						if computedType in ('image','text'):
+							dur = MMAttrdefs.getattr(cnode, 'project_default_duration_%s' % computedType)
+						if not dur:
+							dur = MMAttrdefs.getattr(cnode, 'project_default_duration')
+						if dur:
+							self.editmgr.setnodeattr(cnode, 'duration', dur)
+				del cnode.setduration
 ##			prearmtime = node.compute_download_time()
 ##			if prearmtime:
 ##				arc = MMNode.MMSyncArc(node, 'begin', srcnode='syncbase', delay=prearmtime)

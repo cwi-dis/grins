@@ -214,6 +214,12 @@
 (project_default_duration (float) 3.0 'Default duration' default
 	'Default duration for new objects with no intrinsic duration' inherited (template cmif smil2))
 
+(project_default_duration_image (float) 0.0 'Default image duration' default
+	'Default duration for new image objects' inherited (template cmif smil2))
+
+(project_default_duration_text (float) 0.0 'Default text duration' default
+	'Default duration for new text objects' inherited (template cmif smil2))
+
 (project_default_region (name) undefined 'Default region' channelname
 	'Default region for descendants of this group' inherited (template cmif))
 

@@ -873,6 +873,8 @@ smil_attrs=[
 	("begin", lambda writer, node: getsyncarc(writer, node, 0), None),
 	("dur", getduration, "duration"),
 	("project_default_duration", lambda writer, node: getduration(writer, node, 'project_default_duration'), "project_default_duration"),
+	("project_default_duration_image", lambda writer, node: getduration(writer, node, 'project_default_duration_image'), "project_default_duration_image"),
+	("project_default_duration_text", lambda writer, node: getduration(writer, node, 'project_default_duration_text'), "project_default_duration_text"),
 	("min", getmin, "min"),
 	("max", getmax, "max"),
 	("end", lambda writer, node: getsyncarc(writer, node, 1), None),
