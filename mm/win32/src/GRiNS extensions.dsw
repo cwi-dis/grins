@@ -15,6 +15,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "GRiNSRes"=.\GRiNSRes\GRiNSRes.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "HtmlEx"=.\HtmlEx\HtmlEx.dsp - Package Owner=<4>
 
 Package=<5>
@@ -69,10 +81,16 @@ Package=<4>
     Project_Dep_Name mpegEx
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name textex
+    Project_Dep_Name TimerEx
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name TimerEx
+    Project_Dep_Name GRiNSRes
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name gifex
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name soundex
     End Project Dependency
 }}}
 
@@ -126,7 +144,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "midiEx"=.\soundex\MidiEx.dsp - Package Owner=<4>
+Project: "midiEx"=.\midiex\MidiEx.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -156,7 +174,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "textex"=.\TextEx\Textex.dsp - Package Owner=<4>
+Project: "soundex"=.\soundex\soundex.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
