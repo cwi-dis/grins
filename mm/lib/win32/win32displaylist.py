@@ -202,9 +202,10 @@ class _DisplayList:
 
 				# split rects
 				ls, ts, rs, bs = wnd.ltrb(rcSrc)
+				
 				xd, yd, wd, hd = dest_x, dest_y, width, height
 				ld, td, rd, bd = x+xd, y+yd, x+xd+wd, y+yd+hd
-
+				
 				# destination clip
 				ldc, tdc, rdc, bdc = wnd.ltrb( wnd.rectAnd((xc, yc, wc, hc), (ld, td, rd-ld, bd-td)) )
 				
@@ -216,9 +217,10 @@ class _DisplayList:
 					lsc, tsc, rsc, bsc = lsc+dx, tsc+dy, rsc+dx, bsc+dy
 
 				try:
+					#print 'Blt: ',lsc, tsc, rsc, bsc, '->', ldc, tdc, rdc, bdc
 					dds.Blt((ldc, tdc, rdc, bdc), image, (lsc, tsc, rsc, bsc), flags)
- 				except:
- 					pass
+ 				except ddraw.error, arg:
+ 					print arg
 
 			elif cmd == 'fbox':
 				dest_x, dest_y, width, height = entry[2]
@@ -544,17 +546,18 @@ class _DisplayList:
 	def createDDSImage(self, image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep):
 		if not self._directdraw: return image
 		tw = self._window._topwindow
-		dds = tw.CreateSurface(width, height)
+		x, y, w, h = rcKeep
+		dds = tw.CreateSurface(w, h)
 		trans_rgb = win32ig.gettransp(image)
 		if trans_rgb:
 			convbgcolor = dds.GetColorMatch(trans_rgb)
-			dds.BltFill((0, 0, width, height), convbgcolor)
+			dds.BltFill((0, 0, w, h), convbgcolor)
 		try:
 			imghdc = dds.GetDC()
 		except:
 			return dds
 		win32ig.render(imghdc, self._bgcolor,
-				mask, image, src_x, src_y, 0, 0, width, height, rcKeep, aspect="none" )
+				mask, image, src_x, src_y, 0, 0, w, h, rcKeep, aspect="none" )
 		dds.ReleaseDC(imghdc)
 		flags = ddraw.DDBLT_WAIT
 		if trans_rgb:
