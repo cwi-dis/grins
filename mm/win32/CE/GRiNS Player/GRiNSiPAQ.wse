@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
   Version=9.01
-  Title=GRiNS Player for Handheld Installation
+  Title=Oratrix GRiNS Player for Handheld Installation
   Title French= Installation
   Flags=00000100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -15,7 +15,7 @@ item: Global
   Log Pathname=%MAINDIR%\INSTALL.LOG
   Message Font=MS Sans Serif
   Font Size=8
-  Pages Modified=00011000010100000000000000000010
+  Pages Modified=00011000010100000000000000000011
   Extra Pages=00000000000000000000101110110000
   Disk Label=Default
   Disk Filename=SETUP
@@ -33,7 +33,7 @@ item: Global
   Dialogs Version=7
   Version File=1.0
   Version Description=GRiNS Player for Handheld Device
-  Version Copyright=(c) 2002 Oratrix
+  Version Copyright=Copyright © 2002 Oratrix
   Version Company=Oratrix
   Crystal Format=10111100101100000010001001001001
   Crystal Destination=00000000000000000000000000001011
@@ -63,7 +63,7 @@ item: WinCE Component
   Setup INI Name=GRiNS Player
   Component Name=GRiNS Player
   Component Description=GRiNS Player for Handheld Device
-  Component Uninstall Name=GRiNS Player for Handheld
+  Component Uninstall Name=Oratrix GRiNS Player for Handheld
   Component Install DirName=\Program Files\GRiNS
   Component Icon Index=0
   item: WinCE File
@@ -282,7 +282,7 @@ item: Remark
 end
 item: Set Variable
   Variable=APPTITLE
-  Value=GRiNS Player for Handheld
+  Value=Oratrix GRiNS Player for Handheld
   Flags=10000000
 end
 item: Remark
@@ -1100,6 +1100,11 @@ end
 item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
+item: Install File
+  Source=c:\Documents and Settings\sjoerd\My Documents\src\cmif\Build\win32\GRiNS Player for SMIL 2.0\Player.ico
+  Destination=%MAINDIR%\Player.ico
+  Flags=0000000010000010
+end
 item: Remark
 end
 item: Remark
@@ -1418,6 +1423,13 @@ item: Edit Registry
     Value Name=Comments
     Root=2
   end
+end
+item: Edit Registry
+  Total Keys=1
+  Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\%APPTITLE%
+  New Value=%MAINDIR%\Player.ico,-0
+  Value Name=DisplayIcon
+  Root=2
 end
 item: New Event
   Name=Cancel

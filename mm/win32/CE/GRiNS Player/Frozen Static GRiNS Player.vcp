@@ -2646,21 +2646,6 @@ SOURCE=.\freeze\M_MainDialog.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\freeze\M_mainloop.c
-
-!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\freeze\M_mediainterface.c
 
 !IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
