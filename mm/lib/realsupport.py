@@ -554,7 +554,7 @@ def writecoords(f, str, coords):
 		if c != 0:
 			f.write(' %s%s="%d"' % (str, coordnames[i], c))
 
-def writeRP(file, rp):
+def writeRP(file, rp, node):
 	from SMILTreeWrite import nameencode
 
 	f = open(file, 'w')
@@ -597,13 +597,17 @@ def writeRP(file, rp):
 	for name, handle in images.items():
 		f.write('  <image handle="%d" name=%s/>\n' % (handle, nameencode(name)))
 	start = 0
+	duration = 0
 	for attrs in rp.tags:
 		tag = attrs.get('tag', 'fill')
 		f.write('  <%s' % tag)
 		start = start + attrs.get('start', 0)
 		f.write(' start="%g"' % start)
 		if tag != 'fill':
-			f.write(' duration="%g"' % attrs.get('duration', 0))
+			duration = attrs.get('duration', 0)
+			f.write(' duration="%g"' % duration)
+		else:
+			duration = 0
 		if tag in ('fill', 'fadeout'):
 			color = attrs.get('color', (0,0,0))
 			for name, val in colors.items():
@@ -640,6 +644,9 @@ def writeRP(file, rp):
 		f.write('/>\n')
 	f.write('</imfl>\n')
 	f.close()
+	if rp.duration < start + duration:
+		import windowinterface, MMAttrdefs
+		windowinterface.showmessage('Duration for RealPix node %s on channel %s too short to accomodate all transitions\n(duration = %g, required: %g)' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName(), rp.duration, start + duration), mtype = 'warning')
 
 import re
 durre = re.compile(r'\s*(?:(?P<days>\d+):(?:(?P<hours>\d+):(?:(?P<minutes>\d+):)?)?)?(?P<seconds>\d+(\.\d+)?)\s*')
