@@ -48,6 +48,8 @@ class SoundChannel(ChannelAsync):
 		# Determine playability. Expensive, but this method is only
 		# called when needed (i.e. the node is within a switch).
 		fn = self.getfileurl(node)
+		if not fn:
+			return 0
 		try:
 			fn, hdr = MMurl.urlretrieve(fn)
 		except (IOError, EOFError, audio.Error):
@@ -63,14 +65,17 @@ class SoundChannel(ChannelAsync):
 	def do_arm(self, node, same=0):
 		if same and self.arm_fp:
 			return 1
+		node.__type = ''
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
 		if debug: print 'SoundChannel: arm', node
 		fn = self.getfileurl(node)
+		if not fn:
+			self.errormsg(node, 'No URL set on this node')
+			return 1
 		import mimetypes
 		mtype = mimetypes.guess_type(fn)[0]
-		node.__type = ''
 		if mtype and string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
 			if self.__rc is None:

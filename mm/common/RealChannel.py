@@ -112,6 +112,9 @@ class RealChannel:
 		duration = self.__channel.getduration(node)
 		if url is None:
 			url = self.__channel.getfileurl(node)
+		if not url:
+			self.errormsg(node, 'No URL set on this node')
+			return 1
 		url = MMurl.canonURL(url)
 		self.__url = url
 ##		self.__window = window
