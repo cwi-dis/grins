@@ -243,9 +243,12 @@ class SMIL:
 			'type':None,
 			# subregion positioning attributes
 			'bottom':None,
+			'height':None,
 			'left':None,
 			'right':None,
 			'top':None,
+			'width':None,
+			'z-index':None,
 			'fit':None,
 			# registration point
 			'regPoint':None,
@@ -288,9 +291,12 @@ class SMIL:
 			  'transOut':None,
 			  # subregion positioning attributes
 			  'bottom':None,
+			  'height':None,
 			  'left':None,
 			  'right':None,
 			  'top':None,
+			  'width':None,
+			  'z-index':None,
 			  'fit':None,
 			  # registration point
 			  'regPoint':None,
