@@ -361,7 +361,7 @@ class VideoChannel(ChannelWindowAsync):
 		if self.__rc:
 			self.__rc.pauseit(paused)
 		if self.play_movie:
-			if self._paused:
+			if paused:
 				self.play_movie.StopMovie()
 			else:
 				self.play_movie.StartMovie()
