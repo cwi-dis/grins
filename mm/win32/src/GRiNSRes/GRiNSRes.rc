@@ -2359,21 +2359,21 @@ BEGIN
                     12
     EDITTEXT        IDC_COLORS,25,73,52,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Pick color...",IDC_COLOR_PICK,83,73,46,12
-    CONTROL         "On request",IDC_CLOSEV1,"Button",BS_AUTORADIOBUTTON,159,
-                    50,54,8
+    CONTROL         "On request",IDC_CLOSEV1,"Button",BS_AUTORADIOBUTTON,160,
+                    80,54,8
     CONTROL         "When not active",IDC_CLOSEV2,"Button",
-                    BS_AUTORADIOBUTTON,220,50,72,8
+                    BS_AUTORADIOBUTTON,221,80,72,8
     GROUPBOX        "TopLayout geometry",IDC_GROUP1,6,5,289,31
     LTEXT           "",IDC_ATTR_INFO,6,132,289,18,SS_SUNKEN
     LTEXT           "Width:",IDC_WIDTHL,14,20,21,8
     LTEXT           "Height:",IDC_HEIGHTL,87,19,24,8
     GROUPBOX        "Background color",IDC_LABEL,6,38,127,58
-    GROUPBOX        "Close",IDC_CLOSEL,139,38,155,27
-    CONTROL         "On start",IDC_OPENV1,"Button",BS_AUTORADIOBUTTON,159,81,
+    GROUPBOX        "Close",IDC_CLOSEL,140,69,155,27
+    CONTROL         "On start",IDC_OPENV1,"Button",BS_AUTORADIOBUTTON,159,50,
                     54,8
     CONTROL         "When active",IDC_OPENV2,"Button",BS_AUTORADIOBUTTON,220,
-                    81,57,8
-    GROUPBOX        "Open",IDC_OPENL,139,69,155,27
+                    50,57,8
+    GROUPBOX        "Open",IDC_OPENL,139,38,155,27
     GROUPBOX        "Trace image",IDC_TRACEIMAGEL,6,99,289,31
     LTEXT           "Location:",IDC_1,14,112,31,8
     EDITTEXT        IDC_TRACEIMAGEV,51,110,194,12,ES_AUTOHSCROLL
