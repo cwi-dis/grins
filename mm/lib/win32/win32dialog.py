@@ -1546,7 +1546,7 @@ class ReplaceDialog(FindDialog):
 
 		findWhatEmpty = self._findWhat.gettext() == ''
 			
-		if code == win32con.EN_CHANGE or findWhatEmpty:
+		if (code == win32con.EN_CHANGE and hctrl == self._findWhat.GetSafeHwnd()) or findWhatEmpty:
 			# disable the replace button
 			self.enableReplace(0)
 			
