@@ -14,7 +14,6 @@ import "unknwn.idl";
 ]
 interface IGRiNSPlayerAuto : IUnknown
 	{
-	HRESULT setWindow([in] HWND hwnd);
 	HRESULT open([in, string] wchar_t *szFileOrUrl);
 	HRESULT close();
 	HRESULT play();
@@ -22,14 +21,20 @@ interface IGRiNSPlayerAuto : IUnknown
 	HRESULT pause();
 	HRESULT update();
 	HRESULT getState([out] int *pstate);
-	HRESULT getSize([out] int *pw, [out] int *ph);
+
+	HRESULT getTopLayoutCount([out] int *count);
+	HRESULT setTopLayoutWindow([in]int index,[in] HWND hwnd);
+	HRESULT getTopLayoutDimensions([in]int index, [out] int *pw, [out] int *ph);
+	HRESULT getTopLayoutTitle([in]int index, [out, string] wchar_t **pszTitle);
+	HRESULT getTopLayoutState([in]int index, [out] int *pstate);
+	HRESULT mouseClicked([in]int index, [in] int x, [in] int y);
+	HRESULT mouseMoved([in]int index, [in] int x, [in] int y, [out] BOOL *phot);
+
 	HRESULT getDuration([out] double *pdur);
 	HRESULT getTime([out] double *pt);
 	HRESULT setTime([in] double t);
 	HRESULT getSpeed([out] double *ps);
 	HRESULT setSpeed([in] double s);
-	HRESULT mouseClicked([in] int x, [in] int y);
-	HRESULT mouseMoved([in] int x, [in] int y, [out] BOOL *phot);
 	HRESULT getCookie([out] long *cookie);
 	};
 
