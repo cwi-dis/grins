@@ -1,6 +1,5 @@
 __version__ = "$Id$"
 
-from audio import Error
 from format import *
 import convert
 import audioop
