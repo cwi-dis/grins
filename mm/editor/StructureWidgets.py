@@ -2203,11 +2203,7 @@ class MediaWidget(MMNodeWidget):
 			dur = ad
 
 		if dur >= 0 and t2 > t0:
-			if dur == 0:
-				align = 'right'
-			else:
-				align = 'left'
-			dw = timemapper.interptime2pixel(t0+min(dur, t2-t0), align) - x
+			dw = timemapper.interptime2pixel(t0+min(dur, t2-t0), 'right') - x
 			if dw < 0: dw = 0
 			if dw > w: dw = w
 		else:
