@@ -655,9 +655,19 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 	def setcursor(self, strid):
 		if self._curcursor == strid: 
 			return
+
+		# remember it
 		self._curcursor = strid
+
+		# locate handle
 		cursor = win32window.getcursorhandle(strid)
+
+		# to avoid cursor flashing set os window cursor instead of setting the global cursor (using SetCursor)
 		Sdk.SetClassLong(self.GetSafeHwnd(),win32con.GCL_HCURSOR,cursor)
+
+		# set global cursor 
+		# SetClassLong seems not to be enough in some cases (for example while dragging)
+		Sdk.SetCursor(cursor)
 	
 	#
 	# Canvas and scrolling section
