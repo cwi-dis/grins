@@ -1700,7 +1700,7 @@ def cvslideurl(url, purl):
 	if posixpath.isabs(spath):
 		if not posixpath.isabs(path):
 			# find absolute path of RealPix URL
-			path = urlparse.urlparse(MMurl.pathname2url(os.join(os.getcwd(), MMurl.url2pathname(path))))[2]
+			path = urlparse.urlparse(MMurl.pathname2url(os.path.join(os.getcwd(), MMurl.url2pathname(path))))[2]
 		dir = posixpath.dirname(path)
 		if spath[:len(dir)] == dir:
 			# make relative
