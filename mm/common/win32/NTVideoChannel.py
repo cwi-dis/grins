@@ -4,6 +4,45 @@ __version__ = "$Id$"
 # WIN32 Video channel.
 #
 
+""" @win32doc|NTVideoChannel
+The NTVideoChannel extends the ChannelWindow
+(although it repeats the ChannelWindowAsync implementation)
+
+Nothing beyond the standard interface is required
+from the window by this channel.
+
+In this module ue use an object called GraphBuilder
+that supports the interface:
+
+interface IGraphBuilder:
+	def RenderFile(self,fn):return 1
+
+	def Run(self):pass
+	def Stop(self):pass
+	def Pause(self):pass
+
+	def GetDuration(self):return 0
+	def SetPosition(self,pos):pass
+	def GetPosition(self,pos):return 0
+
+	def SetVisible(self,f):pass
+	def SetWindow(self,w):pass
+
+
+We have implemented such an object using the win32 DirectShow Sdk
+We get the module from the module server by calling:
+DirectShowSdk=win32ui.GetDS()
+and from the module returned, we request an object 
+with the above interface with the call
+builder=DirectShowSdk.CreateGraphBuilder()
+
+Note that the same object is used for the SoundChannel
+and MidiChannel
+
+For more on the DirectShow architecture see MS documentation.
+"""
+
+
 from Channel import *
 
 # node attributes
@@ -39,12 +78,17 @@ class VideoChannel(ChannelWindow):
 
 		# active builder from self._builders
 		self._playBuilder=None
+		self._playDuration=0
 
 		# scheduler notification mechanism
 		self.__qid=None
 		
 		# main thread monitoring fiber id
 		self._fiber_id=0
+		self.__playdone=1
+
+		# keep last frame support
+		self._bmp=None
 
 	def __repr__(self):
 		return '<VideoChannel instance, name=' + `self._name` + '>'
@@ -63,8 +107,9 @@ class VideoChannel(ChannelWindow):
 			b.Stop()
 			b.SetVisible(0)		
 			b.SetWindowNull()
-			#b.Release()
-		#self._builders.clear()
+			b.Release()
+		del self._builders
+		self._builders={}
 		self._playBuilder=None
 		ChannelWindow.do_hide(self)
 
@@ -74,25 +119,32 @@ class VideoChannel(ChannelWindow):
 			b.Stop()
 			b.SetVisible(0)
 			b.SetWindowNull()
-			#b.Release()
+			b.Release()
+		del self._builders
+		self._builders={}
 		self._playBuilder=None
-		self._builders.clear()
 		ChannelWindow.destroy(self)
 
 	def do_arm(self, node, same=0):
 		if debug:print 'VideoChannel.do_arm('+`self`+','+`node`+'same'+')'
-		self.arm_display(node)
-		if node in self._builders.keys():		
+		if same and self.armed_display:
 			return 1
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
+			return 1
+
+		self.arm_display(node)
+
+		if node in self._builders.keys():		
 			return 1
 		fn = self.getfileurl(node)
 		fn = MMurl.urlretrieve(fn)[0]
 		fn = self.toabs(fn)
 		builder=DirectShowSdk.CreateGraphBuilder()
 		if builder:
-			builder.RenderFile(fn)
+			if not builder.RenderFile(fn):
+				print 'Failed to render',fn
+				builder=None
 			self._builders[node]=builder
 		else:
 			print 'Failed to create GraphBuilder'
@@ -102,25 +154,26 @@ class VideoChannel(ChannelWindow):
 	def play(self, node):
 		if debug:print 'VideoChannel.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if not self._is_shown or not node.IsPlayable() \
-		   or self.syncplay:
+	
+		if debug: print 'self._is_shown',self._is_shown,'node.IsPlayable()',node.IsPlayable(),'self.syncplay',self.syncplay
+		if not self._is_shown or not node.IsPlayable() or not self.window:
 			self.play_1()
 			return
-		if not self.nopop:
-			self.window.pop()
-		if self.played_display:
-			self.played_display.close()
-		self.played_display = self.armed_display
-		self.armed_display = None
-		if self._is_shown:
-			self.played_display.render()
-			self.do_play(node)
-		self.armdone()
+
+		if self._is_shown and node.IsPlayable() and self.window:
+			self.check_popup()
+			self.set_arm_display()
+			if not self.syncplay:
+				self.do_play(node)
+				self.armdone()
+			else: # replaynode call, may be due to resize
+				self.play_1()
 
 	def do_play(self, node):
 		if debug:print 'VideoChannel.do_play('+`self`+','+`node`+')'
 		if node not in self._builders.keys():
 			print 'node not armed'
+			self.__playdone=1
 			self.playdone(0)
 			return
 
@@ -135,18 +188,28 @@ class VideoChannel(ChannelWindow):
 			self.__qid=self._scheduler.enter(duration, 0, self._stopplay, ())
 
 		self._playBuilder=self._builders[node]
+		if not self._playBuilder:
+			self.__playdone=1
+			self.playdone(0)
+			return
+			
 		self._playBuilder.SetPosition(0)
+		self._playDuration=self._playBuilder.GetDuration()
 		if self.window and self.window.IsWindow():
 			self._playBuilder.SetWindow(self.window,WM_GRPAPHNOTIFY)
 			self.window.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
 		self._playBuilder.Run()
 		self._playBuilder.SetVisible(1)
 		self.register_for_timeslices()
+		self.__playdone=0
 
 		if self.play_loop == 0 and duration == 0:
+			self.__playdone=1
 			self.playdone(0)
 
+
 	def arm_display(self,node):
+		if debug: print 'NTVideoChannel arm_display'
 		drawbox = MMAttrdefs.getattr(node, 'drawbox')
 		if drawbox:
 			self.armed_display.fgcolor(self.getbucolor(node))
@@ -162,41 +225,58 @@ class VideoChannel(ChannelWindow):
 			if drawbox:
 				b.hicolor(hicolor)
 			self.setanchor(a[A_ID], a[A_TYPE], b)
+		self.armed_display.drawvideo(self.update)
 
-	def __stop(self):
-		if self._playBuilder:
-			#self._playBuilder.Pause()
-			# pause instead of stopping in order
-			# to keep video frame ?
+	def set_arm_display(self):
+		if self.armed_display and self.armed_display.is_closed():
+			# assume that we are going to get a
+			# resize event
+			pass
+		else:
+			self.armed_display.render()
+		if hasattr(self,'played_display') and self.played_display:
+			self.played_display.close()
+		self.played_display = self.armed_display
+		self.armed_display = None
 
-			self._playBuilder.Stop()
-			self._playBuilder.SetVisible(0)
-			self._playBuilder=None
-			if self.window:
-				self.window.update()
-		# keep anchors and background
-		#if self.played_display:
-		#	self.played_display.close()
-				
+	# Make a copy of frame and keep it until stopplay is called
+	def __freeze(self):
+		import win32mu
+		if self.window and self.window.IsWindow():
+			self._bmp=win32mu.WndToBmp(self.window)
+	def update(self,dc):
+		import win32mu
+		if self._playBuilder and (self.__playdone or self._paused):
+			if self._bmp:
+				win32mu.BitBltBmp(dc,self._bmp,self.window.GetClientRect())
+
 	# scheduler callback, at end of duration
 	def _stopplay(self):
 		self.__qid = None
-		self.__stop()
+		self.__freeze()
+		self.__playdone=1
 		self.playdone(0)
 
-	# part of stop sequence
+	# Part of stop sequence. Stop and remove last frame 
 	def stopplay(self, node):
 		if self.__qid is not None:
 			self._scheduler.cancel(self.__qid)
 			self.__qid = None
-		self.__stop()
+		if self._playBuilder:
+			self._playBuilder.Stop()
+			self._playBuilder.SetVisible(0)
+			self._playBuilder=None
+		if self._bmp:self._bmp=None
 		ChannelWindow.stopplay(self, node)
+		if self.window:
+			self.window.update()
 
 	# toggles between pause and run
 	def setpaused(self, paused):
 		self._paused = paused
 		if self._playBuilder:
 			if self._paused:
+				self.__freeze()
 				self._playBuilder.Pause()
 			else:
 				self._playBuilder.Run()
@@ -204,10 +284,9 @@ class VideoChannel(ChannelWindow):
 
 	# capture end of media
 	def OnGraphNotify(self,params):
-		if self._playBuilder:
-			duration=self._playBuilder.GetDuration()
+		if self._playBuilder and not self.__playdone:
 			t_msec=self._playBuilder.GetPosition()
-			if t_msec>=duration:self.OnMediaEnd()
+			if t_msec>=self._playDuration:self.OnMediaEnd()
 
 	def OnMediaEnd(self):
 		if debug: print 'VideoChannel: OnMediaEnd',`self`
@@ -215,24 +294,48 @@ class VideoChannel(ChannelWindow):
 			return		
 		if self.play_loop:
 			self.play_loop = self.play_loop - 1
-			if self.play_loop: # more loops
+			if self.play_loop: # more loops ?
 				self._playBuilder.SetPosition(0)
 				self._playBuilder.Run()
 				return
 			# no more loops
-			self.__stop()
+			self.__freeze()
+			self.__playdone=1
 			# if event wait scheduler
 			if self.__qid is not None:return
 			# else end
 			self.playdone(0)
 			return
-
+		# self.play_loop is 0 so repeat
+		self._playBuilder.SetPosition(0)
+		self._playBuilder.Run()
 
 	def defanchor(self, node, anchor, cb):
 		import windowinterface
 		windowinterface.showmessage('The whole window will be hot.')
 		cb((anchor[0], anchor[1], [0,0,1,1]))
 
+
+	############################### ui delays management
+	def on_idle_callback(self):
+		if self._playBuilder and not self.__playdone:
+			t_msec=self._playBuilder.GetPosition()
+			if t_msec>=self._playDuration:self.OnMediaEnd()
+
+	def is_callable(self):
+		return self._playBuilder
+	def register_for_timeslices(self):
+		if self._fiber_id: return
+		import windowinterface
+		self._fiber_id=windowinterface.register((self.is_callable,()),(self.on_idle_callback,()))
+	def unregister_for_timeslices(self):
+		if not self._fiber_id: return
+		import windowinterface
+		windowinterface.unregister(self._fiber_id)
+		self._fiber_id=0
+
+
+	################################# general url stuff
 	def islocal(self,url):
 		utype, url = MMurl.splittype(url)
 		host, url = MMurl.splithost(url)
@@ -247,25 +350,3 @@ class VideoChannel(ChannelWindow):
 				filename=os.path.join(os.getcwd(),filename)
 				filename=ntpath.normpath(filename)	
 		return filename
-
-	# ui delays management
-	def on_idle_callback(self):
-		if self._playBuilder:
-			if self._playBuilder.IsCompleteEvent():
-				self.OnMediaEnd()
-			else: # not actualy needed but I am burned!
-				duration=self._playBuilder.GetDuration()
-				t_msec=self._playBuilder.GetPosition()
-				if t_msec>=duration:self.OnMediaEnd()
-
-	def is_callable(self):
-		return self._playBuilder
-	def register_for_timeslices(self):
-		if self._fiber_id: return
-		import windowinterface
-		self._fiber_id=windowinterface.register((self.is_callable,()),(self.on_idle_callback,()))
-	def unregister_for_timeslices(self):
-		if not self._fiber_id: return
-		import windowinterface
-		windowinterface.unregister(self._fiber_id)
-		self._fiber_id=0
