@@ -7,8 +7,10 @@ set EXCLUDE_WHAT=cmifed
 set main_script=%GRINS_HOME%\fGRiNS.py
 
 del *.c
+del log.txt
+del FreezeOpts
 
-set PYTHON_EXE=d:\ufs\mm\cmif\bin\python.exe
+set PYTHON_EXE=d:\ufs\mm\cmif\bin\win32\python.exe
 set PYTHONHOME=d:\ufs\mm\python
 call c:\Program Files\Microsoft Visual Studio\VC98\Bin\vcvars32.bat
 
@@ -44,6 +46,7 @@ set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\common
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\pylib
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\pylib\audio
+
 rem And the standard Python extensions.
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\lib
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\Build
@@ -74,15 +77,22 @@ rem echo -x MPEGVideoDuration >> FreezeOpts
 rem ****************************
 
 rem Audio stuff not supported on this platform
-echo -x audiodevsun >> FreezeOpts
-echo -x audiodevmac >> FreezeOpts
-echo -x audiodevsgi >> FreezeOpts
-echo -x audio8svx >> FreezeOpts
-echo -x audiohcom >> FreezeOpts
+echo -x audio.aifc >> FreezeOpts
+echo -x audio.au >> FreezeOpts
+echo -x audio.convert >> FreezeOpts
+echo -x audio.devsun >> FreezeOpts
+echo -x audio.devmac >> FreezeOpts
+echo -x audio.devsgi >> FreezeOpts
+echo -x audio.file >> FreezeOpts
+echo -x audio.format >> FreezeOpts
+echo -x audio.hcom >> FreezeOpts
+echo -x audio.sndr >> FreezeOpts
+echo -x audio.sndt >> FreezeOpts
+echo -x audio.svx8 >> FreezeOpts
+echo -x audio.voc >> FreezeOpts
+echo -x audio.wav >> FreezeOpts
+echo -x audio.what >> FreezeOpts
 echo -x audioop >> FreezeOpts
-echo -x audiosndr >> FreezeOpts
-echo -x audiosndt >> FreezeOpts
-echo -x audiovoc >> FreezeOpts
 echo -x sunaudiodev >> FreezeOpts
 echo -x SUNAUDIODEV >> FreezeOpts
 echo -x hcom >> FreezeOpts
