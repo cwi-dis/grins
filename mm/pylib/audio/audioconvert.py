@@ -212,7 +212,7 @@ class cvrate(audio_filter):
 
 	def readframes(self, nframes = -1):
 		import audioop
-		data = self._rdr.readframes(nframes)
+		data = self._rdr.readframes(nframes * self.__inrate / self.__outrate)
 		data, self.__state = audioop.ratecv(data, self.__width,
 					self.__nchannels, self.__inrate,
 					self.__outrate, self.__state)
