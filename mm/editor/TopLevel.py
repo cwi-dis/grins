@@ -89,6 +89,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					qos = settings.RTIPA_classes.get(ip)
 					if qos is not None:
 						query = query + '&class=' + qos
+				if settings.get('RTIPA_debug'):
+					windowinterface.showmessage('Adding query string "%s"' % query)
 			# RTIPA end
 		url = urlunparse((utype, host, path, params, query, None))
 		import urlcache
@@ -1386,6 +1388,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				else:
 					if ct == 'GRIN' and tp == 'TEXT':
 						mtype = 'application/x-grins-project'
+		if mtype not in ('application/x-grins-project', 'application/smil'):
+			if windowinterface.showquestion('MIME type not application/smil or application/x-grins-project.\nFix?'):
+				mtype = 'application/smil'
 		if mtype in ('application/smil', 'application/x-grins-project'):
 			import SMILTreeRead
 			# init progress dialog
@@ -1440,13 +1445,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			else:
 				dur = ''
 			self.new_file = 1
+			from nameencode import nameencode
 			self.root = SMILTreeRead.ReadString('''\
 <smil>
   <body>
-    <ref%s src="%s"/>
+    <ref%s src=%s/>
   </body>
 </smil>
-''' % (dur, filename), filename, self.printfunc)
+''' % (dur, nameencode(filename)), filename, self.printfunc)
 
 ##		t1 = time.time()
 ##		print 'done in', round(t1-t0, 3), 'sec.'
