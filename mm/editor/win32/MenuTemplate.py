@@ -93,20 +93,6 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Find Next', None, FINDNEXT),
 		(FLAG_ALL, ENTRY, 'Replace...', None, REPLACE),
 		(FLAG_ALL, SEP,),
-		(FLAG_ALL, CASCADE, '&Align', (
-			(FLAG_ALL, ENTRY, '&Left', 'L', ALIGN_LEFT),
-			(FLAG_ALL, ENTRY, '&Center', 'C', ALIGN_CENTER),
-			(FLAG_ALL, ENTRY, '&Right', 'R', ALIGN_RIGHT),
-			(FLAG_ALL, SEP,),
-			(FLAG_ALL, ENTRY, '&Top', 'T', ALIGN_TOP),
-			(FLAG_ALL, ENTRY, '&Middle', 'M', ALIGN_MIDDLE),
-			(FLAG_ALL, ENTRY, '&Bottom', 'B', ALIGN_BOTTOM),
-			)),
-		(FLAG_ALL, CASCADE, '&Distribute', (
-			(FLAG_ALL, ENTRY, '&Horizontally', 'H', DISTRIBUTE_HORIZONTALLY),
-			(FLAG_ALL, ENTRY, '&Vertically', 'V', DISTRIBUTE_VERTICALLY),
-			)),
-		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
 		(FLAG_PRO, ENTRY, 'New &Region', None, NEW_REGION),
 		(FLAG_BOSTON, ENTRY, 'New &TopLayout', 'T', NEW_TOPLAYOUT),
@@ -224,6 +210,23 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Use as event &source', None, CREATE_EVENT_SOURCE),
 		(FLAG_ALL, ENTRY, 'Create &begin event', None, CREATE_BEGIN_EVENT),
 		(FLAG_ALL, ENTRY, 'Create &end event', None, CREATE_END_EVENT),
+		)),
+
+	('&Tools', (
+		(FLAG_ALL, CASCADE, '&Align', (
+			(FLAG_ALL, ENTRY, '&Left', 'L', ALIGN_LEFT),
+			(FLAG_ALL, ENTRY, '&Center', 'C', ALIGN_CENTER),
+			(FLAG_ALL, ENTRY, '&Right', 'R', ALIGN_RIGHT),
+			(FLAG_ALL, SEP,),
+			(FLAG_ALL, ENTRY, '&Top', 'T', ALIGN_TOP),
+			(FLAG_ALL, ENTRY, '&Middle', 'M', ALIGN_MIDDLE),
+			(FLAG_ALL, ENTRY, '&Bottom', 'B', ALIGN_BOTTOM),
+			)),
+		(FLAG_ALL, CASCADE, '&Distribute', (
+			(FLAG_ALL, ENTRY, '&Horizontally', 'H', DISTRIBUTE_HORIZONTALLY),
+			(FLAG_ALL, ENTRY, '&Vertically', 'V', DISTRIBUTE_VERTICALLY),
+			)),
+		(FLAG_ALL, SEP,),
 		)),
 
 	('&View', (
