@@ -28,14 +28,12 @@ from MMExc import *
 def showattreditor(node):
 	try:
 		attreditor = node.attreditor
-	except NameError:
-		attreditor = None
-	if attreditor <> None:
 		return # Attribute editor form is already active
+	except NameError:
+		pass
 	#
 	namelist = listattrnames(node)
-	#
-	node.attreditor = AttrEditor().init(node, namelist)
+	attreditor = AttrEditor().init(node, namelist)
 
 
 def hideattreditor(node):
@@ -45,8 +43,6 @@ def hideattreditor(node):
 		return # No attribute editor active
 	# XXX What if there are changes?
 	attreditor.close()
-	del node.attreditor
-	# Leave the rest to garbage collection
 
 
 # List the attribute names that make sense for this node,
@@ -111,6 +107,8 @@ class AttrEditor():
 		form.show_form(PLACE_SIZE, TRUE, 'Attribute Editor')
 		# XXX Should have a more meaningful title
 		#
+		node.attreditor = self
+		#
 		return self
 	#
 	def makebuttons(self, width):
@@ -160,7 +158,9 @@ class AttrEditor():
 	#
 	def close(self):
 		self.form.hide_form()
+		del self.node.attreditor
 		# XXX break circular links...
+		# Leave the rest to garbage collection
 	#
 	def cancelcallback(self, dummy):
 		self.close()
@@ -311,14 +311,14 @@ def test():
 	print 'parsing', filename, '...'
 	root = MMTree.ReadFile(filename)
 	#
-	print 'showattreditor ...'
-	showattreditor(root)
-	#
 	print 'quit button ...'
 	quitform = fl.make_form(FLAT_BOX, 50, 50)
 	quitbutton = quitform.add_button(NORMAL_BUTTON, 0, 0, 50, 50, 'Quit')
 	quitform.set_form_position(600, 10)
 	quitform.show_form(PLACE_POSITION, FALSE, 'QUIT')
+	#
+	print 'showattreditor ...'
+	showattreditor(root)
 	#
 	print 'go ...'
 	while 1:
