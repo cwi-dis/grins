@@ -1,5 +1,3 @@
-# Work in progress.
-
 import types
 
 import Widgets
@@ -738,7 +736,7 @@ class SeqMMWidget(MultiMMWidget):
 	def recalc(self):
 		# iterate through my subwidgets, resizing each.
 		mytimes = self.node.GetTimes()
-		print "DEBUG times: ", mytimes, self.node
+#		print "DEBUG times: ", mytimes, self.node
 		x,y,w,h = self.get_box()
 		endx = x + w # - BARWIDTH + BARWIDTH
 
@@ -757,25 +755,25 @@ class SeqMMWidget(MultiMMWidget):
 		#self.w_debugbar.moveto((x,y,x+w,y+h))
 		if mytimes[1]>mytimes[0] or mytimes[2]>mytimes[0]:
 			if mytimes[1] > mytimes[0]:
-				print "DEBUG: using t1 for structure node."
+				#print "DEBUG: using t1 for structure node."
 				endtime = mytimes[1]
 			else:
-				print "DEBUG: using t2 for structure node."
+				#print "DEBUG: using t2 for structure node."
 				endtime = mytimes[2]
 			ppt = (w-(len(self.subwidgets)-1)*BARWIDTH)/(endtime-mytimes[0])	# pixels per time
 			for i in range(0, len(self.subwidgets)):
 				ctime = self.subwidgets[i].GetTimes()
-				print "DEBUG widget's times: ", ctime, self.subwidgets[i].node
+				#print "DEBUG widget's times: ", ctime, self.subwidgets[i].node
 				cl = (ctime[0]-mytimes[0])*ppt + x
 				if ctime[1] > ctime[0]:
-					print "DEBUG  (using endtime=t1)"
+					#print "DEBUG  (using endtime=t1)"
 					cendtime = ctime[1]
 				elif ctime[2] > ctime[0]:
-					print "DEBUG  (using endtime=t2)"
+					#print "DEBUG  (using endtime=t2)"
 					cendtime = ctime[2]
 				else:
 					cendtime = ctime[0]
-					print "DEBUG  (using endtime=t0 :-( )"
+					#print "DEBUG  (using endtime=t0 :-( )"
 				cr = (cendtime-mytimes[0])*ppt + x
 				self.subwidgets[i].set_x(cl, cr)
 				self.subwidgets[i].recalc()
@@ -798,7 +796,7 @@ class SeqMMWidget(MultiMMWidget):
 				self.y_start_cached = bob
 				return bob
 			else:
-				assert 0
+				return (2,CHANNELHEIGHT)
 
 	def get_y_end(self):
 		if self.y_end_cached is not None:
@@ -809,7 +807,7 @@ class SeqMMWidget(MultiMMWidget):
 				self.y_end_cached = bob
 				return bob
 			else:
-				return 0
+				return (2,CHANNELHEIGHT)
 
 
 class BarMMWidget(MultiMMWidget):
@@ -850,7 +848,7 @@ class BarMMWidget(MultiMMWidget):
 		# recurse through my subwidgets, resizing each.
 		# also, set the bar sizes.
 		mytimes = self.node.GetTimes()
-		print "DEBUG: times: ", mytimes, self.node
+		#print "DEBUG: times: ", mytimes, self.node
 		x,y,w,h = self.get_box()
 		#self.w_debugbar.moveto((x,y,x+w,y+h))
 
@@ -908,7 +906,7 @@ class BarMMWidget(MultiMMWidget):
 			return (highest, lowest)
 		else:
 			# TODO: node with no subwidgets.
-			assert 0
+			return (2,CHANNELHEIGHT)
 
 	def get_y_end(self):
 		# returns a tuple of the top and bottom of the end of this node
@@ -930,7 +928,7 @@ class BarMMWidget(MultiMMWidget):
 			self.y_end_cached = (highest, lowest)
 			return (highest, lowest)
 		else:
-			assert 0	# node with no children. I'm not happy.
+			return (2,CHANNELHEIGHT)	# node with no children. I'm not happy.
 
 
 class ParMMWidget(BarMMWidget):
