@@ -1172,10 +1172,6 @@ SOURCE=.\lib\SMIL.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\SMILTree.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\SMILTreeRead.py
 # End Source File
 # Begin Source File
