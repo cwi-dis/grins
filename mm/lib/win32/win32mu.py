@@ -45,6 +45,8 @@ class Rect:
 	def tuple_ps(self):
 		return (self.left,self.top,self.right-self.left,self.bottom-self.top)
 	def round(self):
+		if self.left<1:self.left=0
+		if self.top<1:self.top=0
 		self.left=int(self.left+0.5);self.top=int(self.top+0.5)
 		self.right=int(self.right+0.5);self.bottom=int(self.bottom+0.5)
 		
