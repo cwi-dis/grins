@@ -85,6 +85,7 @@ class TopLevel(ViewDialog, BasicDialog):
 	# EditMgr interface (as dependent client).
 	# This is the first registered client; hence its commit routine
 	# will be called first, so it can fix the timing for the others.
+	# It also flushes the attribute cache maintained by MMAttrdefs.
 	#
 	def transaction(self):
 		# Always allow transactions
@@ -93,6 +94,7 @@ class TopLevel(ViewDialog, BasicDialog):
 	def commit(self):
 		# Fix the timing -- views may depend on this.
 		self.changed = 1
+		MMAttrdefs.flushcache(self.root)
 		Timing.calctimes(self.root)
 	#
 	def rollback(self):
@@ -117,16 +119,16 @@ class TopLevel(ViewDialog, BasicDialog):
 		x, y, w, h = 0, height, width, bheight
 		#
 		y = y - h
+		self.pvbutton = \
+			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Player')
+		#
+		y = y - h
 		self.bvbutton = \
 			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Hierarchy')
 		#
 		y = y - h
 		self.cvbutton = \
 			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Time chart')
-		#
-		y = y - h
-		self.pvbutton = \
-			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Player')
 		#
 		y = y - h
 		self.svbutton = \
