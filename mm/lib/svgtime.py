@@ -354,7 +354,7 @@ class TimeNode:
 # mixin for svg time elements
 # common behavior (leaf time nodes)?
 
-# states : 'None', 'waitinterval', 'waitbegin', 'active'
+# states : 'idle', 'waitinterval', 'waitbegin', 'active'
 # active conceptual substates: 'playing', 'paused'
 # life states: 'waitinterval', 'waitbegin', 'active'
 # all life states can be transit (zero dur)
@@ -364,7 +364,7 @@ class TimeNode:
 
 # Implementation note:
 # spec states mapping to ours:
-# specStartup : transition from None to waitbegin on a startup event, compute first interval
+# specStartup : transition from idle to waitbegin on a startup event, compute first interval
 # specWaitingToBeginCurrentInterval: waitbegin
 # specActiveTime: active 
 # specEndOfAnInterval: waitinterval, enter state and compute the next one and notify dependents 
@@ -382,7 +382,7 @@ class TimeNode:
 # implrem: take into account time sampling
 
 
-timestates = ['None', 'waitbegin', 'active', 'postactive']
+timestates = ['idle', 'waitbegin', 'active', 'postactive']
 IDLE, WAITINTERVAL, WAITBEGIN, ACTIVE = None, 1, 2, 3
 
 class TimeElement(TimeNode, Timer):
@@ -425,7 +425,7 @@ class TimeElement(TimeNode, Timer):
 	#
 	#  states and transitions
 	#
-	# while in none state make possibly a transition to waiting
+	# while in idle state make possibly a transition to waiting
 	def startupTransition(self, complete=1):
 		assert self._state is None, 'invalid transition'
 		self._state = WAITINTERVAL
@@ -691,21 +691,20 @@ class TimeElement(TimeNode, Timer):
 		repeatDur = self.get('repeatDur')
 		repeatCount = self.get('repeatCount')
 		if dur is None and repeatDur is None and repeatCount is None and endList.isExplicit():
-			return indefinite
+			calcdur = indefinite
 		elif dur is not None:
 			if dur is not indefinite:
-				return float(dur)
+				calcdur = float(dur)
 			else:
-				return indefinite
+				calcdur = indefinite
 		elif dur is None:
-			return self.calcImplicitDur()
+			calcdur = self.calcImplicitDur()
 		elif dur is mediadur:
-			return self.calcImplicitDur()
-		return unresolved
+			calcdur = self.calcImplicitDur()
+		return self.applyTimeManipulations(calcdur)
 
 	def calcImplicitDur(self):
 		return 0.0
-
 
 	#
 	#  calc active duration
@@ -773,7 +772,7 @@ class TimeElement(TimeNode, Timer):
 		speed = self.get('speed')
 		if speed:
 			ad = timediv(ad, speed)	
-		if self.get('autoReverse')=='true':
+		if self.get('autoReverse'):
 			ad = timemul(ad, 2.0)
 		return ad
 
