@@ -3,11 +3,11 @@ __version__ = "$Id$"
 # Cache durations of movie files
 
 import MMurl
-import Qt
+from Carbon import Qt
 import windowinterface
 if not windowinterface._qtavailable():
 	Qt = None
-import QuickTime
+from Carbon import QuickTime
 
 def get(url):
 	if not Qt:
