@@ -1381,6 +1381,18 @@ BEGIN
                     24,169,10
 END
 
+IDD_EDITATTR_S2a DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_GROUP1,6,10,287,39
+    LTEXT           "Clip begin:",IDC_11,16,27,41,8
+    EDITTEXT        IDC_12,61,25,46,12,ES_AUTOHSCROLL
+    LTEXT           "Clip end:",IDC_21,143,27,41,8
+    EDITTEXT        IDC_22,188,25,46,12,ES_AUTOHSCROLL
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
