@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # HierarchyView dialog - Mac version
 # XXXX Note: the separation isn't correct: there are still things in HierarchyView
 # that really belong here...
