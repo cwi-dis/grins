@@ -57,6 +57,7 @@ MENUBAR=(
 		(TOGGLE, 'Pause', 'B', PAUSE),
 		(TOGGLE, 'Stop', 'H', STOP),
 		(SEP,),
+		(DYNAMICCASCADE, 'User groups', USERGROUPS),
 		(DYNAMICCASCADE, 'Visible channels', CHANNELS),
 		)),
 
