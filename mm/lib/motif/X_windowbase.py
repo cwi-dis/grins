@@ -85,6 +85,7 @@ class _Toplevel:
 		self._vmm2pxl = float(self._screenheight) / self._mscreenheight
 		self._dpi_x = int(25.4 * self._hmm2pxl + .5)
 		self._dpi_y = int(25.4 * self._vmm2pxl + .5)
+		self._handcursor = dpy.CreateFontCursor(Xcursorfont.hand2)
 		self._watchcursor = dpy.CreateFontCursor(Xcursorfont.watch)
 		self._channelcursor = dpy.CreateFontCursor(Xcursorfont.draped_box)
 		self._linkcursor = dpy.CreateFontCursor(Xcursorfont.hand1)
@@ -467,6 +468,8 @@ class _Window:
 		form.AddCallback('exposeCallback', self._expose_callback, None)
 		form.AddCallback('resizeCallback', self._resize_callback, None)
 		form.AddCallback('inputCallback', self._input_callback, None)
+		form.AddEventHandler(X.PointerMotionMask, FALSE,
+				     self._motion_handler, None)
 		self.setcursor(self._cursor)
 		if pixmap:
 			self._pixmap = form.CreatePixmap()
@@ -502,6 +505,8 @@ class _Window:
 		self._bgcolor = parent._bgcolor
 		self._fgcolor = parent._fgcolor
 		self._cursor = parent._cursor
+		self._curcursor = ''
+		self._buttonregion = Xlib.CreateRegion()
 		self._callbacks = {}
 		self._accelerators = {}
 		self._menu = None
@@ -778,6 +783,7 @@ class _Window:
 		# create region for whole window
 		self._clip = region = Xlib.CreateRegion()
 		apply(region.UnionRectWithRegion, self._rect)
+		self._buttonregion = bregion = Xlib.CreateRegion()
 		# subtract all subwindows
 		for w in self._subwindows:
 			if w._transparent == 0 or \
@@ -786,6 +792,13 @@ class _Window:
 				apply(r.UnionRectWithRegion, w._rect)
 				region.SubtractRegion(r)
 			w._mkclip()
+			bregion.UnionRegion(w._buttonregion)
+		# create region for all visible buttons
+		if self._active_displist is not None:
+			r = Xlib.CreateRegion()
+			r.UnionRegion(self._clip)
+			r.IntersectRegion(self._active_displist._buttonregion)
+			bregion.UnionRegion(r)
 
 	def _delclip(self, child, region):
 		# delete child's overlapping siblings
@@ -1129,6 +1142,15 @@ class _Window:
 		else:
 			func(arg, self, ResizeWindow, None)
 
+	def _motion_handler(self, form, client_data, event):
+		if self._buttonregion.PointInRegion(event.x, event.y):
+			cursor = 'hand'
+		else:
+			cursor = self._cursor
+		if self._curcursor != cursor:
+			_setcursor(form, cursor)
+			self._curcursor = cursor
+
 class _BareSubWindow:
 	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z):
 		if z < 0:
@@ -1321,6 +1343,7 @@ class _DisplayList:
 		self._window = window
 		window._displists.append(self)
 		self._buttons = []
+		self._buttonregion = Xlib.CreateRegion()
 		self._fgcolor = window._fgcolor
 		self._bgcolor = bgcolor
 		self._linewidth = 1
@@ -1363,12 +1386,18 @@ class _DisplayList:
 				win._gc.SetRegion(win._region)
 				win._pixmap.CopyArea(win._form, win._gc,
 						     x, y, w, h, x, y)
+			win._buttonregion = bregion = Xlib.CreateRegion()
+			w = win._parent
+			while w is not None and w is not toplevel:
+				w._buttonregion.SubtractRegion(win._clip)
+				w = w._parent
 		del self._cloneof
 		del self._optimdict
 		del self._list
 		del self._buttons
 		del self._font
 		del self._imagemask
+		del self._buttonregion
 
 	def is_closed(self):
 		return self._window is None
@@ -1419,6 +1448,14 @@ class _DisplayList:
 			x, y, width, height = window._rect
 			window._pixmap.CopyArea(window._form, window._gc,
 						x, y, width, height, x, y)
+		window._buttonregion = bregion = Xlib.CreateRegion()
+		bregion.UnionRegion(self._buttonregion)
+		bregion.IntersectRegion(window._clip)
+		w = window._parent
+		while w is not None and w is not toplevel:
+			w._buttonregion.SubtractRegion(window._clip)
+			w._buttonregion.UnionRegion(bregion)
+			w = w._parent
 		toplevel._main.UpdateDisplay()
 		
 	def _render(self, region):
@@ -1690,9 +1727,11 @@ class _Button:
 		self._width = self._hiwidth = dispobj._linewidth
 		self._newdispobj = None
 		self._highlighted = 0
+		x, y, w, h = window._convert_coordinates(coordinates)
+		dispobj._buttonregion.UnionRectWithRegion(x, y, w, h)
 		if self._color == dispobj._bgcolor:
 			return
-		dispobj.drawbox(self._coordinates)
+		dispobj.drawbox(coordinates)
 
 	def close(self):
 		if self._dispobj is None:
@@ -2301,7 +2340,11 @@ def _create_menu(menu, list, visual, colormap, acc = None, widgets = {}):
 def _setcursor(form, cursor):
 	if not form.IsRealized():
 		return
-	if cursor == 'watch':
+	if cursor == 'hand':
+		form.DefineCursor(toplevel._handcursor)
+	elif cursor == '':
+		form.UndefineCursor()
+	elif cursor == 'watch':
 		form.DefineCursor(toplevel._watchcursor)
 	elif cursor == 'channel':
 		form.DefineCursor(toplevel._channelcursor)
@@ -2309,8 +2352,6 @@ def _setcursor(form, cursor):
 		form.DefineCursor(toplevel._linkcursor)
 	elif cursor == 'stop':
 		form.DefineCursor(toplevel._stopcursor)
-	elif cursor == '':
-		form.UndefineCursor()
 	else:
 		raise error, 'unknown cursor glyph'
 
