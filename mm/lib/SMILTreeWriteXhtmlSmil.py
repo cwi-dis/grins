@@ -472,8 +472,6 @@ class SMILXhtmlSmilWriter(SMIL):
 			for child in x.GetChildren():
 				self.writenode(child)
 			if self.freezeSyncDict.has_key(x):
-				if not nodeid:
-					nodeid = 'm' + x.GetUID()
 				transOut, trnodeid, trregionid = self.freezeSyncDict[x]
 				self.writeTransition(None, transOut, trnodeid, nodeid)
 			self.pop()
