@@ -2,16 +2,13 @@ __version__ = "$Id$"
 
 """ @win32doc|_UsergroupView
 This module contains the ui implementation of the UsergroupView.
-It is implemented as a dialog bar.
-The MFC CDialogBar class provides the functionality of 
-a Windows modeless dialog box in a control bar. 
-A dialog bar resembles a dialog box in that it contains 
-standard Windows controls that the user can tab between. 
-Another similarity is that you create a dialog template 
-to represent the dialog bar.
+It is implemented as a Form view.
+The MFC CFormView is essentially a view that contains controls. 
+These controls are laid out based on a dialog-template resource
+similar to a dialog box.
 Objects of this class are exported to Python through the win32ui pyd
-as objects of type PyCDialogBar.
-The _LayoutView extends the PyCDialogBar.
+as objects of type PyCFormView.
+The _UsergroupView extends the GenFormView which is an extension to PyCFormView.
 
 The _UsergroupView is created using the resource dialog template with identifier IDD_USERGROUP.
 To edit this template, open it using the resource editor. 
@@ -38,102 +35,66 @@ from usercmdui import *
 # GRiNS resource ids
 import grinsRC
 
+from GenFormView import GenFormView
 
-class _UsergroupView(components.DlgBar):
-
-	# Class contructor. Associates member controls with their ids
-	def __init__(self):
-		components.DlgBar.__init__(self)
+class _UsergroupView(GenFormView):
+	def __init__(self,doc):
+		GenFormView.__init__(self,doc,grinsRC.IDD_USERGROUP)	
 		self['Groups']=components.ListBox(self,grinsRC.IDC_GROUPS)
 		self['New']=components.Button(self,grinsRC.IDCMD_NEW_GROUP)
 		self['Edit']=components.Button(self,grinsRC.IDCMD_EDIT_GROUP)
 		self['Delete']=components.Button(self,grinsRC.IDCMD_DELETE_GROUP)
-		self['Close']=components.Button(self,grinsRC.IDCMD_CLOSE_USERGROUPVIEW)	
-		self._activecmds={}
+
 		self._init_ugroups=[]
 		self._init_pos=None
-
-	# Helper function to create the OS window.
-	def create(self,frame):
-		components.DlgBar.create(self,frame,grinsRC.IDD_USERGROUP,afxres.CBRS_ALIGN_LEFT)
-		for i in self.keys():self[i].attach_to_parent()
-		frame.RecalcLayout()
-		frame.HookCommand(self.OnListCmd,self['Groups']._id)
-
-		frame.HookCommand(self.OnCmd,self['New']._id)
-		frame.HookCommand(self.OnCmd,self['Edit']._id)
-		frame.HookCommand(self.OnCmd,self['Delete']._id)
-
-		frame.HookCommand(self.OnCmd,self['Close']._id)
-
-		frame.HookCommandUpdate(frame.OnUpdateCmdEnable,self['New']._id)
-		frame.HookCommandUpdate(frame.OnUpdateCmdDissable,self['Edit']._id)
-		frame.HookCommandUpdate(frame.OnUpdateCmdDissable,self['Delete']._id)
-
-		frame.HookCommandUpdate(frame.OnUpdateCmdEnable,self['Close']._id)
-
-		if len(self._init_ugroups):
-			self.setgroups(self._init_ugroups,self._init_pos)
 
 	# Sets the acceptable commands. 
 	def set_cmddict(self,cmddict):
 		self._cmddict=cmddict
-	
-	# Response to a selection change of the listbox 
-	def OnListCmd(self,id,code):
-		if code==win32con.LBN_SELCHANGE:
-			frame=self.GetParent()
-			pos=self['Groups'].getcursel()
-			if pos==None or pos<0:
-				frame.HookCommandUpdate(frame.OnUpdateCmdDissable,self['Edit']._id)
-				frame.HookCommandUpdate(frame.OnUpdateCmdDissable,self['Delete']._id)
-			else:
-				frame.HookCommandUpdate(frame.OnUpdateCmdEnable,self['Edit']._id)
-				frame.HookCommandUpdate(frame.OnUpdateCmdEnable,self['Delete']._id)
-		if code==win32con.LBN_DBLCLK:				
-			apply(apply,self._cmddict['Edit'])
 
-	# Response to control notification
-	def OnCmd(self,id,code):
-		if id==self['Close']._id:
-			self.GetParent().PostMessage(win32con.WM_COMMAND,USERGROUPVIEW_UI.id)
-			return
+	def OnInitialUpdate(self):
+		GenFormView.OnInitialUpdate(self)
+		self.GetParent().freezeSize()
+		self.EnableCmd('Groups',1)
+		self.EnableCmd('New',1)
+		if len(self._init_ugroups):
+			self.setgroups(self._init_ugroups,self._init_pos)
+
+	# Reponse to message WM_COMMAND
+	def OnCmd(self,params):
+		# crack message
+		msg=win32mu.Win32Msg(params)
+		id=msg.cmdid()
+		nmsg=msg.getnmsg()
+		
+		# special response	
+		if id==self['Groups']._id:self.OnListCmd(id,nmsg)
+
+		# std stuff
 		for k in self.keys():
 			if self[k]._id==id:
 				if k in self._cmddict.keys():
 					apply(apply,self._cmddict[k])
-				return	
+				return
 
-	# Returns true if the window is visible
-	def is_showing(self):
-		return self.GetSafeHwnd() and self.IsWindowVisible()
+	# Response to a selection change of the listbox
+	# and selection dblclick 
+	def OnListCmd(self,id,code):
+		if code==win32con.LBN_SELCHANGE:
+			pos=self['Groups'].getcursel()
+			if pos==None or pos<0:
+				self.EnableCmd('Edit',0)
+				self.EnableCmd('Delete',0)
+			else:
+				self.EnableCmd('Edit',1)
+				self.EnableCmd('Delete',1)
+		if code==win32con.LBN_DBLCLK:				
+			apply(apply,self._cmddict['Edit'])
 
-	# Called by the core system to close this view
-	def close(self):
-		frame=self.GetParent()
-		self.DestroyWindow()
-		frame.RecalcLayout()
-
-	# Called by the core system to show the view
-	def show(self):
-		if self.GetSafeHwnd():
-			frame=self.GetParent()
-			self.ShowWindow(win32con.SW_SHOW)
-			frame.RecalcLayout()
-
-	# Called by the core system to hide the view
-	def hide(self):
-		if self.GetSafeHwnd():
-			frame=self.GetParent()
-			self.ShowWindow(win32con.SW_HIDE)
-			frame.RecalcLayout()
-
-	def is_oswnd(self):
-		return self.IsWindow()
 
 	def getgroup(self):
 		"""Return name of currently selected user group."""
-		if self.is_oswnd():
+		if self.is_oswindow():
 			ix=self['Groups'].getcursel()
 			if ix==None or ix<0: return None
 			return self['Groups'].gettext(ix)
@@ -149,7 +110,7 @@ class _UsergroupView(components.DlgBar):
 		pos -- None or index in ugroups list--the initially
 			selected element in the list
 		"""
-		if self.is_oswnd():
+		if self.is_oswindow():
 			l=self['Groups']
 			l.delalllistitems()
 			l.addlistitems(ugroups, 0)
