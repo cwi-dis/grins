@@ -1,6 +1,36 @@
 __version__ = "$Id$"
 
 from urllib import *
+import os
+if os.name == 'mac':
+	import ic
+	import macfs
+	try:
+		_mac_icinstance = ic.IC()
+	except:
+		_mac_icinstance = None
+	
+	def _mac_setcreatortype(filename):
+		if not _mac_icinstance:
+			return
+		try:
+			# Get current creator/type of the file
+			fss = macfs.FSSpec(filename)
+			cr, tp = fss.GetCreatorType()
+			# Check whether actual type matches expected type.
+			# XXXX Note: the mapping here is done on filename extension.
+			# it would be better to do it on the basis of the mimetype, but
+			# IC doesn't have that interface.
+			descr = _mac_icinstance.mapfile(filename)
+			wtd_tp = descr[1]
+			wtd_cr = descr[2]
+			if tp == wtd_tp:
+				return
+			# They're different. Try setting it correctly.
+			fss.SetCreatorType(wtd_cr, wtd_tp)
+		except 'xxx':
+			# Any errors are ignored.
+			pass
 
 _OriginalFancyURLopener = FancyURLopener
 
@@ -15,6 +45,12 @@ class FancyURLopener(_OriginalFancyURLopener):
 		fp.close()
 		raise IOError, (errcode, 'http error: ' + errmsg, headers)
 
+	def retrieve(self, url, filename=None, reporthook=None):
+		filename, headers = _OriginalFancyURLopener.retrieve(self, url, filename, reporthook)
+		if os.name == 'mac':
+			_mac_setcreatortype(filename)
+		return filename, headers
+    			
 	def http_error_302(self, url, fp, errcode, errmsg, headers):
 		# XXX The server can force infinite recursion here!
 		if headers.has_key('location'):
