@@ -48,6 +48,8 @@ __version__ = "$Id$";
 	EDIT_REALPIX,			# enable editing of RealPix media (XXX probably non-functional)
 	CONVERT2REALPIX,		# conversion to RealPix
 
+	ALIGNTOOL,			# enable align tools
+
 	# Different capabilities within the hierarchy view
 	H_TRANSITIONS,
 	H_MODIFY_STRUCTURE,		# This is the biggy - decides between templates or not.
@@ -56,4 +58,4 @@ __version__ = "$Id$";
 	H_TIMESTRIP,			# Show snap!-like documents with correct toplevel par/seq
 	H_PLAYABLE,			# Toggle showing of playability of nodes
 	H_THUMBNAILS,			# Toggle showing of image thumbnails
-] = range(35)				# don't forget to update this range!
+] = range(36)				# don't forget to update this range!

@@ -88,14 +88,14 @@ FRAME_TEMPLATE = (
 		)
 	)
 )
-PLAYER_TEMPLATE = (
-	('Player Controls', 'toolbar', 'docked', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, 0, (
-		Button(usercmd.PLAY, TBICON_PLAY),
-		Button(usercmd.PAUSE, TBICON_PAUSE),
-		Button(usercmd.STOP, TBICON_STOP),
-		)
-	)
-)
+##PLAYER_TEMPLATE = (
+##	('Player Controls', 'toolbar', 'docked', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, 0, (
+##		Button(usercmd.PLAY, TBICON_PLAY),
+##		Button(usercmd.PAUSE, TBICON_PAUSE),
+##		Button(usercmd.STOP, TBICON_STOP),
+##		)
+##	)
+##)
 
 LINKING_TEMPLATE = (
 	('Linking and Timing', 'toolbar', 'docked', wndusercmd.TOOLBAR_LINKING, IDW_TOOLBAR_LINKING, grinsRC.IDR_TB_EDITOR, 0, (
@@ -153,7 +153,8 @@ TOOLBARS=[
 ##	PLAYER_TEMPLATE,
 	CONTAINERS_TEMPLATE,
 	LINKING_TEMPLATE,
-	ALIGN_TEMPLATE,
 ]
+if features.ALIGNTOOL in features.feature_set:
+	TOOLBARS.append(ALIGN_TEMPLATE)
 
 TOOLBARS.reverse()  # For now...

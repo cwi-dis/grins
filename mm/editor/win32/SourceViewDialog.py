@@ -44,7 +44,7 @@ class SourceViewDialog(ViewDialog.ViewDialog):
 		if not self.__textwindow:
 			import MenuTemplate
 			self.window = self.__textwindow = \
-				self.toplevel.window.textwindow("", readonly=self.readonly, xywh=self.last_geometry)
+				self.toplevel.window.textwindow("", readonly=self.readonly, xywh=self.last_geometry, title='Source')
 			self.__textwindow.set_mother(self)
 			self.setpopup(MenuTemplate.POPUP_SOURCEVIEW)
 		else:

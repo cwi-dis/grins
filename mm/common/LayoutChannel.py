@@ -1,6 +1,8 @@
 __version__ = "$Id$"
 
 from Channel import *
+import features
+
 #
 # This rather boring channel is used for laying-out other channels
 #
@@ -81,6 +83,8 @@ class LayoutChannel(ChannelWindow):
 			self._curvals['winsize'] = ((width, height), (50,50))
 			x, y = self._attrdict.get('winpos', (None, None))
 			title = mmchan.GetAttrDef('title', self._name)
+			if features.editor:
+				title = 'Previewer: %s' % title
 			if self.want_default_colormap:
 				self.window = windowinterface.newcmwindow(x, y,
 					width, height, title,
