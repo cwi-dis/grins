@@ -31,7 +31,7 @@ import MacOS
 def ITEMrange(fr, to): return range(fr, to+1)
 
 # Dialog parameters
-ID_DIALOG_ARCINFO=519
+from mw_resources import ID_DIALOG_ARCINFO
 ITEM_SRC_BEGIN=2
 ITEM_SRC_END=3
 ITEMLIST_SRC=ITEMrange(ITEM_SRC_BEGIN, ITEM_SRC_END)
@@ -47,7 +47,8 @@ ITEM_RESTORE=11
 ITEM_APPLY=12
 ITEM_OK=13
 
-ITEMLIST_ALL=ITEMrange(1, ITEM_OK)
+ITEM_BALLOONHELP=14
+ITEMLIST_ALL=ITEMrange(1, ITEM_BALLOONHELP)
 
 class ArcInfoDialog(windowinterface.MACDialog):
 	__rangelist = ['0-1 sec', '0-10 sec', '0-100 sec']
