@@ -10,6 +10,8 @@ __version__ = "$Id$"
 import Channel, RealChannel
 
 class RealAudioChannel(Channel.ChannelAsync, RealChannel.RealChannel):
+	node_attrs = Channel.ChannelAsync.node_attrs + ['duration']
+
 	def __init__(self, name, attrdict, scheduler, ui):
 		RealChannel.RealChannel.__init__(self)
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
