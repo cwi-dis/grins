@@ -8,7 +8,8 @@ import os
 import string
 CMIFLIB=os.path.join(sys.path[0], "../../../lib")
 sys.path.append(CMIFLIB)
-import license
+import licparser
+license = licparser
 import getopt
 
 Error = license.Error
