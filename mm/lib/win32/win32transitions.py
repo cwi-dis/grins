@@ -55,14 +55,17 @@ class TransitionEngine:
 		if not self.__transitiontype: return
 		self.__unregister_for_timeslices()
 		self.__transitiontype = None
-		topwindow = self.__windows[0]._topwindow
+		wnd = self.__windows[0]
+		if wnd.is_closed():
+			return
+		topwindow = wnd._topwindow
 		for win in self.__windows:
 			win._transition = None
 			win._drawsurf = None
 			if win._frozen  == 'transition':
 				win._passive = None
 				win._frozen = None
-		self.__clrfrozen(self.__windows[0].getwindowpos(), topwindow)
+		self.__clrfrozen(wnd.getwindowpos(), topwindow)
 		topwindow.update()
 
 	def __clrfrozen(self, (X,Y,W,H), window):
@@ -83,6 +86,8 @@ class TransitionEngine:
 		# transition window
 		# or parent window in multiElement transitions
 		wnd = self.__windows[0]
+		if wnd.is_closed():
+			return
 		
 		# assert that we paint the active surface the correct way 
 		# for each of the following cases:
@@ -158,6 +163,9 @@ class TransitionEngine:
 		self.__transitiontype.move_resize((0, 0, w, h))
 
 	def __onIdle(self):
+		if self.__windows[0].is_closed():
+			self.endtransition()
+			return
 		t_sec = time.time() - self.__start
 		if t_sec>=self.__end:
 			try:
