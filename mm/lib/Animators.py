@@ -762,7 +762,10 @@ class EffectiveAnimator:
 		name = node.attrdict.get('name')
 		# notify/update display value if we have a channel
 		if self.__chan:
-			self.__chan.updateattr(self.__node, self.__attr, value)
+			if self.__chan._anchor2button.has_key(name):
+				button = self.__chan._anchor2button[name]
+				if attr == 'coords':
+					button.updatecoordinates(value)
 			if debug:
 				print 'update area',self.__attr,'of channel',self.__chan._name,'to',value
 		elif debug:
@@ -818,6 +821,7 @@ def getregionattr(node, attr):
 	if node.GetChannel():
 		d = node.GetChannel().attrdict
 	else:
+		# not actually a region
 		d = node.attrdict
 
 	if attr in ('position', 'size', 'left', 'top', 'width', 'height','right','bottom'):
@@ -896,10 +900,9 @@ class AnimateElementParser:
 		self.__hasValidTarget = 0	# valid target node and attribute
 
 		self.__grinsattrname = ''	# grins internal target attribute name
-		self.__grinsext = 0			# is it a grins extension?
 
 		# locate target node
-		# for some elements not represented by nodes (region, transition)
+		# for some elements not represented by nodes (region, area, transition)
 		# create a virtual node 
 		if not hasattr(anim,'targetnode') or not anim.targetnode:
 			te = MMAttrdefs.getattr(anim, 'targetElement')
@@ -921,7 +924,6 @@ class AnimateElementParser:
 		else:
 			self.__target = anim.targetnode
 
-
 		# do we have a valid target node and attribute?
 		self.__hasValidTarget = self.__checkTarget()
 
@@ -932,7 +934,8 @@ class AnimateElementParser:
 
 		# Read time manipulation attributes
 		# speed="1" is a no-op, and speed="-1" means play backwards
-		# we have to get the absolute speed. This is relative to parent 
+		# This speed is relative to parent.
+		# The context absolute speed is set elsewhere.  
 		self.__speed = MMAttrdefs.getattr(anim, 'speed')
 		if self.__speed==0.0: # not allowed
 			self.__speed=1.0
@@ -944,7 +947,6 @@ class AnimateElementParser:
 			self.__accelerate = self.__accelerate/dt
 			self.__decelerate = self.__decelerate/dt
 		self.__autoReverse = MMAttrdefs.getattr(anim, 'autoReverse')
-
 
 	def __repr__(self):
 		import SMILTreeWrite
@@ -982,10 +984,8 @@ class AnimateElementParser:
 		accumulate = self.__accumulate
 		additive = self.__additive
 
-
 		# 1+: force first value display (fulfil: use f(0) if duration is undefined)
 		if not dur or dur<0 or (type(dur)==type('') and dur=='indefinite'): dur=0
-
 
 		# 2. return None on syntax or logic error
 
@@ -997,7 +997,7 @@ class AnimateElementParser:
 
 		# 3. Return explicitly animators for special attributes
 
-		# 'by-only animation' implies sum 
+		# for 'by-only animation' force: additive = 'sum' 
 		if self.__isByOnly(): additive = 'sum'
 
 		if self.__elementTag == 'animateColor' or self.__attrtype=='color':
@@ -1023,17 +1023,6 @@ class AnimateElementParser:
 			else:
 				return None
 
-		## Begin temp grins extensions
-		# position animation
-		if self.__grinsext:
-			values = self.__getNumInterpolationValues()
-			anim = Animator(attr, domval, values, dur, mode, times, splines, 
-					accumulate, additive)
-			anim.setRetunedValuesConverter(_round)
-			self.__setTimeManipulators(anim)
-			return anim
-		## End temp grins extensions
-
 		# 4. Return an animator based on the attr type
 		print 'Guessing animator for attribute',`self.__attrname`,'(', self.__attrtype,')'
 		anim = None
@@ -1042,10 +1031,12 @@ class AnimateElementParser:
 			anim = Animator(attr, domval, values, dur, mode, times, splines, 
 				accumulate, additive)
 			anim.setRetunedValuesConverter(_round)
+
 		elif self.__attrtype == 'float':
 			values = self.__getNumInterpolationValues()
 			anim = Animator(attr, domval, values, dur, mode, times, splines,
 				accumulate, additive)
+
 		elif self.__attrtype == 'string' or self.__attrtype == 'enum' or self.__attrtype == 'bool':
 			mode = 'discrete' # override calc mode
 			values = self.__getAlphaInterpolationValues()
@@ -1168,10 +1159,6 @@ class AnimateElementParser:
 			self.__domval = MMAttrdefs.getattr(self.__target, self.__attrname)
 			self.__grinsattrname = self.__attrname
 			self.__attrtype = MMAttrdefs.getattrtype(self.__attrname)
-
-		# check extensions
-		if self.__domval == None:
-			self.__checkExtensions()
 			
 		if self.__domval==None:
 			print 'Failed to get original DOM value for attr',self.__attrname,'from node',self.__target
@@ -1492,27 +1479,6 @@ class AnimateElementParser:
 			rl.append((x1, y1, x2, y2))
 		return rl
 
-	# temp
-	def __checkExtensions(self):
-		if not self.__target.GetChannel():
-			return
-		d = self.__target.GetChannel().attrdict
-		if not self.__domval and d.has_key('base_winoff'):
-			# check for temp grins extensions
-			self.__grinsext = 1
-			base_winoff = d['base_winoff']
-			if self.__attrname == 'region.left':
-				self.__domval = base_winoff[0]
-			elif self.__attrname == 'region.top':
-				self.__domval = base_winoff[1]
-			elif self.__attrname == 'region.width':
-				self.__domval = base_winoff[2]
-			elif self.__attrname == 'region.height':
-				self.__domval = base_winoff[3]
-		if self.__attrname:
-			self.__grinsattrname = self.__attrname
-			self.__attrtype = 'int'
-
 	def __checkNotNodeElementsTargets(self, te):
 		from MMNode import MMNode
 		anim = self.__anim
@@ -1531,6 +1497,7 @@ class AnimateElementParser:
 			anim.targetnode = newnode
 		elif ctx.transitions.has_key(te):
 			# transition
+			# XXX fix: crate one virtual node per transition
 			tr = ctx.transitions[te]
 			newnode = MMNode('imm',ctx,ctx.newuid())
 			newnode.attrdict = tr.copy()
