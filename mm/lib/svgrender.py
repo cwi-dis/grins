@@ -8,9 +8,10 @@ import svgdom
 import svgpath
 
 import string
-					
+
 class SVGRenderer:
-	filter = ['#comment', 'style', 'defs']
+	animateEl = ['animate', 'set', 'animateMotion', 'animateColor', 'animateTransform']
+	filter = ['#comment', 'style', 'defs'] + animateEl
 	def __init__(self, svgdoc, svggraphics):
 		self.svgdoc = svgdoc
 		root =  svgdoc.getRoot()
@@ -24,6 +25,9 @@ class SVGRenderer:
 		# for save/restore graphics
 		self._grstack = []
 	
+		#
+		self._verbose = 0
+
 	def getFilter(self):
 		return SVGRenderer.filter
 					
@@ -37,6 +41,8 @@ class SVGRenderer:
 	# DOMIterator listener interface
 	#
 	def startnode(self, node):
+		if not node.isVisible():
+			return
 		eltype = node.getType()
 		try:
 			fo = getattr(self, eltype)
@@ -49,6 +55,8 @@ class SVGRenderer:
 				print arg
 
 	def endnode(self, node):
+		if not node.isVisible():
+			return
 		eltype = node.getType()
 		if eltype in ('svg', 'g'):
 			try:
@@ -129,7 +137,7 @@ class SVGRenderer:
 				meetOrSlice = 'meet'
 			else:
 				align, meetOrSlice = ar
-			tflist = self.getViewboxTfList(node.getSize(), viewbox, align, meetOrSlice)
+			tflist = self.getViewboxTfList((w, h), viewbox, align, meetOrSlice)
 			self.graphics.applyTfList(tflist)
 		self.graphics.applyStyle(node.getStyle())
 		self.graphics.applyTfList(node.getTransform())
@@ -197,13 +205,12 @@ class SVGRenderer:
 			self.endgroup(node)
 
 	def title(self, node):
-		print 'TITLE:', `node.data`
-
-	def style(self, node):
-		pass
+		if self._verbose:
+			print 'TITLE:', `node.data`
 
 	def desc(self, node):
-		print 'DESC:', `node.data`
+		if self._verbose:
+			print 'DESC:', `node.data`
 	
 	def svgelement(self, node):
 		print 'unprocessed element', node
@@ -217,6 +224,7 @@ class SVGRenderer:
 	def restoreGraphics(self):
 		assert len(self._grstack)>0, 'unpaired save/restore graphics'
 		self.graphics = self._grstack.pop()
+
 
 ####################################
 # test
