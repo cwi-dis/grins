@@ -311,7 +311,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, '&Tutorial', None, GRINS_TUTORIAL),
 		(FLAG_ALL, ENTRY, 'T&emplates Guide', None, GRINS_TDG),
 		(FLAG_ALL, ENTRY, '&GRiNS Reference Manual', None, GRINS_REFERENCE),
-		(FLAG_ALL, ENTRY, 'GRiNS De&mos', None, GRINS_DENOS),
+		(FLAG_ALL, ENTRY, 'GRiNS De&mos', None, GRINS_DEMOS),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
 		(FLAG_ALL, ENTRY, '&Documentation', None, HELP_CONTENTS),
