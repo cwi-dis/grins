@@ -232,7 +232,7 @@ def fmtfloat(val, suffix = '', withsign = 0, prec = -1):
 		else:
 			str2 = str2 + '0'*prec
 			str = str1 + '.' + str2[:prec]
-	while str[:1] == '0' and str[1:2] in '0123456789':
+	while len(str) > 1 and str[0] == '0' and str[1] in '0123456789':
 		str = str[1:]
 	if not str:
 		str = '0'
@@ -566,7 +566,7 @@ def getsyncarc(writer, node, isend):
 				name = escape_name(writer.uid2name[arc.srcnode.GetUID()]) + '.'
 			if arc.event is not None:
 				name = name + escape_name(arc.event, 0)
-			if arc.delay is not None:
+			if arc.delay:
 				name = name + fmtfloat(arc.delay, withsign = 1)
 			list.append(name)
 		else:
