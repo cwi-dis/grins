@@ -128,7 +128,8 @@ ExampleVideoSurface::Blt(UCHAR*		    pImageData,
 			     REF(PNxRect)	    inDestRect,
 			     REF(PNxRect)	    inSrcRect)
 {
-    BeginOptimizedBlt(pBitmapInfo);
+    PN_RESULT res = BeginOptimizedBlt(pBitmapInfo);
+	if(FAILED(res)) return res;
     return OptimizedBlt(pImageData, inDestRect, inSrcRect);
 }
 
