@@ -140,7 +140,7 @@ def build(src, dir, project, target, dofreeze, dobuild):
 	rv = 0
 	if dofreeze:
 		print "-- Freezing", src
-		macfreeze.process('source', src, dir)
+		macfreeze.process('source', src, dir, with_ifdef=1)
 
 	if dobuild:
 		print "-- Building", target, "in", project
