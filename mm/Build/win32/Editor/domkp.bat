@@ -10,7 +10,7 @@ del *.c
 del log.txt
 del FreezeOpts
 
-set PYTHON_EXE=d:\ufs\mm\cmif\bin\python.exe
+set PYTHON_EXE=d:\ufs\mm\cmif\bin\win32\python.exe
 set PYTHONHOME=d:\ufs\mm\python
 call c:\Program Files\Microsoft Visual Studio\VC98\Bin\vcvars32.bat
 
