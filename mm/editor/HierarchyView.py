@@ -155,6 +155,12 @@ class HierarchyView(HierarchyViewDialog):
 			self.interiorcommands.append(CORRECTLOCALTIMESCALE(callback = (self.timescalecall, ('cfocus',))))
 			self.commands.append(PLAYABLE(callback = (self.playablecall, ())))
 
+		self.timelinezoomcommands = [
+			TIMELINEZOOMIN(callback = (self.timelinezoom, ('in',))),
+			TIMELINEZOOMOUT(callback = (self.timelinezoom, ('out',))),
+			TIMELINEZOOMRESET(callback = (self.timelinezoom, (None,))),
+			]
+
 		self.mediacommands = self._getmediacommands(self.toplevel.root.context)
 
 		self.singlechildcommands = [
@@ -354,6 +360,8 @@ class HierarchyView(HierarchyViewDialog):
 			commands = commands + self.finisheventcommands
 		if fntype in MMNode.interiortypes:
 			commands = commands + self.interiorcommands # Add interior structure modifying commands.
+			if fnode.showtime:
+				commands = commands + self.timelinezoomcommands
 		if fntype not in MMNode.interiortypes and \
 		   fnode.GetChannelType() != 'sound' and \
 		   not (self.toplevel.links and self.toplevel.links.islinksrc(fnode)):
@@ -432,8 +440,8 @@ class HierarchyView(HierarchyViewDialog):
 		if len(widgets) == 1:# If there is one selected element:
 			widget = widgets[0]
 			if isinstance(widget, StructureWidgets.TransitionWidget):
-				# O.k, I'm not quite sure what this is meant to do: -mjvdg
-				which, transitionnames = self.get_selected_widget().posttransitionmenu()
+				# set dynamic cascade entries for transition popup
+				which, transitionnames = widget.posttransitionmenu()
 				self.translist = []
 				for trans in transitionnames:
 					self.translist.append((trans, (which, trans)))
@@ -451,11 +459,8 @@ class HierarchyView(HierarchyViewDialog):
 		if self.selected_icon is not None:
 			a = self.selected_icon.get_contextmenu()
 			if a is not None:
-				self.setpopup(a)
-			else:
-				self.setpopup(popupmenu)
-		else:
-			self.setpopup(popupmenu)
+				popupmenu = a
+		self.setpopup(popupmenu)
 
 		self.setstate()
 
@@ -1838,7 +1843,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		if self.focus_lock:
 			print "WARNING: recursive focus detected in the HierarchyView. Continuing."
-			return 0
+			return
 
 		# If the widget is None, well just clear everything.
 		if widget is None:
@@ -2042,11 +2047,28 @@ class HierarchyView(HierarchyViewDialog):
 			node.showtime = which
 		self.need_resize = 1
 		self.draw()
+
+	def timelinezoom(self, inout):
+		self.toplevel.setwaiting()
+		node = self.get_selected_node()
+		try:
+			scale = node.min_pxl_per_sec
+		except:
+			scale = MIN_PXL_PER_SEC_DEFAULT
+		if inout == 'in':
+			node.min_pxl_per_sec = scale * 1.2
+		elif inout == 'out':
+			node.min_pxl_per_sec = scale / 1.2
+		else:			# reset zoom
+			node.min_pxl_per_sec = 0
+			del node.min_pxl_per_sec
+		self.need_resize = 1
+		self.draw()
 		
 	def clear_showtime(self, node):
 		node.showtime = 0
-		for c in node.children:
-			self.clear_showtime(c)
+##		for c in node.children:
+##			self.clear_showtime(c)
 
 	def bandwidthcall(self):
 		self.toplevel.setwaiting()

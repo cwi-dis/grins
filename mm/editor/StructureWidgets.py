@@ -397,13 +397,15 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				p0, p1 = self.addcollisions(t0, t2, timemapper, (t0, t1, t2, download, begindelay))
 				self.timemapper.addcollision(t0, p0)
 				self.timemapper.addcollision(t2, p1)
-				min_pxl_per_sec = 0
+				min_pxl_per_sec = MIN_PXL_PER_SEC_DEFAULT
 				if self.timeline is None or self.timeline.minwidth == 0:
 					try:
-						min_pxl_per_sec = self.node.__min_pxl_per_sec
+						min_pxl_per_sec = self.node.min_pxl_per_sec
 					except AttributeError:
 						pass
-				self.node.__min_pxl_per_sec = timemapper.calculate(self.node.showtime in ('cfocus', 'bwstrip'), min_pixels_per_second = min_pxl_per_sec)
+				pxl_per_sec = timemapper.calculate(self.node.showtime in ('cfocus', 'bwstrip'), min_pixels_per_second = min_pxl_per_sec)
+				if not hasattr(self.node, 'min_pxl_per_sec'):
+					self.node.min_pxl_per_sec = pxl_per_sec
 				t0, t1, t2, dummy, dummy = self.GetTimes('virtual')
 				w = timemapper.time2pixel(t2, align='right') - timemapper.time2pixel(t0)
 				if w > self.boxsize[0]:
@@ -1168,10 +1170,10 @@ class StructureObjWidget(MMNodeWidget):
 	def get_clicked_obj_at(self, pos):
 		# Returns an object which reacts to a click() event.
 		# This is duplicated code, so it's getting a bit hacky again.
-		if self.collapsebutton is not None and self.collapsebutton.is_hit(pos):
-			return self.collapsebutton
 		if self.is_hit(pos):
-			if self.iconbox.is_hit(pos):
+			if self.collapsebutton is not None and self.collapsebutton.is_hit(pos):
+				return self.collapsebutton
+			elif self.iconbox.is_hit(pos):
 				return self.iconbox.get_clicked_obj_at(pos)
 			elif self.iscollapsed():
 				return self
@@ -2536,7 +2538,7 @@ class TimelineWidget(MMWidgetDecoration):
 			line_y = y + (h/2)
 			tick_top = line_y
 			tick_bot = y+h-(h/3)
-			longtick_top = line_y
+			longtick_top = line_y - 3
 			longtick_bot = y + h - (h/6)
 			midtick_top = line_y
 			midtick_bot = (tick_bot+longtick_bot)/2
@@ -2549,7 +2551,7 @@ class TimelineWidget(MMWidgetDecoration):
 			tick_top = y + (h/3)
 			tick_bot = line_y
 			longtick_top = y + (h/6)
-			longtick_bot = line_y
+			longtick_bot = line_y + 3
 			midtick_top = (tick_top+longtick_top)/2
 			midtick_bot = line_y
 			endtick_top = longtick_top
