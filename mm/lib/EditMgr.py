@@ -136,7 +136,6 @@ class EditMgr(Clipboard.Clipboard):
 	def __start_transaction(self, type, undo=0):
 		done = []
 		for x in self.registry[:]:
-			method = x.transaction
 			if not x.transaction(type):
 				for x in done:
 					x.rollback()
@@ -361,11 +360,11 @@ class EditMgr(Clipboard.Clipboard):
 		self.addstep('setnodevalues', node, node.GetValues())
 		node.SetValues(values)
 
-	def undo_setnodevalues(node, oldvalues):
+	def undo_setnodevalues(self, node, oldvalues):
 		# XXX Shouldn't this be (self, node, oldvalues)?? 
 		self.setnodevalues(node, oldvalues)
 
-	def clean_setnodevalues(node, oldvalues):
+	def clean_setnodevalues(self, node, oldvalues):
 		pass
 
 	#
