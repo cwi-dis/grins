@@ -16,7 +16,7 @@ PreferencesDialogError="PreferencesDialog.Error"
 def ITEMrange(fr, to): return range(fr, to+1)
 
 # Dialog parameters
-ID_DIALOG_PREFERENCES=528
+from mw_resources import ID_DIALOG_PREFERENCES
 ITEM_OVERDUB=3
 ITEM_CAPTIONS=4
 ITEM_BITRATE=5
