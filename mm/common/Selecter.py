@@ -44,7 +44,6 @@ class Selecter:
 			self.scheduler.stop_all()
 		else:
 			self.fullreset()
-		self.stopped()
 
 	def stopped(self):
 		self.runslots = []
