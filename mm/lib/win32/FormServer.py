@@ -16,12 +16,10 @@ forms implementation and modules that use them.
 from AttrEditForm import AttrEditForm
 
 appform={
-	'attr_edit':{'cmd':-1,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm},
+	'attr_edit':{'cmd':-1,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm,'freezesize':1},
 	}
 
 import settings
-if settings.get('use_tab_attr_editor'):
-	appform['attr_edit']={'cmd':-1,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm,'freezesize':1}
 if not settings.get('lightweight'):
 	from NodeInfoForm import NodeInfoForm
 	from AnchorEditForm import AnchorEditForm
