@@ -12,15 +12,15 @@ __version__ = "$Id$"
 # The *STOP events have no corresponding upcalls.
 #
 [NO_EVENT, SCHED, SCHED_DONE, PLAY, PLAY_DONE, SCHED_STOP, PLAY_STOP,
-	SYNC, SYNC_DONE, PLAY_ARM, ARM_DONE, SCHED_FINISH, BAG_START,
+	PLAY_ARM, ARM_DONE, SCHED_FINISH, BAG_START,
 	BAG_STOP, BAG_DONE, LOOPSTART, LOOPSTART_DONE,
 	LOOPEND, LOOPEND_DONE, LOOPRESTART, PLAY_OPTIONAL_ARM,
-	SCHED_STOPPING, SCHED_START] = range(23)
+	SCHED_STOPPING, SCHED_START] = range(21)
 
 ## side_effects = (PLAY, PLAY_STOP, PLAY_ARM)
 
 op_names = [ 'NO_EVENT', 'SCHED', 'SCHED_DONE', 'PLAY', 'PLAY_DONE',
-	     'SCHED_STOP', 'PLAY_STOP', 'SYNC', 'SYNC_DONE',
+	     'SCHED_STOP', 'PLAY_STOP',
 	     'PLAY_ARM', 'ARM_DONE', 'SCHED_FINISH', 'BAG_START',
 	     'BAG_STOP', 'BAG_DONE', 'LOOPSTART',
 	     'LOOPSTART_DONE', 'LOOPEND', 'LOOPEND_DONE', 'LOOPRESTART',
@@ -29,22 +29,12 @@ op_names = [ 'NO_EVENT', 'SCHED', 'SCHED_DONE', 'PLAY', 'PLAY_DONE',
 def ev2string(ev):
 	try:
 		opcode, node = ev
-		if opcode == SYNC:
-			delay, node = node
-			if type(node) == type(0):
-				return 'SYNC(%e, %d)' % (delay, node)
-			return 'SYNC(%e, %s)' % (delay, _getname(node))
-		if opcode == SYNC_DONE and type(node) == type(0):
-			return 'SYNC_DONE(%d)' % node
-		name = _getname(node)
-		return op_names[opcode] + '(' + name + ')'
+		return '%s(%s)' % (op_names[opcode], _getname(node))
 	except:
 		return 'ILL-FORMED-EVENT:'+`ev`
 		
 def _getname(node):
-	uid = node.GetUID()
-	name = node.GetAttrDef('name', '') + '#' + uid
-	return name
+	return '%s#%s' % (node.GetAttrDef('name', ''), node.GetUID())
 
 def evlist2string(evlist):
 	first = 1
