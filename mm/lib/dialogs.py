@@ -246,6 +246,13 @@ def showdialog(*text):
 	return r
 
 def showmessage(text):
+##	if hasattr(windowinterface, 'Xt'):
+##		import Xm, Xmd
+##		dialog = Xm.CreateMessageDialog(windowinterface._toplevel._main, 'popup', {'messageString': text})
+##		Xm.MessageBoxGetChild(d, Xmd.DIALOG_CANCEL_BUTTON).UnmanageChild()
+##		Xm.MessageBoxGetChild(d, Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
+##		dialog.ManageChild()
+##		return
 	dummy = showdialog(text, DEFBUTTON + DONEMSG)
 
 def showquestion(text):
@@ -271,3 +278,93 @@ def multchoice(prompt, list, defindex):
 				return i - 1	# offset due to prompt
 	return None
 		
+def getstring(prompt):
+	fg = 0, 0, 0
+	bg = 255, 255, 255
+	w = windowinterface.newwindow(0,0,50,10,'DIALOG')
+	d = w.newdisplaylist()
+	bl, fh, ps = d.setfont('Times-Roman', 10)
+	d.setpos(0, bl)
+	dummy = d.writestr(prompt)
+	cursor = d.writestr(' ')
+	sw = w.newwindow(cursor)
+	sw.bgcolor(fg)
+	sw.fgcolor(bg)
+	sd = sw.newdisplaylist()
+	bl, fh, ps = sd.setfont('Times-Roman', 10)
+	sd.setpos(0, bl)
+	dummy = sd.writestr(' ')
+	d.render()
+	sd.render()
+	str = ''
+	redraw = 0
+	curpos = 0
+	while 1:
+		win, ev, val = events.readevent()
+		if ev == EVENTS.WindowExit:
+			w.close()
+			return None
+		elif ev == EVENTS.ResizeWindow:
+			redraw = 1
+		elif ev == EVENTS.KeyboardInput:
+			if val == '\b':
+				if len(str) >= 0 and curpos > 0:
+					str = str[:curpos-1] + str[curpos:]
+					redraw = 1
+					curpos = curpos - 1
+			elif val in ('\033', '\n', '\r'):
+				w.close()
+				return str
+			elif ' ' <= val <= '~':
+				str = str[:curpos] + val + str[curpos:]
+				curpos = curpos + 1
+				redraw = 1
+			elif val == '\001':		# ^A
+				if curpos != 0:
+					redraw = 1
+				curpos = 0
+			elif val == '\005':		# ^E		
+				if curpos != len(str):
+					redraw = 1
+				curpos = len(str)
+			elif val == '\002':		# ^B
+				if curpos > 0:
+					curpos = curpos - 1
+					redraw = 1
+			elif val == '\006':		# ^F
+				if curpos < len(str):
+					curpos = curpos + 1
+					redraw = 1
+			elif val == '\013':		# ^K
+				if len(str) > curpos:
+					str = str[:curpos]
+					redraw = 1
+			elif val == '\004':		# ^D
+				if len(str) > curpos:
+					str = str[:curpos] + str[curpos+1:]
+					redraw = 1
+		if redraw:
+			sw.close()
+			nd = w.newdisplaylist()
+			bl, fh, ps = nd.setfont('Times-Roman', 10)
+			nd.setpos(0, bl)
+			dummy = nd.writestr(prompt + str[:curpos])
+			if curpos >= len(str):
+				c = ' '
+				cursor = nd.writestr(c)
+			else:
+				c = str[curpos]
+				cursor = nd.writestr(c)
+				dummy = nd.writestr(str[curpos+1:])
+			sw = w.newwindow(cursor)
+			sw.bgcolor(fg)
+			sw.fgcolor(bg)
+			sd = sw.newdisplaylist()
+			bl, fh, ps = sd.setfont('Times-Roman', 10)
+			sd.setpos(0, bl)
+			dummy = sd.writestr(c)
+			nd.render()
+			d.close()
+			d = nd
+			sd.render()
+			redraw = 0
