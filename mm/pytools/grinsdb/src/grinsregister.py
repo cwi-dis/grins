@@ -7,6 +7,7 @@ import crypt
 import sys
 import time
 import rfc822
+import tempfile
 import grinsdb
 import grpasswd
 
@@ -26,8 +27,13 @@ Error="grinsregister.Error"
 def main():
 	status = 0
 	if len(sys.argv) <= 1:
+		tmpfile = tempfile.mktemp()
+		tfp = open(tmpfile, 'w+')
+		os.unlink(tmpfile)
+		tfp.write(sys.stdin.read())
+		tfp.seek(0)
 		try:
-			register(sys.stdin, "<stdin>")
+			register(tfp, "<stdin copied to '%s'>"%tmpfile)
 		except Error:
 			status = 1
 	else:
@@ -37,6 +43,14 @@ def main():
 				register(fp, file)
 			except Error:
 				status = 1
+			else:
+				dir, fn = os.path.split(file)
+				tmpfn = os.path.join(dir, ','+fn)
+				try:
+					os.remove(tmpfn)
+				except OSError:
+					pass
+				os.rename(file, tmpfn)
 	sys.exit(status)
 	
 def register(file, filename):
