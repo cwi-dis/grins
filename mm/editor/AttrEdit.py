@@ -196,7 +196,9 @@ class NodeWrapper() = Wrapper():
 				if name in namelist: continue
 				if MMAttrdefs.getdef(name)[5] = 'channel':
 					namelist.append(name)
-			namelist = namelist + cclass.node_attrs
+			for name in cclass.node_attrs:
+				if name in namelist: continue
+				namelist.append(name)
 		except:
 			pass # Ignore errors in the above
 		# Merge in nonstandard attributes (except synctolist!)
@@ -370,6 +372,8 @@ class AttrEditor() = Dialog():
 		self.wrapper = wrapper
 		self.namelist = wrapper.attrnames()
 		#
+		self.changed = -1 # Neither 0 not 1
+		#
 		itemwidth = 450
 		itemheight = 25
 		#
@@ -456,41 +460,32 @@ class AttrEditor() = Dialog():
 			self.wrapper.unregister(self)
 			Dialog.hide(self)
 	#
+	def setchanged(self, changed):
+		if self.changed <> changed:
+			self.changed = changed
+			self.activate_buttons(self.changed)
+	#
 	def getvalues(self):
 		self.form.freeze_form()
 		for b in self.blist: b.getvalue()
-		self.changed = 0
-		self.fixbuttons()
+		self.setchanged(0)
 		self.form.unfreeze_form()
 	#
 	def setvalues(self):
 		if not self.wrapper.transaction(): return 0
 		self.form.freeze_form()
 		for b in self.blist: b.setvalue()
-		self.changed = 0
-		self.fixbuttons()
-		self.form.unfreeze_form()
+		self.setchanged(0)
 		self.wrapper.commit()
+		self.form.unfreeze_form()
 		return 1
 	#
 	def fixvalues(self):
 		self.fixfocus()
-		changed = 0
 		self.form.freeze_form()
 		for b in self.blist:
 			b.fixvalue()
-			if b.changed: changed = 1
-		self.changed = changed
-		self.fixbuttons()
 		self.form.unfreeze_form()
-	#
-	def fixbuttons(self):
-		if self.changed:
-			boxtype = UP_BOX
-		else:
-			boxtype = FRAME_BOX
-		for b in self.ok_button,self.apply_button,self.restore_button:
-			b.boxtype = boxtype
 	#
 	def cancel_callback(self, dummy):
 		self.hide()
@@ -512,7 +507,6 @@ class AttrEditor() = Dialog():
 		self.fixfocus()
 		if not self.changed or self.setvalues():
 			self.hide()
-			return
 		obj.set_button(0)
 	#
 	def fixfocus(self):
@@ -577,21 +571,20 @@ class ButtonRow():
 				b.wrapper.delattr(b.name)
 			else:
 				b.wrapper.setattr(b.name, b.currentvalue)
-		b.getvalue()
+		b.changed = 0
+		# b.update() # Don't -- commit will do that
 	#
 	def fixvalue(b):
-		if b.isdefault and b.changed:
+		if not b.changed:
+			b.getvalue()
+		elif b.isdefault:
 			b.currentvalue = b.wrapper.getdefault(b.name)
 			b.update()
-		elif not b.changed:
-			b.getvalue()
 	#
 	def helpcallback(b, dummy):
-		attrdef = self.wrapper.getdef(b.name)
+		attrdef = b.wrapper.getdef(b.name)
 		fl.show_message('attribute: ' + b.name, \
-			'default: ' + b.valuerepr(b.defaultvalue), \
-			attrdef[4])
-		# 
+			'default: ' + b.valuerepr(b.defaultvalue), attrdef[4])
 	#
 	def valuecallback(b, dummy):
 		newtext = b.value.get_input()[:INPUT_MAX-1]
@@ -610,22 +603,22 @@ class ButtonRow():
 			fl.show_message('Syntax error', msg2, msg)
 			b.update()
 			return
-		b.changed = b.attreditor.changed = 1
 		b.currentvalue = value
 		b.isdefault = 0
+		b.changed = 1
+		b.attreditor.setchanged(1)
 		b.update()
-		b.attreditor.fixbuttons()
 	#
 	def resetcallback(b, dummy):
-		b.changed = b.attreditor.changed = 1
 		b.isdefault = b.reset.get_button()
 		if b.isdefault:
 			b.lastvalue = b.currentvalue
 			b.currentvalue = b.defaultvalue
 		else:
 			b.currentvalue = b.lastvalue
+		b.changed = 1
+		b.attreditor.setchanged(1)
 		b.update()
-		b.attreditor.fixbuttons()
 	#
 	def update(b):
 		b.currenttext = b.valuerepr(b.currentvalue)
@@ -634,11 +627,13 @@ class ButtonRow():
 		if b.isdefault and not b.changed:
 			b.reset.hide_object()
 		else:
+			b.reset.freeze_object()
 			if b.changed:
 				b.reset.boxtype = UP_BOX
 			else:
 				b.reset.boxtype = FRAME_BOX
 			b.reset.show_object()
+			b.reset.unfreeze_object()
 	#
 	def valuerepr(b, value):
 		return b.wrapper.valuerepr(b.name, value)
