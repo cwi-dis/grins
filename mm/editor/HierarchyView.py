@@ -1560,8 +1560,7 @@ class HierarchyView(HierarchyViewDialog):
 				if mimetype:
 					mimetype = string.split(mimetype, '/')[0]
 				cnode = template.DeepCopy()
-				# set collapsed and autoroute option
-				cnode.collapsed = 1
+				# set autoroute option
 				cnode.SetAttr('project_autoroute', 1)
 				newnode = cnode.findMimetypeAcceptor(mimetype)
 		if newnode is not None:
@@ -1962,10 +1961,8 @@ class HierarchyView(HierarchyViewDialog):
 			self.draw()
 			return None
 		if cmd == 'copy':
-			if __debug__: print 'DBG: was', cmd, srcnode
 			cmd = 'link'
 			srcnode = srcnode.DeepCopy()
-			if __debug__: print 'DBG: now', cmd, srcnode, srcnode.GetParent()
 			mustdestroy = srcnode
 		if srcnode.context is not self.root.context:
 			# Node comes from another document.
@@ -2129,7 +2126,6 @@ class HierarchyView(HierarchyViewDialog):
 			widget = widget.get_mmwidget()
 
 		widget.select()
-##		print 'DBG selectwidget', widget, 'scroll', scroll, widget.get_box()
 		if scroll:
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 
@@ -2175,7 +2171,6 @@ class HierarchyView(HierarchyViewDialog):
 				self.focus_lock = 1
 				self.editmgr.addglobalfocus([widget.get_node()])
 				self.focus_lock = 0
-##		print 'DBG: alsoselect', widget, 'scroll', scroll, widget.get_box()
 		if scroll:
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 
@@ -2369,7 +2364,6 @@ class HierarchyView(HierarchyViewDialog):
 		dialog = windowinterface.BandwidthComputeDialog(msg, parent=self.getparentwindow())
 		bandwidth, prerolltime, delaycount, errorseconds, errorcount, stalls = \
 			BandwidthCompute.compute_bandwidth(self.root)
-		if __debug__: print 'DBG: stalls:', stalls
 		dialog.setinfo(prerolltime, errorseconds, delaycount, errorcount)
 		dialog.done()
 		self.need_redraw = 1
@@ -2476,12 +2470,6 @@ class HierarchyView(HierarchyViewDialog):
 		timemapper.addmarker(time)
 		timeline.addmarker(time)
 		ntime, is_exact = obj.pixel2time(px, 'left', timemapper)
-		if not is_exact: #DBG
-			print "Warning: marker moved", time, ntime #DBG
-##		print 'MARK', time, 'at', px
-##		print 'MAPPER', timemapper
-##		print 'LINE', timeline
-##		print 'MARKNODE', marknode
 
 	def set_event_source(self):
 		if len(self.multi_selected_widgets) > 0:
