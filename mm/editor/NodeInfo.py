@@ -306,29 +306,37 @@ class NodeInfo(NodeInfoDialog):
 	# dir from the resulting pathname.
 	#
 	def browser_callback(self):
-		import urllib
-		type, filename = urllib.splittype(self.filename)
-		if type:
-			windowinterface.showmessage('Cannot browse URLs')
-			return
-		if filename == '' or filename == '/dev/null':
-			dir, file = '', ''
+		cwd = self.toplevel.dirname
+		if not cwd:
+			cwd = os.getcwd()
+		elif not os.path.isabs(cwd):
+			cwd = os.path.join(os.getcwd(), cwd)
+		file = self.filename
+		if file == '' or file == '/dev/null':
+			dir, file = cwd, ''
 		else:
-			if filename[-1] == '/':
-				dir = urllib.url2pathname(filename)
-				file = os.curdir
+			import urllib
+			type, file = urllib.splittype(file)
+			if type:
+				windowinterface.showmessage('Cannot browse URLs')
+				return
+			file = urllib.url2pathname(file)
+			file = os.path.join(cwd, file)
+			if os.path.isdir(file):
+				dir, file = file, ''
 			else:
-				dir, file = os.path.split(urllib.url2pathname(
-					filename))
+				dir, file = os.path.split(file)
 		windowinterface.FileDialog('Select file', dir, '*', file,
 					   self.browserfile_callback, None)
 
 	def browserfile_callback(self, pathname):
-		import urllib, os
+		import urllib
 		if os.path.isabs(pathname):
 			cwd = self.toplevel.dirname
 			if not cwd:
 				cwd = os.getcwd()
+			elif not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
 			if os.path.isdir(pathname):
 				dir, file = pathname, os.curdir
 			else:
