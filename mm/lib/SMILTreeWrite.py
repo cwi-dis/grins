@@ -433,7 +433,7 @@ def getsubregionatt(writer, node, attr):
 			return None
 
 		if type(val) == type (0.0):
-			return fmtfloat(100*val, '%', prec = 1)
+			return fmtfloat(100*val, '%', prec = 2)
 		else:
 			return str(val)
 	return None
@@ -1857,7 +1857,7 @@ class SMILWriter(SMIL):
 			# write only no auto values
 			if value != None:
 				if type(value) is type(0.0):
-					value = '%d%%' % int(value*100+0.5)
+					value = '%s%%' %fmtfloat(value*100, prec=2)
 				elif type(value) is type(0):
 					value = '%d' % value
 				attrlist.append((name, value))
