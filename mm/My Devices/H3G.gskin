@@ -1,0 +1,9 @@
+image begin_end_icon.gif
+display 35 6 170 210
+play rect 52 226 36 22
+stop rect 152 226 36 22
+exit circle 62 268 15
+open circle 174 268 15
+tab poly 137 278 137 293 149 286
+activate rect 107 274 25 25
+skin rect 113 257 11 13
