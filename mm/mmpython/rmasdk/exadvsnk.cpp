@@ -35,6 +35,7 @@ ExampleClientAdviceSink::ExampleClientAdviceSink(IUnknown* pUnknown)
     , m_pUnknown (NULL)
     , m_pRegistry (NULL)
 	, m_pyAdviceSink(NULL)
+	, m_bBeginOnPostSeek(FALSE)
 	{
     if (pUnknown)
 		{
@@ -282,7 +283,7 @@ ExampleClientAdviceSink::OnPreSeek(	UINT32	ulOldTime,
 						UINT32	ulNewTime)
 	{
 	//fprintf(stdout, "OnPreSeek(%ld, %ld)\n", ulOldTime, ulNewTime);
-	if(m_pyAdviceSink)
+	if(0 && m_pyAdviceSink)
 		{
 		CallerHelper helper("OnPreSeek",m_pyAdviceSink);
 		if(helper.HaveHandler())helper.call(ulOldTime,ulNewTime);
@@ -300,16 +301,16 @@ ExampleClientAdviceSink::OnPreSeek(	UINT32	ulOldTime,
  *  time for the stream's time line after the seek.
  */
 STDMETHODIMP
-ExampleClientAdviceSink::OnPostSeek(	UINT32	ulOldTime,
+ExampleClientAdviceSink::OnPostSeek(UINT32	ulOldTime,
 						UINT32	ulNewTime)
 	{
     //fprintf(stdout, "OnPostSeek(%ld, %ld)\n", ulOldTime, ulNewTime);
  	if(m_pyAdviceSink)
 		{
 		CallerHelper helper("OnPostSeek",m_pyAdviceSink);
-		if(helper.HaveHandler())helper.call(ulOldTime,ulNewTime);
+		if(helper.HaveHandler()) helper.call(ulOldTime,ulNewTime);
 		}
-   return PNR_OK;
+	return PNR_OK;
 	}
 
 
