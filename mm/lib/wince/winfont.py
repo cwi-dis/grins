@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
-import string
 import wingdi
+import wincon
 
 from sysmetrics import *
 
@@ -24,21 +24,21 @@ fonts = _fontmap.keys()
 
 # Parse a font name
 def _parsefontname(fontname):
-	list = string.splitfields(fontname, '-')
+	list = fontname.split('-')
 	if len(list) != 15:
 		raise error, 'fontname not well-formed'
 	return list
 
 # Compose font name
 def _makefontname(font):
-	return string.joinfields(font, '-')
+	return '-'.join(font)
 
 _fontcache = {}
 
 # Find a font with font name at point size
 def findfont(fontname, pointsize):
 	if type(pointsize)==type(''):
-		pointsize = string.atoi(pointsize)
+		pointsize = int(pointsize)
 	pointsize = int(pointsize) # in case of float
 	if fontname in fonts:
 		fontname = _fontmap[fontname]
@@ -81,12 +81,13 @@ def delfonts():
 class _Font:
 	def __init__(self, fontname, pointsize):
 		if type(pointsize)==type(''):
-			pointsize=string.atoi(pointsize)
+			pointsize=int(pointsize)
 		pointsize = int(pointsize+_POINTSIZEOFFSET)	# correction because of tiny fonts on Windows
 		#pointsize = (pointsize*dpi_y+36)/72 # screen correction
 		global user_charset
 		self._fd = {'name':fontname, 'height':-pointsize, 'weight':540}
-		self._hfont = wingdi.CreateFontIndirect(self._fd)		
+##		self._hfont = wingdi.CreateFontIndirect(self._fd)
+		self._hfont = wingdi.GetStockObject(wincon.SYSTEM_FONT)
 		self._tm = self.gettextmetrics()
 
 	# Delete the associated OS font
@@ -129,13 +130,11 @@ class _Font:
 
 	# Returns this font pointsize
 	def pointsize(self):
-		ps=self._fd['height']
-		if ps<0:ps=-ps
-		return ps
+		return self.fontheightPXL() / 12.0
 	
 	# Returns the string size in mm	
 	def strsizePXL(self,str):
-		strlist = string.splitfields(str, '\n')
+		strlist = str.split('\n')
 		hdc = winuser.GetDC()
 		dc = wingdi.CreateDCFromHandle(hdc)
 		self._hfont_org = dc.SelectObject(self._hfont)
