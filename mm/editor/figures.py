@@ -76,8 +76,12 @@ class box():
 		v2f(w, h)
 		v2f(0, h)
 		endclosedline()
+		(ml, mr, mb, mt) = getscrmask()
+		# Now we need untranslated coordinates!  (Or do we?)
+		#myscrmask(x, x+w, y, y+h)
 		translate(w/2, h/2, 0)
 		putlabel(self.label)
+		scrmask(ml, mr, mb, mt)
 		popmatrix()
 		linewidth(l)
 
@@ -99,43 +103,15 @@ class diamond():
 		return self
 
 	def draw(self):
-		if self.hidden <> 0:
-			return
-		x = self.x
-		y = self.y
-		w = self.w
-		h = self.h
-		l = self.l
-		channelcolor()
-		pushmatrix()
-		translate(x+w/2, y, 0)
-		bgnpolygon()
-		v2f(0, 0)
-		v2f(w/2, h/2)
-		v2f(0, h)
-		v2f(-w/2, h/2)
-		endpolygon()
-		bgnline()
-		v2f(0, 0)
-		v2f(0, -l)
-		endline()
-		l = getlwidth()
-		linewidth(l * 2)
-		if self.kind = FOCUS_CHAN:
-			focuscolor()
-		bgnclosedline()
-		v2f(0, 0)
-		v2f(w/2, h/2)
-		v2f(0, h)
-		v2f(-w/2, h/2)
-		endclosedline()
-		linewidth(l)
-		translate(0, h/2, 0)
-		putlabel(self.label)
-		popmatrix()
+		# draw figure plus vertical line
+		self._draw(1)
 
 	def redraw(self):
-		# XXX Why isn't this unified with redraw()
+		# draw figure without vertical line (it would go over all
+		# stuff that has been drawn on top of it)
+		self._draw(0)
+
+	def _draw(self, doline):
 		if self.hidden <> 0:
 			return
 		x = self.x
@@ -152,6 +128,13 @@ class diamond():
 		v2f(0, h)
 		v2f(-w/2, h/2)
 		endpolygon()
+		# This has to go here.  Otherwise this line will put a small
+		# dicontinuity in a dissimilar colored boundary
+		if doline:
+			bgnline()
+			v2f(0, 0)
+			v2f(0, -l)
+			endline()
 		l = getlwidth()
 		linewidth(l * 2)
 		if self.kind = FOCUS_CHAN:
@@ -163,8 +146,12 @@ class diamond():
 		v2f(-w/2, h/2)
 		endclosedline()
 		linewidth(l)
+		(ml, mr, mb, mt) = getscrmask()
+		# We need original coordinates here, OUCH!
+		#myscrmask(x, x+w, y, y+h)
 		translate(0, h/2, 0)
 		putlabel(self.label)
+		scrmask(ml, mr, mb, mt)
 		popmatrix()
 
 	def hotspot(self, (mx, my)):
@@ -299,3 +286,5 @@ class thermo():
 		endpolygon()
 		popmatrix()
 
+def myscrmask(l, r, b, t):
+	scrmask(int(l), int(r), int(b), int(t))
