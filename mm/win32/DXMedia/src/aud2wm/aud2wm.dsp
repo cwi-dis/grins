@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Target_Dir ""
 F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Gz /MD /W3 /Gy /I "..\..\classes\base" /I "..\..\include" /I "..\..\..\wmsdk\wmfsdk\include" /D DBG=0 /D WINVER=0x400 /D _X86_=1 /D "_DLL" /D "_MT" /D "_WIN32" /D "WIN32" /D "STRICT" /D "INC_OLE2" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /FR /Oxs /GF /D_WIN32_WINNT=-0x0400 /c
+# ADD CPP /nologo /Gz /MD /W3 /Gy /I "..\common" /I "..\..\classes\base" /I "..\..\include" /I "..\..\..\wmsdk\wmfsdk\include" /D DBG=0 /D WINVER=0x400 /D _X86_=1 /D "_DLL" /D "_MT" /D "_WIN32" /D "WIN32" /D "STRICT" /D "INC_OLE2" /D try=__try /D except=__except /D leave=__leave /D finally=__finally /FR /Oxs /GF /D_WIN32_WINNT=-0x0400 /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -89,6 +89,59 @@ LINK32=link.exe
 
 # Name "vaud2wm - Win32 Release"
 # Name "vaud2wm - Win32 Debug"
+# Begin Group "common files"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\common\wmwriter.cpp
+DEP_CPP_WMWRI=\
+	"..\..\..\wmsdk\wmfsdk\include\asferr.h"\
+	"..\..\..\wmsdk\wmfsdk\include\nserror.h"\
+	"..\..\..\wmsdk\wmfsdk\include\wmsbuffer.h"\
+	"..\..\..\wmsdk\wmfsdk\include\wmsdk.h"\
+	"..\..\..\wmsdk\wmfsdk\include\wmsdkidl.h"\
+	"..\..\classes\base\amextra.h"\
+	"..\..\classes\base\amfilter.h"\
+	"..\..\classes\base\cache.h"\
+	"..\..\classes\base\combase.h"\
+	"..\..\classes\base\cprop.h"\
+	"..\..\classes\base\ctlutil.h"\
+	"..\..\classes\base\dllsetup.h"\
+	"..\..\classes\base\fourcc.h"\
+	"..\..\classes\base\measure.h"\
+	"..\..\classes\base\msgthrd.h"\
+	"..\..\classes\base\mtype.h"\
+	"..\..\classes\base\outputq.h"\
+	"..\..\classes\base\pstream.h"\
+	"..\..\classes\base\refclock.h"\
+	"..\..\classes\base\reftime.h"\
+	"..\..\classes\base\renbase.h"\
+	"..\..\classes\base\Schedule.h"\
+	"..\..\classes\base\source.h"\
+	"..\..\classes\base\streams.h"\
+	"..\..\classes\base\strmctl.h"\
+	"..\..\classes\base\sysclock.h"\
+	"..\..\classes\base\transfrm.h"\
+	"..\..\classes\base\transip.h"\
+	"..\..\classes\base\videoctl.h"\
+	"..\..\classes\base\vtrans.h"\
+	"..\..\classes\base\winctrl.h"\
+	"..\..\classes\base\winutil.h"\
+	"..\..\classes\base\wxdebug.h"\
+	"..\..\classes\base\wxlist.h"\
+	"..\..\classes\base\wxutil.h"\
+	"..\common\wmwriter.h"\
+	
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\wmwriter.h
+# End Source File
+# End Group
+# Begin Group "source files"
+
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=.\aud2wm.cpp
@@ -128,8 +181,8 @@ DEP_CPP_AUD2W=\
 	"..\..\classes\base\wxdebug.h"\
 	"..\..\classes\base\wxlist.h"\
 	"..\..\classes\base\wxutil.h"\
+	"..\common\wmwriter.h"\
 	".\aud2wm.h"\
-	".\wmwriter.h"\
 	
 # End Source File
 # Begin Source File
@@ -144,21 +197,6 @@ SOURCE=.\aud2wm.h
 
 SOURCE=.\aud2wm.rc
 # End Source File
-# Begin Source File
-
-SOURCE=.\wmwriter.cpp
-DEP_CPP_WMWRI=\
-	"..\..\..\wmsdk\wmfsdk\include\asferr.h"\
-	"..\..\..\wmsdk\wmfsdk\include\nserror.h"\
-	"..\..\..\wmsdk\wmfsdk\include\wmsbuffer.h"\
-	"..\..\..\wmsdk\wmfsdk\include\wmsdk.h"\
-	"..\..\..\wmsdk\wmfsdk\include\wmsdkidl.h"\
-	".\wmwriter.h"\
-	
-# End Source File
-# Begin Source File
-
-SOURCE=.\wmwriter.h
-# End Source File
+# End Group
 # End Target
 # End Project
