@@ -232,7 +232,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			window.setredrawfunc(None)
 			window._topwindow._do_expose(window._region)
 
-	def setpaused(self, paused):
+	def setpaused(self, paused, timestamp):
 		if self.played_movie:
 			if paused:
 				self.played_movie.Stop()
