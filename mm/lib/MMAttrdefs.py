@@ -94,14 +94,14 @@ def readattrdefs(fp, filename):
 		parser.reporterror(filename, 'Unexpected EOF', sys.stderr)
 		raise EOFError
 	except SyntaxError, msg:
-		if type(msg) == type(()):
+		if type(msg) is type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		parser.reporterror(filename, \
 				'Syntax error: ' + msg, sys.stderr)
 		raise SyntaxError, msg
 	except TypeError, msg:
-		if type(msg) == type(()):
+		if type(msg) is type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		parser.reporterror(filename, 'Type error: ' + msg, sys.stderr)
@@ -193,7 +193,7 @@ def showstats(a):
 #
 def getattr(node, attrname):
 	##_stat('MMAttrdefs.getattr')
-	if attrstats != None:
+	if attrstats is not None:
 		if attrstats.has_key(attrname):
 			attrstats[attrname] = attrstats[attrname] + 1
 		else:

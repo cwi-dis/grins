@@ -491,7 +491,7 @@ def testparser():
 		print 'unexpected EOF at line', p.lineno
 		return
 	except SyntaxError, msg:
-		if type(msg) == type(()):
+		if type(msg) is type(()):
 			gotten, expected = msg
 			msg = 'got ' + `gotten` + ', expected ' + `expected`
 		p.reporterror('<stdin>', 'Syntax error: ' + msg, sys.stderr)
