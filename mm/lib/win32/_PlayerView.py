@@ -5,6 +5,7 @@ import win32con
 
 # app constants
 from appcon import *
+import grinsRC
 
 # kick toplevel.serve_events()
 import __main__
@@ -63,12 +64,28 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 
 	def OnInitialUpdate(self):
 		DisplayListView.OnInitialUpdate(self)
-		self.HookMessage(self.onChar, win32con.WM_KEYDOWN)
+		self.HookMessage(self.onKeyDown, win32con.WM_KEYDOWN)
 
-	def onChar(self, params):
+	def onKeyDown(self, params):
 		from WMEVENTS import KeyboardInput
 		c = win32ui.TranslateVirtualKey(params[2])
 		self.onEvent(KeyboardInput, c)
+		return 1 # allow accelerators do their job
+
+	# Called when the view is activated 
+	# Override since DisplayListView will set grinsRC.IDR_STRUCT_EDIT accelerator
+	def activate(self):
+		self._is_active = 1
+		self._parent.set_commandlist(self._commandlist,self._strid)
+		self.set_menu_state()
+		self._parent.LoadAccelTable(grinsRC.IDR_GRINSED)
+
+	# Called when the view is deactivated 
+	def deactivate(self):
+		self._is_active = 0
+		self._parent.set_commandlist(None, self._strid)
+		# restore accelarator
+		# nothing since its already that of frame
 
 	# Do not close and recreate topwindow, due to flushing screen
 	# and loose of focus. 
