@@ -62,8 +62,8 @@ TargetPath=.\Release\dshow.pyd
 InputPath=.\Release\dshow.pyd
 SOURCE="$(InputPath)"
 
-"$(TargetDir)\log,txt" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy $(TargetPath) d:\ufs\mm\cmif\bin\win32
+"$(TargetDir)\log.txt" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy $(TargetPath) ..\..\bin\win32
 
 # End Custom Build
 
@@ -94,12 +94,13 @@ LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 ..\..\..\python\PCbuild\python15_d.lib version.lib winmm.lib vfw32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /out:"Debug/dshow_d.pyd" /pdbtype:sept
 # Begin Custom Build
-OutDir=.\Debug
+TargetDir=.\Debug
+TargetPath=.\Debug\dshow_d.pyd
 InputPath=.\Debug\dshow_d.pyd
 SOURCE="$(InputPath)"
 
-"$(OutDir)\log.txt" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy $(OutDir)\rma_d.pyd d:\ufs\mm\cmif\bin
+"$(TargetDir)\log.txt" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy $(TargetPath) ..\..\bin\win32
 
 # End Custom Build
 
