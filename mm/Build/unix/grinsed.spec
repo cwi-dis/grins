@@ -3,7 +3,7 @@ product grinsed
     cutpoint usr/local/grins
     image sw
         id "GRiNS 1.0 Software"
-        version 10001
+        version 10000
         order 9999
         subsys editor default
             id "GRiNS Editor for SMIL 1.0 Base Software"
@@ -22,7 +22,7 @@ product grinsed
         subsys player default
             id "GRiNS Player for SMIL 1.0 Base Software"
             replaces self
-            replaces grins.sw.player 10001 10001
+            replaces grins.sw.player 10000 10000
             prereq (
                 compiler_eoe.sw.lib 1275056010 maxint
                 dmedia_eoe.sw.audio 1275093220 maxint
@@ -38,50 +38,50 @@ product grinsed
             id "GRiNS Editor for SMIL 1.0 Templates"
             replaces self
             prereq (
-                grinsed.sw.editor 10001 10001
+                grinsed.sw.editor 10000 10000
             )
             exp grinsed.sw.templates
         endsubsys
     endimage
     image help
         id "GRiNS for SMIL 1.0 Help Files"
-        version 10001
+        version 10000
         order 9999
         subsys data default
             id "GRiNS Editor for SMIL 1.0 Tutorial Data"
             replaces self
             prereq (
-                grinsed.sw.editor 10001 10001
+                grinsed.sw.editor 10000 10000
             )
             exp grinsed.help.data
         endsubsys
         subsys examples default
             id "GRiNS for SMIL 1.0 SMIL Examples"
             replaces self
-	    replaces grins.help.examples 10001 10001
+	    replaces grins.help.examples 10000 10000
             prereq (
-                grinsed.sw.editor 10001 10001
+                grinsed.sw.editor 10000 10000
             )
             prereq (
-                grinsed.sw.player 10001 10001
+                grinsed.sw.player 10000 10000
             )
             exp grinsed.help.examples
         endsubsys
         subsys documentation default
             id "GRiNS Editor for SMIL 1.0 Documentation"
             replaces self
-	    replaces grins.help.documentation 10001 10001
+	    replaces grins.help.documentation 10000 10000
             exp grinsed.help.documentation
         endsubsys
     endimage
     image relnotes
         id "GRiNS for SMIL 1.0 Release Notes"
-        version 10001
+        version 10000
         order 9999
         subsys relnotes default
             id "GRiNS for SMIL 1.0 Release Notes"
             replaces self
-            replaces grins.relnotes.relnotes 10001 10001
+            replaces grins.relnotes.relnotes 10000 10000
             exp grinsed.relnotes.relnotes
         endsubsys
     endimage
