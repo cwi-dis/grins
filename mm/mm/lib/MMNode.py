@@ -2072,8 +2072,10 @@ class MMSyncArc:
 			# which is always 0 for wallclock times)
 			return tm + t1 - t0 + self.delay
 
+		if self.accesskey is not None:
+			return self.dstnode.GetSchedRoot().happenings[('event', (None, 'accesskey', self.accesskey))]
 		if self.channel is not None:
-			return self.dstnode.GetSchedRoot().happenings[(self.channel._name, self.event)]
+			return self.dstnode.GetSchedRoot().happenings[('event', (self.channel._name, self.event))]
 
 		refnode = self.refnode()
 		event = self.getevent()
@@ -3622,7 +3624,7 @@ class MMNode(MMTreeElement):
 			endlist = self.FilterArcList(endlist)
 		if endlist:
 			for a in endlist:
-				if a.event is not None and a.event not in ('begin', 'end'):
+				if (a.event is not None and a.event not in ('begin', 'end')) or a.accesskey is not None:
 					# events can happen again and again
 					break
 				elif not a.isresolved(sctx):
