@@ -2517,7 +2517,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 			dummy, where = dragref.GetDragMouse()
 			where = Qd.GlobalToLocal(where)
 			x, y = self._convert_qdcoords(where)
-	 		if message == Dragconst.kDragTrackingInWindow:
+			if message == Dragconst.kDragTrackingInWindow:
 	 			# We're dragging through the window. Give the track
 	 			# handler a chance to update the mouse, if wanted
 				try:
