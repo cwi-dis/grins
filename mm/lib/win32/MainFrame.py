@@ -167,8 +167,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 		window.MDIFrameWnd.__init__(self)
 		cmifwnd._CmifWnd.__init__(self)
 		self._do_init(__main__.toplevel)
-		self._player=None
-##		self._formServer=FormServer(self)
 		self.__playerstate = wndusercmd.TB_STOP
 	
 	# Create the OS window and set the toolbar	
@@ -1136,8 +1134,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 	# Create and initialize a new view object 
 	# Keep instance of player
 	def newview(self,x, y, w, h, title, units = UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_'):
-		if strid=='pview_' and self._player and (not self._player._canclose):
-			return self._player
 		viewno=self.getviewno(strid)
 		viewclass=appview[viewno]['class'] 
 		view=viewclass(self.getdoc())
@@ -1164,7 +1160,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 			dhp=(rcco[3]-rcco[1])-(rcci[3]-rcci[1])
 			dwp=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
 			self.setcoords((x,y,w+dw,h+dhp),units)
-		if strid=='pview_':self._player=view
 		return view
 
 

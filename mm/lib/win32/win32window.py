@@ -107,8 +107,8 @@ class Window:
 
 	# bring the subwindow infront of windows with the same z	
 	def pop(self, poptop=1):
-		# if poptop:
-		#	self._topwindow.do_activate()
+		if poptop:
+			self._topwindow.pop(1)
 		parent = self._parent
 		# put self in front of all siblings with equal or lower z
 		if self is not parent._subwindows[0]:
@@ -122,7 +122,6 @@ class Window:
 
 	# send the subwindow back of the windows with the same z	
 	def push(self):
-		print 'push'
 		parent = self._parent
 		# put self behind all siblings with equal or higher z
 		if self is parent._subwindows[-1]:

@@ -340,12 +340,13 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		# he knows better what he wants to see in front
 		if poptop:
 			self.do_activate()
-		pass
 
 	# Bring window in front of peers
 	def do_activate(self):
-		self._parent.ActivateFrame()
-		self._parent.MDIActivate(self.GetParent())
+		mdichild = self.GetParent()
+		frame=mdichild.GetMDIFrame()
+		frame.ActivateFrame()
+		frame.MDIActivate(mdichild)
 		
 	# Send window back of the peers
 	def push(self):
