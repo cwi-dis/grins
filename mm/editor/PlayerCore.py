@@ -197,14 +197,14 @@ class PlayerCore(Selecter):
 		##	self.toplevel.channelview.channels_changed()
 	#
 	def getchannelbyname(self, name):
-		return self.channels[name]
+	        if self.channels.has_key(name):
+		    return self.channels[name]
+		else:
+		    return None
 	#
 	def getchannelbynode(self, node):
 		cname = MMAttrdefs.getattr(node, 'channel')
-		if self.channels.has_key(cname):
-			return self.channels[cname]
-		else:
-			return None
+		return self.getchannelbyname(cname)
 	#
 	def showchannels(self):
 		for name in self.channelnames:
