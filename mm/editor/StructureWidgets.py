@@ -2438,7 +2438,7 @@ class Icon(MMWidgetDecoration):
 		if not self.selectable:
 			self.draw(displist)
 			return
-		displist.drawfbox((0,0,0),self.get_box())
+##		displist.drawfbox((0,0,0),self.get_box())
 		self.draw(displist)
 		if self.arrowable:	# The arrows get drawn by the Hierarchyview at a later stage.
 			for arrow in self.arrowto:
