@@ -11,7 +11,7 @@
 
     <p>
       These are the release notes for GRiNS Player beta for SMIL 2.0,
-      Release Notes for Macintosh, build 10. A more recent version of
+      Release Notes for Macintosh, build 14. A more recent version of
       these release notes, as well as more recent builds of the
       player, may be available through <a
       href="http://www.oratrix.com/GRiNS/SMIL-2.0/">
@@ -23,6 +23,28 @@
       been tested very thoroughly with large documents. You may
       experience instabilities.
     </p>
+
+    <h2>Changes Since Build 10</h2>
+
+    <ul>
+      <li>You can now select audio descriptions in the preferences.
+      <li>The actuate="onLoad" attribute value for anchors is now
+	implemented.</li>
+      <li>When linking to a document that GRiNS cannot handle itself
+	(<i>i.e.</i> all documents except SMIL documents), the document
+	is handed off to the appropriate application.</li>
+      <li>RealVideo, RealText, and RealPix media elements can now be
+	used as the source of hyperlinks.</li>
+      <li>Various improvements in the scheduler.
+	In particular, an excl node with no resolved children and no
+	explicit duration will now not play.  Also, a node with 0
+	duration but with a min attribute greater than 0 will play and
+	end after the min time is up.</li>
+      <li>Improvements to the hyperlinking code.</li>
+      <li>Support for embedded HTML documents (<i>i.e.</i>, you can
+	use HTML documents as media objects).</li>
+      <li>The readIndex attribute is now recognized.</li>
+    </ul>
 
     <h2>
       SMIL 2.0 Compatibility
@@ -189,8 +211,6 @@
 	    <UL>
 	      <LI>
 		 The scroll value for fit attribute is recognized but not implemented.
-	      <LI>
-		 The z order may be wrong for several sibling regions with the same z-index value
 	    </UL>
 	  <LI>
 	    AudioLayout Module
