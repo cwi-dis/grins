@@ -864,7 +864,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__title = ' %s ' % content
 		elif name == 'base':
 			self.__base = content
-		elif name in ('pics-label', 'PICS-label'):
+		elif name in ('pics-label', 'PICS-label', 'generator'):
 			pass
 		else:
 			self.warning('unrecognized meta property', self.lineno)

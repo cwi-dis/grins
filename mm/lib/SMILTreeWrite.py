@@ -352,6 +352,7 @@ class SMILWriter(SMIL):
 		self.tmpdirname = abs, rel # record both names
 
 	def write(self):
+		import version
 		fp = self.fp
 		fp.write(SMILdecl)
 		if self.uses_cmif_extension:
@@ -365,6 +366,8 @@ class SMILWriter(SMIL):
 		if self.__title:
 			self.fp.write('<meta name="title" content=%s/>\n' %
 				      nameencode(self.__title))
+		self.fp.write('<meta name="generator" content="GRiNS %s"/>\n' %
+			      version.version)
 		self.writelayout()
 		fp.pop()
 		fp.write('</head>\n')
