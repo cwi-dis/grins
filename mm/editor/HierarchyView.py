@@ -763,6 +763,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Create a new node in the Structure view.
 		# (assuming..) 'where' is -1:before, 0:here, 1:after. -mjvdg
 
+		start_transaction = 1
 		# experimental SMIL Boston layout code
 		internalchtype = chtype
 		# end experimental
@@ -834,13 +835,33 @@ class HierarchyView(HierarchyViewDialog):
 					self.opt_render()
 					windowinterface.showmessage('Incompatible file', mtype = 'error', parent = self.window)
 					return
-			chlist = ctx.compatchannels(url, chtype)
-			if dftchannel:
-				nchlist = []
-				for chname in chlist:
-					if ctx.getchannel(chname).GetLayoutChannel().name == dftchannel:
-						nchlist.append(chname)
-				chlist = nchlist
+			if dftchannel is not None and dftchtype != 'undefined':
+				i = 0
+				while ctx.channeldict.has_key('%s %d' % (dftchannel, i)):
+					i = i + 1
+				chname = '%s %d' % (dftchannel, i)
+				em = self.editmgr
+				if not em.transaction():
+					return
+				start_transaction = 0
+				em.addchannel(chname, len(ctx.channelnames), dftchtype)
+				chlist = [chname]
+				bch = ctx.getchannel(dftchannel)
+				if bch.has_key('base_window'):
+					w, h = bch['base_winoff'][2:]
+				else:
+					w, h = bch['winsize']
+				em.setchannelattr(chname, 'units', windowinterface.UNIT_PXL)
+				em.setchannelattr(chname, 'base_window', dftchannel)
+				em.setchannelattr(chname, 'base_winoff', (0,0,w,h))
+			else:
+				chlist = ctx.compatchannels(url, chtype)
+				if dftchannel:
+					nchlist = []
+					for chname in chlist:
+						if ctx.getchannel(chname).GetLayoutChannel().name == dftchannel:
+							nchlist.append(chname)
+					chlist = nchlist
 			if chlist:
 				if len(chlist) > 1:
 					i = windowinterface.multchoice('Choose a channel for this file', chlist, 0, parent = self.window)
@@ -902,7 +923,7 @@ class HierarchyView(HierarchyViewDialog):
 		   self.toplevel.layoutview is not None and \
 		   self.toplevel.layoutview.curlayout is not None:
 			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
-		if self.insertnode(node, where, index):
+		if self.insertnode(node, where, index, start_transaction = start_transaction):
 			if not lightweight:
 				import AttrEdit
 				AttrEdit.showattreditor(self.toplevel, node, chtype = chtype)
@@ -959,7 +980,7 @@ class HierarchyView(HierarchyViewDialog):
 			Clipboard.setclip(type, node.DeepCopy())
 		dummy = self.insertnode(node, where)
 
-	def insertnode(self, node, where, index = -1):
+	def insertnode(self, node, where, index = -1, start_transaction = 1):
 		# 'where' is coded as follows: -1: before 0: under 1: after
 		assert where in [-1,0,1] # asserts by MJVDG.. delete them if they
 		assert node is not None # catch too many bugs :-).
@@ -987,7 +1008,7 @@ class HierarchyView(HierarchyViewDialog):
 				node.Destroy()
 				return 0
 		em = self.editmgr
-		if not em.transaction():
+		if start_transaction and not em.transaction():
 			node.Destroy()
 			return 0
 
