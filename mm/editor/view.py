@@ -7,6 +7,7 @@ from figures import *
 from ArcEdit import *
 import MMAttrdefs
 #import Timing
+from MMNode import alltypes, leaftypes, interiortypes
 
 # the view class.
 #
@@ -182,10 +183,10 @@ class view () :
 				self.channellist.append(text)
 
 		kids = node.GetChildren()
-		if type in ('seq','par','grp') and len(kids) > 0:
+		if type in interiortypes and len(kids) > 0:
 			for child in kids :
 				newduration = self.calcDuration(child)
-				if type in ('seq','grp'):
+				if type = 'seq':
 					node.duration = node.duration + newduration
 				else:
 					if newduration > node.duration:
@@ -208,7 +209,7 @@ class view () :
 		blobj.boxtype = FG_BOX
 		blobj.hidden = 1 - self.debug
 		node.ch_blockobj = blobj
-		if type in ('seq','par','grp'):
+		if type in interiortypes:
 			text = ''
 			left = self.dividor
 			right = self.nrchannels * self.unitwidth + self.dividor
@@ -224,7 +225,7 @@ class view () :
 		if bottom > top:
 			bottom = top
 		chobj = box().new(FOCUS_BOX,left,bottom,right-left,top-bottom,'')
-		if type in ('seq','par','grp'):
+		if type in interiortypes:
 			chobj.hidden = 1
 		chobj.label = name
 		chobj.boxtype = kind
@@ -233,8 +234,8 @@ class view () :
 		chobj.y = bottom
 		chobj.h = top - bottom
 		node.ch_channelobj = chobj
-		if type in ('seq','par','grp') and len(kids) > 0:
-                        if type in ('grp', 'seq') :
+		if type in interiortypes and len(kids) > 0:
+                        if type = 'seq':
 				y = y + h
                                 h = h / len(kids)
                                 dx, dy = 0, -h
@@ -263,7 +264,7 @@ class view () :
 			blobj.hidden = 1 - self.debug
 			node.ch_blockobj = blobj
 		blobj.label = name
-		if type in ('seq','par','grp'):
+		if type in interiortypes:
 			left = self.dividor
 			right = self.nrchannels * self.unitwidth + self.dividor
 		else:
@@ -280,7 +281,7 @@ class view () :
 		except NameError:	# a newly created node!
 			chobj = box().new(FOCUS_BOX,left,bottom,right-left,top-bottom,'')
 			node.ch_channelobj = chobj
-		if type in ('seq','par','grp'):
+		if type in interiortypes:
 			chobj.hidden = 1
 			kind = BG_BOX
 		else:
@@ -291,8 +292,8 @@ class view () :
 		chobj.w = right - left
 		chobj.y = bottom
 		chobj.h = top - bottom
-		if type in ('seq','par','grp') and len(kids) > 0:
-                        if type in ('grp', 'seq') :
+		if type in interiortypes and len(kids) > 0:
+                        if type = 'seq':
 				y = y + h
                                 h = h / len(kids)
                                 dx, dy = 0, -h
@@ -351,7 +352,7 @@ class view () :
 
 		if node.ch_blockobj.boxtype <> FG_BOX:
 			return
-		if mx<self.dividor or node.GetType() not in ('seq','par','grp'):
+		if mx<self.dividor or node.GetType() not in interiortypes:
 			self.dounfocus()
 			self.setfocus (node)
 			self.redraw_node(node)
@@ -371,7 +372,7 @@ class view () :
 		node = self._find_node (self.root, (mx, my))
 		if node = None:
 			return
-		if node.GetType() not in ('seq','par','grp'):
+		if node.GetType() not in interiortypes:
 			node1 = self._find_node2(self.root, (node.ch_blockobj.x,node.ch_blockobj.y),(self.focus.ch_blockobj.x,self.focus.ch_blockobj.y))
 			if node1 = None:
 				raise 'view'
@@ -440,7 +441,7 @@ class view () :
 		self.focus = node
 		self.focuskind = F_NODE
 	def setchanfocus(self, node):
-		if node.GetType() in ('seq','par','grp'):
+		if node.GetType() in interiortypes:
 			for child in node.GetChildren():
 				self.setchanfocus(child)
 		else:
@@ -453,19 +454,19 @@ class view () :
 			self.unchanfocus (node)
 		self.focus = node
 	def unchanfocus(self, node):
-		if node.GetType() in ('seq','par','grp'):
+		if node.GetType() in interiortypes:
 			for child in node.GetChildren():
 				self.unchanfocus(child)
 		else:
 			node.ch_channelobj.boxtype = FG_BOX
 	def lockchanfocus(self, node):
-		if node.GetType() in ('seq','par','grp'):
+		if node.GetType() in interiortypes:
 			for child in node.GetChildren():
 				self.lockchanfocus(child)
 		else:
 			node.ch_channelobj.boxtype = LOCK_BOX
 	def unfocuschan(self, node):
-		if node.GetType() in ('seq','par','grp'):
+		if node.GetType() in interiortypes:
 			for child in node.GetChildren():
 				self.unfocuschan(child)
 		else:
@@ -584,7 +585,7 @@ class view () :
 	def _find_node (self, (node, (x, y))) :
 		type = node.GetType()
 		kids = node.GetChildren()
-		if type in ('seq','par','grp') and len(kids) > 0:
+		if type in interiortypes and len(kids) > 0:
 			for child in kids:
 				if self._in_bounds (child, (x, y)) <> None :
 					n = self._find_node(child, (x,y))
@@ -601,7 +602,7 @@ class view () :
 	def _find_node2(self, (node, (x1, y1), (x2, y2))):
 		type = node.GetType()
 		kids = node.GetChildren()
-		if type in ('seq','par','grp') and len(kids) > 0:
+		if type in interiortypes and len(kids) > 0:
 			for child in kids:
 				if self._in_bounds2(child,(x1,y1),(x2,y2)) <> None:
 					return self._find_node2(child,(x1,y1),(x2,y2))
@@ -704,7 +705,7 @@ def channeleditfunc(bv):
 		name = bv.focus.label
 	elif bv.focuskind = F_NODE:
 		node = bv.focus
-		if node.GetType() in ['seq','par','grp']:
+		if node.GetType() in interiortypes:
 			fl.show_message('Not a single node selected','','')
 			return
 		name = node.GetInherAttrDef('channel', '?')

@@ -15,14 +15,14 @@ import NodeEdit
 
 import NodeInfoForm
 
+from MMNode import alltypes, leaftypes, interiortypes
+
 # from ChannelMap import channelmap
 
 from Dialog import Dialog
 
 FORMWIDTH=535
 FORMHEIGHT=255
-
-alltypes = ['imm', 'ext', 'par', 'seq']
 
 
 # There are two basic calls into this module (but see below for more):
@@ -337,10 +337,10 @@ class NodeInfo() = Dialog():
 	    if newtype = self.type:
 		return
 	    # Check that the change is allowed.
-	    if (self.type = 'seq' or self.type = 'par') and \
-			(newtype = 'seq' or newtype = 'par'):
+	    if (self.type in interiortypes) and \
+			(newtype in interiortypes):
 		pass	# This is ok.
-	    elif ((self.type = 'seq' or self.type = 'par') and \
+	    elif ((self.type in interiortypes) and \
 			self.children = []) or \
 		 (self.type = 'imm' and len(self.immtext) = 1) or \
 		 (self.type = 'ext'):
@@ -443,7 +443,7 @@ class NodeInfo() = Dialog():
 	def conteditor_callback(self, (obj, dummy)):
 	    NodeEdit.showeditor(self.node)
 	#
-	# Callbacks for 'par' and 'seq' type nodes
+	# Callbacks for interior type nodes
 	#
 	def openchild_callback(self, (obj, dummy)):
 	    i = self.children_browser.get_browser()
@@ -459,7 +459,7 @@ def hideall(root):
 
 def hidenode(node):
 	hidenodeinfo(node)
-	if node.GetType() in ('seq', 'par'):
+	if node.GetType() in interiortypes:
 		for child in node.GetChildren():
 			hidenode(child)
 

@@ -4,6 +4,7 @@ import sched
 
 import MMAttrdefs
 from MMExc import *
+from MMNode import alltypes, leaftypes, interiortypes
 
 from ChannelMap import channelmap
 
@@ -56,7 +57,7 @@ def cleanup(node):
 	del node.counter
 	del node.deps
 	type = node.GetType()
-	if type in ('seq', 'par'):
+	if type in interiortypes:
 		for c in node.GetChildren():
 			cleanup(c)
 
@@ -65,7 +66,7 @@ def cleanup(node):
 # Should only be applied to leaf nodes.
 #
 def getduration(node):
-	if node.GetType() in ('par', 'seq'):
+	if node.GetType() in interiortypes:
 		raise RuntimeError, 'Timing.getduration() on non-leaf'
 	try:
 		cname = MMAttrdefs.getattr(node, 'channel')
@@ -117,7 +118,7 @@ def prep2(node, root):
 		if root.IsAncestorOf(xnode):
 			adddep(xnode, xside, delay, node, yside)
 	#
-	if node.GetType() in ('seq', 'par'):
+	if node.GetType() in interiortypes:
 		for c in node.GetChildren(): prep2(c, root)
 
 
@@ -141,7 +142,7 @@ def decrement(q, (delay, node, side)):
 		node.t0 = q.timefunc()
 	elif side = TL:
 		node.t1 = q.timefunc()
-	if node.GetType() not in ('seq', 'par'):
+	if node.GetType() not in interiortypes:
 		if side = HD:
 			dt = getduration(node)
 			id = q.enter(dt, 0, decrement, (q, (0, node, TL)))
