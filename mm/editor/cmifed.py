@@ -151,7 +151,7 @@ def main():
 	except ImportError:
 		splash = None
 	else:
-		splash.splash()
+		splash.splash(version = 'cmifed V0.9')
 	try:
 		import signal, pdb
 	except ImportError:
