@@ -18,6 +18,7 @@ ChannelMime = {
 ##		'image/x-xbitmap',
 ##		'image/x-xpixmap',
 ##		'image/x-xwindowdump',
+		'image/svg-xml',
 		],
 	'sound': [
 		'application/vnd.rn-realmedia', # but only if it's audio only
