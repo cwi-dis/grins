@@ -1918,11 +1918,11 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     PUSHBUTTON      "",IDC_ZOOMIN,59,3,14,12,BS_ICON | BS_CENTER | 
-                    BS_VCENTER | NOT WS_VISIBLE | NOT WS_TABSTOP
+                    BS_VCENTER | NOT WS_VISIBLE
     PUSHBUTTON      "",IDC_ZOOMOUT,77,3,14,12,BS_ICON | BS_CENTER | 
-                    BS_VCENTER | NOT WS_VISIBLE | NOT WS_TABSTOP
+                    BS_VCENTER | NOT WS_VISIBLE
     PUSHBUTTON      "Preview Area",IDC_LAYOUT_PREVIEW,6,18,274,34,BS_FLAT | 
-                    NOT WS_VISIBLE
+                    NOT WS_VISIBLE | NOT WS_TABSTOP
     EDITTEXT        IDC_LAYOUT_REGION_X,6,62,23,14,ES_AUTOHSCROLL | 
                     ES_WANTRETURN | ES_NUMBER
     EDITTEXT        IDC_LAYOUT_REGION_Y,32,62,23,14,ES_AUTOHSCROLL | 
@@ -1936,11 +1936,11 @@ BEGIN
     COMBOBOX        IDC_LAYOUT_FITV,151,63,156,65,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "",IDC_PLAY,12,94,14,12,BS_ICON | BS_CENTER | BS_VCENTER | 
-                    WS_DISABLED | NOT WS_TABSTOP
+                    WS_DISABLED
     PUSHBUTTON      "",IDC_STOP,30,94,14,12,BS_ICON | BS_CENTER | BS_VCENTER | 
-                    WS_DISABLED | NOT WS_TABSTOP
+                    WS_DISABLED
     CONTROL         "Slider1",IDC_LAYOUT_SLIDER,"msctls_trackbar32",
-                    TBS_AUTOTICKS | TBS_TOP,59,92,241,13
+                    TBS_AUTOTICKS | TBS_TOP | WS_TABSTOP,59,92,241,13
     LTEXT           "Scale 1:1",IDC_LAYOUT_SCALE,8,4,42,8
     LTEXT           "x",IDC_X,15,54,11,8
     LTEXT           "y",IDC_Y,42,54,10,8
