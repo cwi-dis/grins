@@ -2157,6 +2157,9 @@ class MMNode_body:
 	def set_start_time(self, timestamp, include_pseudo = 1):
 		self.start_time = timestamp
 
+	def isresolved(self, sctx):
+		return self.parent.isresolved(sctx, self)
+		
 	def startplay(self, timestamp):
 		if debug: print 'startplay',`self`,timestamp,self.fullduration
 		self.playing = MMStates.PLAYING
@@ -2376,7 +2379,7 @@ class MMNode(MMTreeElement):
 			self.playing = MMStates.IDLE
 			self.starting_children = 0
 			self.set_armedmode(ARM_NONE)
-			self.start_time = None
+		self.start_time = None
 		if debug: print 'MMNode.reset', `self`
 		if self.parent and self.parent.type in ('switch', 'foreign', 'prio'):
 			self.parent.reset(full_reset)
@@ -3630,9 +3633,11 @@ class MMNode(MMTreeElement):
 				return 0 # timestamp unusable
 		return 1		# timestamp usable
 
-	def isresolved(self, sctx):
-		if self.start_time is not None:
-			return self.start_time
+	def isresolved(self, sctx, body = None):
+		if body is None:
+			body = self
+		if body.start_time is not None:
+			return body.start_time
 		if self.type == 'switch':
 			child = self.ChosenSwitchChild()
 			if child:
@@ -3642,7 +3647,10 @@ class MMNode(MMTreeElement):
 			presolved = 0
 			pend = None
 		else:
-			presolved = pnode.isresolved(sctx)
+			if pnode.looping_body_self is not None:
+				presolved = pnode.looping_body_self.isresolved(sctx)
+			else:
+				presolved = pnode.isresolved(sctx)
 			if presolved is None:
 				# if parent not resolved, we're not resolved
 				return None
