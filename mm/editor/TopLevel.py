@@ -28,7 +28,7 @@ class TopLevel(ViewDialog):
 		self.dirname, self.basename = os.path.split(self.filename)
 		if self.basename[-5:] == '.cmif':
 			self.basename = self.basename[:-5]
-		elif self.basename[-4:] == '.mml':
+		elif self.basename[-4:] == '.smi':
 			self.basename = self.basename[:-4]
 		self.read_it()
 		self.makeviews()
@@ -203,7 +203,7 @@ class TopLevel(ViewDialog):
 		self.save_callback()
 		self.setwaiting()
 		import MMPlayerTree
-		if self.filename[-4:] == '.mml':
+		if self.filename[-4:] == '.smi':
 			filename = self.filename[:-4] + '.cmif'
 		else:
 			filename = self.filename
@@ -264,7 +264,7 @@ class TopLevel(ViewDialog):
 			pass
 		print 'saving to', filename, '...'
 		try:
-			if filename[-4:] == '.mml':
+			if filename[-4:] == '.smi':
 				import MMLTree
 				MMLTree.WriteFile(self.root, filename)
 			else:
@@ -326,7 +326,7 @@ class TopLevel(ViewDialog):
 		else:
 			print 'parsing', self.filename, '...'
 			t0 = time.time()
-			if self.filename[-4:] == '.mml':
+			if self.filename[-4:] == '.smi':
 				import MMLTree
 				self.root = MMLTree.ReadFile(self.filename)
 			else:
