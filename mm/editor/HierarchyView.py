@@ -821,6 +821,9 @@ class Object:
 	def playcall(self):
 		self.mother.toplevel.player.playsubtree(self.node)
 
+	def playfromcall(self):
+		self.mother.toplevel.player.playfrom(self.node)
+
 	def attrcall(self):
 		import AttrEdit
 		AttrEdit.showattreditor(self.node)
@@ -952,11 +955,12 @@ class Object:
 			(None, 'Under focus', pasteundercall), \
 			]), \
 		('p', 'Play node...', playcall), \
+		('G', 'Play from here...%l', playfromcall), \
 		('i', 'Node info...', infocall), \
 		('a', 'Node attr...', attrcall), \
 		('e', 'Edit contents...', editcall), \
 		('t', 'Edit anchors...', anchorcall), \
-		('L', 'Finish hyperlink%l', hyperlinkcall), \
+		('L', 'Finish hyperlink...%l', hyperlinkcall), \
 		('f', 'Push focus', focuscall), \
 		('z', 'Zoom out', zoomoutcall), \
 		('.', 'Zoom here', zoomherecall), \
