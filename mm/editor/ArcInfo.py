@@ -7,20 +7,17 @@ import MMExc
 import MMAttrdefs
 
 
-form_template = None # Initialized on first use
-
-
-def showarcinfo(root, snode, sside, delay, dnode, dside, new = 0):
-	context = root.context
-	try:
-		arcinfos = context.arcinfos
-	except AttributeError:
-		arcinfos = context.arcinfos = {}
-	key = snode.GetUID() + `sside, delay, dside` + dnode.GetUID()
-	if not arcinfos.has_key(key):
-		arcinfos[key] = ArcInfo(root,
-					snode, sside, delay, dnode, dside, new)
-	arcinfos[key].open()
+##def showarcinfo(root, snode, sside, delay, dnode, dside, new = 0):
+##	context = root.context
+##	try:
+##		arcinfos = context.arcinfos
+##	except AttributeError:
+##		arcinfos = context.arcinfos = {}
+##	key = snode.GetUID() + `sside, delay, dside` + dnode.GetUID()
+##	if not arcinfos.has_key(key):
+##		arcinfos[key] = ArcInfo(root,
+##					snode, sside, delay, dnode, dside, new)
+##	arcinfos[key].open()
 
 
 class ArcInfo:
@@ -59,20 +56,14 @@ class ArcInfo:
 			 ('OK', (self.ok_callback, ()))],
 			left = None, top = self.delay_slider, vertical = 0)
 
-		self.window.fix()
+		self.setchoices()
+		self.getvalues()
+		self.window.show()
+		self.context.editmgr.register(self)
 
 	def __repr__(self):
 		return '<ArcInfo instance for ' + \
 	`(self.snode, self.sside, self.delay, self.dnode, self.dside)` + '>'
-
-	def show(self):
-		self.window.show()
-
-	def hide(self):
-		self.window.hide()
-
-	def is_showing(self):
-		return self.window.is_showing()
 
 	def settitle(self, title):
 		self.window.settitle(title)
@@ -83,18 +74,18 @@ class ArcInfo:
 		return 'Sync arc from "' + sname + '" to "' + dname + '"'
 
 	def open(self):
-		if self.is_showing():
+		if self.window.is_showing():
 			self.window.show()
 		else:
 			self.setchoices()
-			self.show()
+			self.window.show()
 			self.context.editmgr.register(self)
 			self.getvalues()
 
 	def close(self):
 		editmgr = self.context.editmgr
 		editmgr.unregister(self)
-		self.hide()
+		self.window.close()
 		if self.new:
 			if not editmgr.transaction():
 				return
@@ -152,10 +143,6 @@ class ArcInfo:
 		else:
 			self.settitle(self.maketitle())
 
-	def kill(self):
-		self.close()
-		self.destroy()
-
 	def stillvalid(self):
 		if self.snode.GetRoot() is not self.root or \
 			self.dnode.GetRoot() is not self.root:
@@ -209,3 +196,5 @@ class ArcInfo:
 		editmgr.addsyncarc(self.snode, self.sside, self.delay, \
 			self.dnode, self.dside)
 		editmgr.commit()
+
+showarcinfo = ArcInfo
