@@ -63,6 +63,7 @@ attrgrs=(
 	'attrs':[
 		'name',
 		'channel',
+		'.type',
 		]},
 
 	{'name':'.cname',
