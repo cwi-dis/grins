@@ -150,10 +150,6 @@ SOURCE=.\M_AnchorDefs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AnchorEditForm.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_appcon.c
 # End Source File
 # Begin Source File
@@ -186,38 +182,6 @@ SOURCE=.\M_Attrgrs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_audio.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__aifc.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__au.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__convert.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__file.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__format.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__wav.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_audio__what.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_Bandwidth.c
 # End Source File
 # Begin Source File
@@ -239,6 +203,10 @@ SOURCE=.\M_Channel.c
 # Begin Source File
 
 SOURCE=.\M_ChannelMap.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_ChannelMime.c
 # End Source File
 # Begin Source File
 
@@ -318,6 +286,10 @@ SOURCE=.\M_FormServer.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_fsm.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_ftplib.c
 # End Source File
 # Begin Source File
@@ -390,7 +362,7 @@ SOURCE=.\M_ImageChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_imgjpeg.c
+SOURCE=.\M_InputValidator.c
 # End Source File
 # Begin Source File
 
@@ -483,10 +455,6 @@ SOURCE=.\M_MMWrite.c
 # Begin Source File
 
 SOURCE=.\M_MPEGVideoDuration.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_NodeInfoForm.c
 # End Source File
 # Begin Source File
 
@@ -722,10 +690,6 @@ SOURCE=.\M_re.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_RealAudioChannel.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_RealChannel.c
 # End Source File
 # Begin Source File
@@ -747,10 +711,6 @@ SOURCE=.\M_realsupport.c
 # Begin Source File
 
 SOURCE=.\M_RealTextChannel.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_RealVideoChannel.c
 # End Source File
 # Begin Source File
 
