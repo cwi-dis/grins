@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # TimeMapper maps times to pixels and the reverse.
 
 Error = 'TimeMapper.Error'

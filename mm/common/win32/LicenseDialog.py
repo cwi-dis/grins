@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # License dialog
 import windowinterface
 import components
