@@ -1,10 +1,10 @@
 from Channel import ChannelWindow, MPEG, error
 import urllib, MMurl
-import mpegex, win32con
+import win32con
 import win32ui, mmsystem
 from MMExc import *			# exceptions
 from AnchorDefs import *
-
+from win32modules import mpegex
 
 debug = 1
 
