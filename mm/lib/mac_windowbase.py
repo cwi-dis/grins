@@ -284,6 +284,12 @@ class _Toplevel(_Event):
 		self._menu_file = MyMenu(self._menubar, "File")
 		self._mitem_quit = MenuItem(self._menu_file, "Quit", "Q", (self._mselect_quit, ()))
 		self._mitem_abort = MenuItem(self._menu_file, "Abort", "", (self._mselect_abort, ()))
+		self._menus = []
+		
+	def _addmenu(self, title):
+		m = MyMenu(self._menubar, title)
+		self._menus.append(m)
+		return m
 		
 	def _mselect_quit(self):
 		sys.exit(0)
@@ -828,6 +834,24 @@ class _DisplayList:
 		if not self._window._transparent:
 			self._list.append(('clear',))
 		self._font = None
+		self._old_fontinfo = None
+		
+	def _keepfont(self):
+		"""Save the old font for later"""
+		if self._old_fontinfo:
+			return
+		self._old_fontinfo = savefontinfo(self._window._wid) # Save current font info
+		
+	def _setfont(self, fontobj):
+		self._keepfont()
+		fontobj._setfont(self._window._wid)
+		
+	def _restore_font(self):
+		"""Restore the previous font"""
+		if self._old_fontinfo:
+			restorefontinfo(self._window._wid, self._old_fontinfo)
+		self._old_fontinfo = None
+
 
 	def close(self):
 		if self._window is None:
@@ -856,6 +880,7 @@ class _DisplayList:
 		Qd.RGBForeColor(self._fgcolor)
 		for i in self._list:
 			self._render_one(i)
+		self._restore_font()
 			
 	def _render_one(self, entry):
 		cmd = entry[0]
@@ -869,7 +894,7 @@ class _DisplayList:
 		elif cmd == 'fg':
 			Qd.RGBForeColor(entry[1])
 		elif cmd == 'font':
-			entry[1]._setfont(wid)
+			self._setfont(entry[1])
 		elif cmd == 'text':
 			Qd.MoveTo(entry[1], entry[2])
 			Qd.DrawString(entry[3]) # XXXX Incorrect for long strings
@@ -973,6 +998,7 @@ class _DisplayList:
 		return self.usefont(findfont(font, size))
 
 	def fitfont(self, fontname, str, margin = 0):
+		print 'FITFONT', fontname, str, margin
 		return self.usefont(findfont(fontname, 10))
 
 	def baseline(self):
@@ -1000,7 +1026,7 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		list = self._list
-##		f = self._font._font
+		self._setfont(self._font)
 		base = self.baseline()
 		height = self.fontheight()
 		strlist = string.splitfields(str, '\n')
@@ -1012,14 +1038,13 @@ class _DisplayList:
 		for str in strlist:
 			x0, y0 = w._convert_coordinates((x, y))
 			list.append('text', x0, y0, str)
-##			self._curpos = x + float(f.TextWidth(str)) / w._rect[_WIDTH], y
-			# XXXX Must have correct font set...
 			self._curpos = x + float(Qd.TextWidth(str, 0, len(str))) / w._rect[_WIDTH], y
 			x = self._xpos
 			y = y + height
 			if self._curpos[0] > maxx:
 				maxx = self._curpos[0]
 		newx, newy = self._curpos
+		self._restore_font()
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
 
 class _Button:
@@ -1099,12 +1124,9 @@ class findfont:
 		if self._inited:
 			return
 		self._inited = 1
-		cur_fontinfo = savefontinfo(wid) # Save current font info
 		self._setfont(wid)
 		self.ascent, self.descent, widMax, self.leading = Qd.GetFontInfo()
 		self._restorefont(wid)
-		restorefontinfo(wid, cur_fontinfo)
-##		print 'FONTPARS', self.ascent, self.descent, self.leading
 
 	def close(self):
 		pass
@@ -1146,30 +1168,52 @@ class showmessage:
 		pass
 
 class Dialog:
+	def __init__(self, *args):
+		raise 'Dialogs not implemented for mac'
+		
+class MainDialog:
 	def __init__(self, list, title = None, prompt = None, grab = 1,
 		     vertical = 1):
 		print 'DIALOG', self, list, title, prompt, grab, vertical
-		pass
+		self.items = []
+		self._othermenu = None
+		self.menu = toplevel._addmenu('Control')
+		self._createmenu(self.menu, list)
+		
+	def _createmenu(self, menu, list):
+		for item in list:
+			if not item:
+				menu.addseparator()
+				self.items.append(None)
+			else:
+				title, callback = item[:2]
+				shortcut = ''
+				m = MenuItem(menu, title, shortcut, callback)
+				self.items.append(m)
 
 	def close(self):
 ##		print 'CLOSE DIALOG', self
 		pass
 
 	def destroy_menu(self):
-##		print 'DESTROY MENU', self
-		pass
+		if self._othermenu:
+			self._othermenu.delete()
+			self._othermenu = None
 
 	def create_menu(self, list, title = None):
 ##		print 'CREATE MENU', self, list, title
-		pass
+		if self._othermenu:
+			self.destroy_menu()
+		if not title:
+			title = 'Menu'
+		self._othermenu = toplevel._addmenu(title)
+		self._createmenu(self._othermenu, list)
 
 	def getbutton(self, button):
-##		print 'GET BUTTON', self, button
-		return set
+		raise 'getbutton called'
 
 	def setbutton(self, button, onoff = 1):
-##		print 'SET BUTTON', self, button, onoff
-		pass
+		self.items[button].check(onoff)
 
 def multchoice(prompt, list, defindex):
 	print 'MULTCHOICE', list, defindex
