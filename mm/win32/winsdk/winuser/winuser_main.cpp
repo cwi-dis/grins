@@ -114,3 +114,25 @@ PyObject* Winuser_LoadCursor(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", hCursor);
 }
 
+PyObject* Winuser_ShellExecute(PyObject *self, PyObject *args)
+	{
+	HWND hwnd;
+	char *op, *file, *params, *dir;
+	int show;
+	if (!PyArg_ParseTuple(args, "izszzi:ShellExecute", &hwnd, &op, &file, &params, &dir, &show))
+		return NULL;
+	if (dir==NULL)
+		dir="";
+	HINSTANCE rc;
+	Py_BEGIN_ALLOW_THREADS
+	rc = ShellExecute(hwnd, op, file, params, dir, show);
+	Py_END_ALLOW_THREADS
+	char szMsg[512]="OK";
+	if ((rc) <= (HINSTANCE)32) 
+		{
+		BOOL bHaveMessage = ::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL,(DWORD)rc, 0, szMsg,sizeof(szMsg), NULL )>0;
+		if (!bHaveMessage)
+			lstrcpy(szMsg,"Error. No error message is available");
+		}
+	return Py_BuildValue("is",rc, szMsg);
+	}
