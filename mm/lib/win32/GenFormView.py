@@ -161,9 +161,12 @@ class GenFormView(docview.FormView,components.ControlsDict):
 		frame=childframe.GetMDIFrame()
 		frame.MDIActivate(childframe)
 
+	def getViewFrame(self):
+		return self.GetParent()
+
 	def getgeometry(self, units = None):
 		# Ignore units.
-		placement = self.GetParent().GetWindowPlacement()
+		placement = self.getViewFrame().GetWindowPlacement()
 		outerrect = placement[4]
 		out_l, out_t, out_r, out_b = outerrect
 		out_w = out_r - out_l
