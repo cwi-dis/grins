@@ -437,23 +437,28 @@ class NodeInfo(NodeInfoDialog):
 	# dir from the resulting pathname.
 	#
 	def browser_callback(self):
-		import MMurl
+		import MMurl, urlparse
 		cwd = self.toplevel.dirname
 		if cwd:
-			cwd = MMurl.url2pathname(cwd)
-			if not os.path.isabs(cwd):
-				cwd = os.path.join(os.getcwd(), cwd)
+			utype, host, path, params, query, fragment = urlparse.urlparse(cwd)
+			if (not utype or utype == 'file') and \
+			   (not host or host == 'localhost'):
+				cwd = MMurl.url2pathname(path)
+				if not os.path.isabs(cwd):
+					cwd = os.path.join(os.getcwd(), cwd)
+			else:
+				cwd = os.getcwd()
 		else:
 			cwd = os.getcwd()
 		url = self.url
 		if url == '' or url == '/dev/null':
 			dir, file = cwd, ''
 		else:
-			utype, url = MMurl.splittype(url)
-			if utype:
+			utype, host, path, params, query, fragment = urlparse.urlparse(url)
+			if (utype and utype != 'file') or (host and host != 'localhost'):
 				windowinterface.showmessage('Cannot browse URLs')
 				return
-			file = MMurl.url2pathname(url)
+			file = MMurl.url2pathname(path)
 			file = os.path.join(cwd, file)
 			if os.path.isdir(file):
 				dir, file = file, ''
