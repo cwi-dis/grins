@@ -1268,7 +1268,8 @@ class AttrEditor(AttrEditorDialog):
 		self.__open_dialog(initattr)
 		# update the title bar name
 		self.settitle(wrapper.maketitle())
-
+		self.__pagechangeChecking = 0
+		
 	def __open_dialog(self, initattr):
 		import settings
 		import compatibility
@@ -1343,6 +1344,10 @@ class AttrEditor(AttrEditorDialog):
 		del self.wrapper
 
 	def pagechange_allowed(self):
+		# avoid a recursive checking
+		if self.__pagechangeChecking:
+			return 1
+
 		# Optionally save/revert changes made to properties and return 1 if
 		# it is OK to change tabs or change the node the dialog points to.
 		if not self.is_changed():
@@ -1356,7 +1361,11 @@ class AttrEditor(AttrEditorDialog):
 		# answer = windowinterface.GetYesNoCancel("Save modified properties?")
 		answer = windowinterface.GetYesNo("This property dialog has unsaved changes.\nSave these changes?")
 		if answer == 0:
+			# avoid a recursive checking
+			self.__pagechangeChecking = 1
+			
 			self.apply_callback()
+			self.__pagechangeChecking = 0
 			return 1
 		if answer == 1:
 #			self.resetall()
