@@ -12,7 +12,7 @@ __version__ = "$Id$"
 
 attrgrs=(
 	{'name':'subregion',
-	'title':'Destination region',
+	'title':'Destination rendering',
 	'attrs':[
 		'subregionxy',
 		'subregionwh',
@@ -139,7 +139,7 @@ attrgrs=(
 		]},
 
 	{'name':'imgregion',
-	'title':'Image region',
+	'title':'Source area',
 	'attrs':[
 		'imgcropxy',
 		'imgcropwh',

@@ -381,7 +381,7 @@
 (subregionanchor (string) 'top-left' 'Destination region anchor' subregionanchor
 	'Anchor for subregion (x,y) coordinates' normal light)
 
-(displayfull (bool) 1 'Use whole region' default
+(displayfull (bool) 1 'Fill whole region' default
 	'Use whole region for transition effect' normal light)
 
 (tag (string) 'fill' 'Transition type' transition
