@@ -9,9 +9,10 @@ from Menus import *
 [ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE, SPECIAL] = range(6)
 
 # Some commands are optional, depending on preference settings:
-ALL=''
-CMIF='cmif'
-DBG='debug'
+ALL=''			# Available in all versions
+FULL='full'		# available only if setting(lightweight) zero
+CMIF='cmif'		# available only if setting(cmif) nonzero
+DBG='debug'		# available only if setting(debug) nonzero
 #
 # commands we know are not useable on the Mac:
 UNUSED_COMMANDS=(
@@ -61,55 +62,72 @@ MENUBAR=(
 			)),
 		(ALL, ENTRY, 'Delete', (kMenuNoCommandModifier, '\177', 0x0a), DELETE),
 		(ALL, SEP,),
-		(ALL, ENTRY, 'New node...', 'K', NEW_AFTER),
-		(ALL, CASCADE, 'New node special', (
-			(ALL, CASCADE, 'Image node', (
-				(ALL, ENTRY, 'Before', None, NEW_BEFORE_IMAGE),
-				(ALL, ENTRY, 'After', None, NEW_AFTER_IMAGE),
-				(ALL, ENTRY, 'Within', None, NEW_UNDER_IMAGE),
-			)),
-			(ALL, CASCADE, 'Slideshow node', (
-				(ALL, ENTRY, 'Before', None, NEW_BEFORE_SLIDESHOW),
-				(ALL, ENTRY, 'After', None, NEW_AFTER_SLIDESHOW),
-				(ALL, ENTRY, 'Within', None, NEW_UNDER_SLIDESHOW),
-			)),
-			(ALL, CASCADE, 'Text node', (
-				(ALL, ENTRY, 'Before', None, NEW_BEFORE_TEXT),
-				(ALL, ENTRY, 'After', None, NEW_AFTER_TEXT),
-				(ALL, ENTRY, 'Within', None, NEW_UNDER_TEXT),
-			)),
-			(ALL, CASCADE, 'Sound node', (
-				(ALL, ENTRY, 'Before', None, NEW_BEFORE_SOUND),
-				(ALL, ENTRY, 'After', None, NEW_AFTER_SOUND),
-				(ALL, ENTRY, 'Within', None, NEW_UNDER_SOUND),
-			)),
-			(ALL, CASCADE, 'Video node', (
-				(ALL, ENTRY, 'Before', None, NEW_BEFORE_VIDEO),
-				(ALL, ENTRY, 'After', None, NEW_AFTER_VIDEO),
-				(ALL, ENTRY, 'Within', None, NEW_UNDER_VIDEO),
-			)),
-			(ALL, SEP,),
-			(ALL, ENTRY, 'Before...', None, NEW_BEFORE),
-			(ALL, ENTRY, 'Within...', 'D', NEW_UNDER),
-			(ALL, ENTRY, 'Par Parent', None, NEW_PAR),
-			(ALL, ENTRY, 'Seq Parent', None, NEW_SEQ),
-			(ALL, ENTRY, 'Switch Parent', None, NEW_ALT),
-			(CMIF, ENTRY, 'Choice Parent', None, NEW_CHOICE),
-			)),
-		(ALL, ENTRY, 'New Channel', 'M', NEW_CHANNEL),
-		(ALL, ENTRY, 'New Screen', None, NEW_LAYOUT),
-		(ALL, SEP,),
-		(ALL, ENTRY, 'Move Channel', None, MOVE_CHANNEL),
-		(ALL, ENTRY, 'Copy Channel', None, COPY_CHANNEL),
+		(FULL, ENTRY, 'New node...', 'K', NEW_AFTER),
+		(FULL, ENTRY, 'New Channel', 'M', NEW_CHANNEL),
+		(FULL, ENTRY, 'New Screen', None, NEW_LAYOUT),
+		(FULL, SEP,),
+		(FULL, ENTRY, 'Move Channel', None, MOVE_CHANNEL),
+		(FULL, ENTRY, 'Copy Channel', None, COPY_CHANNEL),
 		(CMIF, ENTRY, 'Toggle Channel State', None, TOGGLE_ONOFF),
-		(ALL, SEP, ),
-##		(ALL, ENTRY, 'Info...', 'I', INFO),
+		(FULL, SEP, ),
 		(ALL, ENTRY, 'Properties...', 'A', ATTRIBUTES),
 		(ALL, ENTRY, 'Edit Content', 'E', CONTENT),
-##		(ALL, SEP, ),
-##		(ALL, ENTRY, 'Edit Source...', None, EDITSOURCE),
 		(ALL, SEP, ),
 		(ALL, ENTRY, 'Preferences...', None, PREFERENCES),
+		)),
+
+	(ALL, CASCADE, 'Insert', (
+		(ALL, CASCADE, 'Image node', (
+			(ALL, ENTRY, 'Before', None, NEW_BEFORE_IMAGE),
+			(ALL, ENTRY, 'After', None, NEW_AFTER_IMAGE),
+			(ALL, ENTRY, 'Within', None, NEW_UNDER_IMAGE),
+		)),
+		(ALL, CASCADE, 'Slideshow node', (
+			(ALL, ENTRY, 'Before', None, NEW_BEFORE_SLIDESHOW),
+			(ALL, ENTRY, 'After', None, NEW_AFTER_SLIDESHOW),
+			(ALL, ENTRY, 'Within', None, NEW_UNDER_SLIDESHOW),
+		)),
+		(ALL, CASCADE, 'Text node', (
+			(ALL, ENTRY, 'Before', None, NEW_BEFORE_TEXT),
+			(ALL, ENTRY, 'After', None, NEW_AFTER_TEXT),
+			(ALL, ENTRY, 'Within', None, NEW_UNDER_TEXT),
+		)),
+		(ALL, CASCADE, 'Sound node', (
+			(ALL, ENTRY, 'Before', None, NEW_BEFORE_SOUND),
+			(ALL, ENTRY, 'After', None, NEW_AFTER_SOUND),
+			(ALL, ENTRY, 'Within', None, NEW_UNDER_SOUND),
+		)),
+		(ALL, CASCADE, 'Video node', (
+			(ALL, ENTRY, 'Before', None, NEW_BEFORE_VIDEO),
+			(ALL, ENTRY, 'After', None, NEW_AFTER_VIDEO),
+			(ALL, ENTRY, 'Within', None, NEW_UNDER_VIDEO),
+		)),
+		(ALL, CASCADE, 'Parallel node', (
+			(ALL, ENTRY, 'Parent', None, NEW_PAR),
+			(ALL, ENTRY, 'Before', None, NEW_BEFORE_PAR),
+			(ALL, ENTRY, 'After', None, NEW_AFTER_PAR),
+			(ALL, ENTRY, 'Within', None, NEW_UNDER_PAR),
+		)),
+		(ALL, CASCADE, 'Sequential node', (
+			(ALL, ENTRY, 'Parent', None, NEW_SEQ),
+			(ALL, ENTRY, 'Before', None, NEW_BEFORE_SEQ),
+			(ALL, ENTRY, 'After', None, NEW_AFTER_SEQ),
+			(ALL, ENTRY, 'Within', None, NEW_UNDER_SEQ),
+		)),
+		(ALL, CASCADE, 'Switch node', (
+			(ALL, ENTRY, 'Parent', None, NEW_ALT),
+			(ALL, ENTRY, 'Before', None, NEW_BEFORE_ALT),
+			(ALL, ENTRY, 'After', None, NEW_AFTER_ALT),
+			(ALL, ENTRY, 'Within', None, NEW_UNDER_ALT),
+		)),
+		(CMIF, CASCADE, 'Choice node', (
+			(ALL, ENTRY, 'Parent', None, NEW_CHOICE),
+			(ALL, ENTRY, 'Before', None, NEW_BEFORE_CHOICE),
+			(ALL, ENTRY, 'After', None, NEW_AFTER_CHOICE),
+			(ALL, ENTRY, 'Within', None, NEW_UNDER_CHOICE),
+		)),
+		(FULL, ENTRY, 'Before...', None, NEW_BEFORE),
+		(FULL, ENTRY, 'Within...', 'D', NEW_UNDER),
 		)),
 
 	(ALL, CASCADE, 'Play', (
@@ -127,10 +145,10 @@ MENUBAR=(
 	(ALL, CASCADE, 'Linking', (
 		(ALL, ENTRY, 'Create Simple Anchor', 'R', CREATEANCHOR),
 		(ALL, ENTRY, 'Finish Hyperlink to Selection', 'H', FINISH_LINK),
-		(ALL, ENTRY, 'Anchors...', 'T', ANCHORS),
-		(ALL, SEP,),
-		(ALL, ENTRY, 'Create Syncarc from Selection...', None, FINISH_ARC),
-		(ALL, DYNAMICCASCADE, 'Select Sync Arc', SYNCARCS),
+		(FULL, ENTRY, 'Anchors...', 'T', ANCHORS),
+		(FULL, SEP,),
+		(FULL, ENTRY, 'Create Syncarc from Selection...', None, FINISH_ARC),
+		(FULL, DYNAMICCASCADE, 'Select Sync Arc', SYNCARCS),
 		)),
 
 	(ALL, CASCADE, 'View', (
@@ -138,18 +156,18 @@ MENUBAR=(
 		(ALL, ENTRY, 'Expand All', None, EXPANDALL),
 		(ALL, ENTRY, 'Collapse All', None, COLLAPSEALL),
 		(ALL, SEP,),
-		(ALL, ENTRY, 'Zoom In', None, CANVAS_WIDTH),
-		(ALL, ENTRY, 'Fit in Window', None, CANVAS_RESET),
-		(ALL, SEP,),
-		(ALL, ENTRY, 'Synchronize Selection', 'F', PUSHFOCUS),
-		(ALL, SEP,),
-		(ALL, TOGGLE, 'Unused Channels', None, TOGGLE_UNUSED),
-		(ALL, TOGGLE, 'Sync Arcs', None, TOGGLE_ARCS),
-		(ALL, TOGGLE, 'Image Thumbnails', None, THUMBNAIL),
-		(ALL, TOGGLE, 'Bandwidth Usage Strip', None, TOGGLE_BWSTRIP),
+		(FULL, ENTRY, 'Zoom In', None, CANVAS_WIDTH),
+		(FULL, ENTRY, 'Fit in Window', None, CANVAS_RESET),
+		(FULL, SEP,),
+		(FULL, ENTRY, 'Synchronize Selection', 'F', PUSHFOCUS),
+		(FULL, SEP,),
+		(FULL, TOGGLE, 'Unused Channels', None, TOGGLE_UNUSED),
+		(FULL, TOGGLE, 'Sync Arcs', None, TOGGLE_ARCS),
+		(FULL, TOGGLE, 'Image Thumbnails', None, THUMBNAIL),
+		(FULL, TOGGLE, 'Bandwidth Usage Strip', None, TOGGLE_BWSTRIP),
 		(ALL, TOGGLE, 'Check Bandwidth', None, COMPUTE_BANDWIDTH),
-		(ALL, TOGGLE, 'Show Playable', None, PLAYABLE),
-		(ALL, TOGGLE, 'Show Durations', None, TIMESCALE),
+		(FULL, TOGGLE, 'Show Playable', None, PLAYABLE),
+		(FULL, TOGGLE, 'Show Durations', None, TIMESCALE),
 		(CMIF, SEP,),
 		(CMIF, TOGGLE, 'Timeline view follows player', None, SYNCCV),
 		(CMIF, CASCADE, 'Minidoc navigation', (
@@ -166,9 +184,9 @@ MENUBAR=(
 		(ALL, SEP,),
 		(ALL, ENTRY, 'Player', '5', PLAYERVIEW),
 		(ALL, ENTRY, 'Structure View', '6', HIERARCHYVIEW),
-		(ALL, ENTRY, 'Timeline View', '7', CHANNELVIEW),
-		(ALL, ENTRY, 'Layout View', '8', LAYOUTVIEW),
-		(ALL, ENTRY, 'Hyperlinks', '9', LINKVIEW),
+		(FULL, ENTRY, 'Timeline View', '7', CHANNELVIEW),
+		(FULL, ENTRY, 'Layout View', '8', LAYOUTVIEW),
+		(FULL, ENTRY, 'Hyperlinks', '9', LINKVIEW),
 		(CMIF, ENTRY, 'User Groups', '0', USERGROUPVIEW),
 		(ALL, SEP,),
 		(ALL, ENTRY, 'Source', None, SOURCE),
