@@ -953,26 +953,18 @@ class EffectiveAnimator:
 		chan = self.__chan
 
 		if self.__attr == 'position':
-			# animateMotion for subregions seems not to be allowed in SMIL20 profile
-			# Since the origin for the animateMotion when applied to media elements 
-			# is the regAlign value animate regPoint
-			moveSubregion = 1
-			moveRegPoint = 0
+			# 19/3/2001: according to a recent resolution of the working group:
+			# subregion is what is moved 
+			# default origin is parent left top corner
 			csssubregion = self.getCssObj(self.__node)
-			if moveSubregion:
-				csssubregion.move(value)
-				csssubregion.updateTree()
+			csssubregion.move(value)
+			csssubregion.updateTree()
 			coords = csssubregion.getPxGeom()
 			scale = csssubregion.getScale()
 			mediacoords = None
 			if csssubregion.media:
-				if moveRegPoint:
-					csssubregion.media.move(value)
-					csssubregion.media.update()
+				csssubregion.media.update()
 				mediacoords = csssubregion.media.getPxGeom()
-			if moveRegPoint and csssubregion.media:
-				if csssubregion.media.isDOMRegPoint():
-					mediacoords = None
 			if chan.window:
 				chan.window.updatecoordinates(coords, UNIT_PXL, scale, mediacoords)
 
@@ -1658,22 +1650,19 @@ class AnimateElementParser:
 
 				return self.translateTo((x, y), coords, path)	
 
-		# translate media coordinates to internal 'layout'
+		# translate media coordinates to internal 'parent'
 		elif self.__target._type == 'mmnode':
 
 			if origin == 'parent':
 				pass
-				# coordinates of parent with respect to layout
-				#x, y = self.__animateContext.getNodePosRelToParent(self.__target)
-				#return self.translateTo((-x, -y), coords, path)	
 
 			elif origin == 'layout':
-				pass
+				x, y = self.__domval.real, self.__domval.imag
+				return self.translateTo((x, y), coords, path)	
 
 			elif origin == 'topLayout':
-				# coordinates of topLayout with respect to layout
-				x, y = self.__animateContext.getAbsPos(self.__target)
-				return self.translateTo((-x, -y), coords, path)
+				x, y = self.__animateContext.getParentAbsPos(self.__mmtarget)
+				return self.translateTo((-x, -y), coords, path)	
 					
 		if coords: return coords
 		elif path: return path
