@@ -7,7 +7,7 @@ from MMExc import *
 
 from ChannelMap import channelmap
 
-HD, TL = 0, 1
+HD, TL = 0, 1	# Same as in Player!
 
 
 # Calculate the nominal times for each node in the given subtree.
@@ -18,9 +18,6 @@ HD, TL = 0, 1
 #
 # This takes sync arcs within the subtree into account, but ignores
 # sync arcs with one end outside the given subtree.
-#
-# XXX For now, all sync arcs must actually start the given subtree,
-# XXX so you are really restricted to passing a root node...
 #
 # Any circularities in the sync arcs are detected and "reported"
 # as exceptions.
@@ -41,7 +38,7 @@ def calctimes(root):
 #
 def prepare(root):
 	prep1(root)
-	prep2(root)
+	prep2(root, root)
 	if root.counter[HD] <> 0:
 		raise RuntimeError, 'head of root has dependencies!?!'
 
@@ -111,16 +108,17 @@ def prep1(node):
 		adddep(node, HD, -1, node, TL)
 
 
-def prep2(node):
+def prep2(node, root):
 	if not node.GetSummary('synctolist'): return
 	arcs = MMAttrdefs.getattr(node, 'synctolist')
 	for arc in arcs:
 		xuid, xside, delay, yside = arc
 		xnode = node.MapUID(xuid)
-		adddep(xnode, xside, delay, node, yside)
+		if root.IsAncestorOf(xnode):
+			adddep(xnode, xside, delay, node, yside)
 	#
 	if node.GetType() in ('seq', 'par'):
-		for c in node.GetChildren(): prep2(c)
+		for c in node.GetChildren(): prep2(c, root)
 
 
 def adddep(xnode, xside, delay, ynode, yside):
