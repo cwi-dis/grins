@@ -2104,6 +2104,7 @@ class HierarchyView(HierarchyViewDialog):
 		if which == 'toggle':
 			# tri-state toggle: nothing -> bwstrip -> cfocus -> nothing
 			node = self.root
+			recurse = 1
 			if node.showtime == 'cfocus':
 				which = 'cfocus'
 			elif node.showtime == 'bwstrip':
@@ -2113,17 +2114,21 @@ class HierarchyView(HierarchyViewDialog):
 		elif which == 'global':
 			which = 'cfocus'
 			node = self.root
+			recurse = 1
 		elif which == 'bwstrip':
 			# toggle bandwidth strip, not timeline
 			node = self.root
+			recurse = 1
 			if node.showtime == which:
 				which = 'cfocus'
 		elif which == 'focus':
 			node = self.get_selected_node()
+			recurse = 0
 		else:
 			node = self.get_selected_node()
+			recurse = 0
 		if node.showtime == which:
-			self.clear_showtime(node)
+			self.clear_showtime(node, recurse)
 		else:
 			node.showtime = which
 		# If we've toggled the bandwidth strip we
@@ -2153,10 +2158,11 @@ class HierarchyView(HierarchyViewDialog):
 		self.need_resize = 1
 		self.draw()
 		
-	def clear_showtime(self, node):
+	def clear_showtime(self, node, recurse):
 		node.showtime = 0
-##		for c in node.children:
-##			self.clear_showtime(c)
+		if recurse:
+			for c in node.children:
+				self.clear_showtime(c, recurse)
 
 	def bandwidthcall(self):
 		self.toplevel.setwaiting()
