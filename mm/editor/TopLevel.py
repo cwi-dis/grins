@@ -468,14 +468,24 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# update edit manager to delete the current root
 		self.editmgr.deldocument(self.root)
 
+		# init progress bar dialog
+		self.progress = windowinterface.ProgressDialog("Reloading")
+		self.progressMessage = "Reloading SMIL document from source view..."
+		self.progress.set(self.progressMessage)
+
 		# read the source and update edit manager
 		import SMILTreeRead
-		progress = windowinterface.ProgressDialog("Reloading")
-		progress.set("Reloading SMIL document from source view...")
-		root = SMILTreeRead.ReadString(text, self.filename, self.printfunc)
+		root = SMILTreeRead.ReadString(text, self.filename, self.printfunc, progressCallback = (self.progressCallback, 0.5))
+
+		# just update that the loading is finished
+		self.progressCallback(1.0)
+		
 		root = self.__checkParseErrors(root)
 		self.editmgr.adddocument(root)
 
+		# the progress bar will desapear
+		self.progress = None
+				
 		# return the new root
 		return root
 		
@@ -1183,6 +1193,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if type(self.new_file) == type(''):
 				self.context.template = self.new_file
 
+	def progressCallback(self, pValue):
+		self.progress.set(self.progressMessage, None, None, pValue*100, 100)
+		
 	def do_read_it(self, filename):
 ##		import time
 ##		print 'parsing', filename, '...'
@@ -1207,12 +1220,23 @@ class TopLevel(TopLevelDialog, ViewDialog):
 						mtype = 'application/x-grins-project'
 		if mtype in ('application/smil', 'application/x-grins-project'):
 			import SMILTreeRead
-			# The progress dialog will disappear when we exit this function
+			# init progress dialog
 			if mtype == 'application/smil':
-				progress = windowinterface.ProgressDialog("Import")
-				progress.set("Importing SMIL document...")
+				self.progress = windowinterface.ProgressDialog("Import")
+				self.progressMessage = "Importing SMIL document..."
+			else:
+				self.progress = windowinterface.ProgressDialog("Loading")
+				self.progressMessage = "Loading GRiNS document..."				
+			self.progress.set(self.progressMessage)
+			
 			check_compatibility = mtype == 'application/x-grins-project'
-			self.root = SMILTreeRead.ReadFile(filename, self.printfunc, self.new_file, check_compatibility)
+			self.root = SMILTreeRead.ReadFile(filename, self.printfunc, self.new_file, check_compatibility, \
+											  progressCallback=(self.progressCallback, 0.5))
+			# just update that the loading is finished
+			self.progressCallback(1.0)
+			# the progress dialog will desapear
+			self.progress = None
+			
 ##				# For the lightweight version we set SMIL files as being "new"
 ##				if light and mtype == 'application/smil':
 ##					# XXXX Not sure about this, this may mess up code in read_it
@@ -1308,9 +1332,19 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 	def do_read_it_from_string(self, text):
 		import SMILTreeRead
-		progress = windowinterface.ProgressDialog("Reloading")
-		progress.set("Reloading SMIL document from source view...")
-		self.root = SMILTreeRead.ReadString(text, self.filename, self.printfunc)
+
+		# init progress bar dialog
+		self.progress = windowinterface.ProgressDialog("Reloading")
+		self.progressMessage = "Reloading SMIL document from source view..."
+		self.progress.set(self.progressMessage)
+		
+		self.root = SMILTreeRead.ReadString(text, self.filename, self.printfunc, progressCallback = (self.progressCallback, 0.5))
+
+		# just update that the loading is finished
+		self.progressCallback(1.0)
+		# the progress bar will desapear
+		self.progress = None
+		
 		self.root = self.__checkParseErrors(self.root)
 		self.setRoot(self.root)
 		
