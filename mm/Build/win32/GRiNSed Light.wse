@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=4274286950
+  File Checksum=3521849387
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1149,6 +1149,236 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\tutorials.pdf
+  Destination=%MAINDIR%\tutorials.pdf
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Walk.grins
+  Destination=%MAINDIR%\Tutorials\Walk.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\EUROs.grins
+  Destination=%MAINDIR%\Tutorials\EUROs.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm20v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm20v.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm20a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm20a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm200v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm200v.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm200a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm200a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm10v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm10v.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm10a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm10a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm100v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm100v.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm100a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm100a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\next1.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\next1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\next1.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\next1.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\info1.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\info1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\info1.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\info1.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\headline1.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\headline1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\headline1.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\headline1.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\gdot.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\gdot.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\gdot.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\gdot.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\euro52x51.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\euro52x51.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\euro-sm.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\euro-sm.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\dot.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\dot.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\dot.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\dot.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\buttons.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\buttons.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\buttons.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\buttons.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\back1.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\back1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\back1.gif
+  Destination=%MAINDIR%\Tutorials\Assets\euro\back1.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm500a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm500a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm500v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm500v.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm50a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm50a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\tune.aiff
+  Destination=%MAINDIR%\Tutorials\Assets\tune.aiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\money.wav
+  Destination=%MAINDIR%\Tutorials\Assets\money.wav
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\mapc.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\mapc.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\map.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\map.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\h218c.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\h218c.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\h218.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\h218.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\h168c.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\h168c.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\h168.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\h168.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\Pwhite.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\Pwhite.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\Pmusic.ra
+  Destination=%MAINDIR%\Tutorials\Assets\Pmusic.ra
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\Pmap.png
+  Destination=%MAINDIR%\Tutorials\Assets\Pmap.png
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\Phouses.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\Phouses.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\Atune.aiff
+  Destination=%MAINDIR%\Tutorials\Assets\Atune.aiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm50v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm50v.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm5a.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm5a.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Tutorials\Assets\euro\sm5v.jpg
+  Destination=%MAINDIR%\Tutorials\Assets\euro\sm5v.jpg
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\Build\products\g2-15\QuickStart.pdf
   Destination=%MAINDIR%\QuickStart.pdf
   Flags=0000000010000010
@@ -1179,6 +1409,31 @@ item: If/While Statement
   Variable=COMPONENTS
   Value=A
   Flags=00001010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\PyWinTypes.dll
+  Destination=%MAINDIR%\PyWinTypes.dll
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\python16.dll
+  Destination=%MAINDIR%\python16.dll
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\_socket.pyd
+  Destination=%MAINDIR%\_socket.pyd
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\extended-slideshow.bmp
+  Destination=%MAINDIR%\Templates\extended-slideshow.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A6_extended-slideshow.grins
+  Destination=%MAINDIR%\Templates\A6_extended-slideshow.grins
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\rmto3260.dll
@@ -1506,11 +1761,6 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\python15.dll
-  Destination=%MAINDIR%\python15.dll
-  Flags=0000000010000011
-end
-item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\win32ui.pyd
   Destination=%MAINDIR%\win32ui.pyd
   Flags=0000000010000010
@@ -1529,11 +1779,6 @@ item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
   Destination=%MAINDIR%\Gear32sd.dll
   Flags=0000000010000011
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\PyWinTypes15.dll
-  Destination=%MAINDIR%\PyWinTypes15.dll
-  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\rma.pyd
