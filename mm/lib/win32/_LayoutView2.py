@@ -48,6 +48,7 @@ class _LayoutView2(GenFormView):
 		
 		self._layout = None
 		self._mmcontext = None
+		self._slider = None
 
 		self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ')
 		self.__listeners = {}
@@ -184,15 +185,18 @@ class _LayoutView2(GenFormView):
 
 		self._treeComponent.onInitialUpdate(self)
 		
+		#
+		self._slider = components.KeyTimesSlider(self, grinsRC.IDC_LAYOUT_SLIDER)
+
 		# resizing
 		self.saveOrgCtrlPos()
 		self.resizeCtrls(r1-l1, b1-t1)
 		self.HookMessage(self.OnSize, win32con.WM_SIZE)
 			
 		# we have to notify layout if has capture
-		self.HookMessage(self.onMouse,win32con.WM_LBUTTONDOWN)
-		self.HookMessage(self.onMouse,win32con.WM_LBUTTONUP)
-		self.HookMessage(self.onMouse,win32con.WM_MOUSEMOVE)
+		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
+		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
+		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
 
 		self.addZoomButtons()
 		self.addFocusCtrl()
@@ -238,8 +242,30 @@ class _LayoutView2(GenFormView):
 	#
 	# end setup the dialog control values
 	#
+	def onLButtonDown(self, params):
+		msg = win32mu.Win32Msg(params)
+		point = msg.pos()
+		flags = msg._wParam
+		if self._slider:
+			self._slider.onSelect(point, flags)
+		if self._layout._drawContext.hasCapture():
+			self._layout.onNCLButton(params)
 
-	def onMouse(self, params):
+	def onLButtonUp(self, params):
+		msg = win32mu.Win32Msg(params)
+		point = msg.pos()
+		flags = msg._wParam
+		if self._slider:
+			self._slider.onDeselect(point, flags)
+		if self._layout._drawContext.hasCapture():
+			self._layout.onNCLButton(params)
+
+	def onMouseMove(self, params):
+		msg = win32mu.Win32Msg(params)
+		point = msg.pos()
+		flags = msg._wParam
+		if self._slider:
+			self._slider.onDrag(point, flags)
 		if self._layout._drawContext.hasCapture():
 			self._layout.onNCLButton(params)
 
@@ -440,11 +466,13 @@ class _LayoutView2(GenFormView):
 			grinsRC.IDC_W, grinsRC.IDC_LAYOUT_REGION_W,
 			grinsRC.IDC_H, grinsRC.IDC_LAYOUT_REGION_H,
 			grinsRC.IDC_Z, grinsRC.IDC_LAYOUT_REGION_Z,
+			grinsRC.IDC_LAYOUT_SLIDER,
 			grinsRC.IDUC_ATTRIBUTES)
 
 	def resizeCtrls(self, w, h):
 		# controls margin + posibly scrollbar
 		cm = 48 
+		cm = 80 
 
 		lf, tf, rf, bf = self.GetWindowRect()
 
@@ -466,6 +494,7 @@ class _LayoutView2(GenFormView):
 			hc = b1-t1
 			if hc<15: dh =12
 			else: dh=8
+			if id == grinsRC.IDC_LAYOUT_SLIDER: dh = 40
 			newrc = self.__orgctrlpos[id], tl-tf+hp+dh, r1-l1, b1-t1
 			ctrl.setwindowpos(ctrl._hwnd, newrc, flags)
 
@@ -484,9 +513,20 @@ class _LayoutView2(GenFormView):
 		w, h = msg.width(), msg.height()
 		worg, horg = self.__orgctrlpos[-1]
 		self.resizeCtrls(w, h)
+		self.centerViewport()
 
 	def getViewFrame(self):
 		return self.GetParent().GetParent()
+
+	def centerViewport(self):
+		if self._layout and self._layout._viewport:
+			self._layout._viewport.center()
+
+	def OnPaint(self):
+		dc, paintStruct = self.BeginPaint()
+		if self._slider:
+			self._slider.drawOn(dc)
+		self.EndPaint(paintStruct)
 
 ###########################
 # tree component management
@@ -664,6 +704,7 @@ class LayoutManager(LayoutManagerBase):
 		self._blackBrush = Sdk.CreateBrush(win32con.BS_SOLID, 0, 0)
 		self._selPen = Sdk.CreatePen(win32con.PS_SOLID, 1, win32api.RGB(0,0,255))
 		self._selPenDot = Sdk.CreatePen(win32con.PS_DOT, 1, win32api.RGB(0,0,255))
+		self._selPathPen = Sdk.CreatePen(win32con.PS_SOLID, 1, win32api.RGB(255,127,80))
 
 		self.selInc = 0
 			
@@ -720,8 +761,9 @@ class LayoutManager(LayoutManagerBase):
 	#
 	#
 	#
-	
 	def onDSelChanged(self, selections):
+		if len(selections) == 1 and isinstance(selections[0], winlayout.Polyline):
+			return
 		self._selectedList = selections
 		if self._listener != None:
 			if not self.selInc:
@@ -752,25 +794,38 @@ class LayoutManager(LayoutManagerBase):
 
 
 	def onDSelMove(self, selections):
+		if len(selections) == 1 and isinstance(selections[0], winlayout.Polyline):
+			return
 		if self._listener != None:
 			self._listener.onGeomChanging(selections)		
 			
 	def onDSelResize(self, selection):
+		if isinstance(selection, winlayout.Polyline):
+			return
 		if self._listener != None:
 			self._listener.onGeomChanging([selection, ])		
 
 	def onDSelMoved(self, selections):
+		if len(selections) == 1 and isinstance(selections[0], winlayout.Polyline):
+			return
 		if self._listener != None:
 			self._listener.onGeomChanged(selections)		
 
 	def onDSelResized(self, selection):
+		if isinstance(selection, winlayout.Polyline):
+			return
 		if self._listener != None:
 			self._listener.onGeomChanged([selection, ])		
 
 	def onDSelProperties(self, selection): 
 		if not selection: return
-		selection.onProperties()
-
+		if isinstance(selection, winlayout.Polyline):
+			index, prop = self._viewport._polyline.insertPoint(self.LPtoNP(self._lbuttondblclk))
+			if index>0:
+				self.GetParent()._slider.insertKeyTimeFromPoint(index, prop)
+		else:
+			selection.onProperties()
+			
 	#
 	# winlayout.MSDrawContext ShapeContainer interface
 	#
@@ -779,14 +834,17 @@ class LayoutManager(LayoutManagerBase):
 		# convert it to natural coordinates
 		point = self.LPtoNP(point)
 
+# kk: again this breaks selection logic
+# temporary out
 		# if the point belongs already to a selected shape we keep the shape
 		# it's important to have this behavior if you want to edit a node behind another one
-		for shape in self._selectedList:
-			if shape.inside(point):
-				return shape
-			
+#		for shape in self._selectedList:
+#			if shape.inside(point):
+#				return shape
+		
 		if self._viewport:
-			return self._viewport.getMouseTarget(point)
+			shape = self._viewport.getMouseTarget(point)
+			return shape
 
 	# 
 	# interface implementation: function called from an external module
@@ -898,6 +956,7 @@ class LayoutManager(LayoutManagerBase):
 		if self._viewport:
 			self._viewport._draw3drect(dc, self._hasfocus)
 			self._viewport.paintOn(dc)
+			self.drawPolyline(dc)
 			self.drawTracker(dc)
 
 	def drawTracker(self, dc):
@@ -905,7 +964,12 @@ class LayoutManager(LayoutManagerBase):
 		xv, yv, wv, hv = v.LRtoDR(v.getwindowpos(), round=1)
 		ltrbv = xv, yv, xv+wv, yv+hv
 
-		for wnd in self._drawContext._selections:
+
+		for shape in self._drawContext._selections:
+			if isinstance(shape, winlayout.Polyline):
+				self.drawPolylineTracker(dc, shape)
+				continue
+			wnd = shape
 			rc = wnd.LRtoDR(wnd.getwindowpos(), round=1)
 			l, t, r, b = wnd.ltrb(rc)
 
@@ -928,6 +992,36 @@ class LayoutManager(LayoutManagerBase):
 				x, y, w, h = wnd.getDragHandleRect(ix)
 				dc.FillSolidRect((x, y, x+w, y+h), win32api.RGB(255,127,80))
 				dc.FrameRectFromHandle((x, y, x+w, y+h), self._blackBrush)
+
+	def drawPolylineTracker(self, dc, polyline):
+		# draw polyline
+		oldpen = dc.SelectObjectFromHandle(self._selPathPen)
+		points = polyline.getDevicePoints()
+		dc.Polyline(points)
+		dc.SelectObjectFromHandle(oldpen)
+
+		# draw polyline handles
+		nHandles = polyline.getDragHandleCount()		
+		for ix in range(1,nHandles+1):
+			x, y, w, h = polyline.getDragHandleRect(ix)
+			dc.FillSolidRect((x, y, x+w, y+h), win32api.RGB(255,127,80))
+			dc.FrameRectFromHandle((x, y, x+w, y+h), self._blackBrush)
+
+	def drawPolyline(self, dc):
+		polyline = self._viewport._polyline
+		if not polyline: return
+		# draw polyline
+		oldpen = dc.SelectObjectFromHandle(self._selPenDot)
+		points = polyline.getDevicePoints()
+		dc.Polyline(points)
+		dc.SelectObjectFromHandle(oldpen)
+
+		# draw polyline handles
+		nHandles = polyline.getDragHandleCount()		
+		for ix in range(1,nHandles+1):
+			x, y, w, h = polyline.getDragHandleRect(ix)
+			dc.FillSolidRect((x, y, x+w, y+h), win32api.RGB(0,0,0))
+			dc.FrameRectFromHandle((x, y, x+w, y+h), self._blackBrush)
 
 	def hilight(self, f):
 		self._hasfocus = f
@@ -961,6 +1055,7 @@ class Viewport(win32window.Window, UserEventMng):
 		self._attrdict = attrdict
 		self._name = name
 		self._ctx = context
+		self._polyline = None
 		win32window.Window.__init__(self)
 		UserEventMng.__init__(self)
 		self._uidx, self._uidy = 8, 8
@@ -992,6 +1087,27 @@ class Viewport(win32window.Window, UserEventMng):
 		self._active_displist = self.newdisplaylist()
 
 		self._showname = 1
+
+		points = [ (0,0), (100, 200), (300,100)]
+		self._polyline = winlayout.Polyline(self, points)
+		self.center()
+
+	def center(self):
+		x, y, w, h = self._rectb
+		layout = self._ctx
+		vw, vh = layout.GetClientRect()[2:]
+		vw, vh = self.DPtoLP((vw, vh))
+		x = (vw - w)/2
+		y = (vh - h)/2
+		if x<8: x=8
+		if y<8: y=8
+		self._rectb = x, y, w, h
+		
+	def getDeviceOrg(self):
+		return self.LPtoDP(self._rectb[:2], round = 1)
+
+	def getOrg(self):
+		return self._rectb[:2]
 
 	# overide the default newdisplaylist method defined in win32window
 	def newdisplaylist(self, bgcolor = None):
@@ -1089,9 +1205,9 @@ class Viewport(win32window.Window, UserEventMng):
 	# override win32window.Window method
 	def setDeviceToLogicalScale(self, d2lscale):
 		win32window.Window.setDeviceToLogicalScale(self, d2lscale)
-		x, y, w, h = self._rectb
-		dx, dy = self.DPtoLP( (self._uidx, self._uidy) )
-		self._rectb = int(dx+0.5), int(dy+0.5), w, h
+		if self._polyline:
+			self._polyline.setDeviceToLogicalScale(d2lscale)
+		self.center()
 
 	def insideCaption(self, point):
 		x, y, w, h = self.getwindowpos()
@@ -1101,7 +1217,12 @@ class Viewport(win32window.Window, UserEventMng):
 			return 1
 		return 0
 		
+		if self._polyline and self._polyline.inside(point):
+				return self._polyline
+
 	def getMouseTarget(self, point):
+		if self._polyline and self._polyline.inside(point):
+			return self._polyline
 		for w in self._subwindows:
 			target = w.getMouseTarget(point)
 			if target:
