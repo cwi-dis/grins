@@ -180,17 +180,19 @@ HRESULT CVid2rmInputPin::CheckMediaType(const CMediaType *)
 HRESULT CVid2rmInputPin::SetMediaType(const CMediaType *pmt)
 {
     CAutoLock cObjectLock(m_pLock);
-
-    m_mtIn = *pmt;
 	
     VIDEOINFO *pVideoInfo = (VIDEOINFO *) pmt->Format();
 	if(!pVideoInfo) return NOERROR; // needed!
 
+    m_mtIn = *pmt;
     BITMAPINFOHEADER *pbmi;     // Image format data
-	pbmi = HEADER(m_mtIn.Format());
+	pbmi = HEADER(pmt->Format());
+	if(pbmi->biSize!=sizeof(BITMAPINFOHEADER))
+		Log("NOT NORMAL\n");
 	char sz[128]="";
 	CRefTime rt(pVideoInfo->AvgTimePerFrame);
-	sprintf(sz,"Size: %ld %ld fps:%ld\n",pbmi->biWidth,pbmi->biHeight,1000/rt.Millisecs());
+	//sprintf(sz,"Size: %ld %ld fps:%ld\n",pbmi->biWidth,pbmi->biHeight,1000/rt.Millisecs());
+	sprintf(sz,"Size: %ld %ld fps:%ld\n",pVideoInfo->rcSource.right,pVideoInfo->rcSource.bottom,1000/rt.Millisecs());
 	Log(sz);
 
 	return NOERROR;
@@ -252,6 +254,33 @@ STDMETHODIMP CVid2rmInputPin::Receive(IMediaSample *pSample)
     if (FAILED(hr)) {
         return hr;
     }
+	if(true){
+		FILE *bmpFile=fopen("frame.bmp","wb");
+		if(bmpFile){
+		VIDEOINFO *pVideoInfo = (VIDEOINFO *) m_mtIn.Format();
+		BITMAPFILEHEADER filehdr;
+		BITMAPINFOHEADER infohdr;
+		ZeroMemory(&filehdr,sizeof(filehdr));
+		*((char*)&filehdr.bfType)='B';
+		*(((char*)&filehdr.bfType)+1)='M';
+		filehdr.bfSize=sizeof(BITMAPFILEHEADER)+sizeof(BITMAPINFOHEADER)+pSample->GetActualDataLength(); 
+		ZeroMemory(&infohdr,sizeof(infohdr));
+		infohdr.biSize=sizeof(infohdr);
+		infohdr.biWidth    = pVideoInfo->rcSource.right-pVideoInfo->rcSource.left;
+		infohdr.biHeight   = pVideoInfo->rcSource.bottom-pVideoInfo->rcSource.top;
+		infohdr.biPlanes   = 1;
+		infohdr.biBitCount = 24;
+		infohdr.biCompression=BI_RGB;
+		infohdr.biSizeImage = 0;
+		infohdr.biClrUsed = 0;
+
+		filehdr.bfOffBits=sizeof(BITMAPFILEHEADER)+sizeof(BITMAPINFOHEADER);
+		fwrite(&filehdr,1,sizeof(BITMAPFILEHEADER),bmpFile);
+		fwrite(&infohdr,1,sizeof(BITMAPINFOHEADER),bmpFile);
+		fwrite(pbData,1,pSample->GetActualDataLength(),bmpFile);
+		fclose(bmpFile);
+		}
+	}
 	WriteStringInfo(pSample);
 	return NOERROR;
     //return m_pVid2rm->Write(pbData,pSample->GetActualDataLength());
