@@ -12,7 +12,6 @@ from AnchorDefs import *
 import string
 import os
 import MMurl
-import regsub
 import re
 from cmif import findfile
 import windowinterface
@@ -27,14 +26,6 @@ def nameencode(value):
 	value = string.join(string.split(value,'>'),'&gt;')
 	value = string.join(string.split(value,'<'),'&lt;')
 	value = string.join(string.split(value,'"'),'&quot;')
-##	if '&' in value:
-##		value = regsub.gsub('&', '&amp;', value)
-##	if '>' in value:
-##		value = regsub.gsub('>', '&gt;', value)
-##	if '<' in value:
-##		value = regsub.gsub('<', '&lt;', value)
-##	if '"' in value:
-##		value = regsub.gsub('"', '&quot;', value)
 	return '"' + value + '"'
 
 # CMIF channel types that have a visible representation
