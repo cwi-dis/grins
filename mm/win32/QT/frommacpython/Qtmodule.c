@@ -7,6 +7,7 @@
 #include "pymactoolbox.h"
 
 #ifdef _WIN32
+#include "pywintoolbox.h"
 #include <QTML.h>
 #include <TextUtils.h>
 #endif

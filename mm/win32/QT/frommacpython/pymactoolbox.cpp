@@ -21,7 +21,16 @@ PyObject *PyMac_BuildStr255(Str255) {return 0;}		/* Convert Str255 to PyObject *
 PyObject *PyMac_BuildOptStr255(Str255) {return 0;}		/* Convert Str255 to PyObject, NULL to None */
 
 int PyMac_GetRect(PyObject *_args, Rect *pr) 
-		{return PyArg_ParseTuple(_args, "(iiii)", pr->left, pr->top, pr->right, pr->bottom);}	
+	{
+	RECT rc;
+	if(!PyArg_ParseTuple(_args, "iiii", &rc.left, &rc.top, &rc.right, &rc.bottom))
+		return 0;
+	pr->left = short(rc.left);
+	pr->top = short(rc.top);
+	pr->right = short(rc.right);
+	pr->bottom = short(rc.bottom);
+	return 1;
+	}
 PyObject *PyMac_BuildRect(Rect *pr) 
 	{return Py_BuildValue("iiii", pr->left, pr->top, pr->right, pr->bottom);}			
 

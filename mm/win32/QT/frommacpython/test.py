@@ -123,7 +123,8 @@ class QTWnd(MfcOsWnd):
 			self.movie.StopMovie()
 		del self.ctrl
 		del self.movie
-		Qt.DestroyPortAssociation(self.port)
+		if self.port:
+			Qt.DestroyPortAssociation(self.port)
 		Qt.ExitMovies()
 		Qt.TerminateQTML()
 

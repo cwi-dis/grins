@@ -2,31 +2,14 @@
 
 static PyObject *MovieCtlObj_MCIsPlayerEventWin(MovieControllerObject *_self, PyObject *_args)
 {
-	HWND hwnd;
-	UINT message;
-	WPARAM wParam;
-	LPARAM lParam;
-	long time;
-	POINT pt;
-	if (!PyArg_ParseTuple(_args, "(iiiii(ii))", &hwnd, &message,&wParam,&lParam, &time, &pt.x, &pt.y))
-		return NULL;
-	MSG msg;
-    msg.hwnd = hwnd;
-    msg.message = message;
-    msg.wParam = wParam;
-    msg.lParam = lParam;
-    msg.time = time; 
-	msg.pt = pt;
-
-	PyObject *_res = NULL;
-	ComponentResult _rv;
 	EventRecord e;
-	WinEventToMacEvent(&msg, &e);
+	if (!PyArg_ParseTuple(_args, "O&", ToEventRecord, &e))
+		return NULL;
+	ComponentResult _rv;
 	Py_BEGIN_ALLOW_THREADS
 	_rv = MCIsPlayerEvent(_self->ob_itself, &e);
 	Py_END_ALLOW_THREADS
-	_res = Py_BuildValue("l", _rv);
-	return _res;
+	return Py_BuildValue("l", _rv);
 }
 
 static PyObject *MovieCtlObj_MCDrawWin(MovieControllerObject *_self, PyObject *_args)
@@ -36,8 +19,10 @@ static PyObject *MovieCtlObj_MCDrawWin(MovieControllerObject *_self, PyObject *_
 	int w;
 	if (!PyArg_ParseTuple(_args, "i", &w))
 		return NULL;
+	Py_BEGIN_ALLOW_THREADS
 	_rv = MCDraw(_self->ob_itself,
 	             (GrafPtr)w);
+	Py_END_ALLOW_THREADS
 	_res = Py_BuildValue("l",
 	                     _rv);
 	return _res;
