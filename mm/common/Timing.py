@@ -150,9 +150,9 @@ from AnchorDefs import A_TYPE, ATYPE_PAUSE, ATYPE_ARGS
 is_warned = 0
 
 def getduration(node):
-	global is_warned
-	if not node.IsWanted():
-		return 0
+##	global is_warned
+##	if not node.IsWanted():
+##		return 0
 	import Duration
 	d = Duration.get(node)
 	node.timing_discont = 0
