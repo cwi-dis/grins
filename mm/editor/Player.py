@@ -8,7 +8,6 @@ from PlayerCore import PlayerCore
 from MMExc import *
 import MMAttrdefs
 from ViewDialog import ViewDialog
-import Timing
 import windowinterface, WMEVENTS
 from usercmd import *
 
