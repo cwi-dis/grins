@@ -99,6 +99,7 @@ struct mpeg {
 	GC m_gc;		/* graphics context to write images */
 	Widget m_widget;	/* the window widget */
 	Visual *m_visual;	/* the visual to use */
+	int m_depth;		/* depth of the window */
 #endif
 };
 
@@ -218,9 +219,11 @@ mpeg_init(self)
 			goto error_return;
 		}
 		v = PyDict_GetItemString(self->mm_attrdict, "visual");
-		if (v && is_visualobject(v))
-			PRIV->m_visual = getvisualinfovalue(v)->visual;
-		else {
+		if (v && is_visualobject(v)) {
+			XVisualInfo *vi = getvisualinfovalue(v);
+			PRIV->m_visual = vi->visual;
+			PRIV->m_depth = vi->depth;
+		} else {
 			ERROR(mpeg_init, PyExc_RuntimeError, "no visual specified");
 			goto error_return;
 		}
@@ -386,9 +389,11 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	    framesize = PRIV->m_arm.m_width * PRIV->m_arm.m_height * sizeof(long);
 #ifdef USE_XM
 	    if (windowsystem == WIN_X) {
-		pbuf[0][1] = CL_RGB332;
+		if (PRIV->m_depth == 8) {
+		    pbuf[0][1] = CL_RGB332;
+		    framesize /= sizeof(long);
+		}
 		pbuf[1][1] = CL_TOP_DOWN;
-		framesize /= sizeof(long);
 	    }
 #endif
 	    clSetParams(decHandle, (int *)pbuf, sizeof(pbuf)/sizeof(int));
@@ -413,12 +418,14 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	PRIV->m_arm.m_decHdl = decHandle;
 #ifdef USE_XM
 	if (windowsystem == WIN_X) {
+	    int depth = PRIV->m_depth == 8 ? 1 : 4;
 	    PRIV->m_arm.m_image = XCreateImage(XtDisplay(PRIV->m_widget),
 					       PRIV->m_visual,
-					       8, ZPixmap, 0,
+					       PRIV->m_depth, ZPixmap, 0,
 					       PRIV->m_arm.m_frame,
 					       PRIV->m_arm.m_width,
-					       PRIV->m_arm.m_height, 8, 0);
+					       PRIV->m_arm.m_height, depth * 8,
+					       PRIV->m_arm.m_width * depth);
 	}
 #endif
 
