@@ -239,8 +239,10 @@ class HierarchyView(HierarchyViewDialog):
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 			]
 		self.finisheventcommands = [
-			CREATE_BEGIN_EVENT(callback = (self.create_begin_event_dest, ())),
 			CREATE_END_EVENT(callback = (self.create_end_event_dest, ())),
+			]
+		self.finishbegineventcommands = [
+			CREATE_BEGIN_EVENT(callback = (self.create_begin_event_dest, ())),
 			]
 		self.navigatecommands = [
 			TOPARENT(callback = (self.toparent, ())),
@@ -341,6 +343,9 @@ class HierarchyView(HierarchyViewDialog):
 			commands = commands + self.finishlinkcommands
 		if len(self.event_sources) > 0:
 			commands = commands + self.finisheventcommands
+			fnodeparent = fnode.GetParent()
+			if fnodeparent and fnodeparent.GetType() != 'seq':
+				commands = commands + self.finishbegineventcommands
 		if fntype in MMTypes.interiortypes:
 			commands = commands + self.interiorcommands # Add interior structure modifying commands.
 		if self.root.showtime:
@@ -2470,6 +2475,7 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			windowinterface.beep() # Should not happen
 		self.draw()
+		self.aftersetfocus()
 
 	def __clear_event_source(self):
 		# Resets the event source list.
@@ -2484,9 +2490,12 @@ class HierarchyView(HierarchyViewDialog):
 		widgets = self.get_selected_widgets()
 
 		if len(widgets)==1 and len(self.event_sources) > 0:
+			node = widgets[0].get_node()
+			if not node.GetParent() or node.GetParent().GetType() == 'seq':
+				windowinterface.beep()
+				return 0
 			if not self.editmgr.transaction():
 				return 0
-			node = widgets[0].get_node()
 			for src in self.event_sources:
 				# XXX BUG! each NewBeginEvent is another transaction. Idiot.
 				node.NewBeginEvent(src, 'activateEvent', editmgr=self.editmgr)
