@@ -14,7 +14,15 @@ if windowinterface.Version <> 'X':
 	print 'HtmlChannel: Cannot work without X (use CMIF_USE_X=1)'
 	raise ImportError
 
+error = 'HtmlChannel.error'
+
 class HtmlChannel(Channel.ChannelWindow):
+
+        # HTML Channels get colorized thru X resources.
+	# XXXX Hope this doesn't break any Channel.py code...
+        node_attrs = Channel.ChannelWindow.node_attrs[:]
+	node_attrs.remove('bgcolor')
+	node_attrs.remove('hicolor')
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
@@ -58,10 +66,13 @@ class HtmlChannel(Channel.ChannelWindow):
 		return '<HtmlChannel instance, name=' + `self._name` + '>'
 
 	def updatefixedanchors(self, node):
-		if self._armstate != Channel.AIDLE:
-			raise error, 'Arm state must be idle when defining an anchor'
-		if self._playstate != Channel.PIDLE:
-			raise error, 'Play state must be idle when defining an anchor'
+		if self._armstate != Channel.AIDLE or \
+		   self._playstate != Channel.PIDLE:
+		    if self._played_node == node:
+			# Ok, all is well, we've played it.
+			return 1
+		    windowinterface.showmessage('Cannot recompute anchorlist (channel busy)')
+		    return 1
 		windowinterface.setcursor('watch')
 		context = Channel.AnchorContext()
 		self.startcontext(context)
@@ -74,8 +85,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.syncplay = 0
 		return 1
 
-	def seekanchor(self, node, aid, args):
-		windowinterface.showmessage('JUMP:'+`aid`+`args`)
+#	def seekanchor(self, node, aid, args):
+#		windowinterface.showmessage('JUMP:'+`aid`+`args`)
 		
 	def do_arm(self, node):
 		self.armed_str = self.getstring(node)
