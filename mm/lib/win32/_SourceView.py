@@ -24,6 +24,7 @@ class _SourceView(docview.EditView):
 		docview.EditView.__init__(self,doc)
 		self._text=''
 		self._close_cmd_list=[]
+		self.mother = None
 
 	# Create the OS window
 	def createWindow(self,parent):
@@ -38,13 +39,13 @@ class _SourceView(docview.EditView):
 
 	# Called by the framework before this window is closed
 	def OnClose(self):
-		print "DEBUG: Warning! Saving source is not implemented yet."
 		saveme = windowinterface.GetYesNoCancel("Do you want to keep your changes?", self.GetParent())
 		if saveme==0:		# Which means the user clicked "yes"
 			edit = self.GetEditCtrl()
 			# Bugger. The TopLevel is miles away, through several rather bizarre API calls.
 			# For later, anyway:
-			print edit.GetWindowText()
+			text = edit.GetWindowText()
+			self.mother.save_source_callback(text)
 		if self._closecmdid>0:
 			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
 		else:
@@ -65,6 +66,9 @@ class _SourceView(docview.EditView):
 		# if already visible, update text in window
 		if self._mdiframe is not None:
 			self.GetEditCtrl().SetWindowText(self._text)
+
+	def setmother(self, mother):
+		self.mother = mother
 
 	# Convert the text from unix or mac to windows
 	def convert2ws(self,text):
