@@ -51,6 +51,8 @@ MENUBAR=(
 		(FLAG_DBG, SEP,),
 		(FLAG_ALL, ENTRY, 'C&heck for GRiNS update...', None, CHECKVERSION),
 		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Choose skin...', None, CHOOSESKIN),
+		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'E&xit', None, EXIT))),
 
 

@@ -99,6 +99,7 @@ class CommandUI:
 #
 CommandUI(OPENFILE, grinsRC.IDM_OPEN)
 CommandUI(CLOSE, grinsRC.IDM_CLOSE)
+CommandUI(CHOOSESKIN, grinsRC.IDM_SKIN)
 CommandUI(EXIT, grinsRC.IDM_EXIT)
 
 

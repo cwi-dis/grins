@@ -88,6 +88,7 @@ class Main(MainDialog):
 			PREFERENCES(callback = (self.preferences_callback, ())),
 			CHECKVERSION(callback=(self.checkversion_callback, ())),
 			EXIT(callback = (self.close_callback, ())),
+			CHOOSESKIN(callback = (self.skin_callback, ())),
 			]
 		import settings
 		if hasattr(windowinterface, 'is_embedded') and windowinterface.is_embedded():

@@ -1862,6 +1862,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if command == 'activate()':
 			self.player.activate()
 			return 1
+		if command == 'skin()':
+			# not implemented in editor
+			return 1
 		print 'Unknown grins: command:', command
 		return 0
 
