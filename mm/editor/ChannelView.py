@@ -813,10 +813,11 @@ class ChannelView(ChannelViewDialog):
 		self.placing_orig = name
 
 	def finish_channel(self, x, y):
-	        placement_type = self.placing_channel
-	        self.placing_channel = 0
+		placement_type = self.placing_channel
+		self.placing_channel = 0
 		index = self.channelgapindex(y)
-	        windowinterface.setcursor('')
+		windowinterface.setcursor('')
+		self.window.setcursor('')
 		editmgr = self.editmgr
 		if not editmgr.transaction():
 			return
@@ -1617,8 +1618,6 @@ class INodeBox(GO):
 
 
 class ArcBox(GO, ArcBoxCommand):
-	arc_info=None # Win32:enforce one instance
-
 	def __init__(self, mother, snode, sside, delay, dnode, dside):
 		self.arcid = snode, sside, delay, dnode, dside
 		self.snode, self.sside, self.delay, self.dnode, self.dside = \
@@ -1673,11 +1672,6 @@ class ArcBox(GO, ArcBoxCommand):
 	# Menu stuff beyond what GO offers
 
 	def infocall(self):
-		import sys
-		if sys.platform=='win32':
-			a=ArcBox.arc_info
-			if a and self.mother.editmgr.is_registered(a):
-				return
 		self.mother.toplevel.setwaiting()
 		import ArcInfo
 		ArcBox.arc_info=ArcInfo.showarcinfo(self.mother, self.mother.root,
