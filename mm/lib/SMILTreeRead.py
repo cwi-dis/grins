@@ -69,12 +69,6 @@ wallclockval = re.compile(
 	r'(?P<hour>\d{2}):(?P<min>\d{2})(?::(?P<sec>\d{2}(?:\.\d+)?))?'	# time (required)
 	r'(?:(?P<Z>Z)|(?P<tzsign>[-+])(?P<tzhour>\d{2}):(?P<tzmin>\d{2}))?$'	# timezone (optional)
 	)
-##clock = re.compile(r'(?P<name>local|remote):'
-##		   r'(?P<hours>\d+):'
-##		   r'(?P<minutes>\d{2}):'
-##		   r'(?P<seconds>\d{2})'
-##		   r'(?P<fraction>\.\d+)?'
-##		   r'(?:Z(?P<sign>[-+])(?P<ohours>\d{2}):(?P<omin>\d{2}))?$')
 screen_size = re.compile(_opS + r'(?P<x>\d+)' + _opS + r'[xX]' +
 			 _opS + r'(?P<y>\d+)' + _opS + r'$')
 clip = re.compile(_opS + r'(?:'
@@ -527,15 +521,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['system_captions'] = 0
 				else:
 					self.syntax_error('bad system-captions attribute')
-##			elif attr == 'system-audiodesc':
-##				if val == 'on':
-##					if not attrdict.has_key('system_audiodesc'):
-##						attrdict['system_audiodesc'] = 1
-##				elif val == 'off':
-##					if not attrdict.has_key('system_audiodesc'):
-##						attrdict['system_audiodesc'] = 0
-##				else:
-##					self.syntax_error('bad system-audiodesc attribute')
 			elif attr == 'systemAudioDesc':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -869,9 +854,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				elif chtype == 'html':
 					chtype = 'text'
 
-##	 		if attributes['encoding'] not in ('base64', 'UTF'):
-## 				self.syntax_error('bad encoding parameter')
-
 		# connect to the register point
 		if attributes.has_key('regPoint'):
 			if not self.__regpoints.has_key(attributes['regPoint']):
@@ -917,7 +899,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		if not self.__is_ext:
 			# don't warn since error message already printed
-## 			encoding = attributes['encoding']
 			data = string.split(string.join(self.__nodedata, ''), '\n')
 			for i in range(len(data)-1, -1, -1):
 				tmp = string.join(string.split(data[i]))
@@ -1198,38 +1179,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			func(root)
 		for node in root.GetChildren():
 			apply(self.Recurse, (node,) + funcs)
-
-##	def FixRoot(self):
-##		root = self.__root
-##		if len(root.children) != 1 or root.attrdict or \
-##		   root.__syncarcs or root.__anchorlist or \
-##		   root.children[0].GetType() in leaftypes:
-##			return
-##		child = root.children[0]
-##		# copy stuff over from child to root
-##		root.type = child.type
-##		root.attrdict = child.attrdict.copy()
-##		root.children[:] = child.children # deletes root.children[0]
-##		child.children[:] = []
-##		for c in root.children:
-##			c.parent = root
-##		root.__syncarcs = child.__syncarcs
-##		root.values = child.values
-##		try:
-##			root.__mediatype = child.__mediatype
-##			root.__region = child.__region
-##		except AttributeError:
-##			pass
-##		try:
-##			root.__size = child.__size
-##		except AttributeError:
-##			pass
-##		try:
-##			root.__chantype = child.__chantype
-##		except AttributeError:
-##			pass
-##		root.__anchorlist = child.__anchorlist
-##		root.setgensr()
 
 	def FixSizes(self):
 		for t in self.__tops.keys():
@@ -1950,7 +1899,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					     'attrs':attrs}
 			if not self.__childregions.has_key(None):
 				self.__childregions[None] = []
-##		self.FixRoot()
 		self.FixSizes()
 		self.__makeLayoutChannels()
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
@@ -3107,33 +3055,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if value in ('begin', 'end'):
 				return value
 		raise error, 'bogus presentation counter'
-
-##	def __parsetime(self, xpointer):
-##		offset = 0
-##		res = syncbase.match(xpointer)
-##		if res is not None:
-##			name, event = res.group('name', 'event')
-##			delay = None
-##		else:
-####			res = clock.match(xpointer)
-####			if res is not None:
-####				# XXXX absolute time not implemented
-####				return None, 0, 0
-####			else:
-##			name, event, delay = None, None, xpointer
-##		if event is not None:
-##			counter = self.__parsecounter(event, 1)
-##			if counter == 'begin':
-##				counter = 0
-##			elif counter == 'end':
-##				counter = -1	# special event
-##		else:
-##			counter = 0
-##		if delay is not None:
-##			delay = self.__parsecounter(delay)
-##		else:
-##			delay = 0
-##		return name, counter, delay
 
 	def __parseclip(self, val):
 		res = clip.match(val)
