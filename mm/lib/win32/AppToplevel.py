@@ -574,7 +574,7 @@ The verb can be one of 'open','edit','print'
 """
 
 # url parsing
-import MMurl, ntpath, urlparse
+import MMurl, urlparse
 
 def shell_execute(url,verb='open', showmsg=1):
 	utype, host, path, params, query, fragment = urlparse.urlparse(url)
@@ -583,16 +583,21 @@ def shell_execute(url,verb='open', showmsg=1):
 		filename=MMurl.url2pathname(path)
 		if not os.path.isabs(filename):
 			filename=os.path.join(os.getcwd(),filename)
-			filename=ntpath.normpath(filename)
-		if not os.path.isfile(filename):
-			rv = win32ui.MessageBox(filename+': not found.\nCreate?',
-					 '', win32con.MB_OKCANCEL)
-			if rv == win32con.IDCANCEL:
-				return -1
-			try:
-				open(filename, 'w').close()
-			except:
-				pass
+			filename=os.path.normpath(filename)
+		if not os.path.exists(filename):
+			if os.path.exists(filename+'.lnk'):
+				filename = filename + '.lnk'
+			else:
+				rv = win32con.IDCANCEL
+				if verb == 'edit':
+					rv = win32ui.MessageBox(filename+': not found.\nCreate?',
+						 '', win32con.MB_OKCANCEL)
+				if rv == win32con.IDCANCEL:
+					return -1
+				try:
+					open(filename, 'w').close()
+				except:
+					pass
 		url=filename
 	rc,msg=Sdk.ShellExecute(0,verb,url,None,"", win32con.SW_SHOW)
 	if rc<=32:
