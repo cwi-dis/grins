@@ -41,14 +41,17 @@ class Main(MainDialog):
 		self._untitled_counter = 1
 		self._license = license.License()
 		if self._license.have('save'):
-			can_edit = 1
+			pass # Everything is hunky-dory
 		elif self._license.have('editdemo'):
-			windowinterface.showmessage('This is a demo version. You will not be able to save your changes')
-			can_edit = 1
+			windowinterface.showmessage(
+				'This is a demo version.\n'+
+				'You will not be able to save your changes.',
+				title='CMIFed license')
 		else:
-			windowinterface.showmessage('Sorry, you have no license for this program')
-			can_edit = 0 # XXXX or sys.exit?
-			files = []
+			windowinterface.showmessage(
+				'Sorry, you have no license for this program.',
+				title='CMIFed license')
+			sys.exit(1)
 		try:
 			import mm, posix, fcntl, FCNTL
 		except ImportError:
@@ -63,9 +66,6 @@ class Main(MainDialog):
 		from usercmd import *
 		self.commandlist = [
 			EXIT(callback = (self.close_callback, ())),
-			]
-		if can_edit:
-			self.commandlist = self.commandlist + [
 			NEW_DOCUMENT(callback = (self.new_callback, ())),
 			OPEN(callback = (self.open_callback, ())),
 			PREFERENCES(callback=(self.preferences_callback, ())),
