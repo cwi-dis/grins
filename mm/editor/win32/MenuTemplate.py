@@ -20,7 +20,7 @@ following Grammar:
 # menu_exec_list: (MENU,menu_spec_list)
 where ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE are type constants.
 LABEL and and SHORTCUT are strings
-ID is either an integer or an object that can be maped to an integer 
+ID is either an integer or an object that can be maped to an integer
 """
 
 
@@ -35,7 +35,7 @@ from wndusercmd import *
 # Some commands are optional, depending on preference settings:
 ALL=''
 CMIF='cmif'
-DEBUG='debug'
+DBG='debug'
 
 MENUBAR=(
 	('&File', (
@@ -44,7 +44,7 @@ MENUBAR=(
 		(ALL, ENTRY, '&Open URL...\tCtrl+L', 'O', OPEN),
 		(ALL, DYNAMICCASCADE, 'Open &recent', OPEN_RECENT),
 		(ALL, ENTRY, '&Close', None, CLOSE),
- 		(ALL, SEP,),
+		(ALL, SEP,),
 		(ALL, ENTRY, '&Save\tCtrl+S', 'S', SAVE),
 		(ALL, ENTRY, 'Save &as...', None, SAVE_AS),
 		(ALL, CASCADE, '&Export', (
@@ -52,9 +52,9 @@ MENUBAR=(
 			)),
 		(ALL, ENTRY, 'Revert &to saved', None, RESTORE),
 		(ALL, SEP,),
-        (ALL, ENTRY, 'Document &Properties...', None, PROPERTIES),
-		(DEBUG, SEP,),
-		(DEBUG, CASCADE, 'Debug', (
+	(ALL, ENTRY, 'Document &Properties...', None, PROPERTIES),
+		(DBG, SEP,),
+		(DBG, CASCADE, 'Debug', (
 			(ALL, ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
 			(ALL, TOGGLE, 'Enable call tracing', None, TRACE),
 			(ALL, ENTRY, 'Enter debugger', None, DEBUG),
@@ -181,8 +181,8 @@ MENUBAR=(
 		(ALL, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
 		(ALL, SEP,),
 		(ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
-		
-		
+
+
 #
 # Popup menus for various states
 #
@@ -302,9 +302,9 @@ MAIN_FRAME_POPUP = (
 			)),
 		(ALL, ENTRY, 'Revert &to saved', None, RESTORE),
 		(ALL, SEP,),
-        (ALL, ENTRY, 'Document &Properties...', None, PROPERTIES),
-		(DEBUG, SEP,),
-		(DEBUG, CASCADE, 'Debug', (
+	(ALL, ENTRY, 'Document &Properties...', None, PROPERTIES),
+		(DBG, SEP,),
+		(DBG, CASCADE, 'Debug', (
 			(ALL, ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
 			(ALL, TOGGLE, 'Enable call tracing', None, TRACE),
 			(ALL, ENTRY, 'Enter debugger', None, DEBUG),
@@ -313,5 +313,5 @@ MAIN_FRAME_POPUP = (
 			)),
 		(ALL, SEP,),
 		(ALL, ENTRY, '&Close', None, CLOSE),
- 		(ALL, ENTRY, 'E&xit', None, EXIT),
+		(ALL, ENTRY, 'E&xit', None, EXIT),
 )
