@@ -29,6 +29,7 @@ __version__ = "$Id$"
 
 from usercmd import *
 from wndusercmd import *
+import WMEVENTS
 
 class MainDialog:
 	adornments = {}
@@ -53,10 +54,13 @@ class MainDialog:
 			self.commandlist.append(
 				GRINS_WEB(callback = (self.grins_web_callback, ('http://www.oratrix.com/GRiNS/index.html',))))
 		import windowinterface
+		# register events for all frame wnds
+		windowinterface.register_event(WMEVENTS.DropFile, self.dropfile, None)
+		windowinterface.register_event(WMEVENTS.PasteFile, self.dropfile, None)
 		windowinterface.createmainwnd(title,
 			adornments = self.adornments,
 			commandlist = self.commandlist)
-
+		
 	def open_callback(self):
 		callbacks={
 			'Browse':(self.__openfile_callback, ()),
@@ -70,6 +74,10 @@ class MainDialog:
 		self.__owindow.show()
 
 
+	def dropfile(self, arg, window, event, value):
+		x,y,filename=value
+		url=self.__path2url(filename)
+		self.openURL_callback(url)
 
 	def __ccallback(self):
 		self.__owindow.close()
@@ -90,6 +98,10 @@ class MainDialog:
 					   parent = f)
 
 	def __filecvt(self, filename):
+		text=self.__path2url(filename)
+		self.__text.settext(text)
+
+	def __path2url(self, filename):
 		import os, MMurl
 		if os.path.isabs(filename):
 			cwd = os.getcwd()
@@ -103,7 +115,7 @@ class MainDialog:
 				file = os.path.join(f, file)
 			if dir == cwd:
 				filename = file
-		self.__text.settext(MMurl.pathname2url(filename))
+		return MMurl.pathname2url(filename)
 
 	def console_callback(self):
 		import win32ui,win32con
