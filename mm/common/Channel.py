@@ -970,7 +970,7 @@ class ChannelWindow(Channel):
 		self._bgimg = None
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
-			PLAY(callback = (ui.play_callback, ())),
+#			PLAY(callback = (ui.play_callback, ())),
 			PAUSE(callback = (ui.pause_callback, ())),
 			STOP(callback = (ui.stop_callback, ())),
 			MAGIC_PLAY(callback = (ui.magic_play, ())),
