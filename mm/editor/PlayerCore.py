@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # PlayerCore module -- Player stuff not related to UI or scheduling
 
 
