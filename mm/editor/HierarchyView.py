@@ -24,7 +24,7 @@ DISPLAY_VERTICAL = settings.get('vertical_structure')
 hierarchy_minimum_sizes = settings.get('hierarchy_minimum_sizes')
 root_expanded = settings.get('root_expanded')
 structure_name_size = settings.get('structure_name_size')
-
+show_links = settings.get('show_links')
 
 # Color assignments (RGB)
 
@@ -1623,7 +1623,12 @@ class Object:
 		left_pos = title_left
 		title_left = title_left + awidth
 		self.iconbox = left_pos, t+vmargin, awidth, aheight
-		d.drawicon(self.iconbox, node.infoicon)
+		if node.infoicon:
+			d.drawicon(self.iconbox, node.infoicon)
+		elif show_links:
+			d.drawicon(self.iconbox, self.getlinkicon())
+		else:
+			d.drawicon(self.iconbox, '')
 		# draw the name
 		d.fgcolor(TEXTCOLOR)
 		d.centerstring(title_left, t+vmargin/2, r-hmargin/2, t1, self.name)
@@ -1689,8 +1694,25 @@ class Object:
 		d = self.mother.opt_init_display()
 		if not d:
 			return
+		if not icon:
+			icon = self.getlinkicon()
 		d.drawicon(self.iconbox, icon)
 		self.mother.render()
+
+	def getlinkicon(self):
+		"""Return icon to draw for showing incoming/outgoing hyperlinks"""
+		links = self.node.context.hyperlinks
+		is_src, is_dst = links.findnodelinks(self.node)
+		if is_src:
+			if is_dst:
+				return 'linksrcdst'
+			else:
+				return 'linksrc'
+		else:
+			if is_dst:
+				return 'linkdst'
+			else:
+				return ''
 
 	# Menu handling functions
 
