@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
   Version=7.041
-  Title=Oratrix GRiNS Editor for SMIL 2.0 Installation
+  Title=Oratrix GRiNS Snap! Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
   Japanese Font Name=MS Gothic
@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=138905138
+  File Checksum=271659140
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -50,7 +50,7 @@ item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-20\lllicense.txt
+  Source=D:\ufs\mm\cmif\Build\products\snap\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
 end
@@ -91,12 +91,12 @@ item: End Block
 end
 item: Set Variable
   Variable=APPTITLE
-  Value=Oratrix GRiNS Editor for SMIL 2.0
+  Value=Oratrix GRiNS Snap!
   Flags=10000000
 end
 item: Set Variable
   Variable=GROUP
-  Value=Oratrix GRiNS\GRiNS Editor for SMIL 2.0
+  Value=Oratrix GRiNS\GRiNS Snap!
   Flags=10000000
 end
 item: Set Variable
@@ -105,7 +105,7 @@ item: Set Variable
 end
 item: Set Variable
   Variable=MAINDIR
-  Value=Oratrix\GRiNS_SV2
+  Value=Oratrix\GRiNS_SNP
   Flags=10000000
 end
 item: Check Configuration
@@ -1121,7 +1121,7 @@ item: Check Disk Space
   Component=COMPONENTS
 end
 item: Display Graphic
-  Pathname=D:\ufs\mm\cmif\Build\products\smil-20\win32\splash8bit.bmp
+  Pathname=D:\ufs\mm\cmif\Build\products\snap\win32\splash8bit.bmp
   X Position=32784
   Y Position=16
 end
@@ -1411,6 +1411,11 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\GRiNS_SNP.exe
+  Destination=%MAINDIR%\GRiNS_SNP.exe
+  Flags=0000000010000011
+end
+item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\wmfapi.pyd
   Destination=%MAINDIR%\wmfapi.pyd
   Flags=0000000010000011
@@ -1424,11 +1429,6 @@ item: Install File
   Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
   Destination=%MAINDIR%\WebPro32.ocx
   Flags=0001001010000011
-end
-item: Install File
-  Source=D:\ufs\mm\cmif\bin\win32\GRiNS_SV2.exe
-  Destination=%MAINDIR%\GRiNS_SV2.exe
-  Flags=0000000010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\extended-slideshow.bmp
@@ -1791,7 +1791,7 @@ item: Create Shortcut
 end
 item: Create Shortcut
   Source=%MAINDIR%\Unwise.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS for SMIL 2.0.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS Snap!.lnk
   Icon Number=0
 end
 item: If/While Statement
@@ -1817,8 +1817,8 @@ item: If/While Statement
   Flags=00001010
 end
 item: Create Shortcut
-  Source=%MAINDIR%\GRiNS_SV2.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Editor for SMIL 2.0.lnk
+  Source=%MAINDIR%\GRiNS_SNP.exe
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Snap!.lnk
   Icon Number=0
 end
 item: End Block
@@ -1829,8 +1829,8 @@ item: If/While Statement
   Flags=00001010
 end
 item: Create Shortcut
-  Source=%MAINDIR%\GRiNS_SV2.exe
-  Destination=%CDESKTOPDIR%\GRiNS Editor for SMIL 2.0.lnk
+  Source=%MAINDIR%\GRiNS_SNP.exe
+  Destination=%CSTARTUPDIR%\GRiNS Snap!.lnk
   Icon Number=0
 end
 item: End Block
@@ -1844,8 +1844,8 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL 2.0
-  Command Line=%MAINDIR%\GRiNS_SV2.exe
+  Icon Name=GRiNS Snap!
+  Command Line=%MAINDIR%\GRiNS_SNP.exe
 end
 item: End Block
 end
@@ -1855,9 +1855,9 @@ item: If/While Statement
   Flags=00001010
 end
 item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Editor for SMIL 2.0
-  Command Line=%MAINDIR%\GRiNS_SV2.exe
+  Group=StartUp
+  Icon Name=GRiNS Snap!
+  Command Line=%MAINDIR%\GRiNS_SNP.exe
 end
 item: End Block
 end
@@ -1873,7 +1873,7 @@ item: Add ProgMan Icon
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=Uninstall GRiNS for SMIL 2.0
+  Icon Name=Uninstall GRiNS Snap!
   Command Line=%MAINDIR%\Unwise.exe
 end
 item: If/While Statement
@@ -1936,17 +1936,17 @@ item: Edit Registry
   Total Keys=3
   item: Key
     Key=SMILfile\shell\edit
-    New Value=Edit with GRiNS Editor for SMIL 2.0
+    New Value=Edit with GRiNS Snap!
     Root=32
   end
   item: Key
     Key=SMILfile\shell\edit\command
-    New Value=%MAINDIR%\GRiNS_SV2.exe "%%1"
+    New Value=%MAINDIR%\GRiNS_SNP.exe "%%1"
     Root=32
   end
   item: Key
     Key=SMILfile\shell\open
-    New Value=Edit with GRiNS Editor for SMIL 2.0
+    New Value=Edit with GRiNS Snap!
     Root=32
   end
 end
@@ -1979,32 +1979,31 @@ item: Edit Registry
   Total Keys=2
   item: Key
     Key=GRiNSProject\shell\edit
-    New Value=Edit with GRiNS Editor for SMIL 2.0
+    New Value=Edit with GRiNS Snap!
     Root=32
   end
   item: Key
     Key=GRiNSProject\shell\edit\command
-    New Value=%MAINDIR%\GRiNS_SV2.exe "%%1"
+    New Value=%MAINDIR%\GRiNS_SNP.exe "%%1"
     Root=32
   end
 end
 item: Edit Registry
-  Total Keys=3
-  item: Key
-    Key=SMILfile\shell\open\command
-    New Value=%MAINDIR%\GRiNS_SV2.exe "%%1"
-    Root=32
-  end
-  item: Key
-    Key=GRiNSProject\shell\open
-    New Value=Edit with GRiNS Editor for SMIL 2.0
-    Root=32
-  end
-  item: Key
-    Key=GRiNSProject\shell\open\command
-    New Value=%MAINDIR%\GRiNS_SV2.exe "%%1"
-    Root=32
-  end
+  Total Keys=1
+  Key=GRiNSProject\shell\open
+  New Value=Edit with GRiNS Snap!
+  Root=32
+end
+item: Edit Registry
+  Total Keys=1
+  Key=SMILfile\shell\open\command
+  New Value=%MAINDIR%\GRiNS_SNP.exe "%%1"
+end
+item: Edit Registry
+  Total Keys=1
+  Key=GRiNSProject\shell\open\command
+  New Value=%MAINDIR%\GRiNS_SNP.exe "%%1"
+  Root=32
 end
 item: Self-Register OCXs/DLLs
   Description=Updating System Configuration, Please Wait...
