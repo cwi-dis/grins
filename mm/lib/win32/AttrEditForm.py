@@ -3849,7 +3849,7 @@ class SystemGroup(PreferencesGroup):
 		a = self.getattr('system_screen_depth')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62))
 		a = self.getattr('system_screen_size')
-		cd[a] = SystemScreenSizeCtrl(wnd,a,(grinsRC.IDC_GROUP8, grinsRC.IDC_WIDTHV,grinsRC.IDC_HEIGHTV))
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
 		return cd
 
 class SystemGroup2(SystemGroup):
@@ -3860,6 +3860,9 @@ class SystemGroup2(SystemGroup):
 
 	def createctrls(self,wnd):
 		cd = SystemGroup.createctrls(self,wnd)
+		a = self.getattr('system_screen_size')
+		# override the default system screen crtl
+		cd[a] = SystemScreenSizeCtrl(wnd,a,(grinsRC.IDC_GROUP8, grinsRC.IDC_WIDTHV,grinsRC.IDC_HEIGHTV))
 		a = self.getattr('system_operating_system')
 		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_SOPERATINGSYSTEML,grinsRC.IDC_SOPERATINGSYSTEMV))
 		a = self.getattr('system_cpu')
