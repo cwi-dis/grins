@@ -116,12 +116,9 @@ class LinkEditDialog(windowinterface.MACDialog):
 		self._right_client_data = cbarg2
 
 		# Create the scrolled lists
-		tp, h, rect = self._dialog.GetDialogItem(ITEM_LEFT_ALIST)
-		self._leftlist = self._window.ListWidget(rect)
-		tp, h, rect = self._dialog.GetDialogItem(ITEM_RIGHT_ALIST)
-		self._rightlist = self._window.ListWidget(rect)
-		tp, h, rect = self._dialog.GetDialogItem(ITEM_LINKS_LLIST)
-		self._linklist = self._window.ListWidget(rect)
+		self._leftlist = self._window.ListWidget(ITEM_LEFT_ALIST)
+		self._rightlist = self._window.ListWidget(ITEM_RIGHT_ALIST)
+		self._linklist = self._window.ListWidget(ITEM_LINKS_LLIST)
 		
 		# Create the menus
 		self._leftmenu = windowinterface.FullPopupMenu(menu1)

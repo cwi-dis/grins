@@ -94,8 +94,7 @@ class AnchorEditorDialog(windowinterface.MACDialog):
 		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_ANCHOR,
 				ITEMLIST_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
 
-		tp, h, rect = self._dialog.GetDialogItem(ITEM_BROWSER)
-		self.__anchor_browser = self._window.ListWidget(rect)
+		self.__anchor_browser = self._window.ListWidget(ITEM_BROWSER)
 		self.selection_setlist(list, initial)
 
 ##		XXXX
