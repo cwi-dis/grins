@@ -33,7 +33,7 @@ class Selecter:
 	#
 	def stop(self):
 		if self.playing:
-			self.scheduler.stop_all()
+			self.scheduler.stop_all(self.scheduler.timefunc())
 		else:
 			self.fullreset()
 
@@ -138,8 +138,8 @@ class Selecter:
 	#
 	# sctx_empty is called from the scheduler when a context has become
 	# empty.
-	def sctx_empty(self, sctx):
-		sctx.stop()
+	def sctx_empty(self, sctx, curtime):
+		sctx.stop(curtime)
 		self.sctx = None
 
 def nodename(node):

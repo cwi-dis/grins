@@ -232,9 +232,10 @@ class RealChannel:
 	def OnStop(self):
 		if realenginedebug:
 			print 'RealChannel.OnStop', self
+		print self.__rmaplayer.GetCurrentPlayTime()
 		if self.__qid is None:
 			if not self.__playdone_called:
-				self.__channel.playdone(0)
+				self.__channel.playdone(0, node.get_start_time() + self.__rmaplayer.GetCurrentPlayTime())
 				self.__playdone_called = 1
 
 	def ErrorOccurred(self,str):

@@ -292,7 +292,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.assetsview.show()
 
 	def destroy(self):
-		self.set_timer(-1)
+		self.set_timer(-1, None)
 		self.hideviews()
 		type, data = self.editmgr.getclip()
 		if type == 'node' and data is not None:
@@ -310,17 +310,17 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self in self.main.tops:
 			self.main.tops.remove(self)
 
-	def timer_callback(self):
+	def timer_callback(self, curtime):
 		self._last_timer_id = None
-		self.player.timer_callback()
+		self.player.timer_callback(curtime)
 
-	def set_timer(self, delay):
+	def set_timer(self, delay, arg):
 		if self._last_timer_id is not None:
 			windowinterface.canceltimer(self._last_timer_id)
 			self._last_timer_id = None
 		if delay >= 0:
 			self._last_timer_id = windowinterface.settimer(delay,
-				  (self.timer_callback, ()))
+				  (self.timer_callback, (arg,)))
 
 	#
 	# View manipulation.

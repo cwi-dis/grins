@@ -135,6 +135,7 @@ class VideoChannel(ChannelWindowAsync):
 			dur = end - begin
 		t0 = self._scheduler.timefunc()
 		start_time = node.get_start_time()
+		self.__movieend = start_time + dur
 		if t0 > start_time:
 			extra_delay = (t0-start_time)*tbrate
 		else:
@@ -242,23 +243,23 @@ class VideoChannel(ChannelWindowAsync):
 ##			self.window.setredrawfunc(None)
 ##			self.window._mac_setredrawguarantee(None)
 ##		self.fixidleproc()
-		self.playdone(0)
+		self.playdone(0, self.__movieend)
 			
-	def do_play(self, node):
+	def do_play(self, node, curtime):
 		self.__type = node.__type
 		if not self.__ready:
 			# arming failed, so don't even try playing
-			self.playdone(0)
+			self.playdone(0, curtime)
 			return
 		if node.__type == 'real':
 			if not self.__rc or not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
-				self.playdone(0)
+				self.playdone(0, curtime)
 			return
 		if not self.arm_movie:
 			if self.play_movie:
 				self.play_movie.StopMovie()
 			self.play_movie = None
-			self.playdone(0)
+			self.playdone(0, curtime)
 			return
 			
 		if debug: print 'VideoChannel: play', node
@@ -266,7 +267,6 @@ class VideoChannel(ChannelWindowAsync):
 		self.arm_movie = None
 
 		self.make_ready(self.play_movie, node)
-		self.event('beginEvent')
 		self.play_movie.SetMovieActive(1)
 ##		self.play_movie.MoviesTask(0)
 		self.play_movie.StartMovie()
@@ -325,7 +325,7 @@ class VideoChannel(ChannelWindowAsync):
 			self.__rc = None
 		ChannelWindowAsync.do_hide(self)
 
-	def playstop(self):
+	def playstop(self, curtime):
 		if debug: print 'VideoChannel: playstop'
 		if self.__type == 'real':
 			if self.__rc:
@@ -334,9 +334,9 @@ class VideoChannel(ChannelWindowAsync):
 			self.play_movie.StopMovie()
 ##			self.play_movie = None
 ##			self.fixidleproc()
-		ChannelWindowAsync.playstop(self)
+		ChannelWindowAsync.playstop(self, curtime)
 		
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		if self.window:
 			self.window.setredrawfunc(None)
 			self.window._mac_setredrawguarantee(None)
@@ -344,7 +344,7 @@ class VideoChannel(ChannelWindowAsync):
 			self.play_movie.StopMovie()
 			self.play_movie = None
 		self.fixidleproc()
-		ChannelWindowAsync.stopplay(self, node)
+		ChannelWindowAsync.stopplay(self, node, curtime)
 
 	def fixidleproc(self):
 		if self.window:

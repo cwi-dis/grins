@@ -60,25 +60,25 @@ class _ChannelThread:
 			self.threads.close()
 			self.threads = None
 
-	def play(self, node):
+	def play(self, node, curtime):
 		if debug:
 			print 'ChannelThread.play('+`self`+','+`node`+')'
-		self.play_0(node)
+		self.play_0(node, curtime)
 		if not self._is_shown or not node.ShouldPlay() \
 		   or self.syncplay:
-			self.play_1()
+			self.play_1(curtime)
 			return
 		thread_play_called = 0
 		if self.threads.armed:
 			self.threads.play()
 			thread_play_called = 1
 		if self._is_shown:
-			self.do_play(node)
+			self.do_play(node, curtime)
 		self.armdone()
 		if not thread_play_called:
-			self.playdone(0)
+			self.playdone(0, curtime)
 
-	def playstop(self):
+	def playstop(self, curtime):
 		if debug:
 			print 'ChannelThread.playstop('+`self`+')'
 		if self._is_shown:
@@ -94,7 +94,7 @@ class _ChannelThread:
 		if self._is_shown:
 			self.threads.setrate(not paused)
 
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		if self.threads:
 			self.threads.finished()
 
@@ -106,7 +106,7 @@ class _ChannelThread:
 			return
 		if value == mm.playdone:
 			if self._playstate == PLAYING:
-				self.playdone(0)
+				self.playdone(0, self._scheduler.timefunc())
 			elif self._playstate != PIDLE:
 				raise error, 'playdone event when not playing'
 		elif value == mm.armdone:
@@ -135,20 +135,20 @@ class ChannelThread(_ChannelThread, Channel):
 		Channel.destroy(self)
 		_ChannelThread.destroy(self)
 
-	def playstop(self):
-		_ChannelThread.playstop(self)
-		Channel.playstop(self)
+	def playstop(self, curtime):
+		_ChannelThread.playstop(self, curtime)
+		Channel.playstop(self, curtime)
 
 	def armstop(self):
 		_ChannelThread.armstop(self)
 		Channel.armstop(self)
 
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
-		Channel.stopplay(self, node)
-		_ChannelThread.stopplay(self, node)
+		Channel.stopplay(self, node, curtime)
+		_ChannelThread.stopplay(self, node, curtime)
 
 	def setpaused(self, paused):
 		Channel.setpaused(self, paused)
@@ -185,13 +185,13 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		apply(self.threads.resized, window._rect)
 		return
 
-	def playstop(self):
+	def playstop(self, curtime):
 		if GLLock.gl_lock and GLLock.gl_lock.count:
 			GLLock.gl_lock.lock.release()
-		_ChannelThread.playstop(self)
+		_ChannelThread.playstop(self, curtime)
 		if GLLock.gl_lock and GLLock.gl_lock.count:
 			GLLock.gl_lock.lock.acquire()
-		ChannelWindow.playstop(self)
+		ChannelWindow.playstop(self, curtime)
 
 	def armstop(self):
 		if GLLock.gl_lock and GLLock.gl_lock.count:
@@ -201,32 +201,32 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 			GLLock.gl_lock.lock.acquire()
 		ChannelWindow.armstop(self)
 
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
 		w = self.window
 		if w:
 			w.setredrawfunc(None)
-##		ChannelWindow.stopplay(self, node)
-		Channel.stopplay(self, node) # These 2 lines repl prev.
+##		ChannelWindow.stopplay(self, node, curtime)
+		Channel.stopplay(self, node, curtime) # These 2 lines repl prev.
 		self.played_display = None
 		if hasattr(w, '_gc'):
 			w._gc.SetRegion(w._getmyarea())
 			w._gc.foreground = w._convert_color(w._bgcolor or (0,0,0))
-		_ChannelThread.stopplay(self, node)
+		_ChannelThread.stopplay(self, node, curtime)
 
 	def setpaused(self, paused):
 		ChannelWindow.setpaused(self, paused)
 		_ChannelThread.setpaused(self, paused)
 
-	def play(self, node):
+	def play(self, node, curtime):
 		if debug:
 			print 'ChannelWindowThread.play('+`self`+','+`node`+')'
-		self.play_0(node)
+		self.play_0(node, curtime)
 		if not self._is_shown or not node.ShouldPlay() \
 		   or self.syncplay:
-			self.play_1()
+			self.play_1(curtime)
 			return
 		self.check_popup()
 		if self.armed_display.is_closed():
@@ -251,10 +251,10 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 			self.threads.play()
 			thread_play_called = 1
 		if self._is_shown:
-			self.do_play(node)
+			self.do_play(node, curtime)
 		self.armdone()
 		if not thread_play_called:
-			self.playdone(0)
+			self.playdone(0, curtime)
 
 	def do_redraw(self, rgn=None):
 		# rgn (region to be redrawn, None for everything) ignored for now

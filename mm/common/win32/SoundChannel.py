@@ -82,16 +82,16 @@ class SoundChannel(Channel.ChannelAsync):
 				self.errormsg(node, msg)
 		return 1
 
-	def do_play(self, node):
+	def do_play(self, node, curtime):
 		self.__type = node.__type
 		start_time = node.get_start_time()
 		if not self.__ready:
 			# arming failed, so don't even try playing
-			self.playdone(0, start_time)
+			self.playdone(0, curtime)
 			return
 		if node.__type == 'real':
 			if not self.__rc:
-				self.playdone(0, start_time)
+				self.playdone(0, curtime)
 			elif not self.__rc.playit(node, start_time=start_time):
 				import windowinterface, MMAttrdefs
 				name = MMAttrdefs.getattr(node, 'name')
@@ -100,14 +100,14 @@ class SoundChannel(Channel.ChannelAsync):
 				chtype = self.__class__.__name__[:-7] # minus "Channel"
 				windowinterface.showmessage('No playback support for %s on this system\n'
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
-				self.playdone(0, start_time)
+				self.playdone(0, curtime)
 		elif not self.__mc.playit(node, start_time=start_time):
 			self.errormsg(node,'Can not play')
-			self.playdone(0, start_time)
+			self.playdone(0, curtime)
 
-	def playstop(self):
+	def playstop(self, curtime):
 		self.__stopplayer()
-		self.playdone(1)		
+		self.playdone(1, curtime)		
 				
 	def __stopplayer(self):
 		if self.__mc:
@@ -121,7 +121,7 @@ class SoundChannel(Channel.ChannelAsync):
 
 	def endoftime(self):
 		self.__stopplayer()
-		self.playdone(0)
+		self.playdone(0, curtime)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
@@ -132,9 +132,9 @@ class SoundChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.setpaused(self, paused)
 
 
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		self.__stopplayer()
-		Channel.ChannelAsync.stopplay(self, node)
+		Channel.ChannelAsync.stopplay(self, node, curtime)
 
 	def needsSoundLevelCaps(self, node):
 		d = node.GetContext()._soundlevelinfo

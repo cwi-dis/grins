@@ -47,14 +47,13 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 			self.__rc = None
 		Channel.ChannelWindowAsync.do_hide(self)
 		
-	def do_play(self, node):
+	def do_play(self, node, curtime):
 		if realwindowchanneldebug:
 			print 'do_play', self, node
 		if self.__rc is not None:
-			self.event('beginEvent')
 			if self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
 				return
-		self.playdone(0)
+		self.playdone(0, curtime)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
@@ -62,10 +61,10 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 		if self.__rc is not None:
 			self.__rc.pauseit(paused)
 
-	def playstop(self):
+	def playstop(self, curtime):
 		if self.__rc is not None:
 			self.__rc.stopit()
-		Channel.ChannelWindowAsync.playstop(self)
+		Channel.ChannelWindowAsync.playstop(self, curtime)
 
 	def _getoswindow(self):
 		if hasattr(self.window, "GetSafeHwnd"):
@@ -90,11 +89,11 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 			return (x, y), (w, h)
 		return None
 
-	def play(self, node):
+	def play(self, node, curtime):
 		if realwindowchanneldebug:
 			print 'play', self, node
 		self.need_armdone = 0
-		self.play_0(node)
+		self.play_0(node, curtime)
 		if self._is_shown and node.ShouldPlay() \
 		   and self.window and not self.syncplay:
 			self.check_popup()
@@ -108,12 +107,12 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 				self.played_display.close()
 			self.played_display = self.armed_display
 			self.armed_display = None
-			self.do_play(node)
+			self.do_play(node, curtime)
 			self.need_armdone = 1
 		else:
-			self.play_1()
+			self.play_1(curtime)
 
-	def playdone(self, dummy):
+	def playdone(self, outside_induced, curtime):
 		if realwindowchanneldebug:
 			print 'playdone', self
 		if self._armstate != Channel.ARMED:
@@ -121,4 +120,4 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 		if self.need_armdone:
 			self.need_armdone = 0
 			self.armdone()
-		Channel.ChannelWindowAsync.playdone(self, dummy)
+		Channel.ChannelWindowAsync.playdone(self, outside_induced, curtime)

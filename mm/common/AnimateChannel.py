@@ -49,13 +49,13 @@ class AnimateChannel(Channel.ChannelAsync):
 	def do_hide(self):
 		Channel.ChannelAsync.do_hide(self)
 		
-	def do_play(self, node):
-		Channel.ChannelAsync.do_play(self, node)
+	def do_play(self, node, curtime):
+		Channel.ChannelAsync.do_play(self, node, curtime)
 
 		self.__initEngine(node)
 
 		if not self.__ready():
-			self.playdone(0)
+			self.playdone(0, curtime)
 			return
 
 		# take into account accumulation effect
@@ -83,16 +83,16 @@ class AnimateChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.setpaused(self, paused)
 		self.__pauseAnimate(paused)
 
-	def playstop(self):
+	def playstop(self, curtime):
 		if debug: print 'playstop'
 		self.__stopAnimate()
-		Channel.ChannelAsync.playstop(self)
+		Channel.ChannelAsync.playstop(self, curtime)
 
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		if debug: print 'stopplay'
 		self.__stopAnimate()
 		self.__removeAnimate()
-		Channel.ChannelAsync.stopplay(self, node)
+		Channel.ChannelAsync.stopplay(self, node, curtime)
 
 	#
 	# Animation engine
@@ -188,7 +188,7 @@ class AnimateChannel(Channel.ChannelAsync):
 			dt = self._scheduler.timefunc() - self.__start
 		except TypeError, arg:
 			print arg
-			self.playdone(0)
+			self.playdone(0, 0)
 			return
 		if self.__duration>0:
 			dt = dt - self.__duration * int(float(dt) / self.__duration)
@@ -207,7 +207,7 @@ class AnimateChannel(Channel.ChannelAsync):
 			if self.__lastvalue != val:
 				self.__effAnimator.update(self.__getTargetChannel())
 				self.__lastvalue = val
-		self.playdone(0)
+		self.playdone(0, self.__start+self.__duration)
 
 	def onIdle(self):
 		if not USE_IDLE_PROC:

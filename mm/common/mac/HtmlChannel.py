@@ -118,8 +118,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.arm(node)
 		save_synplay = self.syncplay
 		self.syncplay = 1
-		self.play(node)
-		self.stopplay(node)
+		self.play(node, 0)
+		self.stopplay(node, 0)
 		self.syncarm = save_syncarm
 		self.syncplay = save_synplay
 		windowinterface.setcursor('')
@@ -146,7 +146,7 @@ class HtmlChannel(Channel.ChannelWindow):
 ##		      ('header5Font', 7.8),
 ##		      ('header6Font', 6.5)]
 	
-	def do_play(self, node):
+	def do_play(self, node, curtime):
 		htmlw = self.htmlw
 		self.played_url = self.url = self.armed_url
 		utype, host, path, params, query, tag = urlparse.urlparse(self.url)
@@ -167,8 +167,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.fixanchorlist(node)
 		self.play_node = node
 
-	def stopplay(self, node):
-		Channel.ChannelWindow.stopplay(self, node)
+	def stopplay(self, node, curtime):
+		Channel.ChannelWindow.stopplay(self, node, curtime)
 		if self.htmlw:
 			self.htmlw.insert_html('', '')
 			

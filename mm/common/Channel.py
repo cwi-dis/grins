@@ -245,7 +245,7 @@ class Channel:
 				save_nopop = self.nopop
 				self.nopop = 1
 				self._played_node = None
-				self.play(node)
+				self.play(node, None)
 				self.syncplay = save_syncplay
 				self.nopop = save_nopop
 				self._playstate = playstate
@@ -403,8 +403,6 @@ class Channel:
 		self._subchannels = subchannels
 		if self._armstate == ARMING:
 			self.arm_1()
-##		if self._playstate == PLAYING:
-##			self.playstop()
 
 	def highlight(self, color = (255, 0, 0)):
 		# highlight the channel instance (dummy for channels
@@ -551,9 +549,9 @@ class Channel:
 					# something about that.
 					pass
 				self._qid = None
-			self.playdone(0)
+			self.playdone(0, self._scheduler.timefunc())
 
-	def play_0(self, node):
+	def play_0(self, node, curtime):
 	
 		# This does the initial part of playing a node.
 		# Superclasses should call this method when they are
@@ -564,7 +562,7 @@ class Channel:
 			print 'Channel.play_0('+`self`+','+`node`+')'
 		if self._played_node is not None:
 ##			print 'stopping playing node first',`self._played_node`
-			self.stopplay(self._played_node)
+			self.stopplay(self._played_node, curtime)
 		if self._armed_node is not node:
 			if settings.noprearm:
 				self.arm(node)
@@ -630,7 +628,7 @@ class Channel:
 			self._played_node.event(self._playcontext.parent.timefunc(), event)
 			self._playcontext.sched_arc(self._played_node, arc, event, external = 1)
 
-	def play_1(self):
+	def play_1(self, curtime):
 		# This does the final part of playing a node.  This
 		# should only be called by superclasses when they
 		# don't have an intrinsic duration.  Otherwise they
@@ -647,20 +645,20 @@ class Channel:
 			node = self._played_node
 			start_time = node.get_start_time()
 			if not self.armed_duration:
-				self.playdone(0, end_time = start_time)
+				self.playdone(0, curtime)
 ##			elif self.armed_duration > 0:
 ##				self._qid = self._scheduler.enterabs(
 ##					start_time+self.armed_duration, 0,
 ##					self.playdone, (0, start_time+self.armed_duration))
 		else:
-			self.playdone(0)
+			self.playdone(0, curtime)
 			
 		# in cmif mode, an auto anchor is triggered at the end of active duration
 		# in smil mode, an auto anchor is triggered at the begin of active duration
 		if not CMIF_MODE:
-			self._try_auto_anchors()
+			self._try_auto_anchors(curtime)
 
-	def playdone(self, outside_induced, end_time = None):
+	def playdone(self, outside_induced, curtime):
 		# This method should be called by a superclass
 		# (possibly through play_1) to indicate that the node
 		# has finished playing.
@@ -672,10 +670,6 @@ class Channel:
 				return
 			raise error, 'not playing'
 		self._qid = None
-		if not self.syncplay and \
-		   self._played_node.happenings.has_key(('event','beginEvent')):
-			# can only end when we've actually started
-			self.event('endEvent')
 		# If this node has a pausing anchor, don't call the
 		# callback just yet but wait till the anchor is hit.
 		if not self.syncplay:
@@ -683,12 +677,12 @@ class Channel:
 			# in smil mode, an auto anchor is triggered at the begin of active duration
 			if CMIF_MODE:
 				if not outside_induced:
-					if self._try_auto_anchors():
+					if self._try_auto_anchors(curtime):
 						return
-			self._playcontext.play_done(self._played_node, end_time)
+			self._playcontext.play_done(self._played_node, curtime, curtime)
 		self._playstate = PLAYED
 
-	def _try_auto_anchors(self):
+	def _try_auto_anchors(self, curtime):
 		node = self._played_node
 		list = []
 		for a in MMAttrdefs.getattr(node, 'anchorlist'):
@@ -702,20 +696,20 @@ class Channel:
 			if didfire and self._playstate == PLAYING and \
 			   self._played_node is node:
 				if not self.syncplay:
-					self._playcontext.play_done(node)
+					self._playcontext.play_done(node, curtime)
 				self._playstate = PLAYED
 		return didfire
 
-	def freeze(self, node):
+	def freeze(self, node, curtime):
 		# Called by the Scheduler to stop playing and start freezing.
 		# The node is passed for consistency checking.
 		if debug:
 			print 'Channel.freeze'+`self,node`
 		if self._played_node is not node or self._playstate != PLAYING:
 			return
-		self.playstop()
+		self.playstop(curtime)
 
-	def playstop(self):
+	def playstop(self, curtime):
 		# Internal method to stop playing.
 		if debug:
 			print 'Channel.playstop('+`self`+')'
@@ -736,7 +730,7 @@ class Channel:
 				# something about that.
 				pass
 			self._qid = None
-		self.playdone(1)
+		self.playdone(1, curtime)
 
 	def do_arm(self, node, same=0):
 		# Do the actual arm.
@@ -754,10 +748,8 @@ class Channel:
 			raise error, 'armstop called when not arming'
 		self.arm_1()
 
-	def do_play(self, node):
+	def do_play(self, node, curtime):
 		# Actually play the node.
-		if not self.syncplay:
-			self.event('beginEvent')
 		pass
 
 	#
@@ -825,7 +817,7 @@ class Channel:
 		# the destination anchor here.
 		self.seekargs = (node, aid, args)
 
-	def play(self, node):
+	def play(self, node, curtime):
 		# Play the node that was last armed.  This will change
 		# the playing state from PIDLE to PLAYING.  This can
 		# only be called when the arming state is ARMED.
@@ -843,16 +835,16 @@ class Channel:
 		# anymore.
 		if debug:
 			print 'Channel.play('+`self`+','+`node`+')'
-		self.play_0(node)
+		self.play_0(node, curtime)
 		if not self._armcontext:
 			return
 		if self._is_shown and node.ShouldPlay():
 			# XXXX This depends on node playability not changing,
 			# otherwise we may have to re-arm.
-			self.do_play(node)
-		self.play_1()
+			self.do_play(node, curtime)
+		self.play_1(curtime)
 
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		# Indicate that the channel can revert from the
 		# PLAYING or PLAYED state to PIDLE.
 		# Node is only passed to do consistency checking.
@@ -862,7 +854,7 @@ class Channel:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
 		if self._playstate == PLAYING:
-			self.playstop()
+			self.playstop(curtime)
 		if self._playstate != PLAYED:
 			raise error, 'not played'
 		self._playstate = PIDLE
@@ -907,7 +899,7 @@ class Channel:
 			self.stoparm()
 		self._armcontext = ctx
 
-	def stopcontext(self, ctx):
+	def stopcontext(self, ctx, curtime):
 		# Called by the scheduler to force the channel to the
 		# complete idle state.
 		if debug:
@@ -917,7 +909,7 @@ class Channel:
 			raise error, 'stopcontext with unknown context'
 		if self._playcontext is ctx:
 			if self._playstate in (PLAYING, PLAYED):
-				self.stopplay(self._played_node)
+				self.stopplay(self._played_node, curtime)
 			self._playcontext = None
 		if self._armcontext is ctx:
 			if self._armstate in (ARMING, ARMED):
@@ -1682,16 +1674,16 @@ class ChannelWindow(Channel):
 	def getabswingeom(self):
 		return self._winabsgeom
 	
-	def play(self, node):
+	def play(self, node, curtime):
 		if debug:
 			print 'ChannelWindow.play('+`self`+','+`node`+')'
-		self.play_0(node)
+		self.play_0(node, curtime)
 		if not self._armcontext:
 			return
 		if self._is_shown and node.ShouldPlay() \
 			and self.window:
 			self.check_popup()
-			self.schedule_transitions(node)
+			self.schedule_transitions(node, curtime)
 			if self.armed_display.is_closed():
 			# assume that we are going to get a
 			# resize event
@@ -1702,16 +1694,16 @@ class ChannelWindow(Channel):
 				self.played_display.close()
 			self.played_display = self.armed_display
 			self.armed_display = None
-			self.do_play(node)
-		self.play_1()
+			self.do_play(node, curtime)
+		self.play_1(curtime)
 
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		if debug:
 			print 'ChannelWindow.stopplay('+`self`+','+`node`+')'
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
-		Channel.stopplay(self, node)
+		Channel.stopplay(self, node, curtime)
 		self.cleanup_transitions()
 		self.updateToInactiveState()
 		if self.played_display:
@@ -1731,10 +1723,10 @@ class ChannelWindow(Channel):
 			self.played_display.render()
 		Channel.setpaused(self, paused)
 
-	def playstop(self):
-		return Channel.playstop(self)
+	def playstop(self, curtime):
+		return Channel.playstop(self, curtime)
 
-	def schedule_transitions(self, node):
+	def schedule_transitions(self, node, curtime):
 		in_trans = self.gettransition(node, 'transIn')
 		out_trans = self.gettransition(node, 'transOut')
 		if out_trans <> None:
@@ -1744,16 +1736,16 @@ class ChannelWindow(Channel):
 			if outtranstime is not None and outtranstime >= 0:
 				outtranstime = outtranstime-outtransdur
 				self.__out_trans_qid = self._scheduler.enterabs(outtranstime, 0,
-					self.schedule_out_trans, (out_trans, outtranstime, node))
+					self.schedule_out_trans, (out_trans, outtranstime, outtransdur, node))
 		if in_trans <> None and self.window:
 			start_time = node.get_start_time()
 			otherwindow = self._find_multiregion_transition(in_trans, start_time)
 			if otherwindow:
-				self.window.jointransition(otherwindow, (self.endtransition, (node,)))
+				self.window.jointransition(otherwindow, (self.endtransition, (node, max(curtime,start_time+in_trans.get('dur',1)))))
 			else:
-				self.window.begintransition(0, 1, in_trans, (self.endtransition, (node,)))
+				self.window.begintransition(0, 1, in_trans, (self.endtransition, (node, max(curtime,start_time+in_trans.get('dur',1)))))
 
-	def schedule_out_trans(self, out_trans, outtranstime, node):
+	def schedule_out_trans(self, out_trans, outtranstime, outtransdur, node):
 		self.__out_trans_qid = None
 		if not self.window:
 			return
@@ -1762,13 +1754,13 @@ class ChannelWindow(Channel):
 		if otherwindow:
 			self.window.jointransition(otherwindow)
 		else:
-			self.window.begintransition(1, 1, out_trans, (self.endtransition, (node,)))
+			self.window.begintransition(1, 1, out_trans, (self.endtransition, (node, outtranstime+outtransdur)))
 
-	def endtransition(self, node):
+	def endtransition(self, node, curtime):
 		# callback, called at end of transition
 		chlist = self.getViewportChannel().getOverlapRendererList(self, node)
 		for ch, nd in chlist:
-			self._playcontext.transitiondone(nd)
+			self._playcontext.transitiondone(nd, curtime)
 
 	def cleanup_transitions(self):
 		if self.__out_trans_qid:
@@ -1978,25 +1970,25 @@ class ChannelWindow(Channel):
 	
 class ChannelAsync(Channel):
 
-	def play(self, node):
+	def play(self, node, curtime):
 		if debug:
 			print 'ChannelAsync.play('+`self`+','+`node`+')'
-		self.play_0(node)
+		self.play_0(node, curtime)
 		if not self._armcontext:
 			return
 		if not self._is_shown or not node.ShouldPlay() \
 		   or self.syncplay:
-			self.play_1()
+			self.play_1(curtime)
 			return
 		if self._is_shown:
-			self.do_play(node)
+			self.do_play(node, curtime)
 		self.armdone()
 
 class ChannelWindowAsync(ChannelWindow):
-	def play(self, node):
+	def play(self, node, curtime):
 		if debug:
 			print 'ChannelWindowAsync.play('+`self`+','+`node`+')'
-		self.play_0(node)
+		self.play_0(node, curtime)
 		if not self._armcontext:
 			return
 		if self._is_shown and node.ShouldPlay() \
@@ -2011,7 +2003,7 @@ class ChannelWindowAsync(ChannelWindow):
 ##					self.hide()
 ##					self.show()
 			self.check_popup()
-			self.schedule_transitions(node)
+			self.schedule_transitions(node, curtime)
 			if self.armed_display.is_closed():
 				# assume that we are going to get a
 				# resize event
@@ -2022,10 +2014,10 @@ class ChannelWindowAsync(ChannelWindow):
 				self.played_display.close()
 			self.played_display = self.armed_display
 			self.armed_display = None
-			self.do_play(node)
+			self.do_play(node, curtime)
 			self.armdone()
 		else:
-			self.play_1()
+			self.play_1(curtime)
 
 def dummy_callback(arg):
 	pass
@@ -2040,7 +2032,7 @@ class AnchorContext:
 	def anchorfired(self, node, anchorlist, arg):
 		raise error, 'AnchorContext.anchorfired() called'
 
-	def play_done(self, node):
+	def play_done(self, node, curtime, timestamp = None):
 		raise error, 'AnchorContext.play_done() called'
 
 # cleanup temporary files when we finish
