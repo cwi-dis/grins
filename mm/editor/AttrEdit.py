@@ -392,7 +392,7 @@ class NodeWrapper(Wrapper):
 			]
 		ntype = self.node.GetType()
 		ctype = self.node.GetChannelType()
-		if ntype in leaftypes or not lightweight:
+		if ntype in leaftypes or features.compatibility == features.CMIF:
 			namelist[1:1] = ['channel']
 		if ntype == 'bag':
 			namelist.append('bag_index')
