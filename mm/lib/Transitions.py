@@ -228,6 +228,36 @@ class SnakeWipeTransition(_MatrixTransitionClass):
 			rectlist.append(rect)
 		return rectlist, self.ltrb
 		
+class ParallelSnakesWipeTransition(_MatrixTransitionClass):
+	# Reveal the new image by sweeping left-to-right, then on the next line right-to-left, etc
+	# And the same from bottom up
+		
+	def computeparameters(self, value):
+		index = int(0.5*value*self.hsteps*self.vsteps+0.5)
+		hindex = index % self.hsteps
+		vindex = index / self.hsteps
+		x0, y0, x1, y1 = self.ltrb
+		rectlist = []
+		for i in range(vindex):
+			rect = (x0, self.vboundaries[i], x1, self.vboundaries[i+1])
+			rectlist.append(rect)
+			rect = (x0, self.vboundaries[self.vsteps-i-1], x1, self.vboundaries[self.vsteps-i])
+			rectlist.append(rect)
+		ylasttop = self.vboundaries[vindex]
+		ylastbottom = self.vboundaries[vindex+1]
+		ydowntop = self.vboundaries[self.vsteps-vindex-1]
+		ydownbottom = self.vboundaries[self.vsteps-vindex]
+		for i in range(hindex):
+			if vindex % 2:
+				idx = self.hsteps-i-1
+			else:
+				idx = i
+			rect = (self.hboundaries[idx], ylasttop, self.hboundaries[idx+1], ylastbottom)
+			rectlist.append(rect)
+			rect = (self.hboundaries[idx], ydowntop, self.hboundaries[idx+1], ydownbottom)
+			rectlist.append(rect)
+		return rectlist, self.ltrb
+		
 class SpiralWipeTransition(_MatrixTransitionClass):
 	# Reveal the new image by spiralling over the matrix
 	
@@ -259,6 +289,51 @@ class SpiralWipeTransition(_MatrixTransitionClass):
 		x = x - 1
 		self._xy_to_step.append((x, y))
 		self._xy_to_step.append((x, y))
+		
+	def computeparameters(self, value):
+		index = int(value*self.hsteps*self.vsteps+0.5)
+		rectlist = []
+		for i in range(index):
+			x, y = self._xy_to_step[i]
+			rect = (self.hboundaries[x], self.vboundaries[y], 
+					self.hboundaries[x+1], self.vboundaries[y+1])
+			rectlist.append(rect)
+		return rectlist, self.ltrb
+
+class BoxSnakesWipeTransition(_MatrixTransitionClass):
+	# Reveal the new image by spiralling over the matrix twice, top and bottom symmetric
+	
+	def _recomputeboundaries(self):
+		_MatrixTransitionClass._recomputeboundaries(self)
+		self._xy_to_step = []
+		xmax = self.hsteps-1
+		ymax = self.vsteps/2-1
+		xinc = 1
+		yinc = 1
+		x = 0
+		y = 0
+		skipfirstxmaxdecrement = 1
+		while xmax >= 0 or ymax >= 0:
+			for i in range(xmax):
+				self._xy_to_step.append((x, y))
+				self._xy_to_step.append((x, self.vsteps-y-1))
+				x = x + xinc
+			xinc = -xinc
+			if skipfirstxmaxdecrement:
+				skipfirstxmaxdecrement = 0
+			else:
+				xmax = xmax - 1
+			for i in range(ymax):
+				self._xy_to_step.append((x, y))
+				self._xy_to_step.append((x, self.vsteps-y-1))
+				y = y + yinc
+			yinc = -yinc
+			ymax = ymax - 1
+		x = x - 1
+		self._xy_to_step.append((x, y))
+		self._xy_to_step.append((x, self.vsteps-y-1))
+		self._xy_to_step.append((x, y))
+		self._xy_to_step.append((x, self.vsteps-y-1))
 		for i in range(len(self._xy_to_step)):
 			print i, self._xy_to_step[i]
 		
@@ -270,6 +345,23 @@ class SpiralWipeTransition(_MatrixTransitionClass):
 			rect = (self.hboundaries[x], self.vboundaries[y], 
 					self.hboundaries[x+1], self.vboundaries[y+1])
 			rectlist.append(rect)
+		return rectlist, self.ltrb
+
+class WaterfallWipeTransition(_MatrixTransitionClass):
+	# Reveal the new image by a waterfall-like pattern over the matrix
+	
+	def computeparameters(self, value):
+		totalsteps = self.hsteps + 2*(self.vsteps-1)
+		curstep = int(value*totalsteps+0.5)
+		rectlist = []
+		startstep = 0
+		for x in range(self.hsteps):
+			thismaxy = min(self.vsteps, curstep-startstep)
+			for y in range(thismaxy):
+				rect = (self.hboundaries[x], self.vboundaries[y], 
+					self.hboundaries[x+1], self.vboundaries[y+1])
+				rectlist.append(rect)
+			startstep = startstep + 2
 		return rectlist, self.ltrb
 		
 class PushWipeTransition(TransitionClass, R1R2R3R4BlitterClass):
@@ -327,9 +419,9 @@ TRANSITIONDICT = {
 #	"windshieldWipe" : WindShieldWipeTransition,
 	"snakeWipe" : SnakeWipeTransition,
 	"spiralWipe" : SpiralWipeTransition,
-#	"parallelSnakesWipe" : ParallelSnakesWipeTransition,
-#	"boxSnakesWipe" : BoxSnakesWipeTransition,
-#	"waterfallWipe" : WaterfallWipeTransition,
+	"parallelSnakesWipe" : ParallelSnakesWipeTransition,
+	"boxSnakesWipe" : BoxSnakesWipeTransition,
+	"waterfallWipe" : WaterfallWipeTransition,
 	"pushWipe" : PushWipeTransition,
 	"slideWipe" : SlideWipeTransition,
 	"fade" : FadeTransition,
