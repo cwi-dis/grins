@@ -64,7 +64,7 @@ class Main(MainDialog):
 				
 	def do_init(self, license=None):
 		# We ignore the license, not needed in the player
-		import MMurl, TopLevel, windowinterface
+		import MMurl, windowinterface
 		opts, files = self.tmpopts, self.tmpfiles
 		del self.tmpopts
 		del self.tmpfiles
