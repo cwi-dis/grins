@@ -333,14 +333,14 @@ class _CommonWindow:
 	def register(self, event, func, arg):
 		if func is None or callable(func):
 			self._eventhandlers[event] = (func, arg)
-			if event == DropFile:
+			if event in (DropFile, DropURL):
 				self._enable_drop(1)
 		else:
 			raise error, 'invalid function'
 
 	def unregister(self, event):
 		del self._eventhandlers[event]
-		if event == DropFile:
+		if event in (DropFile, DropURL):
 			self._enable_drop(0)
 
 	def destroy_menu(self):
@@ -1745,7 +1745,8 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 	def _trackhandler(self, message, dragref, wid):
 ##		print 'TRACK', message, dragref, wid
 		if not message in (Dragconst.kDragTrackingEnterWindow, 
-				Dragconst.kDragTrackingLeaveWindow):
+				Dragconst.kDragTrackingLeaveWindow,
+				Dragconst.kDragTrackingInWindow):
 ##			print 'skip message', message
 			return
 ##		print 'DOIT', message, dragref, wid
@@ -1755,6 +1756,22 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		dummy, where = dragref.GetDragMouse()
 		where = Qd.GlobalToLocal(where)
  		x, y = self._convert_qdcoords(where)
+ 		if message == Dragconst.kDragTrackingInWindow:
+ 			# We're dragging through the window. Give the track
+ 			# handler a chance to update the mouse, if wanted
+			try:
+				func, arg = self._eventhandlers[DragFile]
+			except KeyError:
+				return
+			dummy, where = dragref.GetDragMouse()
+			Qd.SetPort(self._wid)
+			where = Qd.GlobalToLocal(where)
+			x, y = self._convert_qdcoords(where)
+			func(arg, self, DragFile, (x, y))
+			return
+ 			
+ 		# We're entering or leaving the window. Draw or remove
+ 		# the highlight.
 ## 		if 0 < x < 1 and 0 < y < 1:
 		if 1:
 			rect = self.qdrect()
@@ -1766,7 +1783,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 				dragref.HideDragHilite()
 			Qd.DisposeRgn(rgn)
 		Qd.SetPort(oldport)
-##		print x, y, 'rect', rect
+##		print x, y, 'rect', rect, (message==Dragconst.kDragTrackingEnterWindow)
 					
 		
 	def _receivehandler(self, dragref, wid):
