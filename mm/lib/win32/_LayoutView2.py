@@ -203,6 +203,7 @@ class _LayoutView2(GenFormView):
 		self.HookMessage(self.onLButtonDblClk,win32con.WM_LBUTTONDBLCLK)
 
 		self.addZoomButtons()
+		self.addPreviewButtons()
 		self.addFocusCtrl()
 
 	#
@@ -441,6 +442,41 @@ class _LayoutView2(GenFormView):
 		if d2lscale>10.0: d2lscale = 10.0
 		self._layout.setDeviceToLogicalScale(d2lscale)
 
+	def addPreviewButtons(self):
+		self._iconplay = win32ui.GetApp().LoadIcon(grinsRC.IDI_PLAY)
+		self._iconstop = win32ui.GetApp().LoadIcon(grinsRC.IDI_STOP)
+		self._bplay = components.Button(self, grinsRC.IDC_PLAY)
+		self._bstop = components.Button(self, grinsRC.IDC_STOP)
+		self._bplay.attach_to_parent()
+		self._bstop.attach_to_parent()
+		self._bplay.seticon(self._iconplay)
+		self._bstop.seticon(self._iconstop)
+		self._bplay.hookcommand(self, self.OnPlay)
+		self._bstop.hookcommand(self, self.OnStop)
+		self._bplay.show()
+		self._bstop.show()
+		self._bplay.enable(0)
+		self._bstop.enable(0)
+
+	def OnPlay(self, id, params):
+		if self._slider and self._slider.isEnabled():
+			self._slider.play()
+			self._bplay.enable(0)
+			self._bstop.enable(1)
+
+	def OnStop(self, id, params):
+		if self._slider and self._slider.isEnabled():
+			self._slider.stop()
+			self._bplay.enable(1)
+			self._bstop.enable(0)
+
+	def EnablePreview(self, flag):
+		if flag:
+			self._bplay.enable(flag)
+		else:
+			self._bplay.enable(0)
+			self._bstop.enable(0)
+			
 	#
 	# Focus adjustements
 	#
