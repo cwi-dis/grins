@@ -137,12 +137,13 @@ class AnchorEditor(AnchorEditorDialog):
 		n = self.node
 		old_alist = MMAttrdefs.getattr(self.node, 'anchorlist')
 		new_alist = self.anchorlist[:]
-		if not new_alist:
-			new_alist = None
-		em.setnodeattr(n, 'anchorlist', new_alist)
-		old_alist = map(lambda a: a[A_ID], old_alist)
+		em.setnodeattr(n, 'anchorlist', new_alist or None)
+		if old_alist is None:
+			old_alist = []
+		else:
+			old_alist = map(lambda a: a[A_ID], old_alist)
 		new_alist = map(lambda a: a[A_ID], new_alist)
-		for aid in new_alist:
+		for aid in new_alist or []:
 			if aid not in old_alist:
 				# new anchor
 				aid = (self.uid, aid)
