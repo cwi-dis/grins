@@ -12,7 +12,7 @@ MENU 613 dummy channel menu
 0.* For media item nodes, select the channel on which this node is to be displayed
 END-MENU
 MENU 626 Attr Edit option menu
-0.* This attribute can have a number of fixed values. Select the value you want with this popup
+0.* This property can have a number of fixed values. Select the value you want with this popup
 END-MENU
 DIALOG 616 Selection dialog
 1.1 Press here when you are happy with your selection
@@ -83,7 +83,7 @@ DIALOG 620 NodeInfoDialog
 4.* For media item nodes you can select the channel here. For SMIL documents, each channel is mapped to a SMIL region
 5.1 Press this button to cancel the changes made above and close the dialog
 6.1 Press this button to cancel the changes made above, but keep the dialog open
-7.1 Press this button to open an attribute editor for this node
+7.1 Press this button to open an property editor for this node
 8.1 Press this button to open an anchor editor for this node
 9.1 Press this button to apply the changes made above, but keep the dialog open
 10.1 Press this button to apply the changes made above and close the dialog
@@ -93,18 +93,18 @@ DIALOG 620 NodeInfoDialog
 16.1 Enter the data for the immedeate media node here. This is only practical for text nodes
 END-DIALOG
 DIALOG 623 Node Attrs dialog
-1.1 Select the attribute you want to view or change in this list. Changes are not really made until you press "Apply" or "OK"
-5.2 The internal attribute name. Not all that interesting, really...
-6.2 The default value for this attribute, used when you provide no value
-7.2 What this attribute does. The text "(Not in SMIL)" means the attribute has no meaning for SMIL documents
-8.1 Press this to remove the attribute, resulting in the default being used
-9.1 Press this to undo ALL attribute changes made and close the dialog
-10.1 Press this to undo ALL attribute changes made, and revert the attribute values for this node to their previous values
+1.1 Select the properties you want to view or change in this list. Changes are not really made until you press "Apply" or "OK"
+5.2 The internal property name. Not all that interesting, really...
+6.2 The default value for this property, used when you provide no value
+7.2 What this property does, very concise.
+8.1 Press this to remove the property, resulting in the default being used
+9.1 Press this to undo ALL property changes made and close the dialog
+10.1 Press this to undo ALL property changes made, and revert the property values for this node to their previous values
 11.1 Press this to apply ALL changes made, but keep the dialog open. "Revert" has no effect after this
 12.1 Press this to apply ALL changes made and close the dialog
-13.1 Enter the value for the attribute here. Multiple values like coordinates should be separated by spaces. Use "." for decimal point
+13.1 Enter the value for the property here. Multiple values like coordinates should be separated by spaces. Use "." for decimal point
 14.1 Press this button to select a local file for which you want the URL to be used
-15.* This attribute can have a number of fixed values. Select the value you want with this popup
+15.* This property can have a number of fixed values. Select the value you want with this popup
 END-DIALOG
 DIALOG 626 LayoutViewDialog
 1.2 ´stt´ Layouts
@@ -117,7 +117,7 @@ DIALOG 626 LayoutViewDialog
 8.1 These channels are part of the layout selected on the left. Select one to edit it and highlight it in the player window (when visible)
 9.1 Press this button to create a new channel and add it to the current layout. When the player is visible you will be asked to draw the channel location
 10.1 Press this button to remove the channel selected on the left from the current layout
-11.1 Press this button to show the attribute editor for the channel selected above
+11.1 Press this button to show the property editor for the channel selected above
 12.1 These channels are not part of the selected layout
 13.1 Press this button to add the channel selected on the right to the current layout
 END-DIALOG
