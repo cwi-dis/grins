@@ -6,7 +6,7 @@ from figures import *
 #import DEVICE
 from ArcEdit import *
 import MMAttrdefs
-import Timing
+#import Timing
 
 # the view class.
 #
@@ -51,6 +51,8 @@ class view () :
 
 		self.toplevel = toplevel
 		self.root = root = toplevel.root
+		self.editmgr = root.context.geteditmgr()
+		self.editmgr.register(self)
 		self.rootview = root
 		self._initcommanddict()
 		self.channellist = []
@@ -85,8 +87,15 @@ class view () :
 		self.locked_focus = None
 		return self
 
+	def transaction(self):
+		return 1 # always allow transactions
+	def commit(self):
+		return # we can do a full redraw here
+	def rollback(self):
+		return # can we do something useful?
+
 	def recalc(self):
-		Timing.calctimes(self.root)
+#		Timing.calctimes(self.root)
 		self.unitheight = (self.h - HDR_SIZE) / self.root.t1
 		for i in range(self.nrchannels):
 			self.chanboxes[i].label = self.channellist[i]
@@ -286,7 +295,7 @@ class view () :
 		synclist = MMAttrdefs.getattr(node, 'synctolist')
 		for i in synclist:
 			uid, frompos, delay, topos = i
-			j = self.add_arrow_at(self.root.MapUID(uid), node, frompos, delay, topos)
+			j = self.add_arrow_at(self.root.MapUID(uid), node, frompos, delay, topos, 0)
 		for i in node.GetChildren():
 			self.mkArrows(i)
 	#
@@ -448,15 +457,19 @@ class view () :
 	# timing arcs
 	#
 	def add_arrow(self):
+		if not self.editmgr.transaction():
+			fl.show_message('Not able to add timing arc','','')
+			return
 		if self.locked_focus = None:
 			fl.show_message ('There is no locked focus','','')
 			return
 		if self.focuskind <> F_NODE:
 			fl.show_message ('There is no focus on a node','','')
 			return
-		self.add_arrow_at(self.locked_focus, self.focus, 1, 0.0, 0).draw()
+		self.add_arrow_at(self.locked_focus, self.focus, 1, 0.0, 0, 1).draw()
+		self.editmgr.commit()
 
-	def add_arrow_at(self, (src, dst, f, d, t)):
+	def add_arrow_at(self, (src, dst, f, d, t, newarc)):
 		fro = src.ch_channelobj
 		too = dst.ch_channelobj
 		frx = fro.x + fro.w / 2
@@ -467,13 +480,12 @@ class view () :
 		toy = too.y
 		if t = 0:
 			toy = toy + too.h
-		arcinfo = (src.GetUID(), f, d, t)
-		arclist = MMAttrdefs.getattr(dst, 'synctolist')
-		if not arcinfo in arclist:
-			arclist1 = arclist[0:len(arclist)]
-			arclist1.append(arcinfo)
-			dst.SetAttr('synctolist', arclist1)
-		thisarc = (view, dst, arcinfo)
+		srcuid = src.GetUID()
+		dstuid = dst.GetUID()
+		arcinfo = (srcuid, f, d, t)
+		if newarc:
+			self.editmgr.addsyncarc(src, f, d, dst, t)
+		thisarc = (self, dst, arcinfo)
 		arr = arrow().new(frx, fry, tox, toy, thisarc, src, dst)
 		self.arrowlist.append(arr)
 		return(arr)
@@ -500,20 +512,29 @@ class view () :
 		arrow.kind = FOCUS_ARROW
 		arrow.draw()
 	def setarcvalues(self, (arrow, newinfo)):
+		if not self.editmgr.transaction():
+			fl.show_message('Can not modify arc now','','')
+			return
 		view, dst, arcinfo = arrow.arc
-		arrow.arc = (view, dst, newinfo)
-		arclist = MMAttrdefs.getattr(dst, 'synctolist')
-		arclist.remove(arcinfo)
-		arclist.append(newinfo)
-		dst.SetAttr('synctolist', arclist)
+		arrow.arc = view, dst, newinfo
+		src = arrow.src
+		srcuid, f, d, t = newinfo
+		dstuid = dst.GetUID()
+		self.editmgr.setsyncarcdelay(src, f, d, dst, t)
+		self.editmgr.commit()
 	def deletearc(self):
 		if self.focus = None:
 			return
+		if not self.editmgr.transaction():
+			fl_show_message('Can not delete arc now','','')
+			return
 		arrow = self.focus
 		view, dst, arcinfo = arrow.arc
-		arclist = MMAttrdefs.getattr(dst, 'synctolist')
-		arclist.remove(arcinfo)
-		dst.SetAttr('synctolist', arclist)
+		src = arrow.src
+		srcuid, f, d, t = arcinfo
+		dstuid = dst.GetUID()
+		self.editmgr.delsyncarc(src, f, d, dst, t)
+		self.editmgr.commit()
 		arrow.hidden = 1
 		del arrow
 		self.redrawfunc()
