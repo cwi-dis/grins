@@ -53,6 +53,7 @@ static char graphics_version[12]; /* gversion() output */
 static int is_entry_indigo;	/* true iff we run on an Entry Indigo */
 static int maxbits;		/* max # of bitplanes for color index */
 static short colors[256][3];	/* saved color map entries */
+static int window_used, initialized;
 
 static int
 movie_init(self)
@@ -78,6 +79,7 @@ movie_init(self)
 	PRIV->m_arm.m_index = NULL;
 	PRIV->m_arm.m_frame = NULL;
 	PRIV->m_arm.m_f = NULL;
+	window_used++;
 	return 1;
 }
 
@@ -85,7 +87,23 @@ static void
 movie_dealloc(self)
 	mmobject *self;
 {
+	int i;
+
 	denter(movie_dealloc);
+	if (--window_used == 0 && gl_lock) {
+		acquire_lock(gl_lock, WAIT_LOCK);
+		if (maxbits < 11 && !is_entry_indigo) {
+			winset(PRIV->m_play.m_wid);
+			for (i = 0; i < 256; i++) {
+				mapcolor(i, colors[i][0], colors[i][1],
+					 colors[i][2]);
+				dprintf(("movie_player(%lx): colors %d %d %d\n",
+					 (long) self, colors[i][0],
+					 colors[i][1], colors[i][2]));
+			}
+		}
+		release_lock(gl_lock);
+	}
 	XDECREF(PRIV->m_play.m_index);
 	XDECREF(PRIV->m_arm.m_index);
 	XDECREF(PRIV->m_play.m_f);
@@ -336,6 +354,7 @@ movie_play(self)
 	mmobject *self;
 {
 	char c;
+	int i;
 
 	denter(movie_play);
 	XDECREF(PRIV->m_play.m_index);
@@ -355,6 +374,18 @@ movie_play(self)
 	winset(PRIV->m_play.m_wid);
 	getsize(&PRIV->m_width, &PRIV->m_height);
 	/* initialize color map */
+	if (initialized == 0) {
+		initialized = 1;
+		if (maxbits < 11 && !is_entry_indigo) {
+			for (i = 0; i < 256; i++) {
+				getmcolor(i, &colors[i][0], &colors[i][1],
+					  &colors[i][2]);
+				dprintf(("movie_play(%lx): colors %d %d %d\n",
+					 (long) self, colors[i][0],
+					 colors[i][1], colors[i][2]));
+			}
+		}
+	}
 	if (PRIV->m_arm.m_format == FORMAT_RGB8 && is_entry_indigo &&
 	    strcmp(graphics_version, "GL4DLG-4.0.") == 0) {
 		/* only on entry-level Indigo running IRIX 4.0.5 */
@@ -391,6 +422,7 @@ movie_player(self)
 	object *v;
 	long xorig, yorig;
 	struct pollfd pollfd;
+	int i;
 
 	denter(movie_player);
 	dprintf(("movie_player(%lx): width = %d, height = %d\n", (long) self, PRIV->m_play.m_width, PRIV->m_play.m_height));
@@ -566,16 +598,11 @@ static void
 moviechannel_dealloc(self)
 	channelobject *self;
 {
-	int i;
-
 	if (self != movie_chan_obj) {
 		dprintf(("moviechannel_dealloc: arg != movie_chan_obj\n"));
 	}
 	DEL(self);
 	movie_chan_obj = NULL;
-	if (maxbits < 11 && !is_entry_indigo)
-		for (i = 0; i < 256; i++)
-			mapcolor(i, colors[i][0], colors[i][1], colors[i][2]);
 }
 
 static object *
@@ -646,7 +673,5 @@ initmoviechannel()
 	maxbits = getgdesc(GD_BITS_NORM_SNG_CMODE);
 	if (maxbits > 11)
 		maxbits = 11;
-	if (maxbits < 11 && !is_entry_indigo)
-		for (i = 0; i < 256; i++)
-			getmcolor(i, &colors[i][0], &colors[i][1], &colors[i][2]);
+
 }
