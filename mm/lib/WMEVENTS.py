@@ -31,6 +31,7 @@ DragURL = 34
 DragNode = 35
 DropNode = 36
 DragEnd = 37 # Windows only, indicate unsuccessful end of drag-and-drop
+QueryNode = 38
 
 # Underlying OS window/bitmap has changed (onscreen<->offscreen bitmap, etc)
 OSWindowChanged = 40
