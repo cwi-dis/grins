@@ -490,6 +490,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			import MMRead
 			self.root = MMRead.ReadFile(filename)
 		else:
+			windowinterface.showmessage('%s is a media item.\nCreating new SMIL file around it.'%filename)
 			import SMILTreeRead
 			if mtype is None or \
 			   (mtype[:6] != 'audio/' and \
