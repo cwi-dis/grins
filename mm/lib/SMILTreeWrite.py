@@ -1092,18 +1092,13 @@ class SMILWriter(SMIL):
 				attrlist.append(('title', title))
 			elif self.ch2name[ch] != ch.name:
 				attrlist.append(('title', ch.name))
-			if ch.get('transparent', 0) == 1:
-				# background-color="transparent" is default
-				# but it doesn't make any sense, so fill in
-				# our default
-				if compatibility == features.G2:
-					bgcolor = 0,0,0
-				else:
-					bgcolor = 255,255,255
-				attrlist.append(('background-color', '#%02x%02x%02x' % bgcolor))
-			elif ch.has_key('bgcolor'):
+			if ch.has_key('bgcolor'):
 				bgcolor = ch['bgcolor']
-				attrlist.append(('background-color', '#%02x%02x%02x' % bgcolor))
+			elif compatibility == features.G2:
+				bgcolor = 0,0,0
+			else:
+				bgcolor = 255,255,255
+			attrlist.append(('background-color', '#%02x%02x%02x' % bgcolor))
 			if ch.has_key('winsize'):
 				units = ch.get('units', 0)
 				w, h = ch['winsize']
