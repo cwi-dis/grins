@@ -101,7 +101,6 @@ class _DisplayList:
 		# copy all instance variables
 		new._list = self._list[:]
 		new._font = self._font
-		new._fullwindow = self._fullwindow
 		new._coverarea = Xlib.CreateRegion()
 		new._coverarea.UnionRegion(self._coverarea)
 		if self._rendered:
@@ -182,9 +181,12 @@ class _DisplayList:
 		if clonestart == 0 and self._imagemask:
 			# restrict to drawing outside the image
 			if type(self._imagemask) is RegionType:
+				imagemask = Xlib.CreateRegion()
+				imagemask.UnionRegion(self._imagemask)
+				imagemask.OffsetRegion(w._rect[0], w._rect[1])
 				r = Xlib.CreateRegion()
 				r.UnionRegion(region)
-				r.SubtractRegion(self._imagemask)
+				r.SubtractRegion(imagemask)
 				gc.SetRegion(r)
 			else:
 				width, height = w._topwindow._rect[2:]
@@ -195,7 +197,8 @@ class _DisplayList:
 				g.foreground = 1
 				g.FillRectangle(0, 0, width, height)
 				g.function = X.GXcopyInverted
-				apply(g.PutImage, self._imagemask)
+				mask, src_x, src_y, dest_x, dest_y, width, height = self._imagemask
+				g.PutImage(mask, src_x, src_y, dest_x+w._rect[0], dest_y+w._rect[1], width, height)
 				gc.SetClipMask(r)
 		for i in range(clonestart, len(self._list)):
 			self._do_render(self._list[i], region)
@@ -206,87 +209,104 @@ class _DisplayList:
 
 	def _do_render(self, entry, region):
 		cmd = entry[0]
-		w = self._window
-		gc = w._gc
+		window = self._window
+		gc = window._gc
 		if cmd == 'clear':
 			color = self._bgcolor
 			if color is None:
-				color = w._bgcolor
+				color = window._bgcolor
 			if color is not None:
-				gc.foreground = w._convert_color(color)
-				apply(gc.FillRectangle, w._rect)
+				gc.foreground = window._convert_color(color)
+				apply(gc.FillRectangle, window._rect)
 		elif cmd == 'image':
 			clip = entry[2]
 			r = region
 			if clip is not None:
 				r = Xlib.CreateRegion()
+				clip = window._convert_coordinates(clip)
 				apply(r.UnionRectWithRegion, clip)
 				r.IntersectRegion(region)
 				
 			mask = entry[1]
+			src_x, src_y, dest_x, dest_y, width, height = entry[4:]
+			dest_x = dest_x + window._rect[0]
+			dest_y = dest_y + window._rect[1]
 			if mask:
 				# mask is clip mask for image
-				width, height = w._topwindow._rect[2:]
-				p = w._form.CreatePixmap(width, height, 1)
+				width, height = window._topwindow._rect[2:]
+				p = window._form.CreatePixmap(width, height, 1)
 				g = p.CreateGC({'foreground': 0})
 				g.FillRectangle(0, 0, width, height)
 				g.SetRegion(r)
 				g.foreground = 1
 				g.FillRectangle(0, 0, width, height)
-				apply(g.PutImage, (mask,) + entry[4:])
+				g.PutImage(mask, src_x, src_y, dest_x, dest_y, width, height)
 				gc.SetClipMask(p)
 			else:
 				gc.SetRegion(r)
-			apply(gc.PutImage, entry[3:])
+			gc.PutImage(entry[3], src_x, src_y, dest_x, dest_y, width, height)
 			if mask or clip:
 				gc.SetRegion(region)
 		elif cmd == 'line':
-			gc.foreground = entry[1]
+			gc.foreground = window._convert_color(entry[1])
 			gc.line_width = entry[2]
-			points = entry[3]
-			x0, y0 = points[0]
-			for x, y in points[1:]:
+			units = entry[3]
+			points = entry[4]
+			x0, y0 = window._convert_coordinates(points[0], units)
+			for p in points[1:]:
+				x, y = window._convert_coordinates(p, units)
 				gc.DrawLine(x0, y0, x, y)
 				x0, y0 = x, y
 		elif cmd == '3dhline':
-			color1, color2, x0, x1, y = entry[1:]
-			gc.foreground = color1
+			color1, color2, x0, x1, y, units = entry[1:]
+			x0, y = window._convert_coordinates((x0, y), units=units)
+			x1, dummy = window._convert_coordinates((x1, y), units=units)
+			gc.foreground = window._convert_color(color1)
 			gc.DrawLine(x0, y, x1, y)
-			gc.foreground = color2
+			gc.foreground = window._convert_color(color2)
 			gc.DrawLine(x0, y+1, x1, y+1)
 		elif cmd == 'box':
-			gc.foreground = entry[1]
+			gc.foreground = window._convert_color(entry[1])
 			gc.line_width = entry[2]
-			x,y,w,h = entry[3]
-			clip = entry[4]
-			if clip:
+			units = entry[5]
+			x,y,w,h = window._convert_coordinates(entry[3], units=units)
+			if entry[4]:
+				clip = window._convert_coordinates(entry[4], units=units)
 				r = Xlib.CreateRegion()
 				apply(r.UnionRectWithRegion, clip)
 				r.IntersectRegion(region)
 				gc.SetRegion(r)
 			gc.DrawRectangle(x,y,w-1,h-1)
-			if clip:
+			if entry[4]:
 				gc.SetRegion(region)
 		elif cmd == 'fbox':
-			gc.foreground = entry[1]
-			apply(gc.FillRectangle, entry[2])
+			gc.foreground = window._convert_color(entry[1])
+			box = window._convert_coordinates(entry[2], units=entry[3])
+			apply(gc.FillRectangle, box)
 		elif cmd == 'marker':
-			gc.foreground = entry[1]
-			x, y = entry[2]
+			gc.foreground =  window._convert_color(entry[1])
+			x, y = window._convert_coordinates(entry[2], units=entry[3])
 			radius = 5 # XXXX
 			gc.FillArc(x-radius, y-radius, 2*radius, 2*radius,
 				   0, 360*64)
 		elif cmd == 'text':
-			gc.foreground = entry[1]
+			gc.foreground = window._convert_color(entry[1])
 			gc.SetFont(entry[2])
-			apply(gc.DrawString, entry[3:])
+			x, y = window._convert_coordinates(entry[3])
+			gc.DrawString(x, y, entry[4])
 		elif cmd == 'fpolygon':
-			gc.foreground = entry[1]
-			gc.FillPolygon(entry[2], X.Convex,
-				       X.CoordModeOrigin)
+			gc.foreground = window._convert_color(entry[1])
+			p = []
+			for point in entry[2]:
+				p.append(window._convert_coordinates(point))
+			gc.FillPolygon(p, X.Convex, X.CoordModeOrigin)
 		elif cmd == '3dbox':
 			cl, ct, cr, cb = entry[1]
-			l, t, w, h = entry[2]
+			cl = window._convert_color(cl)
+			ct = window._convert_color(ct)
+			cr = window._convert_color(cr)
+			cb = window._convert_color(cb)
+			l, t, w, h = window._convert_coordinates(entry[2])
 			r, b = l + w, t + h
 			# l, r, t, b are the corners
 			l3 = l + 3
@@ -310,9 +330,9 @@ class _DisplayList:
 			gc.FillPolygon([(l3, b3), (r3, b3), (r, b), (l, b)],
 				       X.Convex, X.CoordModeOrigin)
 		elif cmd == 'diamond':
-			gc.foreground = entry[1]
+			gc.foreground = window._convert_color(entry[1])
 			gc.line_width = entry[2]
-			x, y, w, h = entry[3]
+			x, y, w, h = window._convert_coordinates(entry[3])
 			gc.DrawLines([(x, y + h/2),
 				      (x + w/2, y),
 				      (x + w, y + h/2),
@@ -320,8 +340,8 @@ class _DisplayList:
 				      (x, y + h/2)],
 				     X.CoordModeOrigin)
 		elif cmd == 'fdiamond':
-			gc.foreground = entry[1]
-			x, y, w, h = entry[2]
+			gc.foreground = window._convert_color(entry[1])
+			x, y, w, h = window._convert_coordinates(entry[2])
 			gc.FillPolygon([(x, y + h/2),
 					(x + w/2, y),
 					(x + w, y + h/2),
@@ -330,7 +350,11 @@ class _DisplayList:
 				       X.Convex, X.CoordModeOrigin)
 		elif cmd == '3ddiamond':
 			cl, ct, cr, cb = entry[1]
-			l, t, w, h = entry[2]
+			cl = window._convert_color(cl)
+			ct = window._convert_color(ct)
+			cr = window._convert_color(cr)
+			cb = window._convert_color(cb)
+			l, t, w, h = window._convert_coordinates(entry[2])
 			r = l + w
 			b = t + h
 			x = l + w/2
@@ -353,11 +377,11 @@ class _DisplayList:
 			gc.FillPolygon([(l, y), (ll, y), (x, bb), (x, b)],
 				       X.Convex, X.CoordModeOrigin)
 		elif cmd == 'arrow':
-			gc.foreground = entry[1]
+			gc.foreground = window._convert_color(entry[1])
 			gc.line_width = entry[2]
-			apply(gc.DrawLine, entry[3])
-			gc.FillPolygon(entry[4], X.Convex,
-				       X.CoordModeOrigin)
+			nsx, nsy, ndx, ndy, points = self._convert_arrow(entry[3], entry[4])
+			gc.DrawLine(nsx, nsy, ndx, ndy)
+			gc.FillPolygon(points, X.Convex, X.CoordModeOrigin)
 
 	def _getcoverarea(self):
 		# return Region that we guarantee to overwrite on render
@@ -366,7 +390,10 @@ class _DisplayList:
 			r = Xlib.CreateRegion()
 			apply(r.UnionRectWithRegion, w._rect)
 			return r
-		return self._coverarea
+		r = Xlib.CreateRegion()
+		r.UnionRegion(self._coverarea)
+		r.OffsetRegion(w._rect[0], w._rect[1])
+		return r
 
 	def fgcolor(self, color):
 		if self._rendered:
@@ -408,8 +435,8 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
-		image, mask, src_x, src_y, dest_x, dest_y, width, height, clip = \
-		       w._prepare_image(file, crop, scale, center, coordinates, clip)
+		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
+		       w._prepare_image(file, crop, scale, center, coordinates)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:
@@ -417,8 +444,6 @@ class _DisplayList:
 			r.UnionRectWithRegion(dest_x, dest_y, width, height)
 			self._imagemask = r
 			self._coverarea.UnionRegion(r)
-			if (dest_x, dest_y, width, height) == w._rect:
-				self._fullwindow = 1
 		self._list.append(('image', mask, clip, image, src_x, src_y,
 				   dest_x, dest_y, width, height))
 		self._optimize((2,))
@@ -430,52 +455,39 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
-		p = []
-		for point in points:
-			p.append(w._convert_coordinates(point, units = units))
-		self._list.append(('line', w._convert_color(color),
-				   self._linewidth, p))
+		self._list.append(('line', color, self._linewidth, units,
+				   points[:]))
 		self._optimize((1,))
 
 	def draw3dhline(self, color1, color2, x0, x1, y, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		w = self._window
-		x0, y = w._convert_coordinates((x0, y), units=units)
-		x1, dummy = w._convert_coordinates((x1, y), units=units)
-		self._list.append(('3dhline', w._convert_color(color1), w._convert_color(color2),
-				   x0, x1, y))
+		self._list.append(('3dhline', color1, color2, x0, x1, y, units))
 		self._optimize((1,))
 
 	def drawbox(self, coordinates, clip = None, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		w = self._window
-		if clip is not None:
-			clip = w._convert_coordinates(clip, units = units)
-		self._list.append(('box', w._convert_color(self._fgcolor),
-				   self._linewidth,
-				   w._convert_coordinates(coordinates, units = units),
-				   clip))
+		self._list.append(('box', self._fgcolor, self._linewidth,
+				   coordinates, clip, units))
 		self._optimize((1,))
 
 	def drawfbox(self, color, coordinates, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
+		self._list.append(('fbox', color, coordinates, units))
 		box = w._convert_coordinates(coordinates, units = units)
-		self._list.append(('fbox', w._convert_color(color), box))
-		apply(self._coverarea.UnionRectWithRegion, box)
-		if self._list[-1][2] == w._rect:
-			self._fullwindow = 1
+		self._coverarea.UnionRectWithRegion(box[0]-w._rect[0],
+						    box[1]-w._rect[1],
+						    box[2], box[3])
 		self._optimize((1,))
 
-	def drawmarker(self, color, coordinates):
+	def drawmarker(self, color, coordinates, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
-		self._list.append(('marker', w._convert_color(color),
-				   w._convert_coordinates(coordinates)))
+		self._list.append(('marker', color, coordinates, units))
 
 	def get3dbordersize(self):
 		# This is the same "3" as in 3dbox bordersize
@@ -531,8 +543,7 @@ class _DisplayList:
 		oldy = oldy - base
 		maxx = oldx
 		for str in strlist:
-			x0, y0 = w._convert_coordinates((x, y))
-			list.append(('text', self._window._convert_color(self._fgcolor), self._font._font, x0, y0, str))
+			list.append(('text', self._fgcolor, self._font._font, (x, y), str))
 			self._optimize((1,))
 			self._curpos = x + float(f.TextWidth(str)) / w._rect[_WIDTH], y
 			x = self._xpos
@@ -577,11 +588,12 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
-		color = w._convert_color(color)
+		self._list.append(('fpolygon', color, points))
+		x0, y0 = w._rect[:2]
 		p = []
 		for point in points:
-			p.append(w._convert_coordinates(point))
-		self._list.append(('fpolygon', color, p))
+			x, y = w._convert_coordinates(point)
+			p.append((x-x0, y-y0))
 		r = Xlib.PolygonRegion(p, w._gc.fill_rule)
 		self._coverarea.UnionRegion(r)
 		self._optimize((1,))
@@ -590,20 +602,14 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
-		coordinates = window._convert_coordinates(coordinates)
-		cl = window._convert_color(cl)
-		ct = window._convert_color(ct)
-		cr = window._convert_color(cr)
-		cb = window._convert_color(cb)
 		self._list.append(('3dbox', (cl, ct, cr, cb), coordinates))
 		self._optimize((1,))
 
 	def drawdiamond(self, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		coordinates = self._window._convert_coordinates(coordinates)
 		self._list.append(('diamond',
-				   self._window._convert_color(self._fgcolor),
+				   self._fgcolor,
 				   self._linewidth, coordinates))
 		self._optimize((1,))
 
@@ -617,26 +623,21 @@ class _DisplayList:
 		if h < 0:
 			y, h = y + h, -h
 		coordinates = window._convert_coordinates((x, y, w, h))
-		color = window._convert_color(color)
-		self._list.append(('fdiamond', color, coordinates))
+		self._list.append(('fdiamond', color, (x, y, w, h)))
 		x, y, w, h = coordinates
-		r = Xlib.PolygonRegion([(x, y + h/2),
-					(x + w/2, y),
-					(x + w, y + h/2),
-					(x + w/2, y + h),
-					(x, y + h/2)], w._gc.fill_rule)
+		x0, y0 = w._rect[:2]
+		r = Xlib.PolygonRegion([(x-x0, y + h/2 - y0),
+					(x + w/2 - x0, y - y0),
+					(x + w - x0, y + h/2 - y0),
+					(x + w/2 - x0, y + h - y0),
+					(x - x0, y + h/2 - y0)],
+				       w._gc.fill_rule)
 		self._coverarea.UnionRegion(r)
 		self._optimize((1,))
 
 	def draw3ddiamond(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		window = self._window
-		cl = window._convert_color(cl)
-		ct = window._convert_color(ct)
-		cr = window._convert_color(cr)
-		cb = window._convert_color(cb)
-		coordinates = window._convert_coordinates(coordinates)
 		self._list.append(('3ddiamond', (cl, ct, cr, cb), coordinates))
 		self._optimize((1,))
 
@@ -653,8 +654,8 @@ class _DisplayList:
 		w = self._window
 		module = _iconmap.get(icon) or _iconmap['']
 		reader = __import__(module)
-		image, mask, src_x, src_y, dest_x, dest_y, width, height, clip = \
-		       w._prepare_image(reader, (0,0,0,0), -2, 1, coordinates, None)
+		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
+		       w._prepare_image(reader, (0,0,0,0), -2, 1, coordinates)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:
@@ -666,11 +667,8 @@ class _DisplayList:
 				   dest_x, dest_y, width, height))
 		self._optimize((2,))
 		
-	def drawarrow(self, color, src, dst):
-		if self._rendered:
-			raise error, 'displaylist already rendered'
+	def _convert_arrow(self, src, dst):
 		window = self._window
-		color = self._window._convert_color(color)
 		if not window._arrowcache.has_key((src,dst)):
 			sx, sy = src
 			dx, dy = dst
@@ -701,9 +699,13 @@ class _DisplayList:
 			points.append((roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
 				       roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos)))
 			window._arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
-		nsx, nsy, ndx, ndy, points = window._arrowcache[(src,dst)]
-		self._list.append(('arrow', color, self._linewidth,
-				   (nsx, nsy, ndx, ndy), points))
+		return window._arrowcache[(src,dst)]
+
+	def drawarrow(self, color, src, dst):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		window = self._window
+		self._list.append(('arrow', color, self._linewidth, src, dst))
 		self._optimize((1,))
 
 	def _optimize(self, ignore = ()):
