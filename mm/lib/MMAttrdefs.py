@@ -228,7 +228,7 @@ def getattr(node, attrname, animated=0):
 	if settings.activeFullSmilCss:
 		if node != None:
 			if node.isCssAttr(attrname):
-				return node.getCssAttr(attrname)
+				return node.getCssRawAttr(attrname)
 				
 	if attrstats is not None:
 		if attrstats.has_key(attrname):
