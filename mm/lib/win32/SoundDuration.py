@@ -24,7 +24,7 @@ def get(url):
 	return duration
 
 def getmarkers(url):
-	nframes, framerate, markers = getfillinfo(url)
+	nframes, framerate, markers = getfullinfo(url)
 	if not markers:
 		return []
 	xmarkers = []

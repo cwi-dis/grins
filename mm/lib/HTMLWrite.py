@@ -15,7 +15,6 @@ import MMurl
 import re
 from cmif import findfile
 import windowinterface
-import MMurl
 import compatibility
 import features
 
@@ -59,8 +58,7 @@ def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0, exportty
 	
 def __WriteFileG2(root, filename, smilurl, oldfilename='', evallicense = 0):
 	# XXXX If oldfilename set we should use that as a template
-	import cmif
-	templatedir = cmif.findfile('Templates')
+	templatedir = findfile('Templates')
 	templatedir = MMurl.pathname2url(templatedir)
 	#
 	# This is a bit of a hack. G2 appears to want its URLs without
@@ -99,8 +97,7 @@ def __WriteFileG2(root, filename, smilurl, oldfilename='', evallicense = 0):
 
 def __WriteFileQT(root, filename, smilurl, oldfilename='', evallicense = 0):
 	# XXXX If oldfilename set we should use that as a template
-	import cmif
-	templatedir = cmif.findfile('Templates')
+	templatedir = findfile('Templates')
 	templatedir = MMurl.pathname2url(templatedir)
 	#
 	# This is a bit of a hack. G2 appears to want its URLs without
@@ -214,8 +211,8 @@ class HTMLWriter:
 			raise Error, 'HTML template file does not exist'
 		try:
 			template_data = open(templatefile).read()
-		except IOError, arg:
-			raise Error, 'HTML template %s: I/O error'%templatename
+		except IOError:
+			raise Error, 'HTML template %s: I/O error'%template_name
 		
 		#
 		# Step two - Construct the dictionary for the %(name)s values
