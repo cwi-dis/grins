@@ -1,0 +1,126 @@
+
+
+default_settings = {
+##	'lightweight': 0,		# Lightweight version
+
+	'system_bitrate': 34400,	# Fast modem
+	'system_captions': 0,		# Don't show captions
+	'system_language': 'en',	# English
+	'system_overdub_or_caption': 'subtitle', # Subtitles preferred over overdub
+## Special case, see get() routine
+##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
+##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
+	'system_required': (),		# Needs special handling in match...
+	'system_component': (),		# Needs special handling in match...
+	'system_audiodesc': 0,		# No audio description
+	'system_operating_system': 'UNKNOWN',
+	'system_cpu': 'UNKNOWN',
+	'license': '',
+	'license_user' : '',
+	'license_organization' : '',
+	'baselicense': '',
+	'skin': '',			# URL for skin definition file
+	'askskin': 0,			# Ask for skin file when opening file in player
+
+	'default_sync_behavior_locked' : 0,
+	'default_sync_tolerance' : 0.1,
+
+	'templatedirs': ['My Templates', 'Templates'], # List of template directories.  May be relative to installation directory
+
+##	'compatibility': G2,		# Try to be compatible with...
+	'cmif': 0,			# Show cmif-only attributes
+	'debug': 0,			# Show debug commands
+	'checkext': 0,			# Guess Mime type based on extension
+	'no_canvas_resize': 1,	 # Don't resize canvas after window resize (X)
+	'showhidden': 0,		# Show override="hidden" custom tests
+	'hierarchy_minimum_sizes': 0,	# Leaf nodes drawn using min. size
+	'structure_name_size': 1,
+	'structure_thumbnails': 1,	# Display image thumbnails by default
+	'structure_tickdistance':5,	# Min distance between tick in timeline
+	'root_expanded': 0,		# Root node always expanded
+	'recent_documents':[],		# Recently used documents
+	'thumbnail_size':10.0,		# Size of thumbnail (mm)
+	'time_scale_factor': 1.0,	# Scale factor for sec to mm
+	'show_links':1,			# Show hyperlink icons
+	'initial_dialog': 1,		# Show initial dialog if true
+	'RPthumbnails': 0,		# RealPix thumbnails in timeline view
+	'cascade': 0,			# Cascade regions when no <layout>
+	'no_image_cache': 0,		# Don't cache images (or info about them)
+	'noskip': 0,			# Don't skip initial part of continuous media
+	'vertical_icons': 1,		# Display icons vertically in Structure View
+	'vertical_spread': 1,		# Fill vertical free space in Structure View
+# HierarchyView colors
+	'structure_bgcolor': (150, 150, 150), # Background of Structure View
+	'structure_leafcolor': (255,255,222), # Unselected playable leaf nodes
+	'structure_darkleaf': (203,203,170), # Unselected unplayable leaf nodes
+	'structure_commentcolor': (203,203,170), # Comment nodes
+	'structure_foreigncolor': (255,222,255), # Playable foreign nodes
+	'structure_darkforeign': (181,164,181),	# Unplayable foreign nodes
+	'structure_rpcolor': (196,159,127), # Playable RealPix nodes (G2 only)
+	'structure_darkrp': (196,159,127), # Unplayable RealPix nodes (G2 only)
+	'structure_slidecolor': (222,255,255), # Playable RealPix slide (G2 only)
+	'structure_darkslide': (164,181,181), # Unplayable RealPix slide (G2 only)
+	'structure_altcolor': (184,95,95), # Playable switch node
+	'structure_darkalt': (157,108,108), # Unplayable switch node
+	'structure_parcolor': (79,156,130), # Playable par node
+	'structure_darkpar': (91,126,114), # Unplayable par node
+	'structure_seqcolor': (116,154,189), # Playable seq node
+	'structure_darkseq': (108,128,146), # Unplayable seq node
+	'structure_exclcolor': (148,117,166), # Playable excl node
+	'structure_darkexcl': (131,119,137), # Unplayable excl node
+	'structure_priocolor': (166,61,126), # Playable prio node
+	'structure_darkprio': (142,53,108), # Unplayable prio node
+	'structure_textcolor': (0, 0, 0), # Most text
+	'structure_ctextcolor': (50, 50, 50),	# Region names
+	'structure_expcolor': (200, 200, 200), # Open disclosure triangle (not used?)
+	'structure_colcolor': (200, 200, 200), # Collision color (not used?)
+	'structure_fillcolor': (255,255,222), # Fill bar color in media node
+	'structure_freezecolor': (150, 150, 150), # Freeze color in media node
+	'structure_repeatcolor': (100, 100, 100), # Repeat color in media node
+	'structure_trunccolor': (255,0,0), # Indication that node is truncated
+	'structure_ecbordercolor': (40, 40, 40), # triangle border (not used?)
+	'structure_focusleft': (200, 200, 200),	# left edge of 3D focus border
+	'structure_focustop': (200, 200, 200), # top edge of 3D focus border
+	'structure_focusright': (40, 40, 40), # right edge of 3D focus border
+	'structure_focusbottom': (40, 40, 40), # bottom edge of 3D focus border
+	'structure_dropcolor': (0, 0, 0), # drop target border color
+
+	'structure_bandwidthfree': (150, 150, 150),
+	'structure_bandwidthok': (0, 100, 0),
+	'structure_bandwidthnotok': (100, 0, 0),
+	'structure_bandwidthmaybeok': (100, 60, 0),
+	'structure_bandwidthokfocus': (0, 200, 0),
+	'structure_bandwidthnotokfocus': (200, 0, 0),
+	'structure_bandwidthmaybeokfocus': (200, 120, 0),
+	'structure_bwprerollcolor': (255, 160, 0),
+	'structure_bwmaystallcolor': (255, 160, 0),
+	'structure_bwstallcolor': (255, 0, 0),
+
+	# Locations on the net
+	'templatedir_url': 'http://www.oratrix.com/indir/images',
+	'openviews' : [('structure', (-1, -1, -1, -1))],	# Default views to open
+	'saveopenviews': 0,
+	'showsource' : 0,	# Hidden preference to show source window in the player
+
+	# The temporal view
+	'temporal_barwidth': 5,		# width of the sync bars
+	'temporal_channelwidth':100,	# Width of the channels. If channels are made Hierarchical, this may change.
+	'temporal_nodestart': 102,	# Where the first bar is
+	'temporal_nodeend' : 1000,	# Where the last bar is.
+	'temporal_backgroundcolor' : (227,223,145),	# The color of the background
+	'temporal_channelcolor': (232, 193,152),	# Color of the channels
+	'temporal_channelheight': 16,	# Height of the channels
+	'temporal_nodecolor': (205,207,194),		# the color of each node
+	'temporal_parcolor': (79,156,130),
+	'temporal_seqcolor': (116,154,189),
+	'temporal_exclcolor': (148,117,166),
+	'temporal_priocolor': (166,61,126),
+	'temporal_switchcolor': (148,117,166),
+	'temporal_timescale': 5,	# pixels per second.
+	'temporal_fillcolor': (150,150,150), # The color a node is for it's fill segment.
+	
+	# Attribute editor prefs
+	'show_all_attributes' : 1,
+	'enable_template': 0,
+	'registered': 'notyet',
+}
