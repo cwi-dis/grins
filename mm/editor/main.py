@@ -26,6 +26,9 @@ def main():
 	finally:
 		SoundChannel.restore()
 	#
+	import MMNode
+	MMNode._prstats()
+	#
 	sys.exit(status)
 
 main()
