@@ -151,6 +151,7 @@ echo -x imgformat >> FreezeOpts
 
 rem producer stuff
 echo -x producer >> FreezeOpts
+echo -x dshow >> FreezeOpts
 
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
