@@ -1439,10 +1439,10 @@ class StructureObjWidget(MMNodeWidget):
 	def draw_box(self, displist):
 		displist.draw3dbox(DROPCOLOR, DROPCOLOR, DROPCOLOR, DROPCOLOR, self.get_box())
 
-	def __draw_box(self, displist, color):
+	def __draw_box(self, displist, color, willplay):
 		x,y,w,h = self.get_box()
 		timemapper = self.__timemapper
-		if timemapper is None or not isinstance(self, MediaWidget):
+		if not willplay or timemapper is None or not isinstance(self, MediaWidget):
 			displist.drawfbox(color, (x,y,w,h))
 			return
 
@@ -1484,7 +1484,7 @@ class StructureObjWidget(MMNodeWidget):
 			color = self.PLAYCOLOR
 		else:
 			color = self.NOPLAYCOLOR
-		self.__draw_box(displist, color)
+		self.__draw_box(displist, color, willplay)
 
 		if self.channelbox is not None and not self.iscollapsed():
 			self.channelbox.draw(displist)
