@@ -1346,7 +1346,11 @@ class BitrateAttrEditorField(PopupAttrEditorField):
 	def valuerepr(self, value):
 		if value is None:
 			return self.default
-		return self.__strings[self.__values.index(value)]
+		str = self.__strings[0]
+		for i in range(len(self.__values)):
+			if self.__values[i] <= value:
+				str = self.__strings[i]
+		return str
 
 	def getoptions(self):
 		return self.__strings
@@ -1355,12 +1359,7 @@ class BitrateAttrEditorField(PopupAttrEditorField):
 		val = self.wrapper.getvalue(self.getname())
 		if val is None:
 			return self.getdefault()
-		nval = self.__values[0]
-		if val not in self.__values:
-			for v in self.__values:
-				if v <= val:
-					nval = v
-		return self.valuerepr(nval)
+		return self.valuerepr(val)
 
 class Bitrate3AttrEditorField(BitrateAttrEditorField):
 	def getoptions(self):
@@ -1370,12 +1369,7 @@ class Bitrate3AttrEditorField(BitrateAttrEditorField):
 		val = self.wrapper.getvalue(self.getname())
 		if val is None:
 			return self.default
-		nval = self.__values[0]
-		if val not in self.__values:
-			for v in self.__values:
-				if v <= val:
-					nval = v
-		return self.valuerepr(nval)
+		return self.valuerepr(val)
 
 class TransitionAttrEditorField(PopupAttrEditorField):
 	__values = ['fill', 'fadein', 'fadeout', 'crossfade', 'wipe', 'viewchange']
