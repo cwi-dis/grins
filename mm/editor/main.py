@@ -189,11 +189,11 @@ def main():
 		except:
 			sys.stdout = sys.stderr
 			print
-			print '\t-------------------------------------------'
-			print '\t| Entering debugger -- call Guido or Jack |'
-			print '\t-------------------------------------------'
+			print '\t--------------------------------------------'
+			print '\t| Entering debugger -- call Sjoerd or Jack |'
+			print '\t--------------------------------------------'
 			print
-			print '\t' + sys.exc_type + ':', `sys.exc_value`
+			print '\t' + str(sys.exc_type) + ':', `sys.exc_value`
 			print
 ##			import os
 ##			sts = os.system('/ufs/guido/bin/playaudio /ufs/guido/lib/woowoo &')
