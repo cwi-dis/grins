@@ -159,7 +159,7 @@ class License:
 			if f == "upgradefromsmil2real":
 				basefeaturewanted.append("smil2real")
 				baseproductnames.append("GRiNS/RealOne")
-			if f == "upgradefromsmil1":
+			if f == "upgradefromsmil1editor":
 				basefeaturewanted.append("editor")
 				basefeaturewanted.append("light")
 				basefeaturewanted.append("pro")
@@ -182,6 +182,7 @@ class License:
 			if f in old_features:
 				break
 		else:
+			settings.set('baselicense', '')
 			return "Only upgrades licenses for %s" % baseproductnames
 		settings.set('baselicense', self._baselicense)
 		return None
