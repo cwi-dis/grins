@@ -914,8 +914,9 @@ class Object:
 						# f not reassigned!
 						pass
 				if f is not None:
+					ih = min(b1-t1, 2*titleheight)
 					try:
-						box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1)/2-titleheight, r-l-2*hmargin, 2*titleheight))
+						box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
 					except windowinterface.error:
 						pass
 					else:
