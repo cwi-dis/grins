@@ -520,6 +520,8 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandMultiSItemList = [
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
+				COPY(callback = (self.onCopy, ())),
+				CUT(callback = (self.onCut, ())),
 				]
 		else:
 			self.commandMultiSItemList = []		
@@ -529,6 +531,8 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandMultiSiblingSItemList = [
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
+				COPY(callback = (self.onCopy, ())),
+				CUT(callback = (self.onCut, ())),
 				]
 		else:
 			self.commandMultiSiblingSItemList = []
