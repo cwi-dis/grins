@@ -104,6 +104,15 @@ class TextWindow() = (glwindow.glwindow)():
 
 class TextChannel() = Channel():
 	#
+	# Declaration of attributes that are relevant to this channel,
+	# respectively to nodes belonging to this channel.
+	#
+	chan_attrs = Channel.chan_attrs + \
+		['winsize', 'winpos', 'font', 'pointsize']
+	node_attrs = Channel.node_attrs + ['file', 'wait_for_close']
+	#
+	# Initialization function.
+	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, (name, attrdict, player))
 		self.window = TextWindow().init(name, attrdict)
@@ -131,7 +140,7 @@ class TextChannel() = Channel():
 		self.showtext(node)
 		wait = MMAttrdefs.getattr(node, 'wait_for_close')
 		if wait:
-			self.player.freeze() # Should have another interface
+			self.player.pause() # Should have another interface
 			now = self.player.timefunc()
 			self.qid = self.player.enter(now + 0.001, 0, \
 						self.done, (callback, arg))
