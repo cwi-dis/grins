@@ -1,9 +1,9 @@
 __version__ = "$Id$"
 
-##################################
+## ################################
 # entry points for the core system
 # and the other ../win32 folders
-##################################
+## ################################
 
 import AppToplevel
 import __main__
@@ -73,13 +73,13 @@ from win32dialog import *
 # override some dialogs when embedded
 import __main__
 if hasattr(__main__,'embedded') and __main__.embedded:
-	import embedding
-	showmessage = embedding.showmessage
-	ProgressDialog = embedding.ProgressDialog
-	showquestion = embedding.showquestion
-	GetYesNoCancel = embedding.GetYesNoCancel
-	GetOKCancel = embedding.GetOKCancel
-	GetYesNo = embedding.GetYesNo
+    import embedding
+    showmessage = embedding.showmessage
+    ProgressDialog = embedding.ProgressDialog
+    showquestion = embedding.showquestion
+    GetYesNoCancel = embedding.GetYesNoCancel
+    GetOKCancel = embedding.GetOKCancel
+    GetYesNo = embedding.GetYesNo
 
 # Auxiliary functions
 from AppToplevel import beep
@@ -89,25 +89,24 @@ GetImageSize=toplevel.GetImageSize
 from win32dxm import GetVideoSize
 
 def lopristarting():
-	pass
+    pass
 
 import win32api
 def RGB(c):return win32api.RGB(c[0],c[1],c[2])
 
 def serve_events():
-	import win32ui, win32con
-	win32ui.PumpWaitingMessages(win32con.WM_MOUSEFIRST,win32con.WM_MOUSELAST)
-	from __main__ import toplevel
-	toplevel.serve_events()
+    import win32ui, win32con
+    win32ui.PumpWaitingMessages(win32con.WM_MOUSEFIRST,win32con.WM_MOUSELAST)
+    from __main__ import toplevel
+    toplevel.serve_events()
 
 def sleep(t):
-	win32api.Sleep(int(t*1000.0+0.5))
+    win32api.Sleep(int(t*1000.0+0.5))
 
 def HasSvgSupport():
-	import win32ui
-	return win32ui.HasSvgSupport()
+    import win32ui
+    return win32ui.HasSvgSupport()
 
 def is_embedded():
-	import __main__
-	return hasattr(__main__,'embedded') and __main__.embedded
-
+    import __main__
+    return hasattr(__main__,'embedded') and __main__.embedded
