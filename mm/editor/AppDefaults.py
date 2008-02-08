@@ -10,12 +10,12 @@ show_links = settings.get('show_links')
 
 vertical_spread = settings.get('vertical_spread')
 
-# Fonts used 
+# Fonts used
 f_title = windowinterface.findfont('Helvetica', 10)
 f_channel = windowinterface.findfont('Helvetica', 8)
 f_timescale = f_channel
-FONTTWEAK = 2				# potentially system-dependant vertical tweak of fonts
-					# this is used to vertically center text
+FONTTWEAK = 2                           # potentially system-dependant vertical tweak of fonts
+                                        # this is used to vertically center text
 
 TICKDIST = settings.get('structure_tickdistance')
 
@@ -74,25 +74,25 @@ FOCUSBOTTOM = settings.get('structure_focusbottom')
 DROPCOLOR = settings.get('structure_dropcolor')
 
 SIZEUNIT = windowinterface.UNIT_PXL # units for the following
-MINSIZE = 48 
+MINSIZE = 48
 MAXSIZE = 128
 TITLESIZE = int(f_title.fontheightPXL())
 if TITLESIZE < windowinterface.ICONSIZE_PXL:
-	TITLESIZE = windowinterface.ICONSIZE_PXL
+    TITLESIZE = windowinterface.ICONSIZE_PXL
 CHNAMESIZE = 0
-LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
+LABSIZE = TITLESIZE+CHNAMESIZE          # height of labels
 HOREXTRASIZE = f_title.strsizePXL('XX')[0]
-ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
-ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
+ARRSIZE = windowinterface.ICONSIZE_PXL  # width of collapse/expand arrow
+ERRSIZE = windowinterface.ICONSIZE_PXL  # width of error/bandwidth indicator
 
 MIN_PXL_PER_SEC_DEFAULT = 0
 
-GAPSIZE = 4 #2						# size of gap between nodes
-HEDGSIZE = 4 #3						# size of edges
-VEDGSIZE = 4 #3						# size of edges
+GAPSIZE = 4 #2                                          # size of gap between nodes
+HEDGSIZE = 4 #3                                         # size of edges
+VEDGSIZE = 4 #3                                         # size of edges
 DRAGHANDLESIZE = 4
 TRUNCSIZE = 4
-DROPAREASIZE = 32		# size of the decoration at the end of a "roll of film"
+DROPAREASIZE = 32               # size of the decoration at the end of a "roll of film"
 FLATBOX = 0
 TIMEBARHEIGHT = 0
 DROPAREA = MINSIZE + HOREXTRASIZE
@@ -111,8 +111,3 @@ NODES_WANTED_OPEN = 7
 ANCESTORBOX = 0
 INNERBOX = 1
 LEAFBOX = 2
-
-
-
-
-
