@@ -74,7 +74,7 @@ class scheduler:
 
     def run(self):
         """Execute events until the queue is empty.
-   
+
         When there is a positive delay until the first event, the
         delay function is called and the event is left in the queue;
         otherwise, the event is removed from the queue and executed
