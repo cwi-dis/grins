@@ -40,7 +40,7 @@ DROPEFFECT_NONE   = 0
 DROPEFFECT_COPY   = 1
 DROPEFFECT_MOVE   = 2
 DROPEFFECT_LINK   = 4
-DROPEFFECT_SCROLL = 0x80000000 
+DROPEFFECT_SCROLL = 0x80000000
 
 # Private window messages
 
@@ -51,11 +51,11 @@ MLF_SHOWONIDLE     = 0x0004  # show window if not visible at idle time
 
 WM_KICKIDLE        = 0x036A
 
-WM_USER_CREATE_BOX_OK		= win32con.WM_USER + 1
-WM_USER_CREATE_BOX_CANCEL	= win32con.WM_USER + 2
+WM_USER_CREATE_BOX_OK           = win32con.WM_USER + 1
+WM_USER_CREATE_BOX_CANCEL       = win32con.WM_USER + 2
 
 # constants to select web browser control
 [IE_CONTROL, WEBSTER_CONTROL]=0, 1
 
 # start of unnamed messages
-WM_USER_GRINS				= win32con.WM_USER + 100
+WM_USER_GRINS                           = win32con.WM_USER + 100
