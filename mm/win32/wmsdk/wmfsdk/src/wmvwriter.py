@@ -26,52 +26,49 @@ System configuration profiles
 """
 
 try:
-	import wmfapi
+    import wmfapi
 except ImportError:
-	wmfapi = None
-		
+    wmfapi = None
+
 class WMWriter:
-	def __init__(self, dds, profile=20):
-		self._dds = dds
-		self._writer = None
-		self._filename = None
-		self._sample = None
-		self._lasttm = 0
-		if not wmfapi:
-			return
-		profman = wmfapi.CreateProfileManager()
-		prof = profman.LoadSystemProfile(profile) 
-		writer = wmfapi.CreateDDWriter(prof)
-		wmtype = wmfapi.CreateDDVideoWMType(self._dds)
-		writer.SetVideoFormat(wmtype)
-		self._writer = writer
+    def __init__(self, dds, profile=20):
+        self._dds = dds
+        self._writer = None
+        self._filename = None
+        self._sample = None
+        self._lasttm = 0
+        if not wmfapi:
+            return
+        profman = wmfapi.CreateProfileManager()
+        prof = profman.LoadSystemProfile(profile)
+        writer = wmfapi.CreateDDWriter(prof)
+        wmtype = wmfapi.CreateDDVideoWMType(self._dds)
+        writer.SetVideoFormat(wmtype)
+        self._writer = writer
 
-	def setOutputFilename(self, filename):
-		self._filename = filename
-		if self._writer:
-			self._writer.SetOutputFilename(filename)
-		
-	def beginWriting(self):
-		if self._writer:
-			self._writer.BeginWriting()
-			self._sample = self._writer.AllocateDDSample(self._dds)
-			self._lasttm = 0
+    def setOutputFilename(self, filename):
+        self._filename = filename
+        if self._writer:
+            self._writer.SetOutputFilename(filename)
 
-	def endWriting(self):
-		if self._writer:
-			self._writer.Flush()
-			self._writer.EndWriting()
+    def beginWriting(self):
+        if self._writer:
+            self._writer.BeginWriting()
+            self._sample = self._writer.AllocateDDSample(self._dds)
+            self._lasttm = 0
 
-	def update(self, now):
-		now = int(1000.0*now+0.5)
-		now = 100*(now/100)
-		if not self._writer: return
-		t = self._lasttm
-		while t <= now:
-			self._writer.WriteVideoSample(t, self._sample)
-			t = t + 100
-		self._sample = self._writer.AllocateDDSample(self._dds)
-		self._lasttm = now
+    def endWriting(self):
+        if self._writer:
+            self._writer.Flush()
+            self._writer.EndWriting()
 
-
-
+    def update(self, now):
+        now = int(1000.0*now+0.5)
+        now = 100*(now/100)
+        if not self._writer: return
+        t = self._lasttm
+        while t <= now:
+            self._writer.WriteVideoSample(t, self._sample)
+            t = t + 100
+        self._sample = self._writer.AllocateDDSample(self._dds)
+        self._lasttm = now
