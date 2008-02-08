@@ -13,19 +13,17 @@ OWNER_CLIPBOARD = 2
 OWNER_ASSET = 4
 
 class Owner:
-	def __init__(self):
-		self.__owner = OWNER_NONE
+    def __init__(self):
+        self.__owner = OWNER_NONE
 
-	# return the owner of a root node
-	def getOwner(self):
-		return self.__owner
+    # return the owner of a root node
+    def getOwner(self):
+        return self.__owner
 
-	# add the owner flag without affecting the others
-	def addOwner(self, owner):
-		self.__owner = self.__owner | owner
+    # add the owner flag without affecting the others
+    def addOwner(self, owner):
+        self.__owner = self.__owner | owner
 
-	# remove an owner flag without affecting the others
-	def removeOwner(self, owner):
-		self.__owner = self.__owner &~ owner
-
-	
+    # remove an owner flag without affecting the others
+    def removeOwner(self, owner):
+        self.__owner = self.__owner &~ owner

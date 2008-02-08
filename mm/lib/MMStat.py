@@ -9,19 +9,18 @@ __version__ = "$Id$"
 _stats = {}
 #
 def _stat(key):
-	if _stats.has_key(key):
-		_stats[key] = _stats[key] + 1
-	else:
-		_stats[key] = 1
+    if _stats.has_key(key):
+        _stats[key] = _stats[key] + 1
+    else:
+        _stats[key] = 1
 #
 def _prstats():
-	from string import rjust
-	print '### Statistics ###'
-	list = []
-	for key in _stats.keys():
-		list.append((_stats[key], key))
-	list.sort()
-	list.reverse()
-	for count, key in list:
-		print '#', rjust(`count`, 5), key
-
+    from string import rjust
+    print '### Statistics ###'
+    list = []
+    for key in _stats.keys():
+        list.append((_stats[key], key))
+    list.sort()
+    list.reverse()
+    for count, key in list:
+        print '#', rjust(`count`, 5), key
