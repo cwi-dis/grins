@@ -97,26 +97,26 @@ ITEM_BANDWIDTH_PREROLL=13
 ITEM_BANDWIDTH_MESSAGE2=14
 
 # Icon IDs
-ID_ICON_TRIANGLE_RIGHT=612		# Mac-style right-pointing reveal triangle
-ID_ICON_TRIANGLE_DOWN=613		# Mac-style down-pointing reveal triangle
-ID_ICON_BANDWIDTH_OK=614		# green pipeline
-ID_ICON_BANDWIDTH_ERROR=615		# red bulging pipeline
-##ID_ICON_TRIANGLE_RIGHT=616	# Windows-style boxed +
-##ID_ICON_TRIANGLE_DOWN=617		# Windows-style boxed -
-ID_ICON_ERROR=618				# Warning trafficsign
-ID_ICON_DANGLINGEVENT=619		# Both source and destination
-ID_ICON_LINKSRC=621				# Source of hyperlinks
-ID_ICON_LINKDST=620				# Destination of hyperlinks
-ID_ICON_DANGLINGANCHOR=622		# Both source and destination
-ID_ICON_TRANSIN=623				# in-transition
-ID_ICON_TRANSOUT=624			# out-transition
-ID_ICON_EVENTIN=626				# Node begin is an event arc
-ID_ICON_EVENTOUT=626			# Node end is an event arc
-ID_ICON_CAUSEEVENT=628			# Node is source of an event arc
-ID_ICON_REPEAT=629				# Node repeats
-ID_ICON_PLAYING=630				# Node is playing
-ID_ICON_WAITSTOP=631			# Node is in fill=freeze
-ID_ICON_IDLE=632				# Node is idle
+ID_ICON_TRIANGLE_RIGHT=612              # Mac-style right-pointing reveal triangle
+ID_ICON_TRIANGLE_DOWN=613               # Mac-style down-pointing reveal triangle
+ID_ICON_BANDWIDTH_OK=614                # green pipeline
+ID_ICON_BANDWIDTH_ERROR=615             # red bulging pipeline
+## ID_ICON_TRIANGLE_RIGHT=616    # Windows-style boxed +
+## ID_ICON_TRIANGLE_DOWN=617        # Windows-style boxed -
+ID_ICON_ERROR=618                               # Warning trafficsign
+ID_ICON_DANGLINGEVENT=619               # Both source and destination
+ID_ICON_LINKSRC=621                             # Source of hyperlinks
+ID_ICON_LINKDST=620                             # Destination of hyperlinks
+ID_ICON_DANGLINGANCHOR=622              # Both source and destination
+ID_ICON_TRANSIN=623                             # in-transition
+ID_ICON_TRANSOUT=624                    # out-transition
+ID_ICON_EVENTIN=626                             # Node begin is an event arc
+ID_ICON_EVENTOUT=626                    # Node end is an event arc
+ID_ICON_CAUSEEVENT=628                  # Node is source of an event arc
+ID_ICON_REPEAT=629                              # Node repeats
+ID_ICON_PLAYING=630                             # Node is playing
+ID_ICON_WAITSTOP=631                    # Node is in fill=freeze
+ID_ICON_IDLE=632                                # Node is idle
 ID_ICON_ACTIVATEVENT=None
 ID_ICON_ANIMATION=None
 ID_ICON_DURATION=None
