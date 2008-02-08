@@ -3,20 +3,20 @@ __version__ = "$Id$"
 import imgformat
 
 class reader:
-	def __init__(self):
-		self.width = 16
-		self.height = 16
-		self.format = imgformat.colormap
-		self.format_choices = (self.format,)
-		import imgcolormap
-		self.colormap = imgcolormap.new('''\0\377\0\0''')
-		self.transparent = 0
-		self.top = 0
-		self.left = 0
-		self.aspect = 0
+    def __init__(self):
+        self.width = 16
+        self.height = 16
+        self.format = imgformat.colormap
+        self.format_choices = (self.format,)
+        import imgcolormap
+        self.colormap = imgcolormap.new('''\0\377\0\0''')
+        self.transparent = 0
+        self.top = 0
+        self.left = 0
+        self.aspect = 0
 
-	def read(self):
-		return '''\
+    def read(self):
+        return '''\
 \0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\
 \0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\
 \0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\
