@@ -1,11 +1,11 @@
 __version__ = "$Id$"
 
 #
-#	SVGChannel
+#       SVGChannel
 #
 
 from Channel import Channel
 
 class SVGChannel(Channel):
-	def getaltvalue(self, node):
-		return 0
+    def getaltvalue(self, node):
+        return 0
