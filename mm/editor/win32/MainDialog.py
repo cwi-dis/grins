@@ -32,213 +32,212 @@ import features
 import version
 
 _documentation = [('QuickStart', GRINS_QSG),
-		  ('Howto-Basic', GRINS_TUTORIAL),
-		  ('TDG', GRINS_TDG),
-		  ('REFM', GRINS_REFERENCE),
-		  ('TDG', GRINS_DEMOS),]
+                  ('Howto-Basic', GRINS_TUTORIAL),
+                  ('TDG', GRINS_TDG),
+                  ('REFM', GRINS_REFERENCE),
+                  ('TDG', GRINS_DEMOS),]
 
 class MainDialog:
-	adornments = {}
-	def __init__(self, title, hasarguments=1):
-		# Create the Main dialog.
+    adornments = {}
+    def __init__(self, title, hasarguments=1):
+        # Create the Main dialog.
 
-		# Create the dialog window (non-modal, so does not grab
-		# the cursor) and pop it up (i.e. display it on the
-		# screen).
+        # Create the dialog window (non-modal, so does not grab
+        # the cursor) and pop it up (i.e. display it on the
+        # screen).
 
-		# Arguments (no defaults):
-		# title -- string to be displayed as window title
-		if __debug__:
-			self.commandlist.append(
-				CONSOLE(callback=(self.console_callback, ())))
-			self.commandlist.append(
-				SCHEDDEBUG(callback=(self.scheddebug_callback, ())))
-		import Help
-		import cmif, MMurl, os
-		if hasattr(Help, 'hashelp') and Help.hashelp():
-			self.commandlist.append(
-				HELP_CONTENTS(callback = (self.help_contents_callback, ())))
-		self.commandlist.append(
-			GRINS_WEB(callback = (self.grins_web_callback, ('http://www.oratrix.com/GRiNS/',))))
-		for base, cmd in _documentation:
-			for ext in ['.pdf', '.html']:
-				file = cmif.findfile(base + ext)
-				if os.path.exists(file):
-					url = MMurl.pathname2url(file)
-					self.commandlist.append(
-						cmd(callback = (self.grins_web_callback, (url,))))
-					break
-		import windowinterface
-		# register events for all frame wnds
-		windowinterface.register_event(WMEVENTS.PasteFile, self.pastefile, None)
-		windowinterface.register_event(WMEVENTS.DragFile, self.dropeffect, None)
-		windowinterface.register_event(WMEVENTS.DropFile, self.dropfile, None)
-		windowinterface.createmainwnd(title,
-			adornments = self.adornments,
-			commandlist = self.commandlist)
-		import settings
-		if not hasarguments and settings.get('initial_dialog'):
-			f = windowinterface.getmainwnd()
-			doclist = self.get_recent_files()
-			# if we can't edit the GRiNS preferences, we shouldn't allow this check mark
-			if features.PREFERENCES in features.feature_set:
-				never_again = self.never_again
-			else:
-				never_again = None
-			windowinterface.OpenAppDialog(version.title, self.new_callback, 
-				self.openfile_callback, never_again,
-				doclist, self.openURL_callback, parent=f)
-		
-	def getparentwindow(self):
-		# Used by machine-independent code to pass as parent
-		# parameter to dialogs
-		import windowinterface
-		return windowinterface.getmainwnd()
+        # Arguments (no defaults):
+        # title -- string to be displayed as window title
+        if __debug__:
+            self.commandlist.append(
+                    CONSOLE(callback=(self.console_callback, ())))
+            self.commandlist.append(
+                    SCHEDDEBUG(callback=(self.scheddebug_callback, ())))
+        import Help
+        import cmif, MMurl, os
+        if hasattr(Help, 'hashelp') and Help.hashelp():
+            self.commandlist.append(
+                    HELP_CONTENTS(callback = (self.help_contents_callback, ())))
+        self.commandlist.append(
+                GRINS_WEB(callback = (self.grins_web_callback, ('http://www.oratrix.com/GRiNS/',))))
+        for base, cmd in _documentation:
+            for ext in ['.pdf', '.html']:
+                file = cmif.findfile(base + ext)
+                if os.path.exists(file):
+                    url = MMurl.pathname2url(file)
+                    self.commandlist.append(
+                            cmd(callback = (self.grins_web_callback, (url,))))
+                    break
+        import windowinterface
+        # register events for all frame wnds
+        windowinterface.register_event(WMEVENTS.PasteFile, self.pastefile, None)
+        windowinterface.register_event(WMEVENTS.DragFile, self.dropeffect, None)
+        windowinterface.register_event(WMEVENTS.DropFile, self.dropfile, None)
+        windowinterface.createmainwnd(title,
+                adornments = self.adornments,
+                commandlist = self.commandlist)
+        import settings
+        if not hasarguments and settings.get('initial_dialog'):
+            f = windowinterface.getmainwnd()
+            doclist = self.get_recent_files()
+            # if we can't edit the GRiNS preferences, we shouldn't allow this check mark
+            if features.PREFERENCES in features.feature_set:
+                never_again = self.never_again
+            else:
+                never_again = None
+            windowinterface.OpenAppDialog(version.title, self.new_callback,
+                    self.openfile_callback, never_again,
+                    doclist, self.openURL_callback, parent=f)
 
-	def open_callback(self):
-		if not self.canopennewtop():
-			return
-		callbacks={
-			'Browse':(self.__openfile_callback, ()),
-			'Open': (self.__tcallback, ()),
-			'Cancel':(self.__ccallback, ()),
-			}
-		import windowinterface
-		f=windowinterface.getmainwnd()
-		self.__owindow=windowinterface.OpenLocationDlg(callbacks, f, self.last_location, recent_files=self.get_recent_files())
-		self.__text=self.__owindow
-		self.__owindow.show()
+    def getparentwindow(self):
+        # Used by machine-independent code to pass as parent
+        # parameter to dialogs
+        import windowinterface
+        return windowinterface.getmainwnd()
 
-	def openfile_callback(self):
-		# Callback for OPENFILE menu command
-		if not self.canopennewtop():
-			return
-		import windowinterface
-		f=windowinterface.getmainwnd()
-		filetypes = ['/All presentations', 'application/x-grins-project', 'application/smil']
-		windowinterface.FileDialog('Open Document', 'Desktop', filetypes, '',
-					   self.__openfile_done, None, 1,
-					   parent = f)
+    def open_callback(self):
+        if not self.canopennewtop():
+            return
+        callbacks={
+                'Browse':(self.__openfile_callback, ()),
+                'Open': (self.__tcallback, ()),
+                'Cancel':(self.__ccallback, ()),
+                }
+        import windowinterface
+        f=windowinterface.getmainwnd()
+        self.__owindow=windowinterface.OpenLocationDlg(callbacks, f, self.last_location, recent_files=self.get_recent_files())
+        self.__text=self.__owindow
+        self.__owindow.show()
 
-	def __openfile_done(self, filename):
-		# End of OPENFILE menu command. Open the file (as url)
-		url = self.__path2url(filename)
-		if url:
-			self.openURL_callback(url)
+    def openfile_callback(self):
+        # Callback for OPENFILE menu command
+        if not self.canopennewtop():
+            return
+        import windowinterface
+        f=windowinterface.getmainwnd()
+        filetypes = ['/All presentations', 'application/x-grins-project', 'application/smil']
+        windowinterface.FileDialog('Open Document', 'Desktop', filetypes, '',
+                                   self.__openfile_done, None, 1,
+                                   parent = f)
 
-	def dropfile(self, arg, window, event, value):
-		if not self.canopennewtop():
-			return
-		x,y,filename=value
-		url=self.__path2url(filename)
-		import urlcache
-		mimetype = urlcache.mimetype(url)
-		if mimetype in ('application/x-grins-project', 'application/smil', 'application/smil+xml'):
-			self.openURL_callback(url)
-		else:
-			import windowinterface
-			windowinterface.showmessage('Only GRiNS or SMIL files can be dropped.')
-	
-	def pastefile(self, arg, window, event, value):
-		if not self.canopennewtop():
-			return
-		x,y,filename=value
-		url=self.__path2url(filename)
-		self.openURL_callback(url)
-		
-	def dropeffect(self, dummy, window, event, params):
-		import windowinterface, urlcache
-		x,y,filename=params
-		url=self.__path2url(filename)
-		mimetype = urlcache.mimetype(url)
-		if mimetype in ('application/x-grins-project', 'application/smil', 'application/smil+xml', 'application/x-grins-cmif'):
-			return windowinterface.DROPEFFECT_COPY
-		else:
-			return windowinterface.DROPEFFECT_NONE
+    def __openfile_done(self, filename):
+        # End of OPENFILE menu command. Open the file (as url)
+        url = self.__path2url(filename)
+        if url:
+            self.openURL_callback(url)
 
-	def set_recent_list(self, list):
-		import windowinterface
-		f=windowinterface.getactivedocframe()
-		f.set_dynamiclist(OPEN_RECENT, list)
+    def dropfile(self, arg, window, event, value):
+        if not self.canopennewtop():
+            return
+        x,y,filename=value
+        url=self.__path2url(filename)
+        import urlcache
+        mimetype = urlcache.mimetype(url)
+        if mimetype in ('application/x-grins-project', 'application/smil', 'application/smil+xml'):
+            self.openURL_callback(url)
+        else:
+            import windowinterface
+            windowinterface.showmessage('Only GRiNS or SMIL files can be dropped.')
 
-	def __ccallback(self):
-		self.__owindow.close()
-		self.__owindow = None
-		self.__text = None
+    def pastefile(self, arg, window, event, value):
+        if not self.canopennewtop():
+            return
+        x,y,filename=value
+        url=self.__path2url(filename)
+        self.openURL_callback(url)
 
-	def __tcallback(self):
-		# Callback from the "open" button on the Open URL... dialog.
-		text = self.__text.gettext()
-		self.__ccallback()
-		if text:
-			self.openURL_callback(text)
+    def dropeffect(self, dummy, window, event, params):
+        import windowinterface, urlcache
+        x,y,filename=params
+        url=self.__path2url(filename)
+        mimetype = urlcache.mimetype(url)
+        if mimetype in ('application/x-grins-project', 'application/smil', 'application/smil+xml', 'application/x-grins-cmif'):
+            return windowinterface.DROPEFFECT_COPY
+        else:
+            return windowinterface.DROPEFFECT_NONE
 
-	def __openfile_callback(self):
-		# Callback used by "browse" button in open url
-		import windowinterface
-		text = self.__text.gettext()
-		dir, file = ',', ''
-		if text:
-			import urlparse
-			utype, host, path, params, query, fragment = urlparse.urlparse(text)
-			if (not utype or utype == 'file') and \
-			   (not host or host == 'localhost') and \
-			   path:
-				import MMurl, os
-				file = MMurl.url2pathname(path)
-				dir, file = os.path.split(file)
-		f=windowinterface.getmainwnd()
-		filetypes = ['/All presentations', 'application/x-grins-project', 'application/smil']
-		windowinterface.FileDialog('Open file', dir, filetypes, file,
-					   self.__filecvt, None, 1,
-					   parent = f)
+    def set_recent_list(self, list):
+        import windowinterface
+        f=windowinterface.getactivedocframe()
+        f.set_dynamiclist(OPEN_RECENT, list)
 
-	def __filecvt(self, filename):
-		# End of "browse" in "open url" dialog. Set URL
-		text=self.__path2url(filename)
-		self.__text.settext(text)
+    def __ccallback(self):
+        self.__owindow.close()
+        self.__owindow = None
+        self.__text = None
 
-	def __path2url(self, filename):
-		# this method is called also from the drop stuff
-		# so check for UNC names before calling pathname2url
-		# otherwise it will fail.
-		import longpath, MMurl
-##		import os
-		filename = longpath.short2longpath(filename)
-##		if os.path.isabs(filename):
-##			cwd = os.getcwd()
-##			if os.path.isdir(filename):
-##				dir, file = filename, os.curdir
-##			else:
-##				dir, file = os.path.split(filename)
-##			# XXXX maybe should check that dir gets shorter!
-##			while len(dir) > len(cwd):
-##				dir, f = os.path.split(dir)
-##				file = os.path.join(f, file)
-##			if dir == cwd:
-##				filename = file
-		return MMurl.pathname2url(filename)
+    def __tcallback(self):
+        # Callback from the "open" button on the Open URL... dialog.
+        text = self.__text.gettext()
+        self.__ccallback()
+        if text:
+            self.openURL_callback(text)
 
-	if __debug__:
-		def console_callback(self):
-			import win32ui,win32con
-			cwnd=win32ui.GetAfx().GetMainWnd()
-			if cwnd.IsWindowVisible():
-				cwnd.ShowWindow(win32con.SW_HIDE)
-			else:
-				cwnd.ShowWindow(win32con.SW_RESTORE)
-				cwnd.ShowWindow(win32con.SW_SHOW)
-				cwnd.BringWindowToTop()
+    def __openfile_callback(self):
+        # Callback used by "browse" button in open url
+        import windowinterface
+        text = self.__text.gettext()
+        dir, file = ',', ''
+        if text:
+            import urlparse
+            utype, host, path, params, query, fragment = urlparse.urlparse(text)
+            if (not utype or utype == 'file') and \
+               (not host or host == 'localhost') and \
+               path:
+                import MMurl, os
+                file = MMurl.url2pathname(path)
+                dir, file = os.path.split(file)
+        f=windowinterface.getmainwnd()
+        filetypes = ['/All presentations', 'application/x-grins-project', 'application/smil']
+        windowinterface.FileDialog('Open file', dir, filetypes, file,
+                                   self.__filecvt, None, 1,
+                                   parent = f)
 
-		def scheddebug_callback(self):
-			import Scheduler
-			Scheduler.debugevents = not Scheduler.debugevents
+    def __filecvt(self, filename):
+        # End of "browse" in "open url" dialog. Set URL
+        text=self.__path2url(filename)
+        self.__text.settext(text)
 
-	def help_contents_callback(self, params=None):
-		import Help
-		Help.showhelpwindow()
+    def __path2url(self, filename):
+        # this method is called also from the drop stuff
+        # so check for UNC names before calling pathname2url
+        # otherwise it will fail.
+        import longpath, MMurl
+##         import os
+        filename = longpath.short2longpath(filename)
+##         if os.path.isabs(filename):
+##             cwd = os.getcwd()
+##             if os.path.isdir(filename):
+##                 dir, file = filename, os.curdir
+##             else:
+##                 dir, file = os.path.split(filename)
+##             # XXXX maybe should check that dir gets shorter!
+##             while len(dir) > len(cwd):
+##                 dir, f = os.path.split(dir)
+##                 file = os.path.join(f, file)
+##             if dir == cwd:
+##                 filename = file
+        return MMurl.pathname2url(filename)
 
-	def grins_web_callback(self, url):
-		import windowinterface
-		helpwindow = windowinterface.shell_execute(url,'open')
+    if __debug__:
+        def console_callback(self):
+            import win32ui,win32con
+            cwnd=win32ui.GetAfx().GetMainWnd()
+            if cwnd.IsWindowVisible():
+                cwnd.ShowWindow(win32con.SW_HIDE)
+            else:
+                cwnd.ShowWindow(win32con.SW_RESTORE)
+                cwnd.ShowWindow(win32con.SW_SHOW)
+                cwnd.BringWindowToTop()
 
+        def scheddebug_callback(self):
+            import Scheduler
+            Scheduler.debugevents = not Scheduler.debugevents
+
+    def help_contents_callback(self, params=None):
+        import Help
+        Help.showhelpwindow()
+
+    def grins_web_callback(self, url):
+        import windowinterface
+        helpwindow = windowinterface.shell_execute(url,'open')
