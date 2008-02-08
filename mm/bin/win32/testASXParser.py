@@ -1,5 +1,5 @@
 # Test data for ASXParser
-# 
+#
 
 import sys
 sys.path[0:0] = [r'd:\ufs\mm\cmif\pylib',r'd:\ufs\mm\cmif\lib',]
@@ -38,7 +38,7 @@ data1="""<ASX Version = "3.0">
 """
 
 data2="""<ASX version = "3.0" BannerBar = "FIXED">
-	<Title>Show title</Title>
+        <Title>Show title</Title>
     <Logo href = "http://server/logos/mark1.jpg" style = "MARK" />
     <MoreInfo href = "http://server/main" />
 
@@ -93,22 +93,22 @@ data5="""<asx><Entry>
 """
 
 data6="""<asx><Entry>
-	<Duration value = "00:00:30" />
+        <Duration value = "00:00:30" />
     <Ref href = "mms://nsserver/content/selection.asf" />
-	</Entry>
+        </Entry>
 </asx>
 """
 
 data7="""<asx><Entry>
-	<Duration value = "1:01.5" />    <!--This is also 61.5 seconds. -->
+        <Duration value = "1:01.5" />    <!--This is also 61.5 seconds. -->
     <Ref href = "mms://nsserver/content/selection.asf" />
-	</Entry>
+        </Entry>
 </asx>
 """
 
 
 
 if __name__ == '__main__':
-	parser=ASXParser.ASXParser()
-	parser.feed(data7)
-	print 'Playlist:',parser._playlist
+    parser=ASXParser.ASXParser()
+    parser.feed(data7)
+    print 'Playlist:',parser._playlist
