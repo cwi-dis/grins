@@ -31,14 +31,14 @@ h1 = win32ui.GetMainFrame()
 #CMIFDIR = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Python\\PythonCore\\CmifPath")
 CMIFDIR = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Chameleon\\CmifPath")
 CMIFPATH = [
-	os.path.join(CMIFDIR, 'editor\\win32'),
-	os.path.join(CMIFDIR, 'editor'),
-	os.path.join(CMIFDIR, 'common\\win32'),
-	os.path.join(CMIFDIR, 'common'),
-	os.path.join(CMIFDIR, 'lib\\win32'),
-	os.path.join(CMIFDIR, 'lib'),
-	os.path.join(CMIFDIR, 'pylib'),
-	os.path.join(CMIFDIR, 'pylib\\audio'),
+        os.path.join(CMIFDIR, 'editor\\win32'),
+        os.path.join(CMIFDIR, 'editor'),
+        os.path.join(CMIFDIR, 'common\\win32'),
+        os.path.join(CMIFDIR, 'common'),
+        os.path.join(CMIFDIR, 'lib\\win32'),
+        os.path.join(CMIFDIR, 'lib'),
+        os.path.join(CMIFDIR, 'pylib'),
+        os.path.join(CMIFDIR, 'pylib\\audio'),
 ]
 CMIF_USE_WIN32="ON"
 #CHANNELDEBUG="ON"
@@ -67,7 +67,6 @@ os.environ["CMIF_USE_WIN32"] = "ON"
 
 import cmifex
 for i in range(1,len(sys.argv)):
-	sys.argv[i]=cmifex.ToLongName(sys.argv[i])
+    sys.argv[i]=cmifex.ToLongName(sys.argv[i])
 
 import cmifed
-
