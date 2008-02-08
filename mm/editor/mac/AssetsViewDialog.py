@@ -9,20 +9,20 @@ from usercmd import *
 IMPL_AS_FORM=1
 
 class AssetsViewDialog:
-	def __init__(self):
-		pass
+    def __init__(self):
+        pass
 
-	def destroy(self):
-		pass
+    def destroy(self):
+        pass
 
-	def show(self):
-		pass
+    def show(self):
+        pass
 
-	def is_showing(self):
-		return 0
+    def is_showing(self):
+        return 0
 
-	def hide(self):
-		pass
+    def hide(self):
+        pass
 
-	def get_geometry(self):
-		return None
+    def get_geometry(self):
+        return None
