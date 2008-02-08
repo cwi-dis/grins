@@ -3,7 +3,7 @@
 #
 # fredrik lundh, january 1999
 #
-#  fredri-@pythonware.com 
+#  fredri-@pythonware.com
 # http://www.pythonware.com
 #
 
