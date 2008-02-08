@@ -10,25 +10,25 @@ import string
 # triple (parno, start, end)
 
 def calclines(parlist, sizefunc, limit):
-	partoline = []
-	linetopar = []
-	curlines = []
-	for parno in range(len(parlist)):
-		par = parlist[parno]
-		sublist = []
-		partoline.append(sublist) # It will grow while in there
-		start = 0
-		while 1:
-			i = fitwords(par, sizefunc, limit)
-			n = len(par)
-			while i < n and par[i] == ' ': i = i+1
-			sublist.append((len(curlines), start, start+i))
-			curlines.append(par[:i])
-			linetopar.append((parno, start, start+i))
-			par = par[i:]
-			start = start + i
-			if not par: break
-	return curlines, partoline, linetopar
+    partoline = []
+    linetopar = []
+    curlines = []
+    for parno in range(len(parlist)):
+        par = parlist[parno]
+        sublist = []
+        partoline.append(sublist) # It will grow while in there
+        start = 0
+        while 1:
+            i = fitwords(par, sizefunc, limit)
+            n = len(par)
+            while i < n and par[i] == ' ': i = i+1
+            sublist.append((len(curlines), start, start+i))
+            curlines.append(par[:i])
+            linetopar.append((parno, start, start+i))
+            par = par[i:]
+            start = start + i
+            if not par: break
+    return curlines, partoline, linetopar
 
 
 # Find last occurence of space in string such that the size (according
@@ -39,23 +39,23 @@ def calclines(parlist, sizefunc, limit):
 # sizefunc(s + t) == sizefunc(s) + sizefunc(t)
 
 def fitwords(s, sizefunc, limit):
-	words = string.split(s, ' ')
-	spw = sizefunc(' ')[0]
-	okcount = -1
-	totsize = 0
-	totcount = 0
-	for w in words:
-		if w:
-			addsize = sizefunc(w)[0]
-			if totsize > 0 and totsize + addsize > limit:
-				break
-			totsize = totsize + addsize
-			totcount = totcount + len(w)
-			okcount = totcount
-		# The space after the word
-		totsize = totsize + spw
-		totcount = totcount + 1
-	if okcount < 0:
-		return totcount
-	else:
-		return okcount
+    words = string.split(s, ' ')
+    spw = sizefunc(' ')[0]
+    okcount = -1
+    totsize = 0
+    totcount = 0
+    for w in words:
+        if w:
+            addsize = sizefunc(w)[0]
+            if totsize > 0 and totsize + addsize > limit:
+                break
+            totsize = totsize + addsize
+            totcount = totcount + len(w)
+            okcount = totcount
+        # The space after the word
+        totsize = totsize + spw
+        totcount = totcount + 1
+    if okcount < 0:
+        return totcount
+    else:
+        return okcount
