@@ -1,9 +1,9 @@
 __version__ = "$Id$"
 
 try:
-	import Qt
+    import Qt
 except ImportError:
-	Qt = None
+    Qt = None
 
 mcTopLeftMovie = 1
 mcScaleMovieToFit = 1 << 1
@@ -12,13 +12,13 @@ mcNotVisible = 1 << 3
 mcWithFrame = 1 << 4
 
 if Qt is not None:
-	VisualMediaCharacteristic   = Qt.BuildOSType('eyes')
-	AudioMediaCharacteristic= Qt.BuildOSType('ears')
-	kCharacteristicCanSendVideo = Qt.BuildOSType('vsnd')
-	kCharacteristicProvidesActions = Qt.BuildOSType('actn')
-	kCharacteristicNonLinear= Qt.BuildOSType('nonl')
-	kCharacteristicCanStep  = Qt.BuildOSType('step')
-	kCharacteristicHasNoDuration = Qt.BuildOSType('noti')
+    VisualMediaCharacteristic   = Qt.BuildOSType('eyes')
+    AudioMediaCharacteristic= Qt.BuildOSType('ears')
+    kCharacteristicCanSendVideo = Qt.BuildOSType('vsnd')
+    kCharacteristicProvidesActions = Qt.BuildOSType('actn')
+    kCharacteristicNonLinear= Qt.BuildOSType('nonl')
+    kCharacteristicCanStep  = Qt.BuildOSType('step')
+    kCharacteristicHasNoDuration = Qt.BuildOSType('noti')
 
 movieTrackMediaType = 1 << 0
 movieTrackCharacteristic= 1 << 1
@@ -30,7 +30,7 @@ hintsDontPurge  = 1 << 2
 hintsUseScreenBuffer= 1 << 5
 hintsAllowInterlace = 1 << 6
 hintsUseSoundInterp = 1 << 7
-hintsHighQuality= 1 << 8  
+hintsHighQuality= 1 << 8
 hintsPalindrome = 1 << 9
 hintsInactive   = 1 << 11
 hintsOffscreen  = 1 << 12
