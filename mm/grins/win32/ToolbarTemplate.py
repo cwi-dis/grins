@@ -28,46 +28,46 @@ IDW_TOOLBAR_PLAYER=0xe804
 
 
 class Button:
-	def __init__(self, cmdid, iconindex):
-		self.type = 'button'
-		self.cmdid = cmdid
-		self.arg = iconindex
+    def __init__(self, cmdid, iconindex):
+        self.type = 'button'
+        self.cmdid = cmdid
+        self.arg = iconindex
 
 class Separator:
-	def __init__(self, width):
-		self.type = 'separator'
-		self.cmdid = None
-		self.width = width
+    def __init__(self, width):
+        self.type = 'separator'
+        self.cmdid = None
+        self.width = width
 
 class Pulldown:
-	def __init__(self, name, width=None):
-		self.type = 'pulldown'
-		self.name = name
-		self.width = width
+    def __init__(self, name, width=None):
+        self.type = 'pulldown'
+        self.name = name
+        self.width = width
 
 GENERAL_TEMPLATE = (
-	('General', 'toolbar', 'docked', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, 0, (
-		Button(usercmd.OPENFILE, TBICON_OPENFILE),
-		Button(usercmd.CLOSE, TBICON_CLOSE),
-		Button(usercmd.RELOAD, TBICON_RESTORE),
-		Separator(12),
-		Button(usercmd.HELP, TBICON_HELP),
-		)
-	)
+        ('General', 'toolbar', 'docked', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, 0, (
+                Button(usercmd.OPENFILE, TBICON_OPENFILE),
+                Button(usercmd.CLOSE, TBICON_CLOSE),
+                Button(usercmd.RELOAD, TBICON_RESTORE),
+                Separator(12),
+                Button(usercmd.HELP, TBICON_HELP),
+                )
+        )
 )
 
-##PLAYER_TEMPLATE = (
-##	('Player Controls', 'toolbar', 'docked', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, 0, (
-##		Button(usercmd.PLAY, TBICON_PLAY),
-##		Button(usercmd.PAUSE, TBICON_PAUSE),
-##		Button(usercmd.STOP, TBICON_STOP),
-##		)
-##	)
-##)
+## PLAYER_TEMPLATE = (
+##     ('Player Controls', 'toolbar', 'docked', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, 0, (
+##         Button(usercmd.PLAY, TBICON_PLAY),
+##         Button(usercmd.PAUSE, TBICON_PAUSE),
+##         Button(usercmd.STOP, TBICON_STOP),
+##         )
+##     )
+## )
 
 TOOLBARS=[
-	GENERAL_TEMPLATE,
-##	PLAYER_TEMPLATE,
+        GENERAL_TEMPLATE,
+##     PLAYER_TEMPLATE,
 ]
 
 TOOLBARS.reverse()  # For now...
