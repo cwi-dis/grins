@@ -13,28 +13,28 @@ __version__ = "$Id$"
 cmifpath = None
 
 def findfile(name):
-	global cmifpath
-	import os
-	if os.path.isabs(name):
-		return name
-	if cmifpath is None:
-		if os.environ.has_key('CMIFPATH'):
-			import string
-			var = os.environ['CMIFPATH']
-			cmifpath = string.splitfields(var, ':')
-		elif os.environ.has_key('CMIF'):
-			cmifpath = [os.environ['CMIF']]
-		else:
-			import sys
-			cmifpath = [os.path.split(sys.executable)[0]]
-			try:
-				link = os.readlink(sys.executable)
-			except (os.error, AttributeError):
-				pass
-			else:
-				cmifpath.append(os.path.dirname(os.path.join(os.path.dirname(sys.executable), link)))
-	for dir in cmifpath:
-		fullname = os.path.join(dir, name)
-		if os.path.exists(fullname):
-			return fullname
-	return name
+    global cmifpath
+    import os
+    if os.path.isabs(name):
+        return name
+    if cmifpath is None:
+        if os.environ.has_key('CMIFPATH'):
+            import string
+            var = os.environ['CMIFPATH']
+            cmifpath = string.splitfields(var, ':')
+        elif os.environ.has_key('CMIF'):
+            cmifpath = [os.environ['CMIF']]
+        else:
+            import sys
+            cmifpath = [os.path.split(sys.executable)[0]]
+            try:
+                link = os.readlink(sys.executable)
+            except (os.error, AttributeError):
+                pass
+            else:
+                cmifpath.append(os.path.dirname(os.path.join(os.path.dirname(sys.executable), link)))
+    for dir in cmifpath:
+        fullname = os.path.join(dir, name)
+        if os.path.exists(fullname):
+            return fullname
+    return name
