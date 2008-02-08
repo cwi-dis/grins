@@ -30,4 +30,4 @@ ICONSIZE_PXL=16
 
 [TOP, CENTER, BOTTOM] = range(3)
 
-_def_useGadget = 1			# whether to use gadgets or not
+_def_useGadget = 1                      # whether to use gadgets or not
