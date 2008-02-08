@@ -17,12 +17,11 @@ def play(file):
             break
         dev.writeframes(data)            # send data to device
     dev.wait()                           # wait for output to drain
-    
+
 if __name__ == '__main__':
-	if not sys.argv[1:]:
-		print 'Usage: %s audiofile ...' % sys.argv[0]
-		sys.exit(1)
-	for file in sys.argv[1:]:
-		print 'Playing %s...' % file
-		play(file)
-		
+    if not sys.argv[1:]:
+        print 'Usage: %s audiofile ...' % sys.argv[0]
+        sys.exit(1)
+    for file in sys.argv[1:]:
+        print 'Playing %s...' % file
+        play(file)
