@@ -6,31 +6,31 @@ sys.path.append(os.pardir)
 # An instance can be set to receive RM status notifications
 # RMListener classes may have some or all of the methods
 class PrintRMListener:
-	def __init__(self):
-		pass
-	def __del__(self):
-		print 'PrintRMListener dying'
-	def OnPresentationOpened(self):
-		print 'OnPresentationOpened'
-	def OnPresentationClosed(self):
-		print 'OnPresentationClosed'
-	def OnStop(self):
-		print 'OnStop'
-	def OnPause(self,timenow):
-		print 'OnPause',timenow
-	def OnBegin(self,timenow):
-		print 'OnBegin',timenow
-	def OnPosLength(self,pos,len):
-		#print 'pos:',pos,'/',len
-		pass
-	def OnPreSeek(self,oldtime,newtime):
-		pass
-	def OnPostSeek(self,oldtime,newtime):
-		pass
-	def OnBuffering(self,flags,percentcomplete):
-		pass
-	def OnContacting(self,hostname):
-		print hostname
+    def __init__(self):
+        pass
+    def __del__(self):
+        print 'PrintRMListener dying'
+    def OnPresentationOpened(self):
+        print 'OnPresentationOpened'
+    def OnPresentationClosed(self):
+        print 'OnPresentationClosed'
+    def OnStop(self):
+        print 'OnStop'
+    def OnPause(self,timenow):
+        print 'OnPause',timenow
+    def OnBegin(self,timenow):
+        print 'OnBegin',timenow
+    def OnPosLength(self,pos,len):
+        #print 'pos:',pos,'/',len
+        pass
+    def OnPreSeek(self,oldtime,newtime):
+        pass
+    def OnPostSeek(self,oldtime,newtime):
+        pass
+    def OnBuffering(self,flags,percentcomplete):
+        pass
+    def OnContacting(self,hostname):
+        print hostname
 
 # real audio
 cwd = os.getcwd()
@@ -58,21 +58,20 @@ x3 = player.Begin()
 print 'Begin returned', hex(x3)
 
 if os.name == 'mac':
-	import MacOS, Evt, Events
-	
-	# Disable event processing
-	oldparms = MacOS.SchedParams(0, 0)
-	while not player.IsDone():
-		ok, evt = Evt.WaitNextEvent(-1, 0)	# No timeout, immedeate return
-		if evt[0] == Events.keyDown:	# Stop on any key
-			break
-		engine.EventOccurred(evt)
-	apply(MacOS.SchedParams, oldparms)
-	print 'press return to exit-'
-	sys.stdin.readline()
+    import MacOS, Evt, Events
+
+    # Disable event processing
+    oldparms = MacOS.SchedParams(0, 0)
+    while not player.IsDone():
+        ok, evt = Evt.WaitNextEvent(-1, 0)      # No timeout, immedeate return
+        if evt[0] == Events.keyDown:    # Stop on any key
+            break
+        engine.EventOccurred(evt)
+    apply(MacOS.SchedParams, oldparms)
+    print 'press return to exit-'
+    sys.stdin.readline()
 # for console apps, enter message loop
 #import sys
 #if sys.platform=='win32':
-#	import win32ui
-#	win32ui.GetApp().RunLoop(win32ui.GetWin32Sdk().GetDesktopWindow())
-
+#       import win32ui
+#       win32ui.GetApp().RunLoop(win32ui.GetWin32Sdk().GetDesktopWindow())
