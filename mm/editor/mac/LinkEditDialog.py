@@ -97,502 +97,501 @@ ITEMLIST_EDITOR_ALL=ITEMrange(ITEM_DIR_TITLE, ITEM_EDITOR_BALLOONHELP)
 __version__ = "$Id$"
 
 class LinkBrowserDialog(windowinterface.MACDialog):
-	def __init__(self, title, menu1, cbarg1, menu2, cbarg2):
-		"""Create the LinkEditor dialog.
+    def __init__(self, title, menu1, cbarg1, menu2, cbarg2):
+        """Create the LinkEditor dialog.
 
-		Create the dialog window (non-modal, so does not grab
-		the cursor) but do not pop it up (i.e. do not display
-		it on the screen).
+        Create the dialog window (non-modal, so does not grab
+        the cursor) but do not pop it up (i.e. do not display
+        it on the screen).
 
-		Arguments (no defaults):
-		title -- string to be display as window title
-		menu1 -- list of tuples -- the menu for the left list
-			(see module doc for description of tuples)
-		cbarg1 -- any object -- argument passed on to
-			callbacks related to the left list
-		menu2 -- list of tuples -- the menu for the right list
-			(see module doc for description of tuples)
-		cbarg2 -- any object -- argument passed on to
-			callbacks related to the right list
-		"""
-		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_LINKBROWSE,
-				ITEMLIST_BROWSER_ALL, cancel=self._close_window)
-		self._window.register(WMEVENTS.WindowExit, self._close_window, ())
-		
-		self._left_client_data = cbarg1
-		self._right_client_data = cbarg2
+        Arguments (no defaults):
+        title -- string to be display as window title
+        menu1 -- list of tuples -- the menu for the left list
+                (see module doc for description of tuples)
+        cbarg1 -- any object -- argument passed on to
+                callbacks related to the left list
+        menu2 -- list of tuples -- the menu for the right list
+                (see module doc for description of tuples)
+        cbarg2 -- any object -- argument passed on to
+                callbacks related to the right list
+        """
+        windowinterface.MACDialog.__init__(self, title, ID_DIALOG_LINKBROWSE,
+                        ITEMLIST_BROWSER_ALL, cancel=self._close_window)
+        self._window.register(WMEVENTS.WindowExit, self._close_window, ())
 
-		# Create the scrolled lists
-		self._leftlist = self._window.ListWidget(ITEM_LEFT_ALIST)
-		self._rightlist = self._window.ListWidget(ITEM_RIGHT_ALIST)
-		self._linklist = self._window.ListWidget(ITEM_LINKS_LLIST)
-##		self._rightlist.setcellsize(1024, 0) XXXX does not work...
-		
-		# Create the menus
-		self._leftmenu = windowinterface.FullPopupMenu(menu1)
-		self._rightmenu = windowinterface.FullPopupMenu(menu2)
-		self.addexternalsetsensitive(0)
-		
-	def _close_window(self, *dummies):
-		self.delete_callback()
-						
-	def do_itemhit(self, item, event):
-		if item == ITEM_LEFT_NODESELECT:
-			self._showmenu(event, ITEM_LEFT_NODESELECT, self._leftmenu)
-		elif item == ITEM_LEFT_ALIST:
-##			self._listclick(event, self._leftlist, self.anchor_browser_callback,
-##					(self._left_client_data,))
-			self.anchor_browser_callback(self._left_client_data)
-		elif item == ITEM_LEFT_PUSH:
-			self.show_callback(self._left_client_data)
-		elif item == ITEM_LEFT_AEDIT:
-			self.anchoredit_callback(self._left_client_data)
-		
-		elif item == ITEM_RIGHT_NODESELECT:
-			self._showmenu(event, ITEM_RIGHT_NODESELECT, self._rightmenu)
-		elif item == ITEM_RIGHT_ALIST:
-##			self._listclick(event, self._rightlist, self.anchor_browser_callback,
-##					(self._right_client_data,))
-			double = self._rightlist.lastclickwasdouble()
-			print 'Double:', `double`
-			if double:
-				data = self._rightlist.getselectvalue()
-				if data:
-					windowinterface.showmessage(data)
-			self.anchor_browser_callback(self._right_client_data)
-		elif item == ITEM_RIGHT_PUSH:
-			self.show_callback(self._right_client_data)
-		elif item == ITEM_RIGHT_AEDIT:
-			self.anchoredit_callback(self._right_client_data)
-		elif item == ITEM_RIGHT_ADDEXT:
-			self.add_external_callback()
-		
-		elif item == ITEM_LINKS_LLIST:
-##			self._listclick(event, self._linklist, self.link_browser_callback, ())
-			self.link_browser_callback()
-		elif item == ITEM_LINKS_ADD:
-			self.link_new_callback()
-		elif item == ITEM_LINKS_EDIT:
-			self.link_edit_callback()
-		elif item == ITEM_LINKS_DELETE:
-			self.link_delete_callback()
-		else:
-			print 'Unexpected dialog browser event, item', item, 'event', event
-		return 1
-		
-	def _showmenu(self, event, baseitem, menu):
-		tp, h, (x0, y0, x1, y1) = self._dialog.GetDialogItem(baseitem)
-		Qd.SetPort(self._dialog)
-		y, x = Qd.LocalToGlobal((x0, y0))
-		menu.popup(x, y, event, self._window)
-			
+        self._left_client_data = cbarg1
+        self._right_client_data = cbarg2
 
-	# Interface to the left list and associated buttons.
-	def lefthide(self):
-		"""Hide the left list with associated buttons."""
-		self._hideitemlist(ITEMLIST_LEFT)
-		
-	def leftshow(self):
-		"""Show the left list with associated buttons."""
-		self._showitemlist(ITEMLIST_LEFT)
+        # Create the scrolled lists
+        self._leftlist = self._window.ListWidget(ITEM_LEFT_ALIST)
+        self._rightlist = self._window.ListWidget(ITEM_RIGHT_ALIST)
+        self._linklist = self._window.ListWidget(ITEM_LINKS_LLIST)
+##         self._rightlist.setcellsize(1024, 0) XXXX does not work...
 
-	def leftsetlabel(self, label):
-		"""Set the label for the left list.
+        # Create the menus
+        self._leftmenu = windowinterface.FullPopupMenu(menu1)
+        self._rightmenu = windowinterface.FullPopupMenu(menu2)
+        self.addexternalsetsensitive(0)
 
-		Arguments (no defaults):
-		label -- string -- the label to be displayed
-		"""
-		self._setlabel(ITEM_LEFT_NODE, label)
+    def _close_window(self, *dummies):
+        self.delete_callback()
 
-	def leftdellistitems(self, poslist):
-		"""Delete items from left list.
+    def do_itemhit(self, item, event):
+        if item == ITEM_LEFT_NODESELECT:
+            self._showmenu(event, ITEM_LEFT_NODESELECT, self._leftmenu)
+        elif item == ITEM_LEFT_ALIST:
+##             self._listclick(event, self._leftlist, self.anchor_browser_callback,
+##                     (self._left_client_data,))
+            self.anchor_browser_callback(self._left_client_data)
+        elif item == ITEM_LEFT_PUSH:
+            self.show_callback(self._left_client_data)
+        elif item == ITEM_LEFT_AEDIT:
+            self.anchoredit_callback(self._left_client_data)
 
-		Arguments (no defaults):
-		poslist -- list of integers -- the indices of the
-			items to be deleted
-		"""
-		poslist = poslist[:]
-		poslist.sort()
-		poslist.reverse()
-		for pos in poslist:
-			self._leftlist.delete(pos)
+        elif item == ITEM_RIGHT_NODESELECT:
+            self._showmenu(event, ITEM_RIGHT_NODESELECT, self._rightmenu)
+        elif item == ITEM_RIGHT_ALIST:
+##             self._listclick(event, self._rightlist, self.anchor_browser_callback,
+##                     (self._right_client_data,))
+            double = self._rightlist.lastclickwasdouble()
+            print 'Double:', `double`
+            if double:
+                data = self._rightlist.getselectvalue()
+                if data:
+                    windowinterface.showmessage(data)
+            self.anchor_browser_callback(self._right_client_data)
+        elif item == ITEM_RIGHT_PUSH:
+            self.show_callback(self._right_client_data)
+        elif item == ITEM_RIGHT_AEDIT:
+            self.anchoredit_callback(self._right_client_data)
+        elif item == ITEM_RIGHT_ADDEXT:
+            self.add_external_callback()
 
-	def leftdelalllistitems(self):
-		"""Delete all items from the left list."""
-		self._leftlist.delete()
+        elif item == ITEM_LINKS_LLIST:
+##             self._listclick(event, self._linklist, self.link_browser_callback, ())
+            self.link_browser_callback()
+        elif item == ITEM_LINKS_ADD:
+            self.link_new_callback()
+        elif item == ITEM_LINKS_EDIT:
+            self.link_edit_callback()
+        elif item == ITEM_LINKS_DELETE:
+            self.link_delete_callback()
+        else:
+            print 'Unexpected dialog browser event, item', item, 'event', event
+        return 1
 
-	def leftaddlistitems(self, items, pos):
-		"""Add items to the left list.
-
-		Arguments (no defaults):
-		items -- list of strings -- the items to be added
-		pos -- integer -- the index of the item before which
-			the items are to be added (-1: add at end)
-		"""
-		self._leftlist.insert(pos, items)
-
-	def leftreplacelistitem(self, pos, newitem):
-		"""Replace an item in the left list.
-
-		Arguments (no defaults):
-		pos -- the index of the item to be replaced
-		newitem -- string -- the new item
-		"""
-		self._leftlist.replace(pos, newitem)
-		
-	def leftselectitem(self, pos):
-		"""Select an item in the left list.
-
-		Arguments (no defaults):
-		pos -- integer -- the index of the item to be selected
-		"""
-		self._leftlist.select(pos)
-
-	def leftgetselected(self):
-		"""Return the index of the currently selected item or None."""
-		return self._leftlist.getselect()
-
-	def leftgetlist(self):
-		"""Return the left list as a list of strings."""
-		return self._leftlist.get()
-
-	def leftmakevisible(self, pos):
-		"""Maybe scroll list to make an item visible.
-
-		Arguments (no defaults):
-		pos -- index of item to be made visible.
-		"""
-		pass
-		
-	def leftbuttonssetsensitive(self, sensitive):
-		"""Make the left buttons (in)sensitive.
-
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		self._setsensitive(ITEMLIST_LEFT_BUTTONS, sensitive)
-
-	# Interface to the right list and associated buttons.
-	def righthide(self):
-		"""Hide the right list with associated buttons."""
-		self._hideitemlist(ITEMLIST_RIGHT)
-
-	def rightshow(self):
-		"""Show the right list with associated buttons."""
-		self._showitemlist(ITEMLIST_RIGHT)
-
-	def rightsetlabel(self, label):
-		"""Set the label for the right list.
-
-		Arguments (no defaults):
-		label -- string -- the label to be displayed
-		"""
-		self._setlabel(ITEM_RIGHT_NODE, label)
-
-	def rightdellistitems(self, poslist):
-		"""Delete items from right list.
-
-		Arguments (no defaults):
-		poslist -- list of integers -- the indices of the
-			items to be deleted
-		"""
-		poslist = poslist[:]
-		poslist.sort()
-		poslist.reverse()
-		for pos in poslist:
-			self._rightlist.delete(pos)
-
-	def rightdelalllistitems(self):
-		"""Delete all items from the right list."""
-		self._rightlist.delete()
-
-	def rightaddlistitems(self, items, pos):
-		"""Add items to the right list.
-
-		Arguments (no defaults):
-		items -- list of strings -- the items to be added
-		pos -- integer -- the index of the item before which
-			the items are to be added (-1: add at end)
-		"""
-		self._rightlist.insert(pos, items)
-
-	def rightreplacelistitem(self, pos, newitem):
-		"""Replace an item in the right list.
-
-		Arguments (no defaults):
-		pos -- the index of the item to be replaced
-		newitem -- string -- the new item
-		"""
-		self._rightlist.replace(pos, newitem)
-		
-	def rightselectitem(self, pos):
-		"""Select an item in the right list.
-
-		Arguments (no defaults):
-		pos -- integer -- the index of the item to be selected
-		"""
-		self._rightlist.select(pos)
-
-	def rightgetselected(self):
-		"""Return the index of the currently selected item or None."""
-		return self._rightlist.getselect()
-
-	def rightgetlist(self):
-		"""Return the right list as a list of strings."""
-		return self._rightlist.get()
-
-	def rightmakevisible(self, pos):
-		"""Maybe scroll list to make an item visible.
-
-		Arguments (no defaults):
-		pos -- index of item to be made visible.
-		"""
-		pass
-
-	def rightbuttonssetsensitive(self, sensitive):
-		"""Make the right buttons (in)sensitive.
-
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		self._setsensitive(ITEMLIST_RIGHT_BUTTONS, sensitive)
-		
-	def addexternalsetsensitive(self, sensitive):
-		self._setsensitive([ITEM_RIGHT_ADDEXT], sensitive)
-
-	# Interface to the middle list and associated buttons.
-	def middlehide(self):
-		"""Hide the middle list with associated buttons."""
-		self._hideitemlist(ITEMLIST_LINKS)
-		
-	def middleshow(self):
-		"""Show the middle list with associated buttons."""
-		self._showitemlist(ITEMLIST_LINKS)
-
-	def middledelalllistitems(self):
-		"""Delete all items from the middle list."""
-		self._linklist.delete()
-
-	def middleaddlistitems(self, items, pos):
-		"""Add items to the middle list.
-
-		Arguments (no defaults):
-		items -- list of strings -- the items to be added
-		pos -- integer -- the index of the item before which
-			the items are to be added (-1: add at end)
-		"""
-		self._linklist.insert(pos, items)
-
-	def middleselectitem(self, pos):
-		"""Select an item in the middle list.
-
-		Arguments (no defaults):
-		pos -- integer -- the index of the item to be selected
-		"""
-		self._linklist.select(pos)
-
-	def middlegetselected(self):
-		"""Return the index of the currently selected item or None."""
-		return self._linklist.getselect()
-
-	def middlemakevisible(self, pos):
-		"""Maybe scroll list to make an item visible.
-
-		Arguments (no defaults):
-		pos -- index of item to be made visible.
-		"""
-		pass
-
-	def addsetsensitive(self, sensitive):
-		"""Make the Add button (in)sensitive.
-
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		self._setsensitive([ITEM_LINKS_ADD], sensitive)
-
-	def editsetsensitive(self, sensitive):
-		"""Make the Edit button (in)sensitive.
-
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		self._setsensitive([ITEM_LINKS_EDIT], sensitive)
-
-	def deletesetsensitive(self, sensitive):
-		"""Make the Delete button (in)sensitive.
-
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		self._setsensitive([ITEM_LINKS_DELETE], sensitive)
+    def _showmenu(self, event, baseitem, menu):
+        tp, h, (x0, y0, x1, y1) = self._dialog.GetDialogItem(baseitem)
+        Qd.SetPort(self._dialog)
+        y, x = Qd.LocalToGlobal((x0, y0))
+        menu.popup(x, y, event, self._window)
 
 
-	# Callback functions.  These functions should be supplied by
-	# the user of this class (i.e., the class that inherits from
-	# this class).
-	def delete_callback(self):
-		"""Called when `Delete' button is pressed."""
-		pass
+    # Interface to the left list and associated buttons.
+    def lefthide(self):
+        """Hide the left list with associated buttons."""
+        self._hideitemlist(ITEMLIST_LEFT)
 
-	def show_callback(self, client_data):
-		"""Called when a new entry in the left or right list is selected."""
-		pass
+    def leftshow(self):
+        """Show the left list with associated buttons."""
+        self._showitemlist(ITEMLIST_LEFT)
 
-	def anchoredit_callback(self, client_data):
-		"""Called when the left or right `Anchor editor...' button is pressed."""
-		pass
+    def leftsetlabel(self, label):
+        """Set the label for the left list.
 
-	def anchor_browser_callback(self, client_data):
-		"""Called when the left or right `Push focus' button is pressed."""
-		pass
+        Arguments (no defaults):
+        label -- string -- the label to be displayed
+        """
+        self._setlabel(ITEM_LEFT_NODE, label)
 
-	def link_new_callback(self):
-		"""Called when the `Add...' button is pressed."""
-		pass
+    def leftdellistitems(self, poslist):
+        """Delete items from left list.
 
-	def link_edit_callback(self):
-		"""Called when the `Edit...' button is pressed."""
-		pass
+        Arguments (no defaults):
+        poslist -- list of integers -- the indices of the
+                items to be deleted
+        """
+        poslist = poslist[:]
+        poslist.sort()
+        poslist.reverse()
+        for pos in poslist:
+            self._leftlist.delete(pos)
 
-	def link_delete_callback(self):
-		"""Called when the `Delete' button is pressed."""
-		pass
+    def leftdelalllistitems(self):
+        """Delete all items from the left list."""
+        self._leftlist.delete()
 
-	def link_browser_callback(self):
-		"""Called when a new selection is made in the middle list."""
-		pass
+    def leftaddlistitems(self, items, pos):
+        """Add items to the left list.
 
-##XXXX
+        Arguments (no defaults):
+        items -- list of strings -- the items to be added
+        pos -- integer -- the index of the item before which
+                the items are to be added (-1: add at end)
+        """
+        self._leftlist.insert(pos, items)
+
+    def leftreplacelistitem(self, pos, newitem):
+        """Replace an item in the left list.
+
+        Arguments (no defaults):
+        pos -- the index of the item to be replaced
+        newitem -- string -- the new item
+        """
+        self._leftlist.replace(pos, newitem)
+
+    def leftselectitem(self, pos):
+        """Select an item in the left list.
+
+        Arguments (no defaults):
+        pos -- integer -- the index of the item to be selected
+        """
+        self._leftlist.select(pos)
+
+    def leftgetselected(self):
+        """Return the index of the currently selected item or None."""
+        return self._leftlist.getselect()
+
+    def leftgetlist(self):
+        """Return the left list as a list of strings."""
+        return self._leftlist.get()
+
+    def leftmakevisible(self, pos):
+        """Maybe scroll list to make an item visible.
+
+        Arguments (no defaults):
+        pos -- index of item to be made visible.
+        """
+        pass
+
+    def leftbuttonssetsensitive(self, sensitive):
+        """Make the left buttons (in)sensitive.
+
+        Arguments (no defaults):
+        sensitive -- boolean indicating whether to make
+                sensitive or insensitive
+        """
+        self._setsensitive(ITEMLIST_LEFT_BUTTONS, sensitive)
+
+    # Interface to the right list and associated buttons.
+    def righthide(self):
+        """Hide the right list with associated buttons."""
+        self._hideitemlist(ITEMLIST_RIGHT)
+
+    def rightshow(self):
+        """Show the right list with associated buttons."""
+        self._showitemlist(ITEMLIST_RIGHT)
+
+    def rightsetlabel(self, label):
+        """Set the label for the right list.
+
+        Arguments (no defaults):
+        label -- string -- the label to be displayed
+        """
+        self._setlabel(ITEM_RIGHT_NODE, label)
+
+    def rightdellistitems(self, poslist):
+        """Delete items from right list.
+
+        Arguments (no defaults):
+        poslist -- list of integers -- the indices of the
+                items to be deleted
+        """
+        poslist = poslist[:]
+        poslist.sort()
+        poslist.reverse()
+        for pos in poslist:
+            self._rightlist.delete(pos)
+
+    def rightdelalllistitems(self):
+        """Delete all items from the right list."""
+        self._rightlist.delete()
+
+    def rightaddlistitems(self, items, pos):
+        """Add items to the right list.
+
+        Arguments (no defaults):
+        items -- list of strings -- the items to be added
+        pos -- integer -- the index of the item before which
+                the items are to be added (-1: add at end)
+        """
+        self._rightlist.insert(pos, items)
+
+    def rightreplacelistitem(self, pos, newitem):
+        """Replace an item in the right list.
+
+        Arguments (no defaults):
+        pos -- the index of the item to be replaced
+        newitem -- string -- the new item
+        """
+        self._rightlist.replace(pos, newitem)
+
+    def rightselectitem(self, pos):
+        """Select an item in the right list.
+
+        Arguments (no defaults):
+        pos -- integer -- the index of the item to be selected
+        """
+        self._rightlist.select(pos)
+
+    def rightgetselected(self):
+        """Return the index of the currently selected item or None."""
+        return self._rightlist.getselect()
+
+    def rightgetlist(self):
+        """Return the right list as a list of strings."""
+        return self._rightlist.get()
+
+    def rightmakevisible(self, pos):
+        """Maybe scroll list to make an item visible.
+
+        Arguments (no defaults):
+        pos -- index of item to be made visible.
+        """
+        pass
+
+    def rightbuttonssetsensitive(self, sensitive):
+        """Make the right buttons (in)sensitive.
+
+        Arguments (no defaults):
+        sensitive -- boolean indicating whether to make
+                sensitive or insensitive
+        """
+        self._setsensitive(ITEMLIST_RIGHT_BUTTONS, sensitive)
+
+    def addexternalsetsensitive(self, sensitive):
+        self._setsensitive([ITEM_RIGHT_ADDEXT], sensitive)
+
+    # Interface to the middle list and associated buttons.
+    def middlehide(self):
+        """Hide the middle list with associated buttons."""
+        self._hideitemlist(ITEMLIST_LINKS)
+
+    def middleshow(self):
+        """Show the middle list with associated buttons."""
+        self._showitemlist(ITEMLIST_LINKS)
+
+    def middledelalllistitems(self):
+        """Delete all items from the middle list."""
+        self._linklist.delete()
+
+    def middleaddlistitems(self, items, pos):
+        """Add items to the middle list.
+
+        Arguments (no defaults):
+        items -- list of strings -- the items to be added
+        pos -- integer -- the index of the item before which
+                the items are to be added (-1: add at end)
+        """
+        self._linklist.insert(pos, items)
+
+    def middleselectitem(self, pos):
+        """Select an item in the middle list.
+
+        Arguments (no defaults):
+        pos -- integer -- the index of the item to be selected
+        """
+        self._linklist.select(pos)
+
+    def middlegetselected(self):
+        """Return the index of the currently selected item or None."""
+        return self._linklist.getselect()
+
+    def middlemakevisible(self, pos):
+        """Maybe scroll list to make an item visible.
+
+        Arguments (no defaults):
+        pos -- index of item to be made visible.
+        """
+        pass
+
+    def addsetsensitive(self, sensitive):
+        """Make the Add button (in)sensitive.
+
+        Arguments (no defaults):
+        sensitive -- boolean indicating whether to make
+                sensitive or insensitive
+        """
+        self._setsensitive([ITEM_LINKS_ADD], sensitive)
+
+    def editsetsensitive(self, sensitive):
+        """Make the Edit button (in)sensitive.
+
+        Arguments (no defaults):
+        sensitive -- boolean indicating whether to make
+                sensitive or insensitive
+        """
+        self._setsensitive([ITEM_LINKS_EDIT], sensitive)
+
+    def deletesetsensitive(self, sensitive):
+        """Make the Delete button (in)sensitive.
+
+        Arguments (no defaults):
+        sensitive -- boolean indicating whether to make
+                sensitive or insensitive
+        """
+        self._setsensitive([ITEM_LINKS_DELETE], sensitive)
+
+
+    # Callback functions.  These functions should be supplied by
+    # the user of this class (i.e., the class that inherits from
+    # this class).
+    def delete_callback(self):
+        """Called when `Delete' button is pressed."""
+        pass
+
+    def show_callback(self, client_data):
+        """Called when a new entry in the left or right list is selected."""
+        pass
+
+    def anchoredit_callback(self, client_data):
+        """Called when the left or right `Anchor editor...' button is pressed."""
+        pass
+
+    def anchor_browser_callback(self, client_data):
+        """Called when the left or right `Push focus' button is pressed."""
+        pass
+
+    def link_new_callback(self):
+        """Called when the `Add...' button is pressed."""
+        pass
+
+    def link_edit_callback(self):
+        """Called when the `Edit...' button is pressed."""
+        pass
+
+    def link_delete_callback(self):
+        """Called when the `Delete' button is pressed."""
+        pass
+
+    def link_browser_callback(self):
+        """Called when a new selection is made in the middle list."""
+        pass
+
+## XXXX
 
 class LinkEditorDialog(windowinterface.MACDialog):
-	def __init__(self, title, dirstr, typestr, dir, type, dirsens):
-		"""Create the LinkEditor dialog.
-		"""
-		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_LINKEDIT,
-				ITEMLIST_EDITOR_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
-		self.linkdirsetchoice(dir)
-		self.linktypesetchoice(type)
-		for i in range(len(dirsens)):
-			if not dirsens[i]:
-				self._setsensitive([ITEM_DIR_RIGHT+i], 0) 
-		
-	def show(self):
-		windowinterface.MACDialog.show(self)
-		self.rungrabbed()
-				
-	def _close_window(self, *dummies):
-		self.delete_callback()
-		
-	def oksetsensitive(self, sensitive):
-		self._setsensitive([ITEM_OK], sensitive)	
-						
-	def do_itemhit(self, item, event):
-		if item in ITEMLIST_DIR:
-			self._dirclick(item-ITEM_DIR_RIGHT)
-		elif item in ITEMLIST_TYPE:
-			self._typeclick(item-ITEM_TYPE_JUMP)
-			
-		elif item == ITEM_CANCEL:
-			self.cancel_callback()
-		elif item == ITEM_OK:
-			self.ok_callback()
-		else:
-			print 'Unexpected link edit dialog event, item', item, 'event', event
-		return 1
-		
-	def _typeclick(self, item):
-		self.linktypesetchoice(item)
-		self.linktype_callback()
-		
-	def _dirclick(self, item):
-		self.linkdirsetchoice(item)
-		self.linkdir_callback()
+    def __init__(self, title, dirstr, typestr, dir, type, dirsens):
+        """Create the LinkEditor dialog.
+        """
+        windowinterface.MACDialog.__init__(self, title, ID_DIALOG_LINKEDIT,
+                        ITEMLIST_EDITOR_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
+        self.linkdirsetchoice(dir)
+        self.linktypesetchoice(type)
+        for i in range(len(dirsens)):
+            if not dirsens[i]:
+                self._setsensitive([ITEM_DIR_RIGHT+i], 0)
 
-	def linkdirsetsensitive(self, pos, sensitive):
-		"""Make an entry in the link dir menu (in)sensitive.
+    def show(self):
+        windowinterface.MACDialog.show(self)
+        self.rungrabbed()
 
-		Arguments (no defaults):
-		pos -- the index of the entry to be made (in)sensitve
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		self._setsensitive(ITEMLIST_DIR[pos+1:pos+2], sensitive)
+    def _close_window(self, *dummies):
+        self.delete_callback()
 
-	def linkdirsetchoice(self, choice):
-		"""Set the current choice of the link dir list.
+    def oksetsensitive(self, sensitive):
+        self._setsensitive([ITEM_OK], sensitive)
 
-		Arguments (no defaults):
-		choice -- index of the new choice
-		"""
-		for i in range(3):
-			ctl = self._dialog.GetDialogItemAsControl(ITEM_DIR_RIGHT+i)
-			if i == choice:
-				ctl.SetControlValue(1)
-			else:
-				ctl.SetControlValue(0)
+    def do_itemhit(self, item, event):
+        if item in ITEMLIST_DIR:
+            self._dirclick(item-ITEM_DIR_RIGHT)
+        elif item in ITEMLIST_TYPE:
+            self._typeclick(item-ITEM_TYPE_JUMP)
 
-	def linkdirgetchoice(self):
-		"""Return the current choice in the link dir list."""
-		for i in range(3):
-			ctl = self._dialog.GetDialogItemAsControl(ITEM_DIR_RIGHT+i)
-			if ctl.GetControlValue():
-				return i
-		raise 'No direction set?'
+        elif item == ITEM_CANCEL:
+            self.cancel_callback()
+        elif item == ITEM_OK:
+            self.ok_callback()
+        else:
+            print 'Unexpected link edit dialog event, item', item, 'event', event
+        return 1
 
-	def linktypesetsensitive(self, pos, sensitive):
-		"""Make an entry in the link type menu (in)sensitive.
+    def _typeclick(self, item):
+        self.linktypesetchoice(item)
+        self.linktype_callback()
 
-		Arguments (no defaults):
-		pos -- the index of the entry to be made (in)sensitve
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		self._setsensitive(ITEMLIST_TYPE[pos+1:pos+2], sensitive)
+    def _dirclick(self, item):
+        self.linkdirsetchoice(item)
+        self.linkdir_callback()
 
-	def linktypesetchoice(self, choice):
-		"""Set the current choice of the link type list.
+    def linkdirsetsensitive(self, pos, sensitive):
+        """Make an entry in the link dir menu (in)sensitive.
 
-		Arguments (no defaults):
-		choice -- index of the new choice
-		"""
-		for i in range(3):
-			ctl = self._dialog.GetDialogItemAsControl(ITEM_TYPE_JUMP+i)
-			if i == choice:
-				ctl.SetControlValue(1)
-			else:
-				ctl.SetControlValue(0)
+        Arguments (no defaults):
+        pos -- the index of the entry to be made (in)sensitve
+        sensitive -- boolean indicating whether to make
+                sensitive or insensitive
+        """
+        self._setsensitive(ITEMLIST_DIR[pos+1:pos+2], sensitive)
 
-	def linktypegetchoice(self):
-		"""Return the current choice in the link type list."""
-		for i in range(3):
-			ctl = self._dialog.GetDialogItemAsControl(ITEM_TYPE_JUMP+i)
-			if ctl.GetControlValue():
-				return i
-		raise 'No type set?'
+    def linkdirsetchoice(self, choice):
+        """Set the current choice of the link dir list.
 
-	# Callback functions.  These functions should be supplied by
-	# the user of this class (i.e., the class that inherits from
-	# this class).
+        Arguments (no defaults):
+        choice -- index of the new choice
+        """
+        for i in range(3):
+            ctl = self._dialog.GetDialogItemAsControl(ITEM_DIR_RIGHT+i)
+            if i == choice:
+                ctl.SetControlValue(1)
+            else:
+                ctl.SetControlValue(0)
 
-	def linkdir_callback(self):
-		"""Called when a new link direction entry is selected."""
-		pass
+    def linkdirgetchoice(self):
+        """Return the current choice in the link dir list."""
+        for i in range(3):
+            ctl = self._dialog.GetDialogItemAsControl(ITEM_DIR_RIGHT+i)
+            if ctl.GetControlValue():
+                return i
+        raise 'No direction set?'
 
-	def linktype_callback(self):
-		"""Called when a new link type entry is selected."""
-		pass
+    def linktypesetsensitive(self, pos, sensitive):
+        """Make an entry in the link type menu (in)sensitive.
 
-	def ok_callback(self):
-		"""Called when `OK' button is pressed."""
-		pass
+        Arguments (no defaults):
+        pos -- the index of the entry to be made (in)sensitve
+        sensitive -- boolean indicating whether to make
+                sensitive or insensitive
+        """
+        self._setsensitive(ITEMLIST_TYPE[pos+1:pos+2], sensitive)
 
-	def cancel_callback(self):
-		"""Called when `Cancel' button is pressed."""
-		pass
+    def linktypesetchoice(self, choice):
+        """Set the current choice of the link type list.
 
+        Arguments (no defaults):
+        choice -- index of the new choice
+        """
+        for i in range(3):
+            ctl = self._dialog.GetDialogItemAsControl(ITEM_TYPE_JUMP+i)
+            if i == choice:
+                ctl.SetControlValue(1)
+            else:
+                ctl.SetControlValue(0)
+
+    def linktypegetchoice(self):
+        """Return the current choice in the link type list."""
+        for i in range(3):
+            ctl = self._dialog.GetDialogItemAsControl(ITEM_TYPE_JUMP+i)
+            if ctl.GetControlValue():
+                return i
+        raise 'No type set?'
+
+    # Callback functions.  These functions should be supplied by
+    # the user of this class (i.e., the class that inherits from
+    # this class).
+
+    def linkdir_callback(self):
+        """Called when a new link direction entry is selected."""
+        pass
+
+    def linktype_callback(self):
+        """Called when a new link type entry is selected."""
+        pass
+
+    def ok_callback(self):
+        """Called when `OK' button is pressed."""
+        pass
+
+    def cancel_callback(self):
+        """Called when `Cancel' button is pressed."""
+        pass

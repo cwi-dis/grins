@@ -3,6 +3,5 @@ __version__ = "$Id$"
 # Bitmap splash management
 
 def getResId():
-	import grinsRC
-	return grinsRC.IDB_SPLASHPRO
-
+    import grinsRC
+    return grinsRC.IDB_SPLASHPRO
