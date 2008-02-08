@@ -16,7 +16,7 @@ import mw_menucmd
 import mw_textwindow
 
 def sleep(sec):
-	pass				# for now
+    pass                            # for now
 
 #
 # There is a cyclic dependency between mw_dialogs and mw_windows. Solve it
@@ -105,21 +105,21 @@ _qtavailable = mw_toplevel._qtavailable
 textwindow = mw_textwindow.textwindow
 # htmlwindow = mw_textwindow.htmlwindow
 def htmlwindow(url):
-	# Workaround (hack) for Explorer bug, which doesn't recognize file:/disk/...
-	if url[:6] == 'file:/' and url[6] != '/':
-		url = 'file:///' + url[6:]
-	try:
-		import ic
-		ic_instance = ic.IC()
-		ic_instance.launchurl(url)
-	except:
-		showmessage('Cannot start webbrowser.\nInternet configuration error?')
-	return None
+    # Workaround (hack) for Explorer bug, which doesn't recognize file:/disk/...
+    if url[:6] == 'file:/' and url[6] != '/':
+        url = 'file:///' + url[6:]
+    try:
+        import ic
+        ic_instance = ic.IC()
+        ic_instance.launchurl(url)
+    except:
+        showmessage('Cannot start webbrowser.\nInternet configuration error?')
+    return None
 
 # open an external application in order to manage the media specified in url
 # verb is the action executed by the external application. may be print, ... (for now ignore)
 def shell_execute(url,verb='open'):
-	htmlwindow(url)
+    htmlwindow(url)
 
 from imgimagesize import GetImageSize
 from mw_toplevel import GetVideoSize
