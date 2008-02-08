@@ -10,17 +10,17 @@ wmfapi.CoInitialize()
 
 # temp debug: find the name of a guid
 def findguid(guid):
-	for s in dir(wmfapi):
-		if s.find("WMMEDIA")>=0 or s.find("WMFORMAT")>=0:
-			if guid==getattr(wmfapi,s):
-				return s
+    for s in dir(wmfapi):
+        if s.find("WMMEDIA")>=0 or s.find("WMFORMAT")>=0:
+            if guid==getattr(wmfapi,s):
+                return s
 
 profman = wmfapi.CreateProfileManager()
 nprofiles = profman.GetSystemProfileCount()
 print nprofiles,'system profiles:'
 for ix in range(nprofiles):
-	prof = profman.LoadSystemProfile(ix)
-	print ix, prof.GetName()
+    prof = profman.LoadSystemProfile(ix)
+    print ix, prof.GetName()
 
 # find audio pin
 prof = profman.LoadSystemProfile(10)
@@ -32,15 +32,15 @@ audiopinmt = None
 audiopinprops = None
 print 'profile pins:'
 for i in range(npins):
-	pinprop = writer.GetInputProps(i)
-	pintype = pinprop.GetType()
-	print i,'\t', findguid(pintype)
-	if pintype == wmfapi.WMMEDIATYPE_Audio:
-		audiopinix = i
-		audiopinprops = pinprop
-		audiopinmt = pinprop.GetMediaType()
+    pinprop = writer.GetInputProps(i)
+    pintype = pinprop.GetType()
+    print i,'\t', findguid(pintype)
+    if pintype == wmfapi.WMMEDIATYPE_Audio:
+        audiopinix = i
+        audiopinprops = pinprop
+        audiopinmt = pinprop.GetMediaType()
 if audiopinix>=0:
-	print 'audiopin is pin ',audiopinix
+    print 'audiopin is pin ',audiopinix
 
 writer.SetOutputFilename(r'D:\ufs\mm\cmif\win32\wmsdk\wmfsdk\src\testdata\test.wma');
 
@@ -71,13 +71,13 @@ ms2cns = large_int(10000)
 writer.BeginWriting()
 samplesToRead = 1024
 while curSample < nSamples:
-	data, bytes, nsamples = avistream.Read(curSample,samplesToRead)
-	sample = writer.AllocateSample(bytes)
-	sample.SetBuffer(data)
-	tmsec = tmsec + bytes*1000/bps
-	tcnsec = large_int(tmsec)*ms2cns
-	curSample = curSample + nsamples
-	writer.WriteSample(audiopinix,tcnsec,0,sample)
+    data, bytes, nsamples = avistream.Read(curSample,samplesToRead)
+    sample = writer.AllocateSample(bytes)
+    sample.SetBuffer(data)
+    tmsec = tmsec + bytes*1000/bps
+    tcnsec = large_int(tmsec)*ms2cns
+    curSample = curSample + nsamples
+    writer.WriteSample(audiopinix,tcnsec,0,sample)
 
 writer.Flush()
 writer.EndWriting()
