@@ -9,18 +9,17 @@ import features
 # this yet).
 
 class AutoEvaluateLicense:
-	def __init__(self):
-		raise Error, ""
+    def __init__(self):
+        raise Error, ""
 
-	def have(self, *feat):
-		return 1
+    def have(self, *feat):
+        return 1
 
-	def need(self, *feat):
-		return None
+    def need(self, *feat):
+        return None
 
-	def userinfo(self):
-		return ''
+    def userinfo(self):
+        return ''
 
-	def is_evaluation_license(self):
-		return 1
-
+    def is_evaluation_license(self):
+        return 1

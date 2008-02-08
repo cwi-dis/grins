@@ -6,9 +6,9 @@ __version__ = "$Id$"
 
 colors = {
 }
-	
+
 def init_colors():
-	# to do: fill the table. The values are system dependant
-	pass
+    # to do: fill the table. The values are system dependant
+    pass
 
 init_colors()
