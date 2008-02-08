@@ -7,23 +7,23 @@ from FeatureSet import *
 import sys
 
 feature_set = [
-	ADVANCED_PROPERTIES,
-	ASSETS_VIEW,
-	CUSTOM_REGIONS,
-	EXPORT_REAL,
-	HYPERLINKS_VIEW,
-	H_MODIFY_STRUCTURE,
-	H_ASSIGN_NAME,
-	LAYOUT_VIEW,
-	PLAYER_VIEW,
-	SOURCE_VIEW,
-	STRUCTURE_VIEW,
-	TRANSITION_VIEW,
-	UNIFIED_FOCUS,
-	AUTO_EVALUATE,
-	SHOW_MEDIA_CHILDREN,
-	UNSUPPORTED_ERROR,
-	]
+        ADVANCED_PROPERTIES,
+        ASSETS_VIEW,
+        CUSTOM_REGIONS,
+        EXPORT_REAL,
+        HYPERLINKS_VIEW,
+        H_MODIFY_STRUCTURE,
+        H_ASSIGN_NAME,
+        LAYOUT_VIEW,
+        PLAYER_VIEW,
+        SOURCE_VIEW,
+        STRUCTURE_VIEW,
+        TRANSITION_VIEW,
+        UNIFIED_FOCUS,
+        AUTO_EVALUATE,
+        SHOW_MEDIA_CHILDREN,
+        UNSUPPORTED_ERROR,
+        ]
 
 version = 'Real'
 compatibility = Boston
@@ -33,7 +33,7 @@ lightweight = 0
 editor = 1
 license_features_needed = ('smil2real', sys.platform)
 
-auto_evaluate_period = 7	# 7 days auto-evaluate
+auto_evaluate_period = 7        # 7 days auto-evaluate
 
 # URL to be used for buying the product
 buyurl = 'http://www.realnetworks.com/special/partners/upsell.html?act=orx'
