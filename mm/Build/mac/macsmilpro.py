@@ -8,16 +8,16 @@ __version__ = "$Id$"
 import sys
 DEBUG=0
 if DEBUG:
-	print '** Verbose **'
-	quietconsole=None
+    print '** Verbose **'
+    quietconsole=None
 elif len(sys.argv) > 1 and sys.argv[1] == '-v':
-	del sys.argv[1]
-	print '** Verbose **'
-	quietconsole=None
+    del sys.argv[1]
+    print '** Verbose **'
+    quietconsole=None
 else:
-	import quietconsole
-	quietconsole.install()
-	
+    import quietconsole
+    quietconsole.install()
+
 # XXXX Temp: enable Navigation
 import macfsn
 macfsn._install()
@@ -26,13 +26,13 @@ ID_SPLASH_DIALOG=513
 # XXXX Debugging code: assure the resource file is available
 from Carbon import Res
 try:
-	Res.GetResource('DLOG', ID_SPLASH_DIALOG)
+    Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 except:
-	Res.FSpOpenResFile(':macsmilpro.rsrc', 0)
-	Res.FSpOpenResFile(':editor.rsrc', 0)
-	Res.FSpOpenResFile(':playercontrols.rsrc', 0)
-	Res.FSpOpenResFile(':common.rsrc', 0)
-	Res.FSpOpenResFile(':editorballoons.rsrc', 0)
+    Res.FSpOpenResFile(':macsmilpro.rsrc', 0)
+    Res.FSpOpenResFile(':editor.rsrc', 0)
+    Res.FSpOpenResFile(':playercontrols.rsrc', 0)
+    Res.FSpOpenResFile(':common.rsrc', 0)
+    Res.FSpOpenResFile(':editorballoons.rsrc', 0)
 Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 
 # Now time for real work.
@@ -44,12 +44,12 @@ import macfs
 # Set variable for standalone cmif:
 #
 try:
-	import SR
+    import SR
 except ImportError:
-	STANDALONE=0
+    STANDALONE=0
 else:
-	STANDALONE=1
-	
+    STANDALONE=1
+
 #
 # Mangle sys.path. Here are the directives for macfreeze:
 #
@@ -131,32 +131,32 @@ else:
 # And here's the code for non-standalone version of the editor:
 
 if not STANDALONE:
-	# For now:
-	progdir=os.path.split(sys.argv[0])[0]	# This is cmif:build:mac
-	progdir=os.path.split(progdir)[0]		# this is cmif:build
-	CMIFDIR=os.path.split(progdir)[0]		# and this is cmif
-	
-	CMIFPATH = [
-		CMIFDIR+":mac",
-		CMIFDIR+":editor:smil10",
-		CMIFDIR+":editor:mac",
-		CMIFDIR+":editor",
-		CMIFDIR+":common:mac",
-		CMIFDIR+":common",
-		CMIFDIR+":lib:mac",
-		CMIFDIR+":lib",
-	# Overrides for Python distribution
-		CMIFDIR+":pylib",
-##	# XXXX Testing purposes only
-##		CMIFDIR+":mmpython:producer:mac:bin",
-	]
-	sys.path[0:0] = CMIFPATH
-	
-	os.environ["CMIF"] = CMIFDIR
-	#os.environ["CHANNELDEBUG"] = "1"
+    # For now:
+    progdir=os.path.split(sys.argv[0])[0]   # This is cmif:build:mac
+    progdir=os.path.split(progdir)[0]               # this is cmif:build
+    CMIFDIR=os.path.split(progdir)[0]               # and this is cmif
+
+    CMIFPATH = [
+            CMIFDIR+":mac",
+            CMIFDIR+":editor:smil10",
+            CMIFDIR+":editor:mac",
+            CMIFDIR+":editor",
+            CMIFDIR+":common:mac",
+            CMIFDIR+":common",
+            CMIFDIR+":lib:mac",
+            CMIFDIR+":lib",
+    # Overrides for Python distribution
+            CMIFDIR+":pylib",
+##     # XXXX Testing purposes only
+##         CMIFDIR+":mmpython:producer:mac:bin",
+    ]
+    sys.path[0:0] = CMIFPATH
+
+    os.environ["CMIF"] = CMIFDIR
+    #os.environ["CHANNELDEBUG"] = "1"
 else:
-	progdir=os.path.split(sys.argv[0])[0]
-	os.environ["CMIF"] = progdir
+    progdir=os.path.split(sys.argv[0])[0]
+    os.environ["CMIF"] = progdir
 
 # Next, show the splash screen
 import splash
@@ -167,52 +167,51 @@ user = settings.get('license_user')
 org = settings.get('license_organization')
 splash.setuserinfo(user, org, license)
 
-	
+
 if len(sys.argv) > 1 and sys.argv[1] == '-p':
-	profile = 1
-	del sys.argv[1]
-	print '** Profile **'
+    profile = 1
+    del sys.argv[1]
+    print '** Profile **'
 else:
-	profile = 0
+    profile = 0
 
 
-##import trace
-##trace.set_trace()
+## import trace
+## trace.set_trace()
 
-##if len(sys.argv) < 2:
-##	MacOS.splash()
-##	fss, ok = macfs.PromptGetFile('CMIF/SMIL file (cancel for URL)', 'TEXT')
-##	if ok:
-##		sys.argv = ["macgrins", fss.as_pathname()]
-##	else:
-##		import EasyDialogs
-##		url = EasyDialogs.AskString("CMIF/SMIL URL")
-##		if url is None:
-##			sys.exit(0)
-##		sys.argv = ["maccmifed", url]
-		
+## if len(sys.argv) < 2:
+##     MacOS.splash()
+##     fss, ok = macfs.PromptGetFile('CMIF/SMIL file (cancel for URL)', 'TEXT')
+##     if ok:
+##         sys.argv = ["macgrins", fss.as_pathname()]
+##     else:
+##         import EasyDialogs
+##         url = EasyDialogs.AskString("CMIF/SMIL URL")
+##         if url is None:
+##             sys.exit(0)
+##         sys.argv = ["maccmifed", url]
+
 no_exception=0
 try:
-	try:
-		if profile:
-			import profile
-			fss, ok = macfs.StandardPutFile("Profile output:")
-			if not ok: sys.exit(1)
-			profile.run("import cmifed", fss.as_pathname())
-		else:
-			import cmifed
-		no_exception=1
-	except SystemExit:
-		no_exception=1
+    try:
+        if profile:
+            import profile
+            fss, ok = macfs.StandardPutFile("Profile output:")
+            if not ok: sys.exit(1)
+            profile.run("import cmifed", fss.as_pathname())
+        else:
+            import cmifed
+        no_exception=1
+    except SystemExit:
+        no_exception=1
 finally:
-	if not no_exception:
-		if quietconsole:
-			quietconsole.revert()
-##		if DEBUG:
-##			import pdb
-##			pdb.post_mortem(sys.exc_info()[2])
-##		elif quietconsole:
-##			quietconsole.revert()
-##			print 'Type return to exit-',
-##			sys.stdin.readline()
-	
+    if not no_exception:
+        if quietconsole:
+            quietconsole.revert()
+##         if DEBUG:
+##             import pdb
+##             pdb.post_mortem(sys.exc_info()[2])
+##         elif quietconsole:
+##             quietconsole.revert()
+##             print 'Type return to exit-',
+##             sys.stdin.readline()
