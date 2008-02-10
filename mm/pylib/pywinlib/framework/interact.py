@@ -1,4 +1,4 @@
-## ################################################################
+##################################################################
 #
 #       Interactive Script parser and executer
 #
@@ -62,7 +62,7 @@ def SaveFontPreferences():
     win32ui.WriteProfileVal( sectionProfile, valueFormatOutput, str(formatOutput) )
     win32ui.WriteProfileVal( sectionProfile, valueFormatOutputError, str(formatOutputError) )
 
-## #############################################################
+###############################################################
 #
 # This class handles the Python interactive interpreter.
 #
