@@ -165,7 +165,7 @@ class SVGChannel(Channel.ChannelWindow):
 
 
 
-## #################################
+###################################
 # SVG channel alt using an OS window and Adobe's SVG viewer
 
 # flag indicating SVG support
