@@ -44,7 +44,7 @@ class DocumentFrame:
                 if cmd is not None and cmd.callback:
                     return cmd
 
-## #######################
+#########################
 import wingeneric
 
 import winstruct

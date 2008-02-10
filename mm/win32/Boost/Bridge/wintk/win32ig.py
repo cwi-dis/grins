@@ -8,7 +8,7 @@ __version__ = "$Id$"
 # that exports the Accusoft Image Gear library
 
 
-## ###########################
+#############################
 
 class ImageLib:
     def __init__(self):

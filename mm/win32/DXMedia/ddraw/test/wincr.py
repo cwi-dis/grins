@@ -36,7 +36,7 @@ win32ui.InstallCallbackCaller(SafeCallbackCaller)
 
 
 
-## ###########################
+#############################
 from pywin.mfc import window
 class MfcOsWnd(window.Wnd):
     """Generic MfcOsWnd class"""
