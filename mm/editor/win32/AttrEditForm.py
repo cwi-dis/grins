@@ -37,7 +37,7 @@ import EventEditor
 
 error = components.error
 
-## ################################################
+##################################################
 # AttrEditor as a tab-dialog
 
 class AttrCtrl:
@@ -142,7 +142,7 @@ def fttoa(t,n,prec):
         return ''
     return ((' %%.%df' % prec) * n) % t
 
-## ################################
+##################################
 class OptionsCtrl(AttrCtrl):
     want_default_help = 0
 
@@ -503,7 +503,7 @@ class OptionsCheckMultipleCtrl(AttrCtrl):
         for ix in range(min(n,len(self._resid)-1)):
             tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[ix+1]),self.gethelp(),None,0)
 
-## ################################
+##################################
 class FileCtrl(AttrCtrl):
     def __init__(self,wnd,attr,resid):
         AttrCtrl.__init__(self,wnd,attr,resid)
@@ -733,7 +733,7 @@ class ElementSelCtrl(AttrCtrl):
 class ElementSelNolabelCtrl(ElementSelCtrl):
     want_label = 0
 
-## ################################
+##################################
 class ColorCtrl(AttrCtrl):
     def __init__(self,wnd,attr,resid):
         AttrCtrl.__init__(self,wnd,attr,resid)
@@ -1195,7 +1195,7 @@ class CssPosCtrl(AttrCtrl):
             self.enableApply()
             self.__fieldModified = 1
 
-## ################################
+##################################
 class StringCtrl(AttrCtrl):
     def __init__(self,wnd,attr, resid, residToHide = ()):
         AttrCtrl.__init__(self,wnd,attr,resid, residToHide)
@@ -2035,7 +2035,7 @@ class HrefCtrl(AttrCtrl):
         tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[4]),'Select destination of internal hyperlnk',None,0)
         tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[5]),'URL of external hyperlink',None,0)
 
-## ################################
+##################################
 # StringOptionsCtrl can be used as a StringCtrl but the user
 # can optionally select the string from a drop down list
 class StringOptionsCtrl(AttrCtrl):
@@ -2120,7 +2120,7 @@ class HtmlTemplateCtrl(StringOptionsCtrl):
             return self._attrval.getvalue()
         return self._attr.getcurrent()
 
-## ################################
+##################################
 class AttrSheet(dialog.PropertySheet):
     def __init__(self,form):
         self._form=form
@@ -2375,7 +2375,7 @@ class EmptyAttrPage(AttrPage):
     def createctrls(self):
         return {}
 
-## #############################
+###############################
 class SingleAttrPage(AttrPage):
     # These map attribute names to (dialog-resource-id, constructor-function, control-ids)
     # tuples. For unknown attributes we default to "string".
@@ -2517,7 +2517,7 @@ class SingleAttrPage(AttrPage):
         dialogresid, constructor, controlresids = self._getcontrolinfo()
         return dialogresid
 
-## ################################
+##################################
 class LayoutScale:
     def __init__(self, wnd, xs, ys, offset = (0,0)):
         self._wnd=wnd
@@ -2594,7 +2594,7 @@ class LayoutScale:
         return Rect((l,t,l+w,t+h))
 
 
-## ################################
+##################################
 # LayoutPage
 import winlayout
 import appcon, sysmetrics
@@ -2922,7 +2922,7 @@ class SubImgLayoutPage(PosSizeLayoutPage):
         if self._layoutctrl:
             self._layoutctrl.setImage(f, fit='fill', mediadisplayrect = None)
 
-## ##########################
+############################
 # Base class for media renderers
 
 class Renderer:
@@ -3006,7 +3006,7 @@ class Renderer:
     def needsoswindow(self):
         return 0
 
-## #############################
+###############################
 from win32ig import win32ig
 
 class ImageRenderer(Renderer):
@@ -3055,7 +3055,7 @@ class ImageRenderer(Renderer):
         Sdk.DeleteObject(br)
         self._adjrc=(dest_x, dest_y,dest_x + width, dest_y + height)
 
-## #############################
+###############################
 import svgdom
 
 class SvgRenderer(Renderer):
@@ -3151,7 +3151,7 @@ class SvgRenderer(Renderer):
         if releaseDC:
             self._wnd.ReleaseDC(dc)
 
-## ###############################
+#################################
 class HtmlRenderer(Renderer):
     def __init__(self,wnd,rc,baseURL=''):
         Renderer.__init__(self,wnd,rc,baseURL)
@@ -3203,7 +3203,7 @@ class HtmlRenderer(Renderer):
                 win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
 
 
-## ###############################
+#################################
 class TextRenderer(Renderer):
     def __init__(self,wnd,rc,baseURL=''):
         Renderer.__init__(self,wnd,rc,baseURL)
@@ -3264,7 +3264,7 @@ class TextRenderer(Renderer):
             return string.join(rl, '\r\n')
 
 
-## ###############################
+#################################
 # DirectShow support
 from win32dxm import GraphBuilder
 
@@ -3343,7 +3343,7 @@ class AudioRenderer(MediaRenderer):
     def needswindow(self):
         return 0
 
-## ###############################
+#################################
 import winqt
 import ddraw
 
@@ -3504,7 +3504,7 @@ class QtAudioRenderer(QtMediaRenderer):
     def needswindow(self):
         return 0
 
-## ###############################
+#################################
 try:
     import rma
 except ImportError:
@@ -3632,7 +3632,7 @@ class RealWndCtrl(components.WndCtrl):
     def onFocus(self,params):
         self.GetParent().SetFocus()
 
-## ###############################
+#################################
 class PreviewPage(AttrPage):
     dragaccept = 0
     def __init__(self,form,renderersig='null',aname='file'):
@@ -3856,7 +3856,7 @@ class TextPreviewPage(PreviewPage):
     def __init__(self,form):
         PreviewPage.__init__(self, form,'text')
 
-## ##########################
+############################
 
 from Attrgrs import attrgrs
 
@@ -3865,7 +3865,7 @@ for d in attrgrs:
     attrgrsdict[d['name']]=d
 
 
-## ##########################
+############################
 # platform and implementation dependent group
 # one per group
 class AttrGroup:
@@ -5580,7 +5580,7 @@ class DocTemplateGroup(AttrGroup):
         cd[a] = FileNolabelCtrl(wnd, a, (grinsRC.IDC_STATIC1, grinsRC.IDC_EDIT2, grinsRC.IDC_BUTTON2,))
         return cd
 
-## ##########################
+############################
 # platform dependent association
 # what we have implemented, anything else goes as singleton
 groupsui={
@@ -5685,7 +5685,7 @@ groupsui={
         'doctemplate':DocTemplateGroup,
         }
 
-## #########################
+###########################
 # already bound: &P, &B, &X, &Y, &W, &H
 
 class TabShortcut:
@@ -5797,7 +5797,7 @@ class TabShortcut:
 
 
 
-## #########################
+###########################
 from  GenFormView import GenFormView
 
 class AttrEditForm(GenFormView):

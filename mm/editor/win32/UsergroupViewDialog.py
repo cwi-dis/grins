@@ -49,7 +49,7 @@ class UsergroupViewDialog(ViewDialog.ViewDialog):
             self.last_geometry = self.__window.getgeometry(windowinterface.UNIT_PXL)
             return self.last_geometry
 
-## ## support win32 model
+#### support win32 model
     def createviewobj(self):
         if self.__window: return
         f=self.toplevel.window
@@ -73,7 +73,7 @@ class UsergroupViewDialog(ViewDialog.ViewDialog):
     def getwindow(self):
         return self.__window
 
-## ## data interchange
+#### data interchange
     def getgroup(self):
         # Return name of currently selected user group.
         if not self.__window:self.createviewobj()

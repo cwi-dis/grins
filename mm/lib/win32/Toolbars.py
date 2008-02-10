@@ -110,11 +110,11 @@ class NullPanelMixin:
     def updatePanelCmdUI(self):
         pass
 
-## # do not use player panel for player yet
+### do not use player panel for player yet
 ## if not features.editor:
 ##     PanelMixin = NullPanelMixin
 
-## ############################
+##############################
 class ToolbarMixin(PanelMixin):
 
     def __init__(self):

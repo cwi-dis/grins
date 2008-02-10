@@ -527,7 +527,7 @@ def makeAnimationWrapper(animnode):
 
     return AnimationDefaultWrapper(animnode)
 
-## ##########################
+############################
 # should go normally to parse utilities
 # copy/paste form SMILTreeRead
 

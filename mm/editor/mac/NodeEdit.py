@@ -91,7 +91,7 @@ class _Convert:
 ##                    prompt = 'Choose an editor:', grab = 1,
 ##                    vertical = 0)
 
-## # InitEditors - Initialize the module.
+### InitEditors - Initialize the module.
 ## def InitEditors():
 ##     # XXX Should add the directory where the .cmif file resides...
 ##     # XXX (toplevel.dirname)
@@ -154,7 +154,7 @@ def showeditor(node, url=None):
 ##         cmd = _showmenu(editor, filename)
     _do_mac_edit(filename)
 
-## # Simple test program. Only tests editor file parsing.
+### Simple test program. Only tests editor file parsing.
 ## def test():
 ##     InitEditors()
 ##     print channeleditors

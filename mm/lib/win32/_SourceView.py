@@ -19,7 +19,7 @@ import afxres, commctrl
 import grinsRC, components
 from GenFormView import GenFormView
 
-## #################################
+###################################
 import win32ui, win32con, afxres
 Sdk=win32ui.GetWin32Sdk()
 

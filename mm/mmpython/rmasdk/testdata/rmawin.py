@@ -85,7 +85,7 @@ class Win32Msg:
         return '<%s instance, %s>' % (self.__class__.__name__, s)
 
 
-## ###########################
+#############################
 from pywin.mfc import window
 class MfcOsWnd(window.Wnd):
     """Generic MfcOsWnd class"""

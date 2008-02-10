@@ -45,12 +45,12 @@ else:
 # when doc duration is resolved
 SHOW_PLAYER_SEEK = 0
 
-## #########################################################
+###########################################################
 
 from MainFrameSpecific import appview
 
 
-## #######################################################
+#########################################################
 from pywinlib.mfc import window, docview
 
 # mixins
@@ -1223,7 +1223,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
         for listener in self._viewCreationListeners:
             listener.onViewCreated(self, view, strid)
 
-## ##############################################
+################################################
 # The ChildFrame purpose is to host the views in its client area
 # according to the MDIFrameWnd pattern
 class ChildFrame(window.MDIChildWnd):
@@ -1322,7 +1322,7 @@ class ChildFrame(window.MDIChildWnd):
         if self._view:
             self._view._isminimized = flag
 
-## #######################
+#########################
 from GenView import GenView
 
 class BrowserPane(GenView, docview.TreeView):

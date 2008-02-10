@@ -50,7 +50,7 @@ class ErrorsViewDialog(ViewDialog.ViewDialog):
         if self.__window != None:
             self.__window.setErrorList(errorList)
 
-## ## support win32 model
+#### support win32 model
     def createviewobj(self):
         if self.__window: return
         f=self.toplevel.window

@@ -38,13 +38,13 @@ if not HtmlRender.HRHTMLRenderingLibAvailable():
 ## SCROLLBARWIDTH=16
 ## IMAGEBORDER=2
 ##
-## # Sizes for HTML tag types
+### Sizes for HTML tag types
 ## HTML_SIZE={
 ##     'h1': 4,
 ##     'h2': 2
 ## }
 ##
-## # Parts of the scrollbar we track:
+### Parts of the scrollbar we track:
 ## TRACKED_PARTS=(Controls.inUpButton, Controls.inDownButton,
 ##         Controls.inPageUp, Controls.inPageDown)
 
@@ -356,13 +356,13 @@ class HTMLWidget:
 ##         # Restore updating, recalc, set focus
 ##         if tag and self.tag_positions.has_key(tag):
 ##             pos = self.tag_positions[tag]
-## ##            print 'DBG: start', tag, pos
+####            print 'DBG: start', tag, pos
 ##         else:
 ##             if tag:
 ##                 print 'Warning: no tag named', tag
 ##             pos = 0
 ##         self.ted.WESetSelection(pos, pos)
-## ##        self.ted.WESetSelection(0, 0)
+####        self.ted.WESetSelection(0, 0)
 ##         self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
 ##
 ##         self._createscrollbars(reset=1)
@@ -394,7 +394,7 @@ class HTMLWidget:
 ##
 ##         pos = 0
 ##         self.ted.WESetSelection(pos, pos)
-## ##        self.ted.WESetSelection(0, 0)
+####        self.ted.WESetSelection(0, 0)
 ##         self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
 ##         self.wid.InvalWindowRect(self.rect)
 ##
@@ -408,7 +408,7 @@ class HTMLWidget:
 ##         # Restore updating, recalc, set focus
 ##         if tag and self.tag_positions.has_key(tag):
 ##             pos = self.tag_positions[tag]
-## ##            print 'DBG: goto', tag, pos
+####            print 'DBG: goto', tag, pos
 ##         else:
 ##             if tag:
 ##                 print 'Warning: no tag named', tag

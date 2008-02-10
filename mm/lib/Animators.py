@@ -428,13 +428,13 @@ class Animator:
                 return b*e[1] + c*e[3] + d
             s = s + step
 
-## #########################
+###########################
 # 'set' element animator
 class SetAnimator(Animator):
     def __init__(self, attr, domval, value, dur):
         Animator.__init__(self, attr, domval, (value, ), dur, mode ='discrete')
 
-## #########################
+###########################
 # A special animator to manage to-only additive animate elements
 class EffValueAnimator(Animator):
     def __init__(self, attr, domval, value, dur, mode='linear',
@@ -452,7 +452,7 @@ class EffValueAnimator(Animator):
         return Animator.getValue(self, t)
 
 
-## #########################
+###########################
 class RNPath:
     def __init__(self, coords):
         self.coords = coords
@@ -569,7 +569,7 @@ class EffIntTupleAnimator(IntTupleAnimator):
         self._path = RNPath((u,v))
         return IntTupleAnimator.getValue(self, t)
 
-## #########################
+###########################
 # 'animateColor'  element animator
 class ColorAnimator(IntTupleAnimator):
     def __init__(self, attr, domval, value, dur, mode='linear',
@@ -602,7 +602,7 @@ class EffColorAnimator(EffIntTupleAnimator):
             else: r.append(v[i])
         return tuple(r)
 
-## #########################
+###########################
 # 'animateMotion' element animator
 class MotionAnimator(Animator):
     def __init__(self, attr, domval, path, dur, mode='paced',
@@ -699,7 +699,7 @@ class SetMotionAnimator(Animator):
         x, y = v.real, v.imag
         return round(x), round(y)
 
-## #########################
+###########################
 # An EffectiveAnimator is responsible to combine properly
 # all animations of the same attribute and the base value
 # to give the final display value.
@@ -1032,7 +1032,7 @@ class EffectiveAnimator:
         return cv
 
 
-## #########################
+###########################
 # AnimateContext is an EffectiveAnimator repository
 # We need a well-known repository so that we can find EffectiveAnimators
 # from Animators (channel) context.
@@ -1115,7 +1115,7 @@ class AnimateContext:
             xp, yp = region.getAbsPos()
         return x-xp, y-yp
 
-## #########################
+###########################
 
 additivetypes = ['int', 'float', 'color', 'position', 'inttuple', 'floattuple']
 alltypes = ['string',] + additivetypes

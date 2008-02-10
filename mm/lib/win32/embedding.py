@@ -187,7 +187,7 @@ class ListenerWnd(GenWnd.GenWnd):
             return slider.getState()
         return 0
 
-## ##########################
+############################
 import FrameRate
 
 class SliderPeer:
@@ -290,7 +290,7 @@ class SliderPeer:
                     return rate
         return 20
 
-## ##########################
+############################
 import win32window
 import ddraw
 from pywinlib.mfc import window

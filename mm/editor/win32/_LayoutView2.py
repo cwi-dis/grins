@@ -690,7 +690,7 @@ class _LayoutView2(GenFormView):
             self._slider.drawOn(dc)
         self.EndPaint(paintStruct)
 
-## #########################
+###########################
 # tree component management
 # the tree component is based on the PyCTreeCtrl python class, which is itself based
 # on MFC CTreeCtrl class. So it's not a lightweight component as Button, List,
@@ -853,7 +853,7 @@ class TreeManager(IconMixin.ViewMixin):
             self._popup = None
         self.treeCtrl.setpopup(self._popup)
 
-## #########################
+###########################
 debugPreview = 0
 
 import winlayout
@@ -1203,7 +1203,7 @@ class UserEventMng:
     def onProperties(self):
         self.listener.onProperties()
 
-## #########################
+###########################
 
 def intersect(rect1, rect2):
     rgn1 = win32ui.CreateRgn()
@@ -1617,7 +1617,7 @@ class Viewport(RectShape):
         dc.SetTextColor(clr_org)
 
 
-## #########################
+###########################
 
 class Region(RectShape):
     def __init__(self, parent, name, context, attrdict, d2lscale):

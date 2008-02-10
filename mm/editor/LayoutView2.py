@@ -27,7 +27,7 @@ DELTA_KEYTIME = 0.01
 TYPE_UNKNOWN, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT, TYPE_ANIMATE, TYPE_ANCHOR = range(6)
 CHILD_TYPE = (TYPE_ANIMATE,)
 
-## #########################
+###########################
 
 #
 # Helper to manage the tree needed for the layout view

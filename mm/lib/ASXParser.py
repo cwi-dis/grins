@@ -11,7 +11,7 @@ import MMurl
 
 from ASXNode import *
 
-## #######################################
+#########################################
 # the definition of the ASX document type
 class ASXdoc:
     # all allowed entities with all their attributes
@@ -88,7 +88,7 @@ class ASXdoc:
     del __asxChilds, __entryChilds, __durEntries, __empty
 
 
-## #######################################
+#########################################
 # The ASXParser
 class ASXParser(ASXdoc, xmllib.XMLParser):
     def __init__(self):
@@ -412,7 +412,7 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
         str = str + "</seq></par></body>\n"
         return str
 
-## #######################################
+#########################################
 
 ASX_HEAD = """\
 <?xml version="1.0" encoding="ISO-8859-1"?>

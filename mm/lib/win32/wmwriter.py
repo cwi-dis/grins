@@ -169,7 +169,7 @@ class WMWriter:
 
         return fg
 
-## #####################
+#######################
 class AudioFormatSetter:
     def __init__(self, writer, url):
         self._audiopeer = dshow.CreatePyRenderingListener(self)
@@ -226,7 +226,7 @@ class AudioFormatSetter:
         self._writer.SetDSAudioFormat(mt)
 
 
-## #####################
+#######################
 class WMVideoConverter:
     def __init__(self):
         self._writing = 0
@@ -378,7 +378,7 @@ class WMVideoConverter:
         if self._writing:
             self._writer.WriteDSSample(self._videopinix, ms)
 
-## #####################
+#######################
 class WMAudioConverter:
     def __init__(self):
         self._writing = 0
@@ -488,7 +488,7 @@ class WMAudioConverter:
         if self._writing:
             self._writer.WriteDSSample(self._audiopinix, ms)
 
-## #####################
+#######################
 class Filter:
     def __init__(self, converter, writer, pinix, pinprops):
         self._converter = converter

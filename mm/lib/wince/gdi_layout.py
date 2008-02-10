@@ -312,7 +312,7 @@ class Region(base_window.Window):
             prev = prev._parent
         return count
 
-## ###########################
+#############################
 
 class Viewport(Region):
     def __init__(self, context, coordinates, bgcolor):

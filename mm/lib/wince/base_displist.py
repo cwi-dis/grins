@@ -641,7 +641,7 @@ class DisplayList:
     # End of animation experimental methods
     ##########################################
 
-## ##################################################
+####################################################
 import CheckInsideArea
 
 class _Button:

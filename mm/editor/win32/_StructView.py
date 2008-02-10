@@ -23,7 +23,7 @@ import DropTarget
 # base class
 from win32dlview import DisplayListView
 
-## ###############################################
+#################################################
 
 class _StructView(DisplayListView):
     # Class contructor. initializes base classes

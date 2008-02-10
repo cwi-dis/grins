@@ -6,7 +6,7 @@ __version__ = "$Id$"
 # positive Y coordinates point down from the top of the window.
 # Also the convention for box coordinates is (left, top, right, bottom)
 
-## # XXX delete this:
+### XXX delete this:
 ## TODO = """
 ## Move focus back to parent node before deleting anything.
 ## properties doesn't work on a multi-selection..
@@ -43,7 +43,7 @@ import settings
 # Color settings
 from AppDefaults import *
 
-## ####################################################################
+######################################################################
 class HierarchyView(HierarchyViewDialog):
     def __init__(self, toplevel):
         self.toplevel = toplevel
@@ -1667,7 +1667,7 @@ class HierarchyView(HierarchyViewDialog):
 ##             if prearmtime:
 ##                 arc = MMNode.MMSyncArc(node, 'begin', srcnode='syncbase', delay=prearmtime)
 ##                 self.editmgr.addsyncarc(node, 'beginlist', arc)
-## #
+###
             self.editmgr.commit()
             if type in MMTypes.mediatypes and not dftchannel:
                 AttrEdit.showattreditor(self.toplevel, node, 'channel')

@@ -16,7 +16,7 @@ import compatibility
 from pywinlib.mfc import window
 from components import *
 
-## ############################
+##############################
 def dllFromDll(dllid):
     # given a 'dll' (maybe a dll, filename, etc), return a DLL object
     if dllid==None:
@@ -333,7 +333,7 @@ class OpenLocationDlg(ResDialog):
     def settext(self, text):
         self._text.settext(text)
 
-## ############################
+##############################
 
 class SelectElementDlg(ResDialog):
     tag2imgid = {'layout': grinsRC.IDI_PROPERTIES,
