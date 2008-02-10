@@ -1100,7 +1100,7 @@ class Channel:
         self._player.cc_stop()
         Channel.__stopping = 0
 
-## # dictionary with channels that have windows
+### dictionary with channels that have windows
 ## ChannelWinDict = {}
 
 _button = None                          # the currently pressed button
