@@ -173,7 +173,7 @@ class HtmlChannel(Channel.ChannelWindow):
             self.window.RetrieveUrl(url)
         self.__armed=1
 
-## ###############################
+#################################
     def defanchor(self, node, anchor, cb):
         # Anchors don't get edited in the HtmlChannel.  You
         # have to edit the text to change the anchor.  We

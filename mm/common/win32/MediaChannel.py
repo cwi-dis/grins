@@ -260,7 +260,7 @@ class MediaChannel:
             self.__fiber_id = None
 
 
-## #################################
+###################################
 
 class VideoStream:
     def __init__(self, channel):
@@ -430,7 +430,7 @@ class VideoStream:
             windowinterface.cancelidleproc(self.__fiber_id)
             self.__fiber_id = None
 
-## ################################################
+##################################################
 HasQtSupport = winqt.HasQtSupport
 
 class QtChannel:
@@ -609,7 +609,7 @@ class QtChannel:
             self.__fiber_id = None
 
 
-## ################################################
+##################################################
 import dsound
 import MMurl
 import math
