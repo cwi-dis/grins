@@ -8,7 +8,7 @@ import wmwriter
 # wmriter configuartion profile
 profile = 20
 
-## #########################################
+###########################################
 
 def LoadImageOn(dds, filename):
     import gear32sd
@@ -26,14 +26,14 @@ def LoadImageOn(dds, filename):
 
 
 
-## #########################################
+###########################################
 
 # viewport dimensions
 w = 400
 h = 300
 
 
-## #########################################
+###########################################
 import ddraw
 
 # create direct draw stuff
@@ -58,7 +58,7 @@ dds.BltFill((0, 0, w, h), ddcolor)
 filename1 = r'D:\ufs\mmdocuments\interop2\interop2\images\frown.jpg'
 filename2 = r'D:\ufs\mmdocuments\interop2\interop2\images\smile.jpg'
 
-## #########################################
+###########################################
 # record manually coded presentation
 
 # create writer
@@ -84,4 +84,4 @@ writer.endWriting()
 
 del writer
 
-## #########################################
+###########################################

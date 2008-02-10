@@ -749,7 +749,7 @@ class Region(base_window.Window):
             prev = prev._parent
         return count
 
-## ###########################
+#############################
 
 class Viewport(Region):
     def __init__(self, context, x, y, width, height, bgcolor):
@@ -905,7 +905,7 @@ class Viewport(Region):
         self.setcursor(self._cursor)
 
 
-## ########################
+##########################
 class DesktopViewportContext:
     def __init__(self, wnd, w, h, units, bgcolor):
 
@@ -1038,7 +1038,7 @@ class DesktopViewportContext:
         except ddraw.error, arg:
             print 'PlayerView.update', arg
 
-## ############
+##############
 
 class ViewportContext:
     def __init__(self, wnd, w, h, units, bgcolor):
@@ -1177,7 +1177,7 @@ class ViewportContext:
         except ddraw.error, arg:
             print 'ViewportContext.update', arg
 
-## #######################
+#########################
 # helpers
 
 import grinsRC

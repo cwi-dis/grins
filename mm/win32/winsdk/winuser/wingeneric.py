@@ -113,7 +113,7 @@ class GenericWnd:
 wnd = GenericWnd()
 wnd.create()
 
-## ######################
+########################
 # helpers
 
 def loword(v):
