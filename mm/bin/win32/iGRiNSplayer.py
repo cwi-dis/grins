@@ -5,7 +5,7 @@
 [PLAYER,EDITOR,SUBSYSTEM]=range(3)
 
 
-## ################### Settings
+##################### Settings
 
 WHAT=PLAYER  # <-- What to run
 what=WHAT
@@ -17,7 +17,7 @@ subsystemModuleName='dslab'
 # Global Application Object
 toplevel=None
 
-## ################### Main Script
+##################### Main Script
 import os
 import sys
 
