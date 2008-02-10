@@ -20,7 +20,7 @@ import math
 
 debug = 0
 
-## #################
+###################
 # dur arithmetic rules
 
 # a time value can be 'unspecified', 'unresolved', 'indefinite', 'definite'
@@ -154,7 +154,7 @@ def timeGE(v1, v2):
 def timeEQ(v1, v2):
     return v1 == v2
 
-## #################
+###################
 # simple local time state keeper
 
 class Timer:
@@ -207,7 +207,7 @@ class Timer:
         self._lastTime = time.time()
 
 
-## #################
+###################
 # simple delta timer queue for scheduling work
 
 class DeltaQueue:
@@ -290,7 +290,7 @@ class DeltaQueue:
         self.cancel(what)
         self.schedule(self, when, what)
 
-## #################
+###################
 # Mixin for the DOM model of the XML language (SMIL, SVG, XHTML, MATHML, etc)
 
 class TimeNode:
@@ -419,7 +419,7 @@ class TimeNode:
             tparent = tparent.tparent
         return 0
 
-## ###################
+#####################
 # SyncElement:
 # Timegraph nodes are either a TimeElement or a SyncElement
 # When a SyncElement receives a time change notification should
@@ -725,7 +725,7 @@ class SyncElement:
         return self._dstattr
 
 
-## ###################
+#####################
 # TimeInterval: an element lifetime is a set of time intervals
 
 class TimeInterval:
@@ -788,7 +788,7 @@ class TimeInterval:
                     arc.updateInstanceTime(oldval, aend)
 
 
-## ###################
+#####################
 # Excl element queue
 
 def priorityLT(n1, n2):
@@ -854,7 +854,7 @@ class ExclPauseQueue:
         return e
 
 
-## ###################
+#####################
 # SMIL2 Timing FSM
 
 # Time element states

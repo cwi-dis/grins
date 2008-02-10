@@ -372,7 +372,7 @@ class Animator:
                 return b*e[1] + c*e[3] + d
             s = s + step
 
-## #########################
+###########################
 # 'set' element animator
 class SetAnimator(Animator):
     def __init__(self, timenode, attr, dict):
@@ -380,7 +380,7 @@ class SetAnimator(Animator):
         assert len(dict.get('values'))==1, 'invalid set element values'
         Animator.__init__(self, timenode, attr, dict)
 
-## #########################
+###########################
 # A special animator to manage to-only additive animate elements
 class EffValueAnimator(Animator):
     def isEffValueAnimator(self):
@@ -394,7 +394,7 @@ class EffValueAnimator(Animator):
         return Animator.getValue(self, t)
 
 
-## #########################
+###########################
 class RNPath:
     def __init__(self, coords):
         self.coords = coords
@@ -491,7 +491,7 @@ class EffIntTupleAnimator(IntTupleAnimator):
         self._path = RNPath((u,v))
         return IntTupleAnimator.getValue(self, t)
 
-## #########################
+###########################
 # 'animateColor'  element animator
 class ColorAnimator(IntTupleAnimator):
     pass
@@ -499,7 +499,7 @@ class ColorAnimator(IntTupleAnimator):
 class EffColorAnimator(EffIntTupleAnimator):
     pass
 
-## #########################
+###########################
 # 'animateMotion' element animator
 class MotionAnimator(Animator):
     def __init__(self, timenode, attr, dict):
@@ -574,7 +574,7 @@ class EffMotionAnimator(Animator):
         return Animator.getValue(self, t)
 
 
-## #########################
+###########################
 class TransformAnimator(Animator):
     def __init__(self, timenode, attr, dict):
         Animator.__init__(self, timenode, attr, dict)

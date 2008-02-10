@@ -15,7 +15,7 @@ from _TransitionView import _TransitionView
 from _UsergroupView import _UsergroupView
 
 # This is a list of classes that are instantiated for each particular view.
-## ### THIS IS ONLY USED WITHIN THE MainFrame MODULE #####
+##### THIS IS ONLY USED WITHIN THE MainFrame MODULE #####
 appview = {
         'attr_edit':{'cmd':-1,'title':'Properties','class':AttrEditForm},
         'aview_':{'cmd':usercmd.HIDE_ASSETSVIEW,'title':'Assets','class':_AssetsView,},

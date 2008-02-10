@@ -382,7 +382,7 @@ class MMStream:
         return secs
 
 
-## #################################
+###################################
 class VideoFormat:
     def __init__(self, name, descr, width, height, format):
         self.__name = name

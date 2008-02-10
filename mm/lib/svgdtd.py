@@ -779,7 +779,7 @@ class SVG:
     del attrset
 
 
-## ############
+##############
 # CAD helpers
 
 def GetDOMClassName(tag):

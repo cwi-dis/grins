@@ -696,7 +696,7 @@ class SvgAnimateColor(AnimateElement):
             dict['values'] = self.getValues(SVGColor)
             self.animator = svganimators.ColorAnimator(self, self.targetAttr, dict)
 
-## ##################3
+####################3
 class SvgView(SvgElement):
     def parseAttributes(self):
         pass
@@ -952,7 +952,7 @@ class SvgFontFace(SvgElement):
     def parseAttributes(self):
         pass
 
-## ##################################
+####################################
 
 class SvgDocument(SvgNode):
     def __init__(self, source):
@@ -1201,7 +1201,7 @@ class SvgDocument(SvgNode):
             else:
                 print self.writesp + '</' + node.getType() + '>'
 
-## ##################################
+####################################
 # SVG DOM Builder using xmllib.XMLParser
 
 import xmllib
@@ -1266,7 +1266,7 @@ class SvgDOMBuilder(svgdtd.SVG, xmllib.XMLParser):
         msg = 'warning: syntax error on line %d: %s' % (lineno or self.lineno, msg)
         print msg
 
-## ##################################
+####################################
 # DOM iterator
 
 class DOMIterator:
@@ -1428,7 +1428,7 @@ class DOMParamIterator:
             self.endnodecb(node)
 
 
-## ##################################
+####################################
 # Plays SVG animations
 
 class SVGPlayer:
@@ -1476,7 +1476,7 @@ class SVGPlayer:
         if self._timeroot.isTicking():
             self._timerid = self._ostimer.settimer(self._timeresolution, (self.timerCallback, ()))
 
-## ##################################
+####################################
 # utilities
 
 class DocCache:
@@ -1535,7 +1535,7 @@ def GetSvgSize(url):
         return svgdoc.getSize()
     return 0, 0
 
-## ##################################
+####################################
 # test
 
 if __debug__:

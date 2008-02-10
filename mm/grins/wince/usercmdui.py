@@ -41,7 +41,7 @@ def getcmdids():
     return L
 
 
-## ##############################
+################################
 # Private implementation
 
 

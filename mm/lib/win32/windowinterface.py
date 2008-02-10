@@ -1,9 +1,9 @@
 __version__ = "$Id$"
 
-## ################################
+##################################
 # entry points for the core system
 # and the other ../win32 folders
-## ################################
+##################################
 
 import AppToplevel
 import __main__

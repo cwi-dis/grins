@@ -34,7 +34,7 @@ import version
 def beep():
     win32api.MessageBeep()
 
-## ##############
+################
 
 # The _Toplevel class represents the root of all windows.  It is never
 # accessed directly by any user code.
@@ -539,7 +539,7 @@ class _Toplevel:
 
 
 
-## #####################################################
+#######################################################
 # FileDialog
 #
 #
@@ -651,7 +651,7 @@ class FileDialog:
     def GetPathName(self):
         return self._dlg.GetPathName()
 
-## #####################################
+#######################################
 
 # @win32doc|shell_execute
 # The shell function calls the win32 functions ShellExecute with the given url and verb

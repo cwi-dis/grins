@@ -574,7 +574,7 @@ class ComboBox(Control):
         self.setcursel(seloption)
 
 
-## ################
+##################
 # A special class that it is both an MFC window and A LightWeightControl
 
 from pywinlib.mfc import window
@@ -583,7 +583,7 @@ class WndCtrl(LightWeightControl,window.Wnd):
     def create_wnd_from_handle(self):
         window.Wnd.__init__(self,win32ui.CreateWindowFromHandle(self._hwnd))
 
-## ##################################################
+####################################################
 # TAB CONTROL STUFF
 
 # Tab control class
@@ -606,7 +606,7 @@ class TabCtrl(Control):
     def getcursel(self):
         return self.sendmessage(commctrl.TCM_GETCURSEL)
 
-## ##################################################
+####################################################
 # Tooltip control
 class Tooltip(Control):
     def __init__(self, parent=None, id=-1):
@@ -732,7 +732,7 @@ class Tooltip(Control):
         self.sendmessage(commctrl.TTM_SETTIPBKCOLOR, win32api.RGB(r, g, b), 0)
 
 
-## ############################
+##############################
 # TipWindow (not lightweight)
 # A window similar to the tip-popup the tooltip control uses
 # The purpose is to have a comletely customizable tip window
@@ -806,7 +806,7 @@ class TipWindow(window.Wnd):
         wnd.InvalidateRect(rc)
         wnd.UpdateWindow()
 
-## ############################
+##############################
 # Base class for controls creation classes
 class WndClass:
     classid = None
@@ -867,7 +867,7 @@ def createwnd(wc,name,pos,size,parent,id):
                     pl,hwnd,id)
 
 
-## ############################
+##############################
 # Any class derved from this class behaves as a dictionary
 # Deprecated: will be removed soon
 class ControlsDict:
@@ -883,7 +883,7 @@ class ControlsDict:
     def has_key(self, key): return self._subwnddict.has_key(key)
     def get(self, key, default): return self._subwnddict.get(key, default)
 
-## ############################
+##############################
 class KeyTimesSlider(window.Wnd):
     # how near key times can be
     # XXX we should use the same variable as the variable defined from LayoutView2

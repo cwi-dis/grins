@@ -277,7 +277,7 @@ class SVGRenderer:
         self.graphics = self._grstack.pop()
 
 
-## ##################################
+####################################
 # test
 
 if __debug__:

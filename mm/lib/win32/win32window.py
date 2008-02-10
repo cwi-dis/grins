@@ -1201,7 +1201,7 @@ class Window:
     def isResizeable(self):
         return 1
 
-## ###############################################
+#################################################
 class DDWndLayer:
     def __init__(self, wnd, bgcolor = None):
         self._wnd = wnd
@@ -1447,7 +1447,7 @@ class DDWndLayer:
                 self.paint()
         self._frontBuffer.Flip(0, ddraw.DDFLIP_WAIT)
 
-## ######################################
+########################################
 
 # regions, RGB
 import win32ui, win32con, win32api
@@ -2240,7 +2240,7 @@ class Region(Window):
             prev = prev._parent
         return count
 
-## ###########################
+#############################
 
 class Viewport(Region):
     def __init__(self, context, x, y, width, height, bgcolor):
@@ -2432,7 +2432,7 @@ class Viewport(Region):
         self.setcursor(self._cursor)
 
 
-## ########################
+##########################
 class ViewportContext:
     def __init__(self, wnd, w, h, units, bgcolor):
 
@@ -2558,7 +2558,7 @@ class ViewportContext:
         return n*16, m*16
 
 
-## #######################################
+#########################################
 # Experimental resizeable DisplayList
 
 from win32ig import win32ig

@@ -15,7 +15,7 @@ __version__ = "$Id$"
 import win32ui, win32con, win32api
 Sdk=win32ui.GetWin32Sdk()
 
-## ##################################################
+####################################################
 # General Class Utilities and Functions
 
 
@@ -341,7 +341,7 @@ def DrawLines(dc,ll,rgb):
     Sdk.DeleteObject(pen)
 
 
-## ################################ Print Screen to Bitmap
+################################## Print Screen to Bitmap
 
 try:
     from sysmetrics import scr_width_pxl,scr_height_pxl
@@ -406,7 +406,7 @@ def WndToBmp(wnd):
     rc=wnd.GetWindowRect()
     return ScreenToBitmap(rc)
 
-## ################################# DlgTemplate
+################################### DlgTemplate
 from Font import findfont
 
 class DlgTemplate:

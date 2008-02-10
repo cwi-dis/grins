@@ -146,9 +146,9 @@ class _WindowGroup:
         dict = {}
         for item in list:
             cmd = item.__class__
-## # This code does not work anymore with per-window button commands.
-## # but we work around it by adding those commands to the UNUSED_COMMANDS
-## # set.
+### This code does not work anymore with per-window button commands.
+### but we work around it by adding those commands to the UNUSED_COMMANDS
+### set.
 ##             if __debug__:
 ##                 if not mw_globals._all_commands.has_key(cmd):
 ##                     print 'Warning: user has no way to issue command', cmd

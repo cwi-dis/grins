@@ -79,7 +79,7 @@ class AssetsViewDialog(ViewDialog.ViewDialog):
         else:
             return None
 
-## ## support win32 model
+#### support win32 model
     def createviewobj(self):
         if self.__window: return
         f=self.toplevel.window

@@ -75,11 +75,11 @@ from AppDefaults import *
 # to another Widget).
 LEFT, RIGHT, TOP, BOTTOM, LEFTBOTTOM, RIGHTBOTTOM, LEFTTOP, RIGHTTOP = range(8)
 
-## ############################################################################
+##############################################################################
 
 #                                 ABSTRACT BASE CLASS INTERACTIVE
 
-## ############################################################################
+##############################################################################
 
 class Widget:
 
@@ -248,11 +248,11 @@ class Widget:
         del self.mother
         del self.parent
 
-## ############################################################################
+##############################################################################
 
 #                                       ABSTRACT BASE CLASS EDITWINDOW
 
-## ############################################################################
+##############################################################################
 
 ## class MultiWidget(Widget):
 ##     # An MultiWidget is a container for Widget objects.
@@ -335,15 +335,15 @@ class Widget:
 ##         self.resort()
 
 ##     # alternatively (untested):
-## #     def insert(self, intact):
-## #         element = 0
-## #         for i in range(len(self.widgets)):
-## #             if self.widgets[i].pos_z = intact.pos_z:
-## #                 element = i
-## #                 break
-## #         head = self.widgets[:i]
-## #         tail = self.widgets[i:]
-## #         self.widgets = head + intact + tail
+###     def insert(self, intact):
+###         element = 0
+###         for i in range(len(self.widgets)):
+###             if self.widgets[i].pos_z = intact.pos_z:
+###                 element = i
+###                 break
+###         head = self.widgets[:i]
+###         tail = self.widgets[i:]
+###         self.widgets = head + intact + tail
 
 ##     def resort(self):
 ##         # Ensure that the list is sorted by z-index.
@@ -360,16 +360,16 @@ class Widget:
 
 ##         self.widgets = new_widgetlist
 
-## ##    def destroy(self):
-## ##        Widget.destroy(self)
-## ##        for i in self.widgets:
-## ##            i.destroy()
-## ##        self.widgets = []
+####    def destroy(self):
+####        Widget.destroy(self)
+####        for i in self.widgets:
+####            i.destroy()
+####        self.widgets = []
 
-## #    def get_minsize(self):
-## #        # The minimum size of a container is the sum of all of it's children.
-## #        print "TODO"
+###    def get_minsize(self):
+###        # The minimum size of a container is the sum of all of it's children.
+###        print "TODO"
 
-## #    def get_maxsize(self):
-## #        # the maximum size of a container is the sum of all of it's children.
-## #       print "TODO"
+###    def get_maxsize(self):
+###        # the maximum size of a container is the sum of all of it's children.
+###       print "TODO"

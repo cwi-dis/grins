@@ -21,7 +21,7 @@ import windowinterface
 import features
 from usercmd import *
 
-## ####################################################################
+######################################################################
 # Editing MMNodes.
 
 class EditableMMNode(MMNode.MMNode):
@@ -358,10 +358,10 @@ class EditableMMNode(MMNode.MMNode):
 ##                 continue
 ##             retlist.append(name)
 
-## ##        if not cmifmode():
-## ##            # cssbgcolor is used instead
-## ##            if 'bgcolor' in retlist: retlist.remove('bgcolor')
-## ##            if 'transparent' in retlist: retlist.remove('transparent')
+####        if not cmifmode():
+####            # cssbgcolor is used instead
+####            if 'bgcolor' in retlist: retlist.remove('bgcolor')
+####            if 'transparent' in retlist: retlist.remove('transparent')
 ##         return retlist
         return namelist
 
@@ -391,7 +391,7 @@ class EditableMMNode(MMNode.MMNode):
                 need_redraw = 1
         return need_redraw
 
-## ####################################################################
+######################################################################
     # Commands from the menus.
     # Note that the commands should control the EditMgr - they
     # are essentually macro-level commands that use the methods above. -mjvdg.

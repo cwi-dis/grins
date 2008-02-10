@@ -37,7 +37,7 @@ class Region(base_window.Window):
         del self._convert_color
         del self._transition
 
-## ###########################
+#############################
 
 class Viewport(Region):
     def __init__(self, context, coordinates, bgcolor):

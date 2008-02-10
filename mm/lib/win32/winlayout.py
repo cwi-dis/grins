@@ -278,7 +278,7 @@ class DrawContext:
         if self._shapeFactory:
             self._shapeFactory.onNewObject(obj)
 
-## #######################
+#########################
 # For multi-selections use MSDrawContext instead of DrawContext
 # Its interface for its clients is the same as that of DrawContext
 # It offers the same functionality plus multi selection
@@ -480,7 +480,7 @@ class MSDrawContext(DrawContext):
             b = y1
         return l, t, r-l, b-t
 
-## #######################
+#########################
 # interface of shapes this framework can create/manipulate
 
 class Shape:
@@ -892,7 +892,7 @@ class Polyline:
             return  projpt, index
         return None, -1
 
-## ##############################
+################################
 
 # std mfc windows stuf
 from pywinlib.mfc import window, docview
@@ -1334,7 +1334,7 @@ class LayoutWnd:
     def NRtoDR(self, rc):
         return self.LRtoDR(self.NRtoLR(rc, round=1))
 
-## #######################
+#########################
 # Final concrete classes
 
 # a layout window based on a generic MFC wnd
@@ -1352,7 +1352,7 @@ class LayoutScrollOsWnd(docview.ScrollView, LayoutWnd):
         LayoutWnd.__init__(self, drawContext)
         self._cancroll = 1
 
-## #######################
+#########################
 # Utility classes
 
 # 1. Minimal concrete win32window.Window

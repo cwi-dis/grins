@@ -8,7 +8,7 @@ import re
 import string
 import math
 
-## ##############
+################
 # common patterns
 
 _S = '[ \t\r\n]+'
@@ -66,7 +66,7 @@ entityPat = _opS + '<!ENTITY' + _S + entityNamePat + _S + quoteDef + _opS + '>'
 ideventPat = r'((?P<name>[a-zA-Z_:][-a-zA-Z0-9_:]*)\.(?P<event>(begin)|(end)))'
 syncvalPat = ideventPat + '?' + _opS + _sign + _opS + numberPat + '?' + timeUnitsPat
 
-## ##############
+################
 # utilities
 
 from tokenizer import *
@@ -88,7 +88,7 @@ from fmtfloat import fmtfloat
 def deg2rad(deg):
     return (deg/180.0)*math.pi
 
-## ##############
+################
 # base classes
 
 # base class for animateable attributes
@@ -149,7 +149,7 @@ class SVGAttr(Animateable):
         Animateable.__init__(self)
 
 
-## ##############
+################
 # svg types
 
 # import path related svg types
@@ -1164,7 +1164,7 @@ class TM:
         return TM(self.elements)
 
 
-## ######################################
+########################################
 stringtype = type('')
 
 # entries:

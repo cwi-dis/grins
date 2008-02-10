@@ -612,7 +612,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
                     lastX, lastY = lastX + seg._x, lastY + seg._y
 
 
-## ####################
+######################
 class Tk:
     def __init__(self):
         self.pen = 0
