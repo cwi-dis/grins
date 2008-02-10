@@ -20,51 +20,51 @@ import version
 import features
 
 def hashelp():
-	import windowinterface
-	return hasattr(windowinterface, 'htmlwindow')
+    import windowinterface
+    return hasattr(windowinterface, 'htmlwindow')
 
-helpbase = None				# directory where the help files live
-helpbase_web = None			# web location where the help files live
+helpbase = None                         # directory where the help files live
+helpbase_web = None                     # web location where the help files live
 helpwindow = None
 
 def sethelpprogram(program):
-	pass
-	
+    pass
+
 def sethelpdir(dirname):
-	global helpbase
-	helpbase = MMurl.pathname2url(os.path.join(dirname, 'index.html'))
+    global helpbase
+    helpbase = MMurl.pathname2url(os.path.join(dirname, 'index.html'))
 
 def fixhelpdir():
-	global helpbase
-	global helpbase_web
-	if helpbase_web is None:
-		helpbase_web = 'http://www.AmbulantPlayer.org/indir/%s/help/index.html'%version.shortversion
-	if helpbase is None:
-		import cmif
-		helpdir = cmif.findfile('Help')
-		basefile = os.path.join(helpdir, 'index.html')
-		if os.path.exists(basefile):
-			helpbase = MMurl.pathname2url(basefile)
-		else:
-			helpbase = helpbase_web
+    global helpbase
+    global helpbase_web
+    if helpbase_web is None:
+        helpbase_web = 'http://www.AmbulantPlayer.org/indir/%s/help/index.html'%version.shortversion
+    if helpbase is None:
+        import cmif
+        helpdir = cmif.findfile('Help')
+        basefile = os.path.join(helpdir, 'index.html')
+        if os.path.exists(basefile):
+            helpbase = MMurl.pathname2url(basefile)
+        else:
+            helpbase = helpbase_web
 
 def givehelp(topic, web=0):
-	global helpwindow
-	import windowinterface
-	if topic == 'buy' and hasattr(features, 'buyurl'):
-		helpurl = features.buyurl
-	else:
-		fixhelpdir()
-		helpfile = '%s.html'%topic
-		if web:
-			base = helpbase_web
-		else:
-			base = helpbase
-		helpurl = MMurl.basejoin(base, helpfile)
-	if helpwindow is not None and not helpwindow.is_closed():
-		helpwindow.goto_url(helpurl)
-	else:
-		helpwindow = windowinterface.htmlwindow(helpurl)
+    global helpwindow
+    import windowinterface
+    if topic == 'buy' and hasattr(features, 'buyurl'):
+        helpurl = features.buyurl
+    else:
+        fixhelpdir()
+        helpfile = '%s.html'%topic
+        if web:
+            base = helpbase_web
+        else:
+            base = helpbase
+        helpurl = MMurl.basejoin(base, helpfile)
+    if helpwindow is not None and not helpwindow.is_closed():
+        helpwindow.goto_url(helpurl)
+    else:
+        helpwindow = windowinterface.htmlwindow(helpurl)
 
 def showhelpwindow():
-	givehelp('index')
+    givehelp('index')
