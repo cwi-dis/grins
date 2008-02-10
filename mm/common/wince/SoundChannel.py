@@ -65,7 +65,7 @@ class SoundChannel(Channel.ChannelAsync):
         Channel.ChannelAsync.stopplay(self, node, curtime)
 
 
-## ################
+##################
 MM_WOM_OPEN = 0x3BB
 MM_WOM_CLOSE = 0x3BC
 MM_WOM_DONE = 0x3BD
@@ -367,7 +367,7 @@ class AudioPlayer:
             self._waveout.Close()
             self._waveout = None
 
-## #######################################
+#########################################
 # The simplest possible form of SoundChannel
 # uses only winmm.SndPlaySound
 # you can't do many things with it
