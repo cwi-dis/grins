@@ -4,7 +4,7 @@
 toplevel = None
 resdll = None
 
-## ################### Main Script
+##################### Main Script
 import os
 import sys
 
