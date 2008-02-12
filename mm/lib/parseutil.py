@@ -16,7 +16,8 @@ clock_val = (_opS +
              r')' + _opS)
 offsetvalue = re.compile('(?P<sign>[-+])?' + clock_val + '$')
 
-error = 'parseutil.error'
+class error(Exception):
+    pass
 
 def _syntax_error(msg):
     raise error, msg

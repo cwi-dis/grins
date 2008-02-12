@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 import Xlib
-from XConstants import error, TRUE, FALSE
+from XConstants import error, TRUE, FALSE, UNIT_PXL
 from XTopLevel import toplevel
 
 class _Button:
@@ -143,7 +143,7 @@ class _ButtonRect(_Button):
         x, y = self._coordinates[1:3]
         w = self._coordinates[3] - x
         h = self._coordinates[4] - y
-        x, y, w, h = window._convert_coordinates((x, y, w, h))
+        x, y, w, h = window._convert_coordinates((x, y, w, h), units = UNIT_PXL)
         lw = self._hiwidth / 2
         r = Xlib.CreateRegion()
         r.UnionRectWithRegion(x - lw, y - lw,

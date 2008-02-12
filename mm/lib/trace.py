@@ -12,13 +12,16 @@ class Trace:
                 'return': self.trace_dispatch_return,
                 'exception': self.trace_dispatch_exception,
                 }
+        self.dispatch['c_call'] = self.dispatch['call']
+        self.dispatch['c_return'] = self.dispatch['return']
+        self.dispatch['c_exception'] = self.dispatch['exception']
         self.modules = None     # restrict to these modules
         self.curframe = None
         self.depth = 0
         self.__printargs = 1
-        self.outputfile = open("trace.txt", 'w'); # This is never actually closed.
+        self.outputfile = open("trace.txt", 'w') # This is never actually closed.
         sys.debugfile = self.outputfile # so other modules can use it.
-        print "Sending trace output to trace.txt in working directory.";
+        print "Sending trace output to trace.txt in working directory."
 
     def run(self, cmd, globals = None, locals = None):
         if globals is None:
@@ -39,7 +42,7 @@ class Trace:
         finally:
             sys.setprofile(None)
 
-    def trace_dispatch(self, frame, event, arg, None = None, split = os.path.split, splitext = os.path.splitext):
+    def trace_dispatch(self, frame, event, arg, split = os.path.split, splitext = os.path.splitext):
         curframe = self.curframe
         if curframe is not frame:
             if frame.f_back is curframe:
@@ -57,7 +60,7 @@ class Trace:
                 return
         self.dispatch[event](frame, arg)
 
-    def trace_dispatch_call(self, frame, arg, None = None, time = time.time):
+    def trace_dispatch_call(self, frame, arg, time = time.time):
         pframe = frame.f_back
         code = frame.f_code
         funcname = code.co_name
@@ -113,7 +116,7 @@ class Trace:
 
     def set_trace(self, *modules):
         try:
-            raise 'xyzzy'
+            raise Exception
         except:
             frame = sys.exc_traceback.tb_frame
         if modules:
@@ -175,7 +178,7 @@ else:
             self.pruneframe = None
 ##             self.__printargs = 0
 
-        def trace_dispatch_call(self, frame, arg, None = None, time = time.time):
+        def trace_dispatch_call(self, frame, arg, time = time.time):
             if self.pruneframe:
                 return
             pframe = frame.f_back

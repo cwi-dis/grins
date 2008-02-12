@@ -32,9 +32,12 @@ formatOutput =  (-402653169, 0, 200, 0, 8421376, 0, 49, 'Courier')
 formatOutputError = (-402653169, 0, 200, 0, 255, 0, 49, 'Courier')
 
 # couple of exceptions defined for this module
-excNoValidCommand = 'No Valid Command'
-excEmptyCommand = 'Empty Command'
-excContinueCommand = 'Continue Command'
+class excNoValidCommand(Exception):
+    pass                                # No Valid Command
+class excEmptyCommand(Exception):
+    pass                                # Empty Command
+class excContinueCommand(Exception):
+    pass                                # Continue Command
 
 def LoadPreference(preference, default = ""):
     return win32ui.GetProfileVal(sectionProfile, preference, default)

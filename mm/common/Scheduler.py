@@ -32,7 +32,8 @@ SCHEDULE_DEPTH = 3                      # how deep we should go scheduling sync 
 N_PRIO = 5
 [PRIO_PREARM_NOW, PRIO_INTERN, PRIO_STOP, PRIO_START, PRIO_LO] = range(N_PRIO)
 
-error = 'Scheduler.error'
+class error(Exception):
+    pass
 
 class SchedulerContext:
     # There is n Scheduler Context instances for each Scheduler instance.

@@ -2,7 +2,8 @@ __version__ = "$Id$"
 
 # TimeMapper maps times to pixels and the reverse.
 
-Error = 'TimeMapper.Error'
+class Error(Exception):
+    pass
 
 CONSISTENT_TIME_MAPPING=0
 DEBUG=0

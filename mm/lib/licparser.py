@@ -38,7 +38,8 @@ FEATURES={
 
 MAGIC=13
 
-Error="license.error"
+class Error(Exception):
+    pass
 
 NOTYET="Not licensed yet"
 EXPIRED="Your evaluation copy has expired"

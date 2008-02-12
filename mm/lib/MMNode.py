@@ -25,7 +25,8 @@ if __debug__:
 
 _CssAttrs = ['top', 'left', 'right', 'width', 'height', 'bottom', 'regPoint', 'regAlign', 'fit']
 
-xpath_error = 'xpath_error'
+class xpath_error(Exception):
+    pass
 
 class MMNodeContext:
     "Adds context information about each MMNode" # -mjvdg. TODO: elaborate.

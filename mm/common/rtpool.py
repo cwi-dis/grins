@@ -6,7 +6,8 @@ __version__ = "$Id$"
 #
 import bisect
 
-error = 'rtpool.error'
+class error(Exception):
+    pass
 
 class rtpool:
     def __init__(self):

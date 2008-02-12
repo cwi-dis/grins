@@ -5,7 +5,8 @@
 __version__ = "$Id$"
 
 
-PreferencesDialogError="PreferencesDialog.Error"
+class PreferencesDialogError(Exception):
+    pass
 
 import windowinterface
 

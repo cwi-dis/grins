@@ -27,7 +27,8 @@ ICONSIZE_PXL=16
 
 Continue = 'Continue'
 
-error = 'windowinterface.error'
+class error(Exception):
+    pass
 
 # DropEffects
 DROPEFFECT_NONE   = 0

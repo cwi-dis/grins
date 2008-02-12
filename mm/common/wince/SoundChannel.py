@@ -13,7 +13,8 @@ import audio, audio.format
 # wince playback module
 import winmm
 
-error = 'SoundChannel.error'
+class error(Exception):
+    pass
 
 class SoundChannel(Channel.ChannelAsync):
     node_attrs = Channel.ChannelAsync.node_attrs + ['duration']

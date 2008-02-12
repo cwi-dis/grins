@@ -14,7 +14,8 @@ from windowinterface import TRUE, FALSE
 import string
 import MMurl
 import urlparse
-error = 'Channel.error'
+class error(Exception):
+    pass
 from usercmd import *
 
 channel_device = 1

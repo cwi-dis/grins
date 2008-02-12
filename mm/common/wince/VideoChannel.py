@@ -10,7 +10,8 @@ import windowinterface
 # wince playback module
 import winmm
 
-error = 'VideoChannel.error'
+class error(Exception):
+    pass
 
 # if true disable updates
 # should be true if winmm was build with the symbol USE_GAPI defined

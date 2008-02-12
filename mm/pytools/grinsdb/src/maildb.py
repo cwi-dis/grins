@@ -8,7 +8,8 @@ import time
 import stat
 import anydbm
 
-Error = 'maildb.Error'
+class Error(Exception):
+    pass
 
 class MdbObject:
     """A database object stored in an rfc822 message"""

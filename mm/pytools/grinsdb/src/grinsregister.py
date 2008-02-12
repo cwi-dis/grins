@@ -32,7 +32,8 @@ LICENSE=os.path.join(grinsdb.DATABASE, ".evallicense")
 
 SENDMAIL="/usr/lib/sendmail -t"
 
-Error="grinsregister.Error"
+class Error(Exception):
+    pass
 
 def main():
     status = 0

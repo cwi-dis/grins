@@ -12,7 +12,8 @@ import sys
 # set() and friends will call them for you.
 _registry=[]
 _in_transaction = 0
-Error = 'Error'
+class Error(Exception):
+    pass
 
 # some constants
 

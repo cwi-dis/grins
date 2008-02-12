@@ -50,7 +50,8 @@ import win32ui,win32con
 
 import parsehtml
 
-error = 'HtmlChannel.error'
+class error(Exception):
+    pass
 
 class HtmlChannel(Channel.ChannelWindow):
     chan_attrs = Channel.ChannelWindow.chan_attrs + ['fgcolor']

@@ -13,7 +13,8 @@ import grpasswd
 # Keys on which we want to index
 KEYS=['email']
 
-Error="grcheckdb.Error"
+class Error(Exception):
+    pass
 
 def main():
     if len(sys.argv) > 1:

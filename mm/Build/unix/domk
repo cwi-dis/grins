@@ -1,4 +1,4 @@
-#!/usr/local/bin/esh -f
+#!/bin/esh -f
 
 # Usage:
 #	domk -- make everything in correct order, also compile .py files

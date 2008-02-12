@@ -13,7 +13,8 @@ __version__ = "$Id$"
 __version__ = "$Id$"
 
 
-PreferencesDialogError="PreferencesDialog.Error"
+class PreferencesDialogError(Exception):
+    pass
 
 stringitems = {
         'system_language': '2-character name for a language',

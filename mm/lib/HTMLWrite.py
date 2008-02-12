@@ -34,7 +34,8 @@ nonascii = re.compile('[\200-\377]')
 isidre = re.compile('^[a-zA-Z_][-A-Za-z0-9._]*$')
 
 
-Error = 'Error'
+class Error(Exception):
+    pass
 
 def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0, exporttype = 'REAL'):
     if exporttype == 'REAL':

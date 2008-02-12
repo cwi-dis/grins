@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
-Error = 'audio.dev.Error'
+class Error(Exception):
+    pass
 
 import sys
 

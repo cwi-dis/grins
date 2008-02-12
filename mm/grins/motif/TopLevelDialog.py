@@ -28,3 +28,9 @@ class TopLevelDialog:
         else:
             # insensitve: exclude CLOSE
             self.player.topcommandlist(self.commandlist[1:])
+
+    def setusergroupsmenu(self, menu):
+        self.player.setusergroupsmenu(menu)
+
+    def setsettingsdict(self, dict):
+        pass
