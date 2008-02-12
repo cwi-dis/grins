@@ -64,7 +64,7 @@ case "$dir" in
 */bin)	dir=`dirname "$dir"`;;
 esac
 
-for sub in $function common python lib mmpython
+for sub in $function common lib mmpython
 do
 	if [ ! -d "$dir/$sub" ]
 	then
@@ -73,9 +73,7 @@ do
 	fi
 done
 
-python="$dir/mmpython/$ARCH/python"
-pythonsrc="$dir/python"
-pythonlib="$pythonsrc/Lib"
+python=python
 
 CMIF="$dir"
 export CMIF
@@ -89,7 +87,7 @@ PYTHONPATH=$PYTHONPATH:$CMIF/lib
 PYTHONPATH=$PYTHONPATH:$CMIF/video
 if [ -d $CMIF/pylib ]
 then
-	for dir in `find $CMIF/pylib -type d ! -name CVS -print`
+	for dir in `find $CMIF/pylib -name CVS -prune -o -type d -print`
 	do
 		[ -f $dir/__init__.py ] ||
 		PYTHONPATH=$PYTHONPATH:$dir
@@ -101,13 +99,6 @@ then
 	LD_LIBRARY_PATH=/usr/lib/RealPlayer7/Common${LD_LIBRARY_PATH+:$LD_LIBRARY_PATH}
 	export LD_LIBRARY_PATH
 fi
-
-PYTHONPATH=$PYTHONPATH:$pythonlib
-PYTHONPATH=$PYTHONPATH:$pythonlib/test
-PYTHONPATH=$PYTHONPATH:$pythonlib/plat-$ARCH
-PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/X11/Lib
-PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/img/Lib
-PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/midi/Lib
 
 export PYTHONPATH
 

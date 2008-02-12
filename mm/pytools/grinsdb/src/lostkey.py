@@ -31,7 +31,8 @@ REGISTER_URL="http://www.oratrix.com/cgi-bin/warm?register.warm"
 
 SENDMAIL="/usr/lib/sendmail -t"
 
-Error="grinsregister.Error"
+class Error(Exception):
+    pass
 
 def main():
     status = 0

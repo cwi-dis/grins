@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
-error = 'windowinterface.error'
+class error(Exception):
+    pass
 FALSE, TRUE = 0, 1
 ReadMask, WriteMask = 1, 2
 SINGLE, HTM, TEXT, MPEG = 0, 1, 2, 3

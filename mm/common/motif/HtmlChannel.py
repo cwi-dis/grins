@@ -21,7 +21,8 @@ try:
 except ImportError:
     has_xrm = 0
 
-error = 'HtmlChannel.error'
+class error(Exception):
+    pass
 
 HtmlWidgets = {}
 

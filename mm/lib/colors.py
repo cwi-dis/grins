@@ -180,7 +180,8 @@ del name, color
 
 import SystemColors
 
-error = 'colors.error'
+class error(Exception):
+    pass
 
 import re
 from xmllib import _opS

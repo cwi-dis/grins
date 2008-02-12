@@ -11,7 +11,8 @@ import WMEVENTS
 import string
 import MacOS
 
-PreferencesDialogError="PreferencesDialog.Error"
+class PreferencesDialogError(Exception):
+    pass
 
 def ITEMrange(fr, to): return range(fr, to+1)
 

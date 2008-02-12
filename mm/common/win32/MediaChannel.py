@@ -41,7 +41,8 @@ WM_GRPAPHNOTIFY=win32con.WM_USER+101
 # private redraw message
 WM_REDRAW=win32con.WM_USER+102
 
-error = 'MediaChannel.error'
+class error(Exception):
+    pass
 
 class MediaChannel:
     def __init__(self, channel):

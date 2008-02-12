@@ -26,7 +26,8 @@ qt_node_attrs = {
         'qtcompositemode':0,
         }
 
-Error = 'Error'
+class Error(Exception):
+    pass
 
 # A fileish object with indenting
 class IndentedFile:

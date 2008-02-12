@@ -18,14 +18,16 @@ RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH = 0, 1, 2
 #
 # General error
 #
-error = 'windowinterface.error'
+class error(Exception):
+    pass
 
 #
 # Another exception, used when searching through the window tree.
 # Raised by transparent windows to signal that searching must continue
 # under this window.
 #
-Continue = 'Continue'
+class Continue(Exception):
+    pass
 
 #
 # Masks for select()

@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
-Error = 'audio.Error'
+class Error(Exception):
+    pass
 
 def reader(filename, dstfmts = None, dstrates = None, loop = 1, filetype = None):
     import file, convert

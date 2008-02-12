@@ -12,7 +12,8 @@ __version__ = "$Id$"
 __version__ = "$Id$"
 
 
-PreferencesDialogError="PreferencesDialog.Error"
+class PreferencesDialogError(Exception):
+    pass
 
 from components import *
 import win32dialog

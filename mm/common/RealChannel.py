@@ -16,7 +16,8 @@ elif os.name == 'posix':
 else:
     NEEDTICKER = 0
 
-error = 'RealChannel.error'
+class error(Exception):
+    pass
 
 realenginedebug=0
 

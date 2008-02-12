@@ -25,7 +25,8 @@ import time
 if __debug__:
     parsedebug = 0
 
-error = 'SMILTreeRead.error'
+class error(Exception):
+    pass
 
 LAYOUT_NONE = 0                         # must be 0
 LAYOUT_SMIL = 1

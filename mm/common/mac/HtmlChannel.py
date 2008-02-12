@@ -14,7 +14,8 @@ import htmlwidget
 from TextChannel import getfont, mapfont
 import WMEVENTS
 
-error = 'HtmlChannel.error'
+class error(Exception):
+    pass
 
 class HtmlChannel(Channel.ChannelWindow):
     chan_attrs = Channel.ChannelWindow.chan_attrs + ['fgcolor']

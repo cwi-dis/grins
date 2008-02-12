@@ -4,7 +4,8 @@ import xmllib, string, re, os
 import MMurl
 import urlcache
 
-error = 'realsupport.error'
+class error(Exception):
+    pass
 
 import colors
 # see SMILTreeRead for a more elaborate version

@@ -32,7 +32,8 @@ debug = lambda msg: None
 #import win32trace;win32trace.InitWrite() # for debugging - delete me!
 #debug = win32trace.write
 
-error = "winout error"
+class error(Exception):
+    pass
 #import thread
 
 class flags:

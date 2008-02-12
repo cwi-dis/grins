@@ -1,7 +1,8 @@
 
 # ddraw interface
 
-error = 'error'
+class error(Exception):
+    pass
 
 
 def CreateSurface(wnd, w, h):

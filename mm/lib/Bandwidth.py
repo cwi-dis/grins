@@ -13,7 +13,8 @@ import MMurl
 import urlcache
 import string
 
-Error="Bandwidth.Error"
+class Error(Exception):
+    pass
 
 # This value has to be determined.
 DEFAULT_STREAMING_MEDIA_PRELOAD=5

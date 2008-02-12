@@ -194,3 +194,7 @@ class PlayerDialogBase:
 
         if self._window is not None:
             return self._window.getgeometry(windowinterface.UNIT_PXL)
+
+    def setusergroupsmenu(self, menu):
+        if self._window is not None:
+            self._window.set_dynamiclist(USERGROUPS, menu)

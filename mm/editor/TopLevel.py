@@ -51,7 +51,8 @@ EMPTY = """
 
 from TopLevelDialog import TopLevelDialog
 
-Error = 'TopLevel.Error'
+class Error(Exception):
+    pass
 
 hasLayoutView2 = None
 

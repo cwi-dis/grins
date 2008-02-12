@@ -40,7 +40,8 @@ RESPONSE_SENDER="grins-request@oratrix.com"
 
 SENDMAIL="/usr/lib/sendmail -t"
 
-Error="grinsregister.Error"
+class Error(Exception):
+    pass
 
 def main():
     os.umask(02)

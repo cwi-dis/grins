@@ -2,7 +2,8 @@ __version__ = "$Id$"
 
 import Xt, Xm, Xmd, sys, X, Xcursorfont
 
-error = 'windowinterface.error'
+class error(Exception):
+    pass
 
 # try these visuals in this order
 tryvisuals = [

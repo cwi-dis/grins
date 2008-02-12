@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
-error = 'parseskin.error'
+class error(Exception):
+    pass
 
 # The syntax for a GRiNS skin description file is very simple:
 #
