@@ -67,12 +67,15 @@ class MMState:
         ns['smil-screenDepth'] = self.__screenDepth
         ns['smil-screenHeight'] = self.__screenHeight
         ns['smil-screenWidth'] = self.__screenWidth
+        # it may be that expr() is called before we actually started
+        # playing (during preparation of the scheduler)
+        self.__started = False
 
     def start(self):
         self.__tree = None
         if self.__url:
             try:
-                f = open(MMurl.urlretrieve(url)[0], 'r')
+                f = open(MMurl.urlretrieve(self.__url)[0], 'r')
             except:
                 pass
             else:
@@ -88,8 +91,11 @@ class MMState:
                 self.__tree = None
         if self.__tree is None:
             self.__tree = etree.parse(StringIO.StringIO('<data/>'))
+        self.__started = True
 
     def expr(self, expression):
+        if not self.__started:
+            self.start()
         try:
             r = self.__tree.xpath(expression)
         except:
@@ -189,10 +195,6 @@ class MMState:
         return p
 
     def send(self, ref, action, method, replace, target):
-##         import windowinterface
-##         windowinterface.showmessage('send not yet implemented', mtype = 'warning')
-##         return
-
         if not action:
             raise error, "no action"
         action = MMurl.basejoin(self.__context.baseurl, action)
@@ -241,11 +243,8 @@ class MMState:
                 p.insert(i, tree)
 
     def matches(self, ref, node):
-        print ref, node
         try:
             e = self.__tree.xpath(ref)
         except:
-            print 'False'
             return False
-        print e
         return node in e
