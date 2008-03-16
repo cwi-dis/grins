@@ -125,6 +125,8 @@ class SchedulerContext:
     #
     def prepare_minidoc(self, seeknode, curtime):
         self.srdict = self.playroot.GenAllSR(curtime, seeknode, sctx = self)
+        if __debug__:
+            if debugdump: self.dump()
     #
     # Re-initialize SR actions and events for a looping node, preparing
     # for the next time through the loop
@@ -137,6 +139,8 @@ class SchedulerContext:
             if self.srdict.has_key(key):
                 raise error, 'Duplicate event '+SR.ev2string(key)
             self.srdict[key] = value
+        if __debug__:
+            if debugdump: self.dump()
     #
     # Start minidoc starts playing what we've prepared
     #
@@ -177,19 +181,18 @@ class SchedulerContext:
 
     def sched_arc(self, node, arc, curtime,
                   event = None, accesskey = None, marker = None,
-                  statechange = None,
+                  statechange = None, contentchange = None,
                   timestamp = None, depth = 0, external = False,
                   propagate = True, force = False):
         # Schedules a single SyncArc for a node.
 
         # node is the node for the start of the arc.
         # arc is the SyncArc
-        # event is the event
-        # marker is ?
+        # event, marker, statechange, contentchange describe the event
         # timestamp is the time.. now.
 
         if __debug__:
-            if debugevents: print 'sched_arc',`node`,`arc`,curtime,event,accesskey,marker,propagate,timestamp,self.parent.timefunc()
+            if debugevents: print 'sched_arc',`node`,`arc`,curtime,event,accesskey,marker,statechange,contentchange,propagate,timestamp,self.parent.timefunc()
         if arc.wallclock is not None:
             timestamp = arc.resolvedtime(self)-arc.delay
         elif arc.marker is not None and '#' in arc.marker:
@@ -213,7 +216,7 @@ class SchedulerContext:
                 return
         else:
             if (event is not None and event not in ('begin', 'end')) or \
-                   (event is None and (accesskey is not None or statechange is not None)):
+                   (event is None and (accesskey is not None or statechange is not None or contentchange is not None)):
                 # a real event, only does something when node is active
                 if arc.dstnode.playing in (MMStates.IDLE, MMStates.PLAYED):
                     if external:
@@ -245,6 +248,8 @@ class SchedulerContext:
                         self.srdict.update(srdict)
                         if __debug__:
                             if debugevents: print 'scheduled_children-1 a',`a.dstnode`,`a`,event,a.dstnode.scheduled_children,self.parent.timefunc()
+                        if __debug__:
+                            if debugdump: self.dump()
                         a.dstnode.scheduled_children = a.dstnode.scheduled_children - 1
                     else:
                         # root node
@@ -262,6 +267,8 @@ class SchedulerContext:
                     self.srdict.update(srdict)
                     if __debug__:
                         if debugevents: print 'scheduled_children+1 c',`arc.dstnode`,`arc`,event,arc.dstnode.scheduled_children,self.parent.timefunc()
+                    if __debug__:
+                        if debugdump: self.dump()
                     arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
                 else:
                     # root node
@@ -321,7 +328,7 @@ class SchedulerContext:
             return
         if timestamp is None:   # Retrieve the timestamp if it was not supplied.
             timestamp = self.parent.timefunc()
-        channel = accesskey = statechange = None
+        channel = accesskey = statechange = contentchange = None
         if event is not None:
             node.event(timestamp, event) # record that event happened
             if type(event) is type(()):
@@ -333,6 +340,9 @@ class SchedulerContext:
                     event = None
                 elif event[1] == 'state':
                     statechange = event[2]
+                    event = None
+                elif event[1] == 'content':
+                    contentchange = event[2]
                     event = None
                 else:
                     channel, event = event[:2]
@@ -346,11 +356,20 @@ class SchedulerContext:
             # the right type with a definite delay etc.).
             if __debug__:
                 if debugevents: print 'sched_arcs',`node`,'trying',`arc`,
+            if arc.isstart and arc.dstnode.GetSchedParent() == 'seq' and arc.dstnode.playing in (MMStates.FROZEN, MMStates.PLAYED):
+                if __debug__:
+                    if debugevents: print 'continue played seq child'
+                continue
+            if not arc.isstart and arc.dstnode.playing == MMStates.PLAYED:
+                if __debug__:
+                    if debugevents: print 'continue played'
+                continue
             if (arc.channel != channel or
                 arc.getevent() != event or
                 arc.marker != marker or
                 arc.accesskey != accesskey or
-##                 (arc.statechange is None) != (statechange is None) or
+                (arc.statechange is None) != (statechange is None) or
+                (arc.contentchange is None) != (contentchange is None) or
                 arc.delay is None) and \
                (arc.getevent() is not None or
                 arc.marker is not None or
@@ -372,6 +391,11 @@ class SchedulerContext:
                 continue
             if statechange is not None and arc.statechange is not None and \
                    not node.context.state.matches(arc.statechange, statechange):
+                continue
+            if contentchange is not None and \
+               arc.contentchange is not None and \
+               arc.contentchange != 'any' and \
+               arc.contentchange != contentchange:
                 continue
             propagate = True
             if arc.isstart:
@@ -399,7 +423,7 @@ class SchedulerContext:
             arc.__in_sched_arcs = True # to break recursion
             self.sched_arc(node, arc, curtime, event = event,
                            accesskey = accesskey, marker = marker,
-                           statechange = statechange,
+                           statechange = statechange, contentchange = contentchange,
                            timestamp = timestamp, depth = depth, propagate = propagate)
             arc.__in_sched_arcs = False
         if depth == 0 and event == 'begin':
@@ -686,6 +710,8 @@ class SchedulerContext:
             ev = (SR.SCHED_DONE, node)
             if __debug__:
                 if debugevents: print 'trigger: queueing',SR.ev2string(ev), timestamp, parent.timefunc()
+            if __debug__:
+                if debugdump: self.dump()
             parent.event(self, ev, timestamp)
             parent.updatetimer(curtime)
             return
@@ -749,6 +775,8 @@ class SchedulerContext:
                         if node not in pnode.pausestack:
                             srdict = pnode.gensr_child(curtime, node, sctx = self)
                             self.srdict.update(srdict)
+                            if __debug__:
+                                if debugdump: self.dump()
                         node.set_start_time(timestamp)
                         self.do_pause(pnode, node, 'hide', timestamp)
                         parent.updatetimer(curtime)
@@ -780,6 +808,8 @@ class SchedulerContext:
                 if debugevents: print 'terminating siblings',parent.timefunc()
             srdict = pnode.gensr_child(curtime, node, runchild = False, sctx = self)
             self.srdict.update(srdict)
+            if __debug__:
+                if debugdump: self.dump()
             for c in pnode.GetSchedChildren():
                 # don't have to terminate it again
                 if c is not node and c.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
@@ -997,6 +1027,8 @@ class SchedulerContext:
                 if num > 0:
                     val[0] = num
             del node.GetSchedParent().srdict[ev]
+        if __debug__:
+            if debugdump: self.dump()
 
     def do_terminate(self, node, curtime, timestamp, fill = 'remove', cancelarcs = False, chkevent = True, skip_cancel = False, ignore_erase = False):
         parent = self.parent
@@ -1107,6 +1139,8 @@ class SchedulerContext:
                     srlist = srdict[e][1]
                     if ev in srlist:
                         srlist.remove(ev)
+                if __debug__:
+                    if debugdump: self.dump()
         if cancelarcs:
             for qid in parent.queue[:]:
                 time, priority, action, argument = qid
@@ -1326,6 +1360,8 @@ class SchedulerContext:
         if not numsrlist:
             raise error, 'Scheduler: actions already sched for ev: %s' % ev
         del srdict[ev]
+        if __debug__:
+            if debugdump: self.dump()
         num, srlist = numsrlist
         num = num - 1
         if num < 0:
