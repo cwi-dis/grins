@@ -141,6 +141,12 @@ class textwindow:
         self.__window = None
         self.__text = None
 
+    def is_closed(self):
+        return self.__window is None or self.__window.is_closed()
+
+    def show(self):
+        self.__window.show()
+
 ## class htmlwindow:
 ##     def __init__(self, url):
 ##         w = Window('Help', resizable = 1, deleteCallback = 'hide')
