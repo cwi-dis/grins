@@ -206,8 +206,8 @@ class MMState:
             if len(e) != 1:
                 raise error, "ref attribute must evaluate to a single node"
             e = e[0]
-            data = etree.tostring(e, pretty_print = True)
-            fp = MMurl.urlopen(action, data, method.upper())
+            data = etree.tostring(e, pretty_print = False)
+            fp = MMurl.urlopen(action, '<?xml version="1.1"?>\n%s\n' % data, method.upper())
         else:
             fp = MMurl.urlopen(action)
         newdata = fp.read()

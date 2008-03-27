@@ -9,7 +9,7 @@ class StateChannel(Channel):
     def do_play(self, node, curtime):
         stag = node.attrdict['stag']
         if stag == 'setvalue':
-            ref = node.GetAttr('state_ref')
+            ref = node.GetAttrDef('state_ref', '/*')
             value = node.GetAttr('state_value')
             try:
                 n = node.context.state.setvalue(ref, value)
@@ -29,7 +29,7 @@ class StateChannel(Channel):
             else:
                 self.event((None, 'state', n), curtime)
         elif stag == 'delvalue':
-            ref = node.GetAttr('state_ref')
+            ref = node.GetAttrDef('state_ref', '/*')
             try:
                 n = node.context.state.delvalue(ref)
             except MMState.error, e:
@@ -44,7 +44,7 @@ class StateChannel(Channel):
             if not sdict:
                 return                  # nothing to do
             action = sdict.get('action')
-            ref = sdict.get('ref')
+            ref = sdict.get('ref', '/*')
             method = sdict.get('method')
             replace = sdict.get('replace')
             target = sdict.get('target')
