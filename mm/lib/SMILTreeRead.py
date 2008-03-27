@@ -2311,13 +2311,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
     __state_required_attrs = {
         'setvalue': ['ref', 'value'],
-        'newvalue': ['ref', 'name', 'value'],
+        'newvalue': ['name', 'value'],
         'delvalue': ['ref'],
         'send':     [],
         }
     __state_optional_attrs = {
         'setvalue': [],
-        'newvalue': ['where'],
+        'newvalue': ['ref', 'where'],
         'delvalue': [],
         'send':     ['submission'],
         }

@@ -18,7 +18,7 @@ class StateChannel(Channel):
             else:
                 self.event((None, 'state', n), curtime)
         elif stag == 'newvalue':
-            ref = node.GetAttr('state_ref')
+            ref = node.GetAttrDef('state_ref', '/*')
             where = node.GetAttrDef('state_where', 'child')
             name = node.GetAttr('state_name')
             value = node.GetAttr('state_value')
