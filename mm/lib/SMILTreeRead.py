@@ -3817,8 +3817,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
             lang = attributes['language']
             if lang != 'http://www.w3.org/TR/1999/REC-xpath-19991116':
                 self.syntax_error('only language recognized is XPath (http://www.w3.org/TR/1999/REC-xpath-19991116)')
-        else:
-            self.syntax_error("required attribute `language' missing in state element")
         url = attributes.get('src')
         if url:
             url = MMurl.basejoin(self.__base, url)
